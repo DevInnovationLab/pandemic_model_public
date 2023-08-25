@@ -13,5 +13,7 @@ function k = capital_costs(q, params, is_mRNA)
 			k = params.k_o * q * (1/(1+params.epsilon)) * (params.epsilon * params.beta / q + (q/params.beta)^params.epsilon);
 		end
 	end
+
+	k = k / 10^6; % in million
 	
 end
