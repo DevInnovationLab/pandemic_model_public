@@ -1,7 +1,8 @@
 %%%%%%%%%%% USER TOGGLES
 
-has_adv_cap = 1; % if to build capacity in advance
+has_adv_cap = 0; % if to build capacity in advance
 save_output = 0;
+has_false_pos = 1;
 
 %%%%%%%%%%%%%%%% PARAMETERS
 
@@ -9,12 +10,13 @@ params = params_default; % main source of params
 
 %%%%%%% LOAD SCENS
 
-scen_file_name = 'sim_scens.xlsx'; % this file is made by gen_sim_scens.m
+scen_file_name= sprintf('sim_results_has_false_%d.xlsx', has_false_pos); % this file is made by gen_sim_scens.m
 sim_scens = readtable(scen_file_name,'Sheet','Sheet1');
 
 yr_start_arr = sim_scens.yr_start_arr;
 intensity_arr = sim_scens.intensity_arr;
 natural_dur_arr = sim_scens.natural_dur_arr;
+is_false_arr = sim_scens.is_false_arr;
 
 state_arr = sim_scens.state_arr;
 state_desc = sim_scens.state_desc;
@@ -23,10 +25,6 @@ sz = size(sim_scens);
 sim_cnt = sz(1); % number of simulations
 
 %%%%%%%%%%%%%%%% INITIALIZATION
-
-if save_output
-    out_filename = sprintf('sim_results_adv_%d.xlsx', has_adv_cap);
-end
 
 vax_fraction_cum_arr = NaN(sim_cnt, 1); % array of fraction of pop vaccinated by end of eval period
 
@@ -47,10 +45,11 @@ for s = 1:sim_cnt % loop through each simulation scenario
     pandemic_natural_dur = natural_dur_arr(s);
     state = state_arr(s);
     intensity = intensity_arr(s);
-    
+    is_false = is_false_arr(s);
+
     if ~isnan(yr_start)
         [vax_benefits_arr, vax_fraction_cum_end, PV_factor, in_pandemic_cap_costs_PV, in_pandemic_marg_costs_m_PV, in_pandemic_marg_costs_o_PV] = ...
-            run_sim(params, yr_start, pandemic_natural_dur, state, intensity, x_m, x_o, z_m, z_o);
+            run_sim(params, yr_start, is_false, pandemic_natural_dur, state, intensity, x_m, x_o, z_m, z_o);
 
         in_pandemic_costs_PV_arr = in_pandemic_cap_costs_PV + in_pandemic_marg_costs_m_PV + in_pandemic_marg_costs_o_PV; % total in pandemic costs, in million
 
@@ -80,6 +79,7 @@ sim_results = table(vax_net_benefits_bn_arr, vax_benefits_bn_arr, vax_costs_bn_a
 mean(vax_net_benefits_bn_arr, 1)
 
 if save_output == 1
+    out_filename = sprintf('sim_results_adv_%d_has_false_%d.xlsx', has_adv_cap, has_false_pos);
     delete(out_filename);
     writetable(sim_results, out_filename,'Sheet',1)
     fprintf('printed output to %s\n', out_filename);

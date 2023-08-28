@@ -11,6 +11,10 @@ function params = params_default()
 	params.i_COVID = 0.32;	% annual deaths per thousand
 	params.i_star = params.i_COVID/2; % min intensity for next pandemic
 
+    % this is the intensity threshold that doubles the prob of being in a pandemic that exceeds i_star (used for when assuming false pos rate is 50%)
+    % this value is calculated in "arrival_distribution.m"
+    params.i_star_w_false = 0.0559;
+
 	arrival.sigma = 0.0113;
 	arrival.xi = 1/0.71;
 	arrival.alpha = 0.62;
