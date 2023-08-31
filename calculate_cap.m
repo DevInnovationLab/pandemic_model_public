@@ -1,12 +1,12 @@
-function out = calculate_cap(tau, params, ind_m, ind_o, x_m_tau, x_o_tau)
+function out = calculate_cap(tau, tau_A, params, ind_m, ind_o, x_m_tau, x_o_tau)
     % Calculate capacity, first index is for mRNA, second for traditional
 	out = zeros(2, 1);
-	if tau <= params.tau_A
+	if tau <= tau_A
 		% no modification
-	elseif tau <= (params.tau_A + params.tau_m)
+	elseif tau <= (tau_A + params.tau_m)
 		out(1) = (ind_m) * x_m_tau * params.f_m;
 		out(2) = (ind_o) * x_o_tau * params.f_o;
-	elseif tau <= (params.tau_A + params.tau_o)
+	elseif tau <= (tau_A + params.tau_o)
 		out(1) = (ind_m) * x_m_tau * (params.f_m + params.g_m);
 		out(2) = (ind_o) * x_o_tau * params.f_o;
 	else

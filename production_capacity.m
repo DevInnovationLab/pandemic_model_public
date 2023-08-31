@@ -1,4 +1,4 @@
-function [x_tot, x_arr] = production_capacity(tau, params, state, x_m_tau, x_o_tau)
+function [x_tot, x_arr] = production_capacity(tau, tau_A, params, state, x_m_tau, x_o_tau)
 
     %%% production capacity by technology platform based on what the state of the world is
 	
@@ -8,17 +8,17 @@ function [x_tot, x_arr] = production_capacity(tau, params, state, x_m_tau, x_o_t
     elseif state == 1 % both successful
         ind_m = 1;
 		ind_o = 1;
-		x_arr = calculate_cap(tau, params, ind_m, ind_o, x_m_tau, x_o_tau);
+		x_arr = calculate_cap(tau, tau_A, params, ind_m, ind_o, x_m_tau, x_o_tau);
 		x_tot = sum(x_arr);
     elseif state == 2 % only mRNA successful
         ind_m = 1;
 		ind_o = 0;
-		x_arr = calculate_cap(tau, params, ind_m, ind_o, x_m_tau, x_o_tau);
+		x_arr = calculate_cap(tau, tau_A, params, ind_m, ind_o, x_m_tau, x_o_tau);
 		x_tot = sum(x_arr);
     elseif state == 3 % only traditional successful
         ind_m = 0;
 		ind_o = 1;
-		x_arr = calculate_cap(tau, params, ind_m, ind_o, x_m_tau, x_o_tau);
+		x_arr = calculate_cap(tau, tau_A, params, ind_m, ind_o, x_m_tau, x_o_tau);
 		x_tot = sum(x_arr);
     else % nothing is successful
         assert(state == 4);
