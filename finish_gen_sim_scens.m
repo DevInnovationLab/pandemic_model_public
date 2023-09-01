@@ -1,34 +1,39 @@
 function outtable = finish_gen_sim_scens(sim_scens, params)
-	
+	% add production state and pandemic natural dur to simulation scenarios table
+
 	pandemic_dur_probs = params.pandemic_dur_probs;
 
     yr_start_arr = sim_scens.yr_start;
-	is_false_arr = sim_scens.is_false;
-	d1_arr = sim_scens.draw_state;
-	d2_arr = sim_scens.draw_natural_dur;
-	RD_score_arr = sim_scens.RD_score;
+    is_false_arr = sim_scens.is_false;
+    d1_arr       = sim_scens.draw_state;
+    d2_arr       = sim_scens.draw_natural_dur;
+    RD_score_arr = sim_scens.RD_score;
 
-	row_cnt = length(is_false_arr);
+	row_cnt = length(sim_scens.sim_num);
 
 	state_arr = NaN(row_cnt, 1);
 	natural_dur_arr = NaN(row_cnt, 1);
+    has_RD_benefit_arr = NaN(row_cnt, 1);
 
-	for i = 1:row_cnt
-		is_false = is_false_arr(i);
-		draw1 = d1_arr(i);
-		draw2 = d2_arr(i);
+	for i = 1:row_cnt % loop through each pandemic in each sim
+        is_false = is_false_arr(i);
+        draw1    = d1_arr(i);
+        draw2    = d2_arr(i);
 
         yr_start = yr_start_arr(i);
         
         if ~isnan(yr_start) && ~is_false
 
+            has_RD_benefit = 0;
             thold1 = params.p_b;
 	        thold2 = thold1 + params.p_m;
 	        thold3 = thold2 + params.p_o;
-    
+            
             if params.has_RD == 1
                 RD_score = RD_score_arr(i);
                 if RD_score >= params.RD_success_rate
+                    has_RD_benefit = 1;
+
                     thold1 = params.p_b + params.RD_impact_vaccine * 2;
 			        thold2 = thold1 + (params.p_m + params.RD_impact_vaccine);
 			        thold3 = thold2 + (params.p_o + params.RD_impact_vaccine);
@@ -55,7 +60,7 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
     
 	        state_arr(i) = state;
 	    	natural_dur_arr(i) = pandemic_natural_dur;
-
+            has_RD_benefit_arr(i) = has_RD_benefit;
         end
     end
 
@@ -63,6 +68,7 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
 
     outtable.state = state_arr;
     outtable.natural_dur = natural_dur_arr;
+    outtable.has_RD_benefit = has_RD_benefit_arr;
 
     outtable.state_desc = repmat({""}, row_cnt, 1);
     outtable.state_desc(outtable.state==1) = {"both"};
