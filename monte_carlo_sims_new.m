@@ -137,7 +137,7 @@ function monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, has_
         
     end
     fprintf('elapsed time (min): %0.1f\n', round(toc/60, 1));
-    fprint('Avg net value (bn): %d\n', mean(vax_net_benefits_bn_arr, 1));
+    fprintf('Avg net value (bn): %d\n', mean(vax_net_benefits_bn_arr, 1));
 
     sim_results = removevars(sim_results,{'RD_score', 'draw_state', 'draw_natural_dur'}); % remove the random draw columns
 
