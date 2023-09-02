@@ -1,4 +1,4 @@
-function [vax_benefits_arr, vax_fraction_cum_end, in_pandemic_marg_costs_m_PV, in_pandemic_marg_costs_o_PV, in_pandemic_fill_finish_costs_PV] = ...
+function [vax_fraction_cum_end, vax_benefits_PV, in_pandemic_marg_costs_m_PV, in_pandemic_marg_costs_o_PV, in_pandemic_tailoring_costs_PV] = ...
     run_pandemic(params, RD_benefit, yr_start, is_false, pandemic_natural_dur, state, intensity, cap_avail_m, cap_avail_o)
 
 	% run simulation for a pandemic of significant size
@@ -39,7 +39,7 @@ function [vax_benefits_arr, vax_fraction_cum_end, in_pandemic_marg_costs_m_PV, i
     %%%%%%%%%% BENEFITS %%%%%%%%%%
 
     if is_false == 1 % if is false positive, then no benefits / no vaccination
-        vax_benefits_arr = zeros(tot_months, 1);
+        vax_benefits_PV = zeros(tot_months, 1);
         vax_fraction_cum_end = NaN;
     else
         ML_arr = (params.value_of_death * params.P0 / 1000) * intensity ./ 12 ./ 10^6; % mortality lossses for during pandemic (monthly, in million)
@@ -51,16 +51,16 @@ function [vax_benefits_arr, vax_fraction_cum_end, in_pandemic_marg_costs_m_PV, i
         
         [h_arr, vax_fraction_cum] = h_integral(params, tot_months, cap_m_arr, cap_o_arr);
 
-        vax_benefits_arr = params.gamma .* h_arr .* TL_PV_arr; % in million
+        vax_benefits_PV = params.gamma .* h_arr .* TL_PV_arr; % in million
         vax_fraction_cum_end = vax_fraction_cum(end);
     end
 
     %%%%%%%%%% COSTS %%%%%%%%%%
     
     % fill and finish incurred regardless of false pos
-    in_pandemic_fill_finish_costs = zeros(tot_months, 1);
-    in_pandemic_fill_finish_costs(1) = cap_avail_m * (params.fill_finish_pct * params.k_m) + cap_avail_o * (params.fill_finish_pct * params.k_o);
-    in_pandemic_fill_finish_costs_PV = PV_factor .* in_pandemic_fill_finish_costs / 10^6; % in million
+    in_pandemic_tailoring_costs = zeros(tot_months, 1);
+    in_pandemic_tailoring_costs(1) = cap_avail_m * (params.tailoring_pct * params.k_m) + cap_avail_o * (params.tailoring_pct * params.k_o);
+    in_pandemic_tailoring_costs_PV = PV_factor .* in_pandemic_tailoring_costs / 10^6; % in million
 
     if is_false == 1
         in_pandemic_marg_costs_m_PV = zeros(tot_months, 1);

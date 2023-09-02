@@ -51,7 +51,7 @@ function params = params_default()
     params.k_m = 1.5;	% unit cost of mRNA capacity in advance
 	params.k_o = 3.0;	% unit cost of traditional capacity in advance
 	
-	params.fill_finish_pct = 1/3; % pct of unit cost of advance capacity that's "fill and finish" (incurred at start of pandemic)
+	params.tailoring_pct = 1/3; % pct of unit cost of advance capacity that's "fill and finish" (incurred at start of any pandemic, incl false positives)
 
 	params.c_m = 6;		% marginal cost of producing mRNA vaccines
 	params.c_o = 3;		% marginal cost of producing traditional vaccines
