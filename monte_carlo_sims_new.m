@@ -61,8 +61,7 @@ function monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, has_
 
     cluster = parcluster;
     parfor (s = 1:sim_cnt, cluster) % loop through each simulation scenario
-%     for s = 1:1 % loop through each simulation scenario
-
+    % for s = 1:sim_cnt % loop through each simulation scenario
 %         if s == 2
 %             blah = 1;
 %         end
@@ -84,7 +83,6 @@ function monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, has_
         in_p_marg_costs_PV_s = 0; 
         in_p_tailoring_costs_PV_s = 0;
 
-
         if row_cnt_s == 1 && isnan(yr_start_arr(1)) %  no pandemic in this simulation (benefits and costs stay at their default of zero)
             
             res = gen_output_struct(sim_scens_s(1, :), z_m/10^9, z_o/10^9, 0, NaN, 0, 0, 0);
@@ -92,6 +90,9 @@ function monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, has_
 
         else
             for i = 1:row_cnt_s % for pandemic i in sim s
+                % if i == 2
+                %     blah = 1+1;
+                % end
                 yr_start             = yr_start_arr(i);
                 pandemic_natural_dur = natural_dur_arr(i);
                 state                = state_arr(i);

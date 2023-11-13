@@ -8,12 +8,9 @@ function params = params_default()
 	params.P0 = 7.89*10^9;	% base year population
 	params.Y0 = 12236.6;		% base year GDP per capita
 
-	params.i_COVID = 0.32;	% annual deaths per thousand
-	params.i_star = params.i_COVID/2; % min intensity for next pandemic
-
-    % this is the intensity threshold that doubles the prob of being in a pandemic that exceeds i_star (used for when assuming false pos rate is 50%)
+    % this is the intensity threshold that doubles the prob of being in a pandemic that exceeds i_star (used for when assuming false pos rate is 50%) (NOT USED)
     % this value is calculated in "arrival_distribution.m"
-    params.i_star_w_false = 0.0559;
+    % params.i_star_w_false = 0.0559;
 
 	arrival.sigma = 0.0113;
 	arrival.xi = 1/0.71;
@@ -68,7 +65,7 @@ function params = params_default()
 	params.g_m = 0.4; 	% fraction of at risk capacity unsuccessful/repurpose-able in mRNA platform
 	params.g_o = 0.4; 	% fraction of at risk capacity unsuccessful/repurpose-able in traditional platform
 
-	params.tau_A = 3;	% months to approve / prep for vaccination campaign
+	params.tau_A = 10;	% months to approve / prep for vaccination campaign
 	params.tau_m = 2;	% months to repurpose mRNA candidate
 	params.tau_o = 6;	% months to repurpose traditional candidate
 
@@ -85,7 +82,7 @@ function params = params_default()
 
     params.sim_periods = 200; % number of yrs in each simulation
 
-    params.pandemic_dur_probs = [1 0 0]; % prob of pandemic of duration 1y, 2y, 3y (respectively)
+    params.pandemic_dur_probs = [0 1 0]; % prob of pandemic of duration 1y, 2y, 3y (respectively)
 	assert(sum(params.pandemic_dur_probs)==1)
 
     % parameters for R&D (if has_RD == 1)

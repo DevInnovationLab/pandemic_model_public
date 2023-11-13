@@ -3,6 +3,7 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
 
 	pandemic_dur_probs = params.pandemic_dur_probs;
 
+    sim_num_arr  = sim_scens.sim_num;
     yr_start_arr = sim_scens.yr_start;
     is_false_arr = sim_scens.is_false;
     d1_arr       = sim_scens.draw_state;
@@ -15,12 +16,18 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
 	natural_dur_arr = NaN(row_cnt, 1);
     has_RD_benefit_arr = NaN(row_cnt, 1);
 
+    remove_arr = zeros(row_cnt, 1); % indicator for if row is to be removed (due to multiple pandemics in a row otherwise)
+
+    sim_num_prev = NaN;
+    yr_start_prev = NaN;
+
 	for i = 1:row_cnt % loop through each pandemic in each sim
         is_false = is_false_arr(i);
         draw1    = d1_arr(i);
         draw2    = d2_arr(i);
 
         yr_start = yr_start_arr(i);
+        sim_num = sim_num_arr(i);
         
         if ~isnan(yr_start) && ~is_false
 
@@ -62,6 +69,13 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
 	    	natural_dur_arr(i) = pandemic_natural_dur;
             has_RD_benefit_arr(i) = has_RD_benefit;
         end
+
+        if isequal(sim_num_prev, sim_num) && isequal(yr_start, yr_start_prev+1) % for pandemics of 2yr duration, remove second pandemic in back-to-back pair (TODO: generalize to duration of X years)
+            remove_arr(i) = 1;
+        else
+            sim_num_prev = sim_num;
+            yr_start_prev = yr_start;
+        end
     end
 
     outtable = sim_scens;
@@ -70,7 +84,10 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
     outtable.natural_dur = natural_dur_arr;
     outtable.has_RD_benefit = has_RD_benefit_arr;
 
-    outtable.state_desc = repmat({""}, row_cnt, 1);
+    outtable(remove_arr == 1,:) = [];
+
+    row_cnt2 = row_cnt - sum(remove_arr);
+    outtable.state_desc = repmat({""}, row_cnt2, 1);
     outtable.state_desc(outtable.state==1) = {"both"};
     outtable.state_desc(outtable.state==2) = {"mRNA_only"};
     outtable.state_desc(outtable.state==3) = {"trad_only"};

@@ -42,12 +42,17 @@ function [vax_fraction_cum_end, vax_benefits_PV, in_pandemic_marg_costs_m_PV, in
         vax_benefits_PV = zeros(tot_months, 1);
         vax_fraction_cum_end = NaN;
     else
-        ML_arr = (params.value_of_death * params.P0 / 1000) * intensity ./ 12 ./ 10^6; % mortality lossses for during pandemic (monthly, in million)
-        OL_arr = (params.Y0 * params.P0 / 100) * exp(0.7393) * (intensity^0.4561) ./ 12 ./ 10^6; % output losses for during pandemic (monthly, in million)
+        ML = (params.value_of_death * params.P0 / 1000) * intensity ./ 12 ./ 10^6; % mortality lossses for during pandemic (monthly, in million)
+        OL = (params.Y0 * params.P0 / 100) * exp(0.7393) * (intensity^0.4561) ./ 12 ./ 10^6; % output losses for during pandemic (monthly, in million)
         
-        LL_arr = (10/13.8) * OL_arr; 
-        TL_arr = ML_arr + OL_arr + LL_arr; % in million
-        TL_PV_arr = PV_factor .* growth_rate .* TL_arr; % pv of cashflows, in million
+        if tot_months > 12 % rescale monthly harm so as to not blow up harm with pandemic duration (keep total harm constant at harm from a pandemic of 1 yr duration)
+            ML = ML * 12 / tot_months; 
+            OL = OL * 12 / tot_months;
+        end
+
+        LL = (10/13.8) * OL; 
+        TL = ML + OL + LL; % in million
+        TL_PV_arr = PV_factor .* growth_rate .* TL; % pv of cashflows, in million
         
         [h_arr, vax_fraction_cum] = h_integral(params, tot_months, cap_m_arr, cap_o_arr);
 

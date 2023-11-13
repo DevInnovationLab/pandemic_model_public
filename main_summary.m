@@ -23,7 +23,7 @@ if reload_data == 1
 		    avg_res0 = varfun(@mean, sim_results); % collapse to a rown of avgs
 		    avg_res0 = remove_mean_from_col_names(avg_res0); % remove "mean_" from var names
 
-            avg_res0 = renamevars(avg_res0, 'vax_costs_in_p_ff_bn_arr', 'vax_costs_in_p_tailoring_bn_arr'); % TEMP
+%             avg_res0 = renamevars(avg_res0, 'vax_costs_in_p_ff_bn_arr', 'vax_costs_in_p_tailoring_bn_arr'); % TEMP
     
 		    avg_res0.scen_name = file_label; % add a scen name col
 		    avg_res = [avg_res0(:,end) avg_res0(:, 1:end-1)]; % make scen name be first column
@@ -106,12 +106,18 @@ title("Costs breakdown")
 legend({'capacity (upf)','capacity (in-p)', 'marginal costs (in-p)', 'tailoring costs (in-p)', 'R&D'}, ...
     'FontSize', 12, 'Orientation','horizontal', 'NumColumns', 3, 'Location','southoutside')
 set(gca,'xticklabel', x_cell)
-ylim([0 120])
+ylim([0 150])
 ax = gca;
 ax.FontSize = 14;
 
 % xlabel('scenario')
-ylabel('$bn (pv)')
+ylabel('$bn (pv)');
+
+fprintf('Net benefits: %d (%s) | %d (%s) | %d (%s) | %d (%s)\n', ... 
+	round(net_benefits(1), 0), x_cell{1}, ...
+	round(net_benefits(2), 0), x_cell{2}, ...
+	round(net_benefits(3), 0), x_cell{3}, ...
+	round(net_benefits(4), 0), x_cell{4});
 
 if save_fig == 1
 	outfilename = 'sim_results_summary_figs';

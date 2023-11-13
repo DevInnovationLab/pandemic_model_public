@@ -1,3 +1,6 @@
+addpath(genpath('/Users/catherineche/Documents/github/pandemic_model/helper_funcs'));
+addpath(genpath('/Users/catherineche/Documents/github/pandemic_model/arrival_distributions'));
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%% CEPI levels of preparedness
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
