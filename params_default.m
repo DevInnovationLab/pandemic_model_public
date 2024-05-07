@@ -35,43 +35,47 @@ function params = params_default()
 	params.arrival = arrival;
 
 	params.value_of_death = 1.3*10^6; % we use this to monetize death, it is not conceptually a VSL
+    % params.value_of_death = 0.13*10^6; % we use this to monetize death, it is not conceptually a VSL
 
 	params.theta = 0.25; % fraction reduction of pandemic-time investments due to advance capacity
 
-	params.delta = 0.08; 	% annual depreciation (=d in paper)
-	params.alpha = 0.7; 	% fraction advance investment recoverable via rental (=phi in paper)
+	params.delta = 0.19; 	% annual depreciation (=d in paper) (LB)
+	params.alpha = 0.40; 	% fraction advance investment recoverable via rental (=phi in paper)
 
 	%%% costs are in units of per course (there can be more than 1 dose per
     %%% course, typically two doses per course)
     params.mRNA_share = 0.5; % what pct of capacity is mRNA platform (remainder is traditional platform)
 
-    params.k_m = 1.5;	% unit cost of mRNA capacity in advance
-	params.k_o = 3.0;	% unit cost of traditional capacity in advance
+    params.capacity_kept = 0.5; % what proportion of capacity is kept after a pandemic (pseudo LB)
+
+    params.k_m = 3.25;	% unit cost of mRNA capacity in advance (LB)
+	params.k_o = 0.96;	% unit cost of traditional capacity in advance (LB)
 	
 	params.tailoring_pct = 1/3; % pct of unit cost of advance capacity that's "fill and finish" (incurred at start of any pandemic, incl false positives)
 
-	params.c_m = 6;		% marginal cost of producing mRNA vaccines
-	params.c_o = 3;		% marginal cost of producing traditional vaccines
+	params.c_m = 34;		% marginal cost of producing mRNA vaccines (LB per dose)
+	params.c_o = 17;		% marginal cost of producing traditional vaccines (LB per dose)
 
 	params.epsilon = 1;	% decreasing returns to capacity installed during pandemic
 
-	params.p_b = 0.5; 	% prob both technologies are successful
-	params.p_m = 0.15;	% prob only mRNA successful
-	params.p_o = 0.15; 	% prob only traditional platform successful
+	% adds up to 40% total
+	params.p_b = 0.25; 	% prob both technologies are successful
+	params.p_m = 0.075;	% prob only mRNA successful
+	params.p_o = 0.075;    % prob only traditional platform successful
 
-	params.f_m = 0.3; 	% fraction of at risk capacity successful in mRNA platform
-	params.f_o = 0.3; 	% fraction of at risk capacity successful in traditional platform
+	params.f_m = 0.2; 	% fraction of at risk capacity successful in mRNA platform
+	params.f_o = 0.2; 	% fraction of at risk capacity successful in traditional platform
 
 	params.g_m = 0.4; 	% fraction of at risk capacity unsuccessful/repurpose-able in mRNA platform
 	params.g_o = 0.4; 	% fraction of at risk capacity unsuccessful/repurpose-able in traditional platform
 
-	params.tau_A = 10;	% months to approve / prep for vaccination campaign
+	params.tau_A = 14;	% months to approve / prep for vaccination campaign (in status quo, is it tau_A + 1, as surveillance generates possibility of one month quicker)
 	params.tau_m = 2;	% months to repurpose mRNA candidate
 	params.tau_o = 6;	% months to repurpose traditional candidate
 
 	params.gamma = 0.5; 	% fraction of remaining harm mitigated by vaccine
 
-	params.T = 6;	% months to reach target vaccination rate
+% 	params.T = 6;	% months to reach target vaccination rate (don't think this is actually used now?)
 
 	params.beta = 100*10^6;	% in-pandemic kink in capital cost function
 
@@ -82,24 +86,49 @@ function params = params_default()
 
     params.sim_periods = 200; % number of yrs in each simulation
 
-    params.pandemic_dur_probs = [0 1 0]; % prob of pandemic of duration 1y, 2y, 3y (respectively)
+    params.pandemic_dur_probs = [0.5 0.2 0.3]; % prob of pandemic of duration 1y, 2y, 3y (respectively)
 	assert(sum(params.pandemic_dur_probs)==1)
 
     % parameters for R&D (if has_RD == 1)
     params.has_RD = 0;
 
-    params.RD_spend = 5; % in billion, in PV
-    params.RD_success_rate = 0.5; % what pct of time R&D spend matches the pandemic pathogen realized
+    params.RD_spend = 1.4 * 3 * 6; % in billion, nominal over period specified by RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
+    % params.RD_success_rate = 0.5; % what pct of time R&D spend matches the pandemic pathogen realized -- DEPRECIATED
 
-    params.RD_impact_time = 1; % if R&D successful, how much tau_A is shortened by
+    params.RD_impact_time = 12; % if R&D successful, how much tau_A is shortened by
     assert(params.RD_impact_time <= params.tau_A);
 
-    params.RD_impact_vaccine = 0.01; % if R&D successful, how much the prob of vaccine is increased (for 2x for p_b, 1x for p_m, and 1x for p_o)
+    params.RD_impact_vaccine = 0.05; % if R&D successful, how much the prob of vaccine is increased (for 2x for p_b, 1x for p_m, and 1x for p_o)
     assert(params.RD_impact_vaccine * 4 <= 1 - params.p_b - params.p_m - params.p_o);
+
+    params.RD_inp_noRD =  0.776297560 ; % bn of nominal
+    params.RD_inp_withRD =  0.531221781; % bn of nominal
 
     % allows user to specify level of advanced capacity
     params.has_user_cap_setting = 0;
 	params.user_z_m = NaN;
 	params.user_z_o = NaN;
+
+	% this freq table lists the families and the probabilty mass associated with them (needs to sum to 1)
+	params.RD_family_freq_table = [
+		1, 0.1;
+		2, 0.1;
+		3, 0.1;
+		4, 0.1;
+		5, 0.1;
+		6, 0.1;
+		7, 0.1;
+		8, 0.1;
+		9, 0.1;
+	   10, 0.1
+	];
+
+	params.RD_family_invested = [ 5 6 7 8 9 10 ]; % families that we invest R&D in
+
+	params.RD_benefit_start = 15; % even with RD benefit, won't realize any until after this year
+
+	params.adv_cap_build_period = 30; % number of years it takes to finish building adv capacity
+
+	params.surveil_spend = 5; % annual spending on surveillance (if there is surveillance), nom bn
 
 end

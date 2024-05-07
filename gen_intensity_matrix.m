@@ -1,12 +1,12 @@
 function gen_intensity_matrix(has_false_pos, sim_cnt)
 
-	rng(1);
 	save_output = 1;
 
     draw_lower = 0.867; % this is the cumulative prob for mu < 10^{-3} 
 
     if has_false_pos == 1
         draw_upper = 0.9988; % if the uniform draw exceeds this, cannot invert (set to mu_prime_prime)
+        % draw_upper = 0.995; % if the uniform draw exceeds this, cannot invert (set to mu_prime_prime)
     else
         draw_upper = 0.9994; % if the uniform draw exceeds this, cannot invert (set to mu_prime_prime)
     end
@@ -44,7 +44,7 @@ function gen_intensity_matrix(has_false_pos, sim_cnt)
         r = unifrnd(0, 1, periods, 1); % array of uniform random variables for the periods
         i_arr = NaN(periods, 1); % array of intensities (inverted from the uniform variables)
         
-        for t = 2:periods-1 % don't want pandemic in first or last year (for calculation/indexing reasons)
+        for t = 2:periods % don't want pandemic in first or last year (for calculation/indexing reasons)
             val = r(t);
 
             if val <= draw_lower
