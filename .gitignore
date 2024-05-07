@@ -11,5 +11,4 @@ gen_sim_scens_old.m
 arrival_distribution_graph.m
 *.mat
 
-data/raw/*
-data/clean/*
+data/*
