@@ -1,12 +1,6 @@
 %%% calling file
 
-if ismac
-    addpath(genpath('/Users/catherineche/Documents/github/pandemic_model/helper_funcs'));
-    addpath(genpath('/Users/catherineche/Documents/github/pandemic_model/arrival_distributions'));
-else
-    addpath(genpath('/accounts/grad/cjche/Documents/pandemic_model/helper_funcs'));
-    addpath(genpath('/accounts/grad/cjche/Documents/pandemic_model/arrival_distributions'));
-end
+addpath(genpath('./pandemic_model'));
 
 sim_cnt = 10000;
 
