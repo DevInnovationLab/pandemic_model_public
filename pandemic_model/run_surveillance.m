@@ -1,4 +1,4 @@
-function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_false_arr, has_surveil, threshold_surveil_arr)
+function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_false_arr, enhanced_surveillance, threshold_surveil_arr)
 	% only computes, no random number generation
 
 	threshold_no_surveil = threshold_surveil_arr(1);
@@ -11,18 +11,18 @@ function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_fals
 	
 		is_pandemic_0 = ~is_false_arr(i); % true state of the world
 
-		if has_surveil == 1
+		if enhanced_surveillance == 1
 			prepare_for_pandemic1 = posterior1(i) > threshold_surveil; % decision rule from first set of signals
 		else
 			prepare_for_pandemic1 = posterior1(i) > threshold_no_surveil;
 		end
 
-		if has_surveil && ~prepare_for_pandemic1 % a second signal if has surveillance and hasn't acted
+		if enhanced_surveillance && ~prepare_for_pandemic1 % a second signal if has surveillance and hasn't acted
 
 			prepare_for_pandemic2 = posterior2(i) > threshold_surveil; % decision rule from second set of signals
 		end
 		
-		if has_surveil == 1 % has access to two sets of signals
+		if enhanced_surveillance == 1 % has access to two sets of signals
 			
 			if prepare_for_pandemic1
 				prep_start_month = 0;

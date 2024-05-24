@@ -21,8 +21,8 @@ i_star_threshold = i_COVID / 2; % min intensity for next pandemic
 
 rng(1);
 
-has_false_pos = 1;
-gen_all_sim_scens(has_false_pos, sim_cnt, i_star_threshold); 
+include_false_positives = 1;
+gen_all_sim_scens(include_false_positives, sim_cnt, i_star_threshold); 
 
 ind_adv = 0;
 ind_RD = 0;
@@ -42,11 +42,11 @@ for thold = thold_rng
 
         has_surveil = 0;
         outfile_label = sprintf('adv_%d_false_1_RD_%d_surveil_%d_thold_%0.2f', ind_adv, ind_RD, has_surveil, thold);
-        [net_no_surveil, ~, ~] = monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, has_false_pos, has_surveil, threshold_surveil_arr);
+        [net_no_surveil, ~, ~] = monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, include_false_positives, has_surveil, threshold_surveil_arr);
 
         has_surveil = 1;
         outfile_label = sprintf('adv_%d_false_1_RD_%d_surveil_%d_thold_%0.2f', ind_adv, ind_RD, has_surveil, thold);
-        [net_with_surveil, ~, ~] = monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, has_false_pos, has_surveil, threshold_surveil_arr);
+        [net_with_surveil, ~, ~] = monte_carlo_sims_new(params_user, outfile_label, has_full_adv_cap, include_false_positives, has_surveil, threshold_surveil_arr);
 
         output_net(i,:) = [thold round(net_no_surveil,1) round(net_with_surveil,1)];
         i = i+1;

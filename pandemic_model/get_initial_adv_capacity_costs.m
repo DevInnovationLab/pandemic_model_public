@@ -1,13 +1,7 @@
-function [z_m0_arr, z_o0_arr, cap_costs_arr_PV0, cap_costs_arr_nom0] = get_initial_adv_capacity_costs(params, pv)
+function [z_m0_arr, z_o0_arr, cap_costs_arr_PV0, cap_costs_arr_nom0] = get_initial_adv_capacity_costs(params)
     
-    % Takes params.adv_cap_build_period years to finish advanced program
-    if params.has_user_cap_setting == 1 % user setting takes priority
-        z_m = params.user_z_m;
-        z_o = params.user_z_o;
-    else
-        % assumes has full adv capacity
-        [z_m, z_o] = get_adv_capacity(params); % get advanced capacity, in millions
-    end
+    z_m = params.z_m
+    z_o = params.z_o
 
     z_m_per_yr = z_m / params.adv_cap_build_period;
     z_o_per_yr = z_o / params.adv_cap_build_period;

@@ -50,9 +50,9 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
                         pathogen_family = pathogen_family_arr(i);
                         if sum(params.RD_family_invested == pathogen_family) == 1
                             has_RD_benefit = 1;
-                            thold1 = params.p_b + params.RD_impact_vaccine * 2;
-        			        thold2 = thold1 + (params.p_m + params.RD_impact_vaccine);
-        			        thold3 = thold2 + (params.p_o + params.RD_impact_vaccine);
+                            thold1 = params.p_b + params.RD_success_rate_increase_per_platform * 2;
+        			        thold2 = thold1 + (params.p_m + params.RD_success_rate_increase_per_platform);
+        			        thold3 = thold2 + (params.p_o + params.RD_success_rate_increase_per_platform);
                         end
                     end
                 	

@@ -4,7 +4,7 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
 	% run simulation for a pandemic of significant size (not false pos)
 
     if RD_benefit == 1
-        tau_A = tau_A - params.RD_impact_time;
+        tau_A = tau_A - params.RD_speedup_months;
     end
 
     tot_months = pandemic_natural_dur * 12; % total months of pandemic

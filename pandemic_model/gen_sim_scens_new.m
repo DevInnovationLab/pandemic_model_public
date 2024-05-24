@@ -1,12 +1,10 @@
-function gen_sim_scens_new(has_false_pos, i_star_threshold, RD_family_freq_table)
+function outpath = gen_sim_scens_new(include_false_positives, i_star_threshold, RD_family_freq_table, int_matrix_path, outdirpath)
     % Generate simulation senarios: allow for multiple pandemics
 
     save_output = 1;
 
     % load intensity matrix
-    int_matrix_file = sprintf('int_matrix_has_false_%d.mat', has_false_pos); % this file is made by gen_intensity_matrix.m
-    load(int_matrix_file,'int_matrix');
-
+    load(int_matrix_path,'int_matrix');
     sim_cnt = int_matrix(end, 1);
 
     % initialize scenario table
@@ -56,7 +54,7 @@ function gen_sim_scens_new(has_false_pos, i_star_threshold, RD_family_freq_table
 
     row_cnt = size(sim_scens,1); % num of sims times pandemics per sim
     
-    if has_false_pos == 1
+    if include_false_positives == 1
         draw_is_false = unifrnd(0, 1, row_cnt, 1);
         is_false_arr = draw_is_false < .5; % false pos half of the time
         sim_scens.is_false = double(is_false_arr);
@@ -75,12 +73,11 @@ function gen_sim_scens_new(has_false_pos, i_star_threshold, RD_family_freq_table
     sim_scens.posterior2 = out_posteriors(:, 2);
 
     if save_output == 1
-        outfilename = sprintf('sim_scens_has_false_%d', has_false_pos);
-    	% delete(outfilename);
-        % writetable(sim_scens, outfilename,'Sheet',1);
-
-        save(outfilename,'sim_scens');
-        fprintf('printed output to %s.mat\n', outfilename);
+        outpath = fullfile(outdirpath, sprintf('sim_scens_has_false_%d', include_false_positives));
+        save(outpath,'sim_scens');
+        fprintf('printed output to %s.mat\n', outpath);
+    else
+        outpath = NaN;
     end
 
 end

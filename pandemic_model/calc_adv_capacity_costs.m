@@ -11,7 +11,7 @@ function out = calc_adv_capacity_costs(params, yr_start, prep_start_month, nom_c
 	cap_costs_arr = zeros(periods, 1); % array of costs
 	cap_costs_arr(yr_start) = (params.delta)^(1/12 * (12-prep_start_month-1)) * nom_cost; % for the remaining months in the build year, no rental and incurs depreciation
 	
-	cap_costs_arr(yr_start+1:end) = (1-params.alpha) * params.delta * nom_cost * capacity_kept; % subsequent years, incur depreciation minus rental income on fraction kept if not adv
+	cap_costs_arr(yr_start+1:end) = (1-params.rental_fraction) * params.delta * nom_cost * capacity_kept; % subsequent years, incur depreciation minus rental income on fraction kept if not adv
 	cap_costs_arr_PV = PV_factor_yr .* cap_costs_arr; % in million
 
 	cap_costs_arr(yr_start) = cap_costs_arr(yr_start) + nom_cost; % add in the upfront cost to the series

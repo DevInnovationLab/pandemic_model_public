@@ -1,6 +1,7 @@
-function gen_all_sim_scens(has_false_pos, sim_cnt, i_star_threshold, RD_family_freq_table)
+function sim_scens_path = gen_all_sim_scens(arrival_params, include_false_positives, sim_cnt, ...
+	i_star_threshold, RD_family_freq_table, sim_periods, outdirpath)
 	
-	gen_intensity_matrix(has_false_pos, sim_cnt); 
-	gen_sim_scens_new(has_false_pos, i_star_threshold, RD_family_freq_table);
+	int_matrix_path = gen_intensity_matrix(arrival_params, include_false_positives, sim_cnt, sim_periods, outdirpath); 
+	sim_scens_path = gen_sim_scens_new(include_false_positives, i_star_threshold, RD_family_freq_table, int_matrix_path, outdirpath);
 
 end

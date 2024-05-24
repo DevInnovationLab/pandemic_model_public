@@ -1,0 +1,8 @@
+{
+    "num_simulations": 10,
+    "sim_periods": 200,
+    "outdir": "./output",
+    "scenario_configs": "./config/scenario_configs/test",
+    "seed": 1,
+    "include_false_positives": 1
+}

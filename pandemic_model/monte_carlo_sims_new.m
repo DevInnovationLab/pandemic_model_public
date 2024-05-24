@@ -1,4 +1,4 @@
-function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_user, outfile_label, has_false_pos, has_surveil, threshold_surveil_arr)
+function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params, sim_scens_path)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % NOTE:
@@ -7,30 +7,19 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
     % for display, for which we put capacity and anything in dollars into bn of units)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    save_output = params_user.save_output;
-
     %%%%%%%%%%%%%%%% PARAMETERS
 
-    params = params_default; % main source of params
-
-    % user parameters override defaults
-    if ~isempty(params_user)
-        fn = fieldnames(params_user);
-        for k=1:numel(fn)
-            params.(fn{k}) = params_user.(fn{k});
-        end
-    end
-
     %%%%%%% LOAD SCENS
-    % scen_file_name = sprintf('sim_scens_has_false_%d.xlsx', has_false_pos); % this file is made by gen_sim_scens_new.m
+    % scen_file_name = sprintf('sim_scens_has_false_%d.xlsx', include_false_positives); % this file is made by gen_sim_scens_new.m
     % sim_scens0 = readtable(scen_file_name,'Sheet','Sheet1');
 
-    scen_file_name = sprintf('sim_scens_has_false_%d', has_false_pos);
-    load(scen_file_name, 'sim_scens');
+    load(sim_scens_path, 'sim_scens');
     sim_scens0 = sim_scens;
     clear sim_scens;
 
-    sim_scens0.prep_start_month = run_surveillance(sim_scens0.posterior1, sim_scens0.posterior2, sim_scens0.is_false, has_surveil, threshold_surveil_arr);
+    sim_scens0.prep_start_month = run_surveillance(sim_scens0.posterior1, ...
+        sim_scens0.posterior2, sim_scens0.is_false, params.enhanced_surveillance, params.surveillance_thresholds);
+    
     sim_scens = finish_gen_sim_scens(sim_scens0, params); % adds state, natural_dur and has_RD_benefit columns
 
     sim_scens = removevars(sim_scens, {'draw_state', 'draw_natural_dur', 'posterior1', 'posterior2'}); % remove the random draw columns
@@ -38,13 +27,13 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
 
     sim_cnt = max(sim_scens.sim_num); % number of simulations
 
-    vax_net_benefits_bn_arr   = zeros(sim_cnt, 1); % array of net benefits for the simulations
-    vax_benefits_bn_arr       = zeros(sim_cnt, 1); % array of benefits
-    vax_costs_bn_arr          = zeros(sim_cnt, 1); % array of costs
+    vax_net_benefits_bn_arr = zeros(sim_cnt, 1); % array of net benefits for the simulations
+    vax_benefits_bn_arr = zeros(sim_cnt, 1); % array of benefits
+    vax_costs_bn_arr = zeros(sim_cnt, 1); % array of costs
     
-    vax_costs_inp_m_bn_arr   = zeros(sim_cnt, 1); % array of costs for in pandemic marginal costs
-    vax_costs_inp_tailoring_bn_arr  = zeros(sim_cnt, 1); % array of costs for in pandemic fill & finish costs
-    vax_costs_inp_RD_bn_arr  = zeros(sim_cnt, 1); % array of costs for in pandemic RD costs
+    vax_costs_inp_m_bn_arr = zeros(sim_cnt, 1); % array of costs for in pandemic marginal costs
+    vax_costs_inp_tailoring_bn_arr = zeros(sim_cnt, 1); % array of costs for in pandemic fill & finish costs
+    vax_costs_inp_RD_bn_arr = zeros(sim_cnt, 1); % array of costs for in pandemic RD costs
     vax_costs_inp_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for in pandemic at risk capacity investments
     vax_costs_upf_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for adv capacity investments
 
@@ -77,19 +66,21 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
     sim_out_arr_costs_surveil_PV = zeros(sim_cnt, params.sim_periods);
     surveil_spend_bn_PV = 0;
     
-    if has_surveil == 1 
+    if params.enhanced_surveillance == 1 
         time_arr = (1:params.sim_periods)';
         PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
-        surveil_spend_bn_arr = repmat(params.surveil_spend, params.sim_periods, 1);
-        surveil_spend_bn_PV = sum(surveil_spend_bn_arr .* PV_factor_yr);
+        surveil_spend_bn_init = repmat(params.surveil_annual_installation_spend, 1, params.surveil_installation_years);
+        surveil_spend_bn_maintenance = repmat(params.surveil_maintenance_spend, 1, params.sim_periods - params.surveil_installation_years);
+        surveil_spend_bn_arr = [surveil_spend_bn_init surveil_spend_bn_maintenance];
+        surveil_spend_bn_PV = sum(surveil_spend_bn_arr' .* PV_factor_yr);
 
-        sim_out_arr_costs_surveil_nom = repmat(params.surveil_spend * 1000, sim_cnt, params.sim_periods);
-        sim_out_arr_costs_surveil_PV = sim_out_arr_costs_surveil_nom .* repmat(PV_factor_yr', sim_cnt, 1 );
+        sim_out_arr_costs_surveil_nom = repmat(surveil_spend_bn_arr, sim_cnt, 1);
+        sim_out_arr_costs_surveil_PV = sim_out_arr_costs_surveil_nom .* repmat(PV_factor_yr', sim_cnt, 1);
     end
     
     %%% benefits
-    sim_out_arr_benefits_vaccine_nom    = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_benefits_vaccine_PV     = zeros(sim_cnt, params.sim_periods);
+    sim_out_arr_benefits_vaccine_nom  = zeros(sim_cnt, params.sim_periods);
+    sim_out_arr_benefits_vaccine_PV  = zeros(sim_cnt, params.sim_periods);
 
     inp_RD_nom = params.RD_inp_noRD * 1000; % mn of nominal
     RD_spend_bn_PV = 0;
@@ -108,14 +99,14 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
     end
 
     tic;
-    fprintf('Starting simulations for scen %s ... \n', outfile_label);
+    fprintf('Starting simulations...');
 
     cluster = parcluster;
     parfor (s = 1:sim_cnt, cluster) % loop through each simulation scenario
-%     for s =1:500
+    %for s =1:500
 
-        idx         = sim_scens.sim_num == s; % indices of rowsinu for sim s
-        row_cnt_s   = sum(idx>0); % number of rows for this simulation
+        idx = sim_scens.sim_num == s; % indices of rowsinu for sim s
+        row_cnt_s = sum(idx>0); % number of rows for this simulation
         sim_scens_s = sim_scens(idx, :); % filter sim_scens for rows relevant for this simulation
 
         [yr_start_arr, intensity_arr, natural_dur_arr, is_false_arr, state_arr, has_RD_benefit_arr, prep_start_month_arr] = ...
@@ -199,7 +190,7 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
                     %%% (Case 2 and 3 are reflected in a longer tau_A)
 
                     % capacity costs should be incurred at one month into prep start
-                    [cap_costs_arr_PV, cap_costs_arr_nom, cap_avail_m, cap_avail_o] = calc_avail_capacity(yr_start, prep_start_month, params, x_m, z_m, x_o, z_o, i); 
+                    [cap_costs_arr_PV, cap_costs_arr_nom, cap_avail_m, cap_avail_o] = calc_avail_capacity(yr_start, prep_start_month, params, x_m, z_m, x_o, z_o, i);
 
                     inp_cap_costs_PV = sum(cap_costs_arr_PV, 1);
                     inp_cap_costs_PV_s = inp_cap_costs_PV_s + inp_cap_costs_PV;
@@ -286,7 +277,7 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
             vax_costs_bn_s = vax_costs_bn_s + RD_spend_bn_PV;
         end
 
-        if has_surveil == 1
+        if params.enhanced_surveillance == 1
             vax_costs_bn_s = vax_costs_bn_s + surveil_spend_bn_PV;
         end
 
@@ -314,7 +305,7 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
     end
 
     vax_costs_surveil_bn_arr = zeros(sim_cnt, 1);
-    if has_surveil == 1
+    if params.enhanced_surveillance == 1
         vax_costs_surveil_bn_arr = repmat(surveil_spend_bn_PV, sim_cnt, 1);
     end
 
@@ -331,8 +322,8 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params_use
 
     sim_results_sum = [sim_results_sum0(:,end) sim_results_sum0(:, 1:end-1)]; % make sim_num be first column
 
-    if save_output == 1
-        save_to_file(outfile_label, sim_results_sum, sim_results, ...
+    if params.save_output == 1
+        save_to_file(params.scenario_name, params.outdirpath, sim_results_sum, sim_results, ...
             sim_out_arr_costs_adv_cap_nom, sim_out_arr_costs_adv_cap_PV, ...
             sim_out_arr_costs_adv_RD_nom, sim_out_arr_costs_adv_RD_PV, ...
             sim_out_arr_costs_surveil_nom, sim_out_arr_costs_surveil_PV, ...

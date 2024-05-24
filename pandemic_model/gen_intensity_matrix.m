@@ -1,18 +1,17 @@
-function gen_intensity_matrix(has_false_pos, sim_cnt)
+function outpath = gen_intensity_matrix(arrival_params, include_false_positives, sim_cnt, sim_periods, outdirpath)
 
 	save_output = 1;
 
     draw_lower = 0.867; % this is the cumulative prob for mu < 10^{-3} 
 
-    if has_false_pos == 1
+    if include_false_positives == 1
         draw_upper = 0.9988; % if the uniform draw exceeds this, cannot invert (set to mu_prime_prime)
         % draw_upper = 0.995; % if the uniform draw exceeds this, cannot invert (set to mu_prime_prime)
     else
         draw_upper = 0.9994; % if the uniform draw exceeds this, cannot invert (set to mu_prime_prime)
     end
 
-    params = params_default;
-    arrival = params.arrival;
+    arrival = arrival_params;
 
 	% parameters that need to be unpacked for functions to work
 
@@ -22,7 +21,7 @@ function gen_intensity_matrix(has_false_pos, sim_cnt)
     sigma = arrival.sigma;
     xi = arrival.xi;
 
-    if has_false_pos == 1
+    if include_false_positives == 1
         w = arrival.w/2;
     else
         w = arrival.w;
@@ -34,7 +33,7 @@ function gen_intensity_matrix(has_false_pos, sim_cnt)
     fours = arrival.fours;
     fives = arrival.fives;
 
-    periods = params.sim_periods;
+    periods = sim_periods;
     i0 = [mu, mu_prime_prime];
 
 	int_matrix = NaN(sim_cnt, periods+1);
@@ -68,11 +67,11 @@ function gen_intensity_matrix(has_false_pos, sim_cnt)
     end
 
     if save_output == 1
-    	outfilename = sprintf('int_matrix_has_false_%d.mat', has_false_pos);
-
-    	save(outfilename, 'int_matrix'); % save overwrites any existing file with this name
-
-        fprintf('saved intensity matrix to %s\n', outfilename);
+    	outpath = fullfile(outdirpath, sprintf('int_matrix_has_false_%d.mat', include_false_positives));
+    	save(outpath, 'int_matrix');
+        fprintf('saved intensity matrix to %s\n', outpath);
+    else
+        outpath = NaN;
     end
 
 end
