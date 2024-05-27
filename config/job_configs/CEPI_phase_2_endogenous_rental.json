@@ -5,5 +5,7 @@
     "scenario_configs": "./config/scenario_configs/CEPI_phase_2",
     "seed": 1,
     "include_false_positives": 1,
-    "add_datetime_to_outdir": 0
+    "add_datetime_to_outdir": 0,
+    "sim_scens_path": "./output/CEPI_phase_2/raw/sim_scens_has_false_1.mat",
+    "endogenous_rental": 1
 }

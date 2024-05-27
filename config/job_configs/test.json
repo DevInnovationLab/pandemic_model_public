@@ -1,8 +1,10 @@
 {
-    "num_simulations": 10,
+    "num_simulations": 1000,
     "sim_periods": 200,
     "outdir": "./output",
     "scenario_configs": "./config/scenario_configs/test",
     "seed": 1,
-    "include_false_positives": 1
+    "include_false_positives": 1,
+    "add_datetime_to_outdir": 0,
+    "sim_scens_path": "./output/test/raw/sim_scens_has_false_1.mat"
 }
