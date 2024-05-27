@@ -18,15 +18,8 @@ function run_job(job_config_path)
         foldername = foldername + "_" + char(currentDateTime);
     end
     
-    outdirpath = fullfile(job_config.outdir, foldername);
-    % Check if the folder already exists
-    if ~exist(outdirpath, 'dir')
-        % Create the new folder
-        mkdir(outdirpath);
-        disp(['Folder created: ', outdirpath]);
-    else
-        disp(['Folder already exists: ', outdirpath]);
-    end  
+    outdirpath = fullfile(job_config.outdir, foldername, "raw");
+    create_folders_recursively(outdirpath);
 
     % Load default params
     default_params = params_default();
@@ -35,10 +28,14 @@ function run_job(job_config_path)
 
     % Create pandemic scenarios
     rng(job_config.seed);
-    % Need to remove this. Create job and scenario configs.
-    sim_scens_path = gen_all_sim_scens(default_params.arrival, job_config.include_false_positives, ...
-        job_config.num_simulations, i_star_threshold, default_params.RD_family_freq_table, ...
-        default_params.sim_periods, outdirpath);  
+    if ~isfield(job_config, 'sim_scens_path')
+        sim_scens_path = gen_all_sim_scens(default_params.arrival, job_config.include_false_positives, ...
+            job_config.num_simulations, i_star_threshold, default_params.RD_family_freq_table, ...
+            default_params.sim_periods, outdirpath);  
+    else
+        sim_scens_path = fullfile(job_config.sim_scens_path);
+
+    end
     
     % Handle folderpath input
     scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.json')); % Assuming JSON config files
@@ -49,6 +46,7 @@ function run_job(job_config_path)
         [~, scenario_name, ~] = fileparts(config_file);
         run_params.include_false_positives = job_config.include_false_positives;
         run_params.scenario_name = scenario_name;
+        run_params.endogenous_rental = job_config.endogenous_rental;
         run_params.outdirpath = outdirpath;
         run_model(run_params, sim_scens_path);
     end
@@ -59,7 +57,7 @@ function updated_params = update_params(params, config_file)
 
     new_params = jsondecode(fileread(config_file));
 
-    % user parameters override defaults
+    % Sser parameters override defaults
     updated_params = params;
     if ~isempty(new_params)
         fns = fieldnames(new_params);
@@ -73,16 +71,12 @@ function updated_params = update_params(params, config_file)
     updated_params.RD_family_invested = updated_params.RD_family_freq_table(families_to_invest_idx, 1)';
     updated_params.RD_spend = updated_params.adv_RD_cost_per_pathogen * ...
         updated_params.pathogens_per_family * ... 
-        params.pathogen_families_to_research; 
+        updated_params.pathogen_families_to_research; 
 
     % Set advance capacity
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity
     updated_params.z_m = updated_params.share_target_advanced_capacity * z_m;
     updated_params.z_o = updated_params.share_target_advanced_capacity * z_o;
-
-    % Calculate rental fraction
-    updated_params.rental_fraction = (updated_params.theta.*updated_params.x_avail / 10^6) ./ ...
-        (updated_params.z_m + updated_params.z_o);
     
     validate_params(updated_params);
 
@@ -93,7 +87,6 @@ function validate_params(params)
     assert(params.RD_speedup_months <= params.tau_A); % R&D speedup must be less than baseline time.
     assert(params.RD_success_rate_increase_per_platform * 4 <= 1 - params.p_b - params.p_m - params.p_o);
     assert(sum(params.pandemic_dur_probs)==1);
-    assert(params.rental_fraction <=1 & params.rental_fraction > 0);
 
 end
 

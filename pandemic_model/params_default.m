@@ -48,7 +48,7 @@ function params = params_default()
     params.k_m = 3.25;	% unit cost of mRNA capacity in advance (LB)
 	params.k_o = 0.96;	% unit cost of traditional capacity in advance (LB)
 	
-	params.tailoring_pct = 1/3; % pct of unit cost of advance capacity that's "fill and finish" (incurred at start of any pandemic, incl false positives)
+	params.tailoring_fraction = 1/3; % pct of unit cost of advance capacity that's "fill and finish" (incurred at start of any pandemic, incl false positives)
 
 	params.c_m = 34;		% marginal cost of producing mRNA vaccines (LB per course)
 	params.c_o = 17;		% marginal cost of producing traditional vaccines (LB per course)
@@ -86,7 +86,6 @@ function params = params_default()
 
     % parameters for R&D (if has_RD == 1)
     params.has_RD = 0;
-	params.num_families = 3;
 	params.pathogens_per_family = 3;
 	params.pathogen_families_to_research = 3;
 	params.adv_RD_cost_per_pathogen = 1.4; % in billion, nominal over period specified by RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
@@ -95,6 +94,7 @@ function params = params_default()
 
     params.RD_speedup_months = 0; % if R&D successful, how much tau_A is shortened by
     params.RD_success_rate_increase_per_platform = 0; % if R&D successful, how much the prob of vaccine is increased (for 2x for p_b, 1x for p_m, and 1x for p_o)
+	params.rental_share = 0.4;
 
     params.RD_inp_noRD =  0.776297560 ; % bn of nominal
     params.RD_inp_withRD =  0.531221781; % bn of nominal
@@ -123,7 +123,7 @@ function params = params_default()
 
 	params.surveil_annual_installation_spend = 5; % Initial spending to install enhanced surveillance, nom bn
 	params.surveil_installation_years = 2; % Time initial costs are incurred, nom bn
-	params.surveil_maintenance_spend = 1; % Maintenance spending on enhanced surveillance nom bn
+	params.surveil_maintenance_spend = 1.25; % Maintenance spending on enhanced surveillance nom bn
 	params.surveil_spend = 5; 
 
 	params.save_output = 1;
