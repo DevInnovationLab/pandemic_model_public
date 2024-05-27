@@ -1,19 +1,15 @@
-
 *** Net benefits across scenarios
-local root "C:/Users/sebqu/Box/MSA/CEPI/CEPI all-risks model/model_outputs/202405"
-#delimit ;
-local scenario_files `" "RD_heavy2/processed/sim_ts_false_1_adv_0.25_RD_1_surveil_1_thold_0.00_20240503_agg_diff.dta"
-	"moderate/processed/sim_ts_false_1_adv_0.25_RD_1_surveil_1_thold_0.00_20240501_agg_diff.dta"
-	"cap_heavy/processed/sim_ts_false_1_adv_0.50_RD_1_surveil_1_thold_0.00_20240502_agg_diff.dta"
-	"RD_heavy/processed/sim_ts_false_1_adv_0.25_RD_1_surveil_1_thold_0.00_20240502_agg_diff.dta" "';
-#delimit cr
+
+local root "C:/Users/sebqu/OneDrive/GitHub/pandemic_model/output/CEPI_phase_2"
+local cleandir "`root'/clean"
+local scenarios `" "100dm" "cap_heavy" "moderate" "rd_heavy" "'
 	
 local i 1
 tempfile temp
 
-foreach scenario_file of local scenario_files {
+foreach scenario of local scenarios {
 
-	local filepath "`root'/`scenario_file'"
+	local filepath "`clean'/`scenario'_agg_diff.dta"
 	use "`filepath'", clear
 	
 	gen net_bene_cum_p = sum(benefits_p - adv_costs_all_p)
