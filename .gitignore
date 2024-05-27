@@ -12,3 +12,5 @@ arrival_distribution_graph.m
 data/raw/*
 data/clean/*
 output/*
+
+ignore_folder/*
