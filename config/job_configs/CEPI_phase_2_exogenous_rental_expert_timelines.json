@@ -2,7 +2,7 @@
     "num_simulations": 10000,
     "sim_periods": 200,
     "outdir": "./output",
-    "scenario_configs": "./config/scenario_configs/CEPI_phase_2",
+    "scenario_configs": "./config/scenario_configs/CEPI_phase_2_expert_timeline_inputs",
     "seed": 1,
     "include_false_positives": 1,
     "add_datetime_to_outdir": 0,

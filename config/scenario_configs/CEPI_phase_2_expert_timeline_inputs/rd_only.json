@@ -1,0 +1,7 @@
+{
+    "has_RD": 1,
+    "pathogen_families_to_research": 3,
+    "tau_A": 29,
+    "RD_success_rate_increase_per_platform": 0.05,
+    "RD_speedup_months": 13
+}
