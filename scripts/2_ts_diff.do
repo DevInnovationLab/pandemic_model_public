@@ -7,7 +7,7 @@
 pause on
 set more off
 
-local root "C:/Users/sebqu/OneDrive/Documents/GitHub/pandemic_model/output/CEPI_phase_2_exogenous_rental"
+local root "C:\Users\Sebastian Quaade\Documents\GitHub\pandemic_model\output\CEPI_phase_2_exogenous_rental"
 local cleandir "`root'/clean"
 local baseline "business_as_usual"
 #delimit ;

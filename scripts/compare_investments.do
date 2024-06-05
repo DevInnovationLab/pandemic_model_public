@@ -3,7 +3,7 @@
 pause on
 set more off
 
-local root "C:/Users/sebqu/OneDrive/Documents/GitHub/pandemic_model/output/CEPI_phase_2_exogenous_rental"
+local root "C:/Users/Sebastian Quaade/Documents/GitHub/pandemic_model/output/CEPI_phase_2_exogenous_rental"
 local cleandir "`root'/clean"
 local figuredir "`root'/figures"
 #delimit ;
@@ -53,10 +53,11 @@ gen bar_order = _N - _n
 * Advance capacity costs in present value across scenarios
 local ytitle_txt `" "Benefits and costs from" "advance investments" "({c $|}bn, present value)" "'
 graph bar all_costs_p benefits_p, over(scenario_labeled, ///
-	label(labsize(medsmall) angle(45) labgap(3)) sort(bar_order)) ///
-	ylabel(, grid gstyle(major)) yscale(titlegap(*10)) ytitle(`ytitle_txt', size(medium)) ///
-	graphregion(color(white)) blabel(bar, format(%9.0f)) xsize(8) ///
-    legend(label(1 "Costs") label(2 "Benefits") position(12) cols(2) region(lstyle(none)))
+    label(labsize(medsmall) angle(45) labgap(3)) sort(bar_order)) ///
+    ylabel(, grid gstyle(major)) yscale(titlegap(*1)) ytitle(`ytitle_txt', size(medium)) ///
+    graphregion(color(white)) blabel(bar, format(%9.0f)) xsize(8) ///
+    legend(label(1 "Costs") label(2 "Benefits") position(12) cols(2) region(lstyle(none))) ///
+    bar(1, color(red)) bar(2, color(green))
 	
 local outfile = "`figuredir'/comparison_across_scenarios_p.png"
 graph export "`outfile'", replace
@@ -65,11 +66,10 @@ graph export "`outfile'", replace
 local ytitle_txt `" "Benefits and costs from" "advance investments" "({c $|}bn, nominal value)" "'
 graph bar all_costs_n benefits_n, over(scenario_labeled, ///
 	label(labsize(medsmall) angle(45) labgap(3))) ///
-	ylabel(, grid gstyle(major)) yscale(titlegap(*10)) ytitle(`ytitle_txt', size(medium)) ///
+	ylabel(, grid gstyle(major)) yscale(titlegap(*1)) ytitle(`ytitle_txt', size(medium)) ///
 	graphregion(color(white)) blabel(bar, format(%9.0f)) xsize(8) ///
-    legend(label(1 "Costs") label(2 "Benefits") position(12) cols(2) region(lstyle(none)))
+    legend(label(1 "Costs") label(2 "Benefits") position(12) cols(2) region(lstyle(none))) ///
+    bar(1, color(red)) bar(2, color(green))
 	
 local outfile = "`figuredir'/comparison_across_scenarios_n.png"
 graph export "`outfile'", replace
-
-
