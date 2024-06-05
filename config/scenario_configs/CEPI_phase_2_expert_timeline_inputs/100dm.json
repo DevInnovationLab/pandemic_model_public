@@ -1,6 +1,5 @@
 {
     "share_target_advanced_capacity": 0.25,
-    "has_RD": 1,
     "tau_A": 29,
     "pathogen_families_to_research": 6,
     "RD_speedup_months": 27,

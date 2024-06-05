@@ -1,6 +1,5 @@
 {
     "enhanced_surveillance": 1,
-    "has_RD": 1,
     "pathogen_families_to_research": 6,
     "RD_speedup_months": 7,
     "RD_success_rate_increase_per_platform": 0.05,

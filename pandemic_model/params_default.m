@@ -38,7 +38,7 @@ function params = params_default()
     % params.value_of_death = 0.13*10^6; % we use this to monetize death, it is not conceptually a VSL
 
 	params.theta = 0.25; % fraction reduction of pandemic-time investments due to advance capacity
-	params.delta = 0.19; 	% annual depreciation + maintenance (=d in paper) (expert survey and authors)
+	params.delta = 0.19; % annual depreciation + maintenance (=d in paper) (expert survey and authors)
 
 	%%% costs are in units of per course (there can be more than 1 dose per
     %%% course, typically two doses per course)
@@ -50,8 +50,8 @@ function params = params_default()
 	
 	params.tailoring_fraction = 1/3; % pct of unit cost of advance capacity that's "fill and finish" (incurred at start of any pandemic, incl false positives)
 
-	params.c_m = 34;		% marginal cost of producing mRNA vaccines (LB per course)
-	params.c_o = 17;		% marginal cost of producing traditional vaccines (LB per course)
+	params.c_m = 34; % marginal cost of producing mRNA vaccines (LB per course)
+	params.c_o = 17; % marginal cost of producing traditional vaccines (LB per course)
 
 	params.epsilon = 1;	% decreasing returns to capacity installed during pandemic
 
@@ -72,8 +72,6 @@ function params = params_default()
 
 	params.gamma = 0.5; 	% fraction of remaining harm mitigated by vaccine
 
-% 	params.T = 6;	% months to reach target vaccination rate (don't think this is actually used now?)
-
 	params.beta = 100*10^6;	% in-pandemic kink in capital cost function
 
     params.x_target = 15.7*10^9;   % target total capacity in annual courses (x^{\prime\prime} in paper)
@@ -85,10 +83,9 @@ function params = params_default()
 	assert(sum(params.pandemic_dur_probs)==1)
 
     % parameters for R&D (if has_RD == 1)
-    params.has_RD = 0;
 	params.pathogens_per_family = 3;
 	params.pathogen_families_to_research = 3;
-	params.adv_RD_cost_per_pathogen = 1.4; % in billion, nominal over period specified by RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
+	params.adv_RD_cost_per_pathogen = 1.4; % in billion, nominal over period specified by adv_RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
 
     % params.RD_success_rate = 0.5; % what pct of time R&D spend matches the pandemic pathogen realized -- DEPRECIATED
 
@@ -96,8 +93,8 @@ function params = params_default()
     params.RD_success_rate_increase_per_platform = 0; % if R&D successful, how much the prob of vaccine is increased (for 2x for p_b, 1x for p_m, and 1x for p_o)
 	params.rental_share = 0.4;
 
-    params.RD_inp_noRD =  0.776297560 ; % bn of nominal
-    params.RD_inp_withRD =  0.531221781; % bn of nominal
+    params.inp_RD_no_adv_RD =  0.776297560 ; % bn of nominal
+    params.inp_RD_with_adv_RD =  0.531221781; % bn of nominal
 
 	% this freq table lists the families and the probabilty mass associated with them (needs to sum to 1)
 	params.RD_family_freq_table = [
@@ -117,7 +114,7 @@ function params = params_default()
 	params.enhanced_surveillance = 0;
 	params.surveillance_thresholds = [0 0]; % First is for regular signal, second is for enhanced surveillance signal.
 
-	params.RD_benefit_start = 15; % even with RD benefit, won't realize any until after this year
+	params.adv_RD_benefit_start = 15; % even with RD benefit, won't realize any until after this year
 
 	params.adv_cap_build_period = 30; % number of years it takes to finish building adv capacity
 

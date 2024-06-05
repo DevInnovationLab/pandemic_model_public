@@ -10,9 +10,6 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params, si
     %%%%%%%%%%%%%%%% PARAMETERS
 
     %%%%%%% LOAD SCENS
-    % scen_file_name = sprintf('sim_scens_has_false_%d.xlsx', include_false_positives); % this file is made by gen_sim_scens_new.m
-    % sim_scens0 = readtable(scen_file_name,'Sheet','Sheet1');
-
     load(sim_scens_path, 'sim_scens');
     sim_scens0 = sim_scens;
     clear sim_scens;
@@ -97,21 +94,18 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params, si
     sim_out_arr_benefits_vaccine_nom  = zeros(sim_cnt, params.sim_periods);
     sim_out_arr_benefits_vaccine_PV  = zeros(sim_cnt, params.sim_periods);
 
-    inp_RD_nom = params.RD_inp_noRD * 1000; % mn of nominal
-    RD_spend_bn_PV = 0;
-    if params.has_RD == 1 % figure out PV of the total spend, which is nominal and over RD_benefit_start years
-        time_arr = (1:params.RD_benefit_start)';
-        PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
-        
-        RD_spend_bn_arr = repmat(params.RD_spend / params.RD_benefit_start, params.RD_benefit_start, 1);
-        RD_spend_bn_PV = sum(RD_spend_bn_arr .* PV_factor_yr);
+    % R&D costs
+    inp_RD_nom = params.inp_RD_cost * 1000; % mn of nominal
 
-        RD_spend_bn_tbl = repmat(params.RD_spend / params.RD_benefit_start * 1000, sim_cnt, params.RD_benefit_start); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
-        sim_out_arr_costs_adv_RD_nom(:, 1:params.RD_benefit_start) = RD_spend_bn_tbl;
-        sim_out_arr_costs_adv_RD_PV(:, 1:params.RD_benefit_start) = RD_spend_bn_tbl .* repmat(PV_factor_yr', sim_cnt, 1 );
+    time_arr = (1:params.adv_RD_benefit_start)';
+    PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
+    
+    adv_RD_spend_bn_arr = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, 1);
+    adv_RD_spend_bn_PV = sum(adv_RD_spend_bn_arr .* PV_factor_yr);
 
-        inp_RD_nom = params.RD_inp_withRD * 1000; % mn of nominal
-    end
+    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start * 1000, sim_cnt, params.adv_RD_benefit_start); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
+    sim_out_arr_costs_adv_RD_nom(:, 1:params.adv_RD_benefit_start) = adv_RD_spend_bn_tbl;
+    sim_out_arr_costs_adv_RD_PV(:, 1:params.adv_RD_benefit_start) = adv_RD_spend_bn_tbl .* repmat(PV_factor_yr', sim_cnt, 1 );
 
     tic;
     fprintf('Starting simulations...');
@@ -382,9 +376,7 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params, si
 
         vax_costs_bn_s = (inp_marg_costs_PV_s + inp_tailoring_costs_PV_s + inp_RD_costs_PV_s + cap_costs_tot)/10^3;
         
-        if params.has_RD == 1
-            vax_costs_bn_s = vax_costs_bn_s + RD_spend_bn_PV;
-        end
+        vax_costs_bn_s = vax_costs_bn_s + adv_RD_spend_bn_PV;
 
         if params.enhanced_surveillance == 1
             vax_costs_bn_s = vax_costs_bn_s + surveil_spend_bn_PV;
@@ -409,9 +401,7 @@ function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params, si
     end
 
     vax_costs_RD_bn_arr = zeros(sim_cnt, 1);
-    if params.has_RD == 1
-        vax_costs_RD_bn_arr = repmat(RD_spend_bn_PV, sim_cnt, 1);
-    end
+    vax_costs_RD_bn_arr = repmat(adv_RD_spend_bn_PV, sim_cnt, 1);
 
     vax_costs_surveil_bn_arr = zeros(sim_cnt, 1);
     if params.enhanced_surveillance == 1

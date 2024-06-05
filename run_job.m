@@ -44,7 +44,6 @@ function run_job(job_config_path)
         disp(['Running configuration from file: ', config_file]);
         run_params = update_params(default_params, config_file);
         [~, scenario_name, ~] = fileparts(config_file);
-        run_params.include_false_positives = job_config.include_false_positives;
         run_params.scenario_name = scenario_name;
         run_params.endogenous_rental = job_config.endogenous_rental;
         run_params.outdirpath = outdirpath;
@@ -69,9 +68,17 @@ function updated_params = update_params(params, config_file)
     % Set pathogen family params. Should maybe do this elsewhere
     families_to_invest_idx = 1:updated_params.pathogen_families_to_research;
     updated_params.RD_family_invested = updated_params.RD_family_freq_table(families_to_invest_idx, 1)';
-    updated_params.RD_spend = updated_params.adv_RD_cost_per_pathogen * ...
+    updated_params.adv_RD_spend = updated_params.adv_RD_cost_per_pathogen * ...
         updated_params.pathogens_per_family * ... 
-        updated_params.pathogen_families_to_research; 
+        updated_params.pathogen_families_to_research;
+
+    if updated_params.pathogen_families_to_research == 0
+        updated_params.has_RD = 0;
+        updated_params.inp_RD_cost = updated_params.inp_RD_no_adv_RD;
+    else
+        updated_params.has_RD = 1;
+        updated_params.inp_RD_cost = updated_params.inp_RD_with_adv_RD;
+    end
 
     % Set advance capacity
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity

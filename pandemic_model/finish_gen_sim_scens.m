@@ -46,7 +46,7 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
         	        thold2 = thold1 + params.p_m;
         	        thold3 = thold2 + params.p_o;
                     
-                    if params.has_RD == 1 & yr_start > params.RD_benefit_start
+                    if params.has_RD == 1 & yr_start > params.adv_RD_benefit_start
                         pathogen_family = pathogen_family_arr(i);
                         if sum(params.RD_family_invested == pathogen_family) == 1
                             has_RD_benefit = 1;
