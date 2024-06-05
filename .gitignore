@@ -2,13 +2,15 @@
 monte_carlo_sims_old.m
 monte_carlo_sims_graphs.m
 monte_carlo_sims_graphs_old.m
-*.xlsx
 gen_sim_scens.m
-*.pdf
 monte_carlo_sims.m
 *.asv
 gen_sim_scens_old.m
 arrival_distribution_graph.m
 *.mat
 
-data/*
+data/raw/*
+data/clean/*
+output/*
+
+ignore_folder/*

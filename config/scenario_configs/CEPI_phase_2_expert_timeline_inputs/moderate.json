@@ -1,0 +1,8 @@
+{
+    "share_target_advanced_capacity": 0.25,
+    "tau_A": 29,
+    "pathogen_families_to_research": 3,
+    "enhanced_surveillance": 1,
+    "RD_success_rate_increase_per_platform": 0.05,
+    "RD_speedup_months": 13
+}
