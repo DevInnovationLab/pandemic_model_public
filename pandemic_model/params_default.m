@@ -5,8 +5,8 @@ function params = params_default()
     params.r = 0.04;         % social discount rate (needs to be less than y for geometric sum to work out)
 
 	% Base year values (circa 2021)
-	params.P0 = 7.89*10^9;	% base year population
-	params.Y0 = 12236.6;		% base year GDP per capita
+	params.P0 = 7.91*10^9;	% base year population
+	params.Y0 = 12316.1;	% base year GDP per capita (World bank: https://data.worldbank.org/indicator/NY.GDP.PCAP.CD)
 
     % this is the intensity threshold that doubles the prob of being in a pandemic that exceeds i_star (used for when assuming false pos rate is 50%) (NOT USED)
     % this value is calculated in "arrival_distribution.m"
@@ -38,15 +38,15 @@ function params = params_default()
     % params.value_of_death = 0.13*10^6; % we use this to monetize death, it is not conceptually a VSL
 
 	params.theta = 0.25; % fraction reduction of pandemic-time investments due to advance capacity
-	params.delta = 0.19; 	% annual depreciation (=d in paper) (LB)
+	params.delta = 0.19; 	% annual depreciation + maintenance (=d in paper) (expert survey and authors)
 
 	%%% costs are in units of per course (there can be more than 1 dose per
     %%% course, typically two doses per course)
     params.mRNA_share = 0.5; % what pct of capacity is mRNA platform (remainder is traditional platform)
-    params.capacity_kept = 0.5; % what proportion of capacity is kept after a pandemic (pseudo LB)
+    params.capacity_kept = 0.5; % what proportion of surge capacity is kept after a pandemic (pseudo LB)
 
-    params.k_m = 3.25;	% unit cost of mRNA capacity in advance (LB)
-	params.k_o = 0.96;	% unit cost of traditional capacity in advance (LB)
+    params.k_m = 1.5;	% unit cost of mRNA capacity in advance (expert survey)
+	params.k_o = 3;	% unit cost of traditional capacity in advance (expert survey)
 	
 	params.tailoring_fraction = 1/3; % pct of unit cost of advance capacity that's "fill and finish" (incurred at start of any pandemic, incl false positives)
 
@@ -124,7 +124,6 @@ function params = params_default()
 	params.surveil_annual_installation_spend = 5; % Initial spending to install enhanced surveillance, nom bn
 	params.surveil_installation_years = 2; % Time initial costs are incurred, nom bn
 	params.surveil_maintenance_spend = 1.25; % Maintenance spending on enhanced surveillance nom bn
-	params.surveil_spend = 5; 
 
 	params.save_output = 1;
 

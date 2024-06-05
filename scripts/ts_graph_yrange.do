@@ -3,7 +3,7 @@ pause on
 
 set more off
 local scenarios `" "100dm" "moderate" "cap_heavy" "rd_heavy" "'
-local root "C:/Users/sebqu/OneDrive/Documents/GitHub/pandemic_model/output/CEPI_phase_2_exogenous_rental"
+local root "C:/Users/Sebastian Quaade/Documents/GitHub/pandemic_model/output/CEPI_phase_2_exogenous_rental"
 local cleandir "`root'/clean"
 local figuredir "`root'/figures"
 local cum_bene_ymin 0 // Y axis range min for cumulative benefits
@@ -52,9 +52,12 @@ foreach scenario of local scenarios {
 			gen `var'_cum = sum(`var') / 1000 // all cum are in bn, by default
 		}
 	}
-	gen net_bene_cum = benefits_p_cum - adv_costs_all_p_cum
 	gen total_costs_p_cum = adv_costs_all_p_cum + inp_costs_all_p_cum
-	list net_bene_cum if yr == 30 | yr == 200
+	gen net_bene_adv_cum = benefits_p_cum - adv_costs_all_p_cum
+	gen net_bene_tot_cum = benefits_p_cum - total_costs_p_cum
+	list benefits_p_cum if yr == 30 | yr == 200
+	list net_bene_adv_cum if yr == 30 | yr == 200
+	list net_bene_tot_cum if yr == 30 | yr == 200
 	list total_costs_p_cum if yr == 30 | yr == 200
 	list inp_cap_p_cum if yr == 30 | yr == 200
 	list inp_costs_all_p_cum if yr == 30 | yr == 200
@@ -108,7 +111,7 @@ foreach scenario of local scenarios {
 			ylabel(0(1)5, grid gstyle(major) glwidth(thin)) ///
 			yscale(range(`ymin' `ymax') titlegap(*1)) ///
 			yscale( titlegap(*1)) ///
-			xscale(range(0 200) titlegap(*5)) ///
+			xscale(range(0 200) titlegap(*1)) ///
 			xlabel(0(20)200) ///
 			ytitle(`ytitle_txt', size(medsmall) margin(medium)) ///
 			xtitle("Year", size(medium) margin(medium)) ///
@@ -199,7 +202,7 @@ foreach scenario of local scenarios {
 	*** CUM TIME SERIES -- COST vs BENEFIT
 	
 	// Identify the year where var1 becomes greater than var2
-	gen diff = benefits_n_cum - adv_costs_all_n_cum
+	gen diff = benefits_n_cum - adv_costs_all_n_cum - inp_costs_all_n_cum
 	gen crossover_year = yr if diff > 0 & diff[_n-1] <= 0
 	levelsof crossover_year if !missing(crossover_year), local(crossover_year)
 	local line_label_year = `crossover_year' + 1
@@ -262,7 +265,7 @@ foreach scenario of local scenarios {
 			line inp_costs_unit_`unit_modifer'`type' yr, lcolor("`c_inp_unit'") lpattern(longdash) ||, ///
 			ylabel(, grid gstyle(major) glwidth(thin)) ///
 			yscale( titlegap(*1)) ///
-			xscale(range(0 200) titlegap(*5)) ///
+			xscale(range(0 200) titlegap(*1)) ///
 			xlabel(0(20)200) ///
 			ytitle("`ytitle_txt'", size(medsmall) margin(medium)) ///
 			xtitle("Year", size(medium) margin(medium)) ///
