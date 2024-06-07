@@ -1,0 +1,10 @@
+# Advance R&D params
+viral_families_to_research: 6
+RD_speedup_months: 7 # % if R&D successful, how much tau_A is shortened by
+RD_success_rate_increase_per_platform: 0.05 # if R&D successful, how much the prob of vaccine is increased (for 2x for p_b, 1x for p_m, and 1x for p_o)
+
+# Advance capacity params
+share_target_advanced_capacity: 0.25
+
+# Enhanced surveillance
+enhanced_surveillance: 1
