@@ -54,7 +54,7 @@ function outpath = gen_intensity_matrix(arrival_params, include_false_positives,
                 %%% invert cumulative prob to get at intensity
 
     %             fprintf('%d \n', val)
-                fun = @(i) f_cum(i, alpha, mu, sigma, xi, w, ones, twos, threes, fours, fives)- val;
+                fun = @(i) f_cum(i, alpha, mu, sigma, xi, w, ones, twos, threes, fours, fives) - val;
                 i = fzero(fun, i0);
             end
 

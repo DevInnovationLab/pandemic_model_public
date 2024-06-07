@@ -1,4 +1,4 @@
-function [net_value, gross_value, gross_costs] = monte_carlo_sims_new(params, sim_scens_path)
+function simulate_scenario(params, sim_scens_path)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % NOTE:

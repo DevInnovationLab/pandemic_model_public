@@ -11,7 +11,7 @@ local root "C:\Users\Sebastian Quaade\Documents\GitHub\pandemic_model\output\CEP
 local cleandir "`root'/clean"
 local baseline "business_as_usual"
 #delimit ;
-local scenarios `" "100dm" "moderate" "rd_heavy" "cap_heavy" "cap_only" "business_as_usual"
+local scenarios `" "rapid_vaccine_readiness" "moderate" "rd_heavy" "cap_heavy" "cap_only" "business_as_usual"
 	"rd_and_cap" "rd_only" "surveil_and_cap" "surveil_and_rd" "surveillance_only" "';
 #delimit cr
 local ts_name benefits inp_tail inp_marg inp_cap inp_RD adv_RD adv_cap inp_costs_all inp_costs_investments inp_costs_unit inp_costs_production adv_costs_all surveil
