@@ -1,4 +1,4 @@
-function outpath = gen_sim_scens_new(include_false_positives, i_star_threshold, RD_family_freq_table, int_matrix_path, outdirpath)
+function outpath = gen_sim_scens_new(include_false_positives, i_star_threshold, viral_family_frequency_table, int_matrix_path, outdirpath)
     % Generate simulation senarios: allow for multiple pandemics
 
     save_output = 1;
@@ -63,7 +63,7 @@ function outpath = gen_sim_scens_new(include_false_positives, i_star_threshold, 
     end
 
     RD_score         = unifrnd(0, 1, row_cnt, 1); % create a column of random variable to denote if RD successful (if there is RD) (this column not used if there is no RD)
-    sim_scens.pathogen_family  = map_RD_score_to_pathogen_family(RD_score, RD_family_freq_table);
+    sim_scens.pathogen_family  = map_RD_score_to_pathogen_family(RD_score, viral_family_frequency_table);
 
     sim_scens.draw_state       = unifrnd(0, 1, row_cnt, 1);
     sim_scens.draw_natural_dur = unifrnd(0, 1, row_cnt, 1);

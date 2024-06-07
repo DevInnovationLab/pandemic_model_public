@@ -7,9 +7,9 @@
 
 pause off
 set more off
-local root "C:\Users\Sebastian Quaade\Documents\GitHub\pandemic_model\output\CEPI_phase_2_exogenous_rental"
+local root "C:\Users\Sebastian Quaade\Documents\GitHub\pandemic_model\output\CEPI_phase_2"
 #delimit ;
-local scenarios `" "100dm" "moderate" "business_as_usual" "rd_heavy" "cap_heavy" 
+local scenarios `" "rapid_vaccine_readiness" "moderate" "business_as_usual" "rd_heavy" "cap_heavy" 
 	"cap_only" "rd_and_cap" "rd_only" "surveil_and_cap" "surveil_and_rd"
 	"surveillance_only" "';
 #delimit cr

@@ -1,16 +1,12 @@
 # Run params
-<<<<<<< HEAD
-num_simulations: 1e5
-=======
-num_simulations: 1e6
->>>>>>> faf4e0401c3f96553719b6e8fbf07c172bc983a2
+num_simulations: 10000
 sim_periods: 200
 outdir: "./output"
-scenario_configs: "./config/scenario_configs/CEPI_phase_2"
+scenario_configs: "./config/scenario_configs/test"
 seed: 1
 include_false_positives: 1
 add_datetime_to_outdir: 0
-sim_scens_path: ~ # Load previously created pandemic simulations (rather than creating new ones with parameters below)
+sim_scens_path: null # Load previously created pandemic simulations (rather than creating new ones with parameters below)
 save_output: 1
 endogenous_rental: 0
 
@@ -25,12 +21,12 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 minimum_pandemic_intensity_threshold: 0.16 # Half of COVID-19 intensity
-pandemic_dur_probs: [0.5, 0.2, 0.3]
+pandemic_dur_probs: [0.5, 0.2 ,0.3]
 arrival: # Arrival distribution parameters
   sigma: 0.0113
   xi: 1.408
   alpha: 0.62
-  mu_prime: 1e-3 # Epidemic lower bound (note difference between scientific and e notation)
+  mu_prime: 10e-4 # Epidemic lower bound (note difference between scientific and e notation)
   mu_prime_prime: 17.7939 # Upper bound based on Spanish flu death count
   extinction: 1000
   w: 20
@@ -76,7 +72,6 @@ adv_RD_cost_per_pathogen: 1.4 # in billion, nominal over period specified by adv
 adv_RD_benefit_start: 15 # years until advance R&D benefits apply
 
 # Surveillance
-surveillance_thresholds: [0, 0] # First is for regular signal, second is for enhanced surveillance signal.
 surveil_annual_installation_spend: 5 # Initial spending to install enhanced surveillance, nom bn
 surveil_installation_years: 2 # Time initial costs are incurred, nom bn
 surveil_maintenance_spend: 1.25 # Maintenance spending on enhanced surveillance nom bn

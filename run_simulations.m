@@ -34,7 +34,10 @@ function run_simulations(job_config_path)
         sim_scens_path = fullfile(job_config.sim_scens_path);
 
     end
+<<<<<<< HEAD
     job_config.pandemic_dur_probs
+=======
+>>>>>>> faf4e0401c3f96553719b6e8fbf07c172bc983a2
 
     % Create object storing job and scenario configurations that we will save.
     out_params = job_config;
@@ -52,7 +55,10 @@ function run_simulations(job_config_path)
 
         % Add scenario specific parameter configucations
         simulation_params = update_params(job_config, scenario_params);
+<<<<<<< HEAD
         simulation_params.pandemic_dur_probs
+=======
+>>>>>>> faf4e0401c3f96553719b6e8fbf07c172bc983a2
         simulation_params.scenario_name = scenario_name;
         simulate_scenario(simulation_params, sim_scens_path);
     end

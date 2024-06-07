@@ -2,7 +2,7 @@
 pause on
 
 set more off
-local scenarios `" "100dm" "moderate" "cap_heavy" "rd_heavy" "'
+local scenarios `" "rapid_vaccine_readiness" "moderate" "cap_heavy" "rd_heavy" "'
 local root "C:/Users/Sebastian Quaade/Documents/GitHub/pandemic_model/output/CEPI_phase_2_exogenous_rental"
 local cleandir "`root'/clean"
 local figuredir "`root'/figures"

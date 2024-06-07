@@ -84,7 +84,7 @@ function params = params_default()
 
     % parameters for R&D (if has_RD == 1)
 	params.pathogens_per_family = 3;
-	params.pathogen_families_to_research = 3;
+	params.viral_families_to_research = 3;
 	params.adv_RD_cost_per_pathogen = 1.4; % in billion, nominal over period specified by adv_RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
 
     % params.RD_success_rate = 0.5; % what pct of time R&D spend matches the pandemic pathogen realized -- DEPRECIATED
@@ -97,7 +97,7 @@ function params = params_default()
     params.inp_RD_with_adv_RD =  0.531221781; % bn of nominal
 
 	% this freq table lists the families and the probabilty mass associated with them (needs to sum to 1)
-	params.RD_family_freq_table = [
+	params.viral_family_frequency_table = [
 		1, 0.1;
 		2, 0.1;
 		3, 0.1;
@@ -124,14 +124,4 @@ function params = params_default()
 
 	params.save_output = 1;
 
-end
-
-% You really ought to move this.
-function RD_family_freq_table = create_RD_family_freq_table(num_families)
-    % Create the first column with natural numbers from 1 to N
-    families = (1:num_families)';
-    probabilities = ones(num_families, 1) / num_families;
-    
-    % Combine the columns into an N by 2 matrix
-    RD_family_freq_table = [families, probabilities];
 end

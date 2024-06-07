@@ -2,7 +2,7 @@
 
 local root "C:/Users/sebqu/OneDrive/GitHub/pandemic_model/output/CEPI_phase_2"
 local cleandir "`root'/clean"
-local scenarios `" "100dm" "cap_heavy" "moderate" "rd_heavy" "'
+local scenarios `" "rapid_vaccine_readiness" "cap_heavy" "moderate" "rd_heavy" "'
 	
 local i 1
 tempfile temp
