@@ -85,6 +85,8 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
                     is_false_prev = is_false;
                     if ~is_false_prev
                         dur_prev = pandemic_natural_dur;
+                    else % Hacky solution to make code work when we start with two false positives.
+                        dur_prev = NaN;
                     end
                 else 
                     if ~is_false_prev
@@ -92,8 +94,7 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
                             remove_arr(sim_start+i-1) = 1;
                         end
                         % the "prev" stays the same, no updating
-                    else
-
+                    else   
                         yr_start_prev = yr_start;
                         is_false_prev = is_false;
                         dur_prev = pandemic_natural_dur;

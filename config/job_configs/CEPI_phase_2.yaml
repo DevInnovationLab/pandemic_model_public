@@ -1,16 +1,12 @@
 # Run params
-<<<<<<< HEAD
-num_simulations: 1e5
-=======
-num_simulations: 1e6
->>>>>>> faf4e0401c3f96553719b6e8fbf07c172bc983a2
+num_simulations: 5e4
 sim_periods: 200
 outdir: "./output"
 scenario_configs: "./config/scenario_configs/CEPI_phase_2"
 seed: 1
 include_false_positives: 1
 add_datetime_to_outdir: 0
-sim_scens_path: ~ # Load previously created pandemic simulations (rather than creating new ones with parameters below)
+sim_scens_path: "./output/CEPI_phase_2/raw/sim_scens_has_false_1.mat" # Load previously created pandemic simulations (rather than creating new ones with parameters below)
 save_output: 1
 endogenous_rental: 0
 
