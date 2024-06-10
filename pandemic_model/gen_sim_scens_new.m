@@ -12,7 +12,8 @@ function outpath = gen_sim_scens_new(include_false_positives, i_star_threshold, 
 
     % turns the intensity matrix (sim_cnt by sim periods) into a list of pandemics
     cluster = parcluster;
-    parfor (s = 1:sim_cnt, cluster) % loop through each simulation scenario
+    pool = parpool(cluster);
+    parfor (s = 1:sim_cnt) % loop through each simulation scenario
     % for s = 1:sim_cnt
 
         i_arr = int_matrix(s, 2:end)';
@@ -51,6 +52,7 @@ function outpath = gen_sim_scens_new(include_false_positives, i_star_threshold, 
             fprintf('finished reshaping int matrix for sim num %d\n', s);
         end
     end
+    delete(pool);
 
     row_cnt = size(sim_scens,1); % num of sims times pandemics per sim
     

@@ -1,5 +1,5 @@
 # Run params
-num_simulations: 5e4
+num_simulations: 1e5
 sim_periods: 200
 outdir: "./output"
 scenario_configs: "./config/scenario_configs/CEPI_phase_2"

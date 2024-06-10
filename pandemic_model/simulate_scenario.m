@@ -111,7 +111,9 @@ function simulate_scenario(params, sim_scens_path)
     fprintf('Starting simulations...');
 
     cluster = parcluster;
-    parfor (s = 1:sim_cnt, cluster) % loop through each simulation scenario
+    pool = parpool(cluster);
+    ticBytes(pool);
+    parfor (s = 1:sim_cnt) % loop through each simulation scenario
     % for s =1:sim_cnt
         idx = sim_scens.sim_num == s; % indices of rowsinu for sim s
         row_cnt_s = sum(idx>0); % number of rows for this simulation
@@ -398,6 +400,8 @@ function simulate_scenario(params, sim_scens_path)
         end
         
     end
+    tocBytes(pool)
+    delete(pool);
 
     vax_costs_RD_bn_arr = zeros(sim_cnt, 1);
     vax_costs_RD_bn_arr = repmat(adv_RD_spend_bn_PV, sim_cnt, 1);

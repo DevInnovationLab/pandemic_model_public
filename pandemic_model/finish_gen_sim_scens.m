@@ -86,7 +86,8 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
                     if ~is_false_prev
                         dur_prev = pandemic_natural_dur;
                     else % Hacky solution to make code work when we start with two false positives.
-                        dur_prev = NaN;
+                        pandemic_natural_dur = NaN;
+                        dur_prev = pandemic_natural_dur;
                     end
                 else 
                     if ~is_false_prev
