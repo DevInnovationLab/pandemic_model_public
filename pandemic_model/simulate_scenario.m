@@ -395,8 +395,7 @@ function simulate_scenario(params, sim_scens_path)
         vax_costs_upf_cap_bn_arr(s)       = upfront_cap_costs / 10^3;
 
         if mod(s, 1000) == 0
-%             fprintf('finished sim num %d (elaspsed min: %d)\n', s, round(toc/60, 1));
-            fprintf('finished sim num %d\n', s);
+           fprintf('finished sim num %d (elaspsed min: %d)\n', s, round(toc/60, 1));
         end
         
     end

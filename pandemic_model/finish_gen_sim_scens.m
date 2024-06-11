@@ -13,7 +13,7 @@ function outtable = finish_gen_sim_scens(sim_scens, params)
     remove_arr = zeros(row_cnt, 1); % indicator for if row is to be removed (due to multiple pandemics in a row otherwise)
 
     sim_start = 1; % row index in sim_scens (keeps track of starting row for each sim, in cumulative fashion)
-	for s = 1:sim_cnt % loop through each pandemic in each sim
+    for s = 1:sim_cnt % loop through each pandemic in each sim
         
         idx         = sim_scens.sim_num == s; % indices of rows for sim s
         row_cnt_s   = sum(idx>0); % number of rows for this simulation
