@@ -2,7 +2,7 @@ function outpath = gen_intensity_matrix(arrival_params, include_false_positives,
 
 	save_output = 1;
 
-    draw_lower = 0.867; % this is the cumulative prob for mu < 10^{-3} 
+    draw_lower = 0.867; % this is the cumulative prob for mu < 10^{-3}
 
     if include_false_positives == 1
         draw_upper = 0.9988; % if the uniform draw exceeds this, cannot invert (set to mu_prime_prime)

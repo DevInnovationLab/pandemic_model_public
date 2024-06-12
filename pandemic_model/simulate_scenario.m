@@ -59,40 +59,40 @@ function simulate_scenario(params, sim_scens_path)
     adv_cap_capital_costs_build_years_tot = sum(adv_cap_capital_costs_over_time);
 
     %%% costs - adv
-    sim_out_arr_costs_adv_cap_nom       = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_adv_cap_PV        = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_adv_RD_nom        = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_adv_RD_PV         = zeros(sim_cnt, params.sim_periods);
+    sim_out_arr_costs_adv_cap_nom       = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_adv_cap_PV        = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_adv_RD_nom        = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_adv_RD_PV         = zeros(params.sim_periods, sim_cnt);
     %%% costs - in-pandemic
-    sim_out_arr_costs_inp_cap_nom       = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_inp_cap_PV        = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_inp_marg_nom      = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_inp_marg_PV       = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_inp_tailoring_nom = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_inp_tailoring_PV  = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_inp_RD_nom        = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_inp_RD_PV         = zeros(sim_cnt, params.sim_periods);
+    sim_out_arr_costs_inp_cap_nom       = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_inp_cap_PV        = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_inp_marg_nom      = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_inp_marg_PV       = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_inp_tailoring_nom = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_inp_tailoring_PV  = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_inp_RD_nom        = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_inp_RD_PV         = zeros(params.sim_periods, sim_cnt);
     
     %%% costs - surveillance (on-going)
-    sim_out_arr_costs_surveil_nom = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_costs_surveil_PV = zeros(sim_cnt, params.sim_periods);
+    sim_out_arr_costs_surveil_nom = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_costs_surveil_PV = zeros(params.sim_periods, sim_cnt);
     surveil_spend_bn_PV = 0;
     
     if params.enhanced_surveillance == 1 
         time_arr = (1:params.sim_periods)';
         PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
-        surveil_spend_bn_init = repmat(params.surveil_annual_installation_spend, 1, params.surveil_installation_years);
-        surveil_spend_bn_maintenance = repmat(params.surveil_maintenance_spend, 1, params.sim_periods - params.surveil_installation_years);
-        surveil_spend_bn_arr = [surveil_spend_bn_init surveil_spend_bn_maintenance];
-        surveil_spend_bn_PV = sum(surveil_spend_bn_arr' .* PV_factor_yr);
+        surveil_spend_bn_init = repmat(params.surveil_annual_installation_spend, params.surveil_installation_years, 1);
+        surveil_spend_bn_maintenance = repmat(params.surveil_maintenance_spend, params.sim_periods - params.surveil_installation_years, 1);
+        surveil_spend_bn_arr = [surveil_spend_bn_init; surveil_spend_bn_maintenance];
+        surveil_spend_bn_PV = sum(surveil_spend_bn_arr .* PV_factor_yr);
 
-        sim_out_arr_costs_surveil_nom = repmat(surveil_spend_bn_arr * 1000, sim_cnt, 1);
-        sim_out_arr_costs_surveil_PV = sim_out_arr_costs_surveil_nom .* repmat(PV_factor_yr', sim_cnt, 1);
+        sim_out_arr_costs_surveil_nom = repmat(surveil_spend_bn_arr * 1000, 1, sim_cnt);
+        sim_out_arr_costs_surveil_PV = sim_out_arr_costs_surveil_nom .* repmat(PV_factor_yr, 1, sim_cnt);
     end
     
     %%% benefits
-    sim_out_arr_benefits_vaccine_nom  = zeros(sim_cnt, params.sim_periods);
-    sim_out_arr_benefits_vaccine_PV  = zeros(sim_cnt, params.sim_periods);
+    sim_out_arr_benefits_vaccine_nom  = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_benefits_vaccine_PV  = zeros(params.sim_periods, sim_cnt);
 
     % R&D costs
     inp_RD_nom = params.inp_RD_cost * 1000; % mn of nominal
@@ -103,20 +103,21 @@ function simulate_scenario(params, sim_scens_path)
     adv_RD_spend_bn_arr = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, 1);
     adv_RD_spend_bn_PV = sum(adv_RD_spend_bn_arr .* PV_factor_yr);
 
-    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start * 1000, sim_cnt, params.adv_RD_benefit_start); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
-    sim_out_arr_costs_adv_RD_nom(:, 1:params.adv_RD_benefit_start) = adv_RD_spend_bn_tbl;
-    sim_out_arr_costs_adv_RD_PV(:, 1:params.adv_RD_benefit_start) = adv_RD_spend_bn_tbl .* repmat(PV_factor_yr', sim_cnt, 1 );
+    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start * 1000, params.adv_RD_benefit_start, sim_cnt); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
+    sim_out_arr_costs_adv_RD_nom(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl;
+    sim_out_arr_costs_adv_RD_PV(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl .* repmat(PV_factor_yr, 1, sim_cnt );
 
     tic;
     fprintf('Starting simulations...');
 
     cluster = parcluster;
-    parfor (s = 1:sim_cnt, cluster) % loop through each simulation scenario
+    pool = parpool(cluster);
+    ticBytes(pool);
+    parfor (s = 1:sim_cnt) % loop through each simulation scenario
     % for s =1:sim_cnt
         idx = sim_scens.sim_num == s; % indices of rowsinu for sim s
         row_cnt_s = sum(idx>0); % number of rows for this simulation
         sim_scens_s = sim_scens(idx, :); % filter sim_scens for rows relevant for this simulation
-
         [yr_start_arr, intensity_arr, natural_dur_arr, is_false_arr, state_arr, has_RD_benefit_arr, prep_start_month_arr] = ...
             extract_columns_from_table(sim_scens_s); % unpack designated columns as arrays
         
@@ -137,8 +138,8 @@ function simulate_scenario(params, sim_scens_path)
             
             % Calculate present_value
             total_adv_cap_costs_over_time_pv = total_adv_cap_costs_over_time .* (1./((1+params.r).^(1:params.sim_periods)));
-            sim_out_arr_costs_adv_cap_nom(s, :) = total_adv_cap_costs_over_time;
-            sim_out_arr_costs_adv_cap_PV(s, :) = total_adv_cap_costs_over_time_pv;
+            sim_out_arr_costs_adv_cap_nom(:, s) = total_adv_cap_costs_over_time';
+            sim_out_arr_costs_adv_cap_PV(:, s) = total_adv_cap_costs_over_time_pv';
             
             % Not sure yet what purpose this serves.
             upfront_cap_costs = sum(total_adv_cap_costs_over_time_pv); % adv capacity cost (in million)
@@ -253,16 +254,16 @@ function simulate_scenario(params, sim_scens_path)
                         adv_cap_o_current * (tailoring_fraction * params.k_o);
                     inp_tailoring_costs_PV = tailoring_PV * tailoring_nom_costs;
 
-                    sim_out_arr_costs_inp_tailoring_nom(s, :) = sim_out_arr_costs_inp_tailoring_nom(s, :) + ...
-                        [repmat(0, 1, yr_start-1) tailoring_nom_costs repmat(0, 1, params.sim_periods-yr_start)] ; % possible this is after yr_start, seems fine for now to just assign to yr_start
-                    sim_out_arr_costs_inp_tailoring_PV(s, :) = sim_out_arr_costs_inp_tailoring_PV(s, :) + ...
-                        [repmat(0, 1, yr_start-1) tailoring_PV * tailoring_nom_costs repmat(0, 1, params.sim_periods-yr_start)] ;
+                    sim_out_arr_costs_inp_tailoring_nom(:, s) = sim_out_arr_costs_inp_tailoring_nom(:, s) + ...
+                        [zeros(yr_start-1, 1); tailoring_nom_costs; zeros(params.sim_periods-yr_start, 1)] ; % possible this is after yr_start, seems fine for now to just assign to yr_start
+                    sim_out_arr_costs_inp_tailoring_PV(:, s) = sim_out_arr_costs_inp_tailoring_PV(:, s) + ...
+                        [zeros(yr_start-1, 1); tailoring_PV * tailoring_nom_costs; zeros(params.sim_periods-yr_start, 1)] ;
 
                     % assume in pandemic RD occurs also at one month into prep start (so uses same disc factor as tailoring costs)
-                    sim_out_arr_costs_inp_RD_nom(s, :) = sim_out_arr_costs_inp_RD_nom(s, :) + ...
-                        [repmat(0, 1, yr_start-1) inp_RD_nom repmat(0, 1, params.sim_periods-yr_start)] ;
-                    sim_out_arr_costs_inp_RD_PV(s, :) = sim_out_arr_costs_inp_RD_PV(s, :) + ...
-                        [repmat(0, 1, yr_start-1) tailoring_PV * inp_RD_nom repmat(0, 1, params.sim_periods-yr_start)] ;
+                    sim_out_arr_costs_inp_RD_nom(:, s) = sim_out_arr_costs_inp_RD_nom(:, s) + ...
+                        [zeros(yr_start-1, 1); inp_RD_nom; zeros(params.sim_periods-yr_start, 1)] ;
+                    sim_out_arr_costs_inp_RD_PV(:, s) = sim_out_arr_costs_inp_RD_PV(:, s) + ...
+                        [zeros(yr_start-1, 1); tailoring_PV * inp_RD_nom; zeros(params.sim_periods-yr_start, 1)] ;
                     
                     inp_RD_costs_PV = tailoring_PV * inp_RD_nom;
 
@@ -288,11 +289,11 @@ function simulate_scenario(params, sim_scens_path)
                     vax_benefits_s = vax_benefits_s + vax_benefits; 
                 
                     if ~is_false 
-                        sim_out_arr_benefits_vaccine_PV(s, :)  = sim_out_arr_benefits_vaccine_PV(s, :) + agg_by_yr(vax_benefits_PV, pandemic_natural_dur, yr_start, params.sim_periods);
-                        sim_out_arr_benefits_vaccine_nom(s, :) = sim_out_arr_benefits_vaccine_nom(s, :) + agg_by_yr(vax_benefits_nom, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_benefits_vaccine_PV(:, s)  = sim_out_arr_benefits_vaccine_PV(:, s) + agg_by_yr(vax_benefits_PV, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_benefits_vaccine_nom(:, s) = sim_out_arr_benefits_vaccine_nom(:, s) + agg_by_yr(vax_benefits_nom, pandemic_natural_dur, yr_start, params.sim_periods);
 
-                        sim_out_arr_costs_inp_marg_PV(s, :) = sim_out_arr_costs_inp_marg_PV(s, :) + agg_by_yr(inp_marg_costs_o_PV + inp_marg_costs_m_PV, pandemic_natural_dur, yr_start, params.sim_periods);
-                        sim_out_arr_costs_inp_marg_nom(s,:) = sim_out_arr_costs_inp_marg_nom(s,:) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_costs_inp_marg_PV(:, s) = sim_out_arr_costs_inp_marg_PV(:, s) + agg_by_yr(inp_marg_costs_o_PV + inp_marg_costs_m_PV, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_costs_inp_marg_nom(:, s) = sim_out_arr_costs_inp_marg_nom(:, s) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, pandemic_natural_dur, yr_start, params.sim_periods);
                     end
                     
                     % Deal with capacity stuff
@@ -362,10 +363,10 @@ function simulate_scenario(params, sim_scens_path)
             total_surge_cap_costs_over_time_pv = total_surge_cap_costs_over_time .* annual_pv_discount_factors;
 
             % Assign to out matrix.
-            sim_out_arr_costs_adv_cap_nom(s, :) = total_adv_cap_costs_over_time;
-            sim_out_arr_costs_adv_cap_PV(s, :) = total_adv_cap_costs_over_time_pv;
-            sim_out_arr_costs_inp_cap_nom(s, :) = total_surge_cap_costs_over_time;
-            sim_out_arr_costs_inp_cap_PV(s, :) = total_surge_cap_costs_over_time_pv;
+            sim_out_arr_costs_adv_cap_nom(:, s) = total_adv_cap_costs_over_time';
+            sim_out_arr_costs_adv_cap_PV(:, s) = total_adv_cap_costs_over_time_pv';
+            sim_out_arr_costs_inp_cap_nom(:, s) = total_surge_cap_costs_over_time';
+            sim_out_arr_costs_inp_cap_PV(:, s) = total_surge_cap_costs_over_time_pv';
 
         end 
 
@@ -394,11 +395,12 @@ function simulate_scenario(params, sim_scens_path)
         vax_costs_upf_cap_bn_arr(s)       = upfront_cap_costs / 10^3;
 
         if mod(s, 1000) == 0
-%             fprintf('finished sim num %d (elaspsed min: %d)\n', s, round(toc/60, 1));
-            fprintf('finished sim num %d\n', s);
+           fprintf('finished sim num %d (elaspsed min: %d)\n', s, round(toc/60, 1));
         end
         
     end
+    tocBytes(pool)
+    delete(pool);
 
     vax_costs_RD_bn_arr = zeros(sim_cnt, 1);
     vax_costs_RD_bn_arr = repmat(adv_RD_spend_bn_PV, sim_cnt, 1);
@@ -422,14 +424,15 @@ function simulate_scenario(params, sim_scens_path)
     sim_results_sum = [sim_results_sum0(:,end) sim_results_sum0(:, 1:end-1)]; % make sim_num be first column
 
     if params.save_output == 1
+        % Transpose matrices before saving to get simulations in rows.
         save_to_file(params.scenario_name, params.outdirpath, sim_results_sum, sim_results, ...
-            sim_out_arr_costs_adv_cap_nom, sim_out_arr_costs_adv_cap_PV, ...
-            sim_out_arr_costs_adv_RD_nom, sim_out_arr_costs_adv_RD_PV, ...
-            sim_out_arr_costs_surveil_nom, sim_out_arr_costs_surveil_PV, ...
-            sim_out_arr_costs_inp_cap_nom, sim_out_arr_costs_inp_cap_PV, ...
-            sim_out_arr_costs_inp_marg_nom, sim_out_arr_costs_inp_marg_PV, ...
-            sim_out_arr_costs_inp_tailoring_nom, sim_out_arr_costs_inp_tailoring_PV, ...
-            sim_out_arr_costs_inp_RD_nom, sim_out_arr_costs_inp_RD_PV, ...
-            sim_out_arr_benefits_vaccine_nom, sim_out_arr_benefits_vaccine_PV);
+            sim_out_arr_costs_adv_cap_nom', sim_out_arr_costs_adv_cap_PV', ...
+            sim_out_arr_costs_adv_RD_nom', sim_out_arr_costs_adv_RD_PV', ...
+            sim_out_arr_costs_surveil_nom', sim_out_arr_costs_surveil_PV', ...
+            sim_out_arr_costs_inp_cap_nom', sim_out_arr_costs_inp_cap_PV', ...
+            sim_out_arr_costs_inp_marg_nom', sim_out_arr_costs_inp_marg_PV', ...
+            sim_out_arr_costs_inp_tailoring_nom', sim_out_arr_costs_inp_tailoring_PV', ...
+            sim_out_arr_costs_inp_RD_nom', sim_out_arr_costs_inp_RD_PV', ...
+            sim_out_arr_benefits_vaccine_nom', sim_out_arr_benefits_vaccine_PV');
     end
 end

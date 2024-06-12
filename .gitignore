@@ -8,3 +8,5 @@ data/clean/*
 output/*
 
 ignore_folder/*
+
+*.log
