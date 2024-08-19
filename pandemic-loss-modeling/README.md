@@ -4,7 +4,7 @@ This repo contains the dataset and tools for forecasting pandemic losses, based 
 <br/>
 
 ### Epidemic Dataset (1500–2024): `epidemics_240816.xlsx`
-This updated dataset from Marani et al. (2021) provides information on historical epidemics, including start and end years, location, mortality and details of specific diseases involved.
+This updated dataset from [Marani et al. (2021)](https://doi.org/10.1073/pnas.2105482118) provides information on historical epidemics, including start and end years, location, mortality and details of specific diseases involved.
 
 **Notes:**
 - **Unknown Death Count**: Coded as `-999` in the `death_thousand` field.
