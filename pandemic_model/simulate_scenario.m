@@ -18,6 +18,8 @@ function simulate_scenario(params, sim_scens_path)
         sim_scens0.posterior2, sim_scens0.is_false, params.enhanced_surveillance, params.surveillance_thresholds);
     
     sim_scens = finish_gen_sim_scens(sim_scens0, params); % adds state, natural_dur and has_RD_benefit columns
+    save(sim_scens_path,'sim_scens');
+    return;
 
     sim_scens = removevars(sim_scens, {'draw_state', 'draw_natural_dur', 'posterior1', 'posterior2'}); % remove the random draw columns
     %%%%%%%%%%%%%%%% INITIALIZATION %%%%%%%%%%%%%%%%
@@ -34,7 +36,7 @@ function simulate_scenario(params, sim_scens_path)
     vax_costs_inp_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for in pandemic at risk capacity investments
     vax_costs_upf_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for adv capacity investments
 
-    sim_results = array2table(double.empty(0, 18), 'VariableNames', {'sim_num', 'yr_start', 'intensity', 'is_false', 'pathogen_family', ...
+    sim_results = array2table(double.empty(0, 18), 'VariableNames', {'sim_num', 'yr_start', 'severity', 'is_false', 'pathogen_family', ...
         'prep_start_month', 'state', 'natural_dur', 'has_RD_benefit', 'state_desc', ...
         'cap_avail_m', 'cap_avail_o', 'vax_benefits', 'vax_fraction_cum', 'inp_marg_costs', 'inp_tailoring_costs', 'inp_RD_costs', 'inp_cap_costs'} );
 
@@ -118,7 +120,7 @@ function simulate_scenario(params, sim_scens_path)
         idx = sim_scens.sim_num == s; % indices of rowsinu for sim s
         row_cnt_s = sum(idx>0); % number of rows for this simulation
         sim_scens_s = sim_scens(idx, :); % filter sim_scens for rows relevant for this simulation
-        [yr_start_arr, intensity_arr, natural_dur_arr, is_false_arr, state_arr, has_RD_benefit_arr, prep_start_month_arr] = ...
+        [yr_start_arr, severity_arr, natural_dur_arr, is_false_arr, state_arr, has_RD_benefit_arr, prep_start_month_arr] = ...
             extract_columns_from_table(sim_scens_s); % unpack designated columns as arrays
         
         vax_benefits_s = 0; % total benefit in simulation (total across pandemics, in million)
@@ -176,7 +178,7 @@ function simulate_scenario(params, sim_scens_path)
                 yr_start             = yr_start_arr(i);
                 pandemic_natural_dur = natural_dur_arr(i);
                 state                = state_arr(i);
-                intensity            = intensity_arr(i);
+                severity            = severity_arr(i);
                 is_false             = is_false_arr(i);
                 has_RD_benefit       = has_RD_benefit_arr(i);
                 prep_start_month     = prep_start_month_arr(i); % interpret prep_start_month as the month where by the end of it, world starts preparing
@@ -276,7 +278,7 @@ function simulate_scenario(params, sim_scens_path)
                         inp_marg_costs_o_PV = zeros(tot_months, 1);
                     else
                         [vax_fraction_cum, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom] = ...
-                            run_pandemic(params, tau_A, has_RD_benefit, yr_start, pandemic_natural_dur, state, intensity, cap_avail_m, cap_avail_o);
+                            run_pandemic(params, tau_A, has_RD_benefit, yr_start, pandemic_natural_dur, state, severity, cap_avail_m, cap_avail_o);
                     end
 
                     inp_marg_costs_PV = sum(inp_marg_costs_m_PV, 1) + sum(inp_marg_costs_o_PV, 1);

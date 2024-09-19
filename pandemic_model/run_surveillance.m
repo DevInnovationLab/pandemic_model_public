@@ -1,58 +1,34 @@
-function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_false_arr, enhanced_surveillance, threshold_surveil_arr)
+function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_false_arr, ...
+	enhanced_surveillance, threshold_surveil_arr)
 	% only computes, no random number generation
 
+	% Extract thresholds
 	threshold_no_surveil = threshold_surveil_arr(1);
 	threshold_surveil = threshold_surveil_arr(2);
 
-	cnt = length(is_false_arr);
-	prep_start_month_arr = zeros(cnt, 1);
+	% Compute true state and prepare decisions
+	is_pandemic = ~is_false_arr;
+	prepare_decision1 = posterior1 > (enhanced_surveillance * threshold_surveil + ~enhanced_surveillance * threshold_no_surveil);
+	prepare_decision2 = posterior2 > threshold_surveil;
 
-	for i=1:cnt
-	
-		is_pandemic_0 = ~is_false_arr(i); % true state of the world
+	% Initialize prep_start_month_arr with default value
+	prep_start_month_arr = 2 * ones(size(is_false_arr));
 
-		if enhanced_surveillance == 1
-			prepare_for_pandemic1 = posterior1(i) > threshold_surveil; % decision rule from first set of signals
-		else
-			prepare_for_pandemic1 = posterior1(i) > threshold_no_surveil;
-		end
-
-		if enhanced_surveillance && ~prepare_for_pandemic1 % a second signal if has surveillance and hasn't acted
-
-			prepare_for_pandemic2 = posterior2(i) > threshold_surveil; % decision rule from second set of signals
-		end
-		
-		if enhanced_surveillance == 1 % has access to two sets of signals
-			
-			if prepare_for_pandemic1
-				prep_start_month = 0;
-            elseif prepare_for_pandemic2
-				prep_start_month = 1;
-			else
-				
-				if is_pandemic_0
-					prep_start_month = 2;
-				else
-					prep_start_month = NaN; % correctly anticipated no pandemic
-				end
-
-			end
-		
-		else % no surveil == access to only one set of signals
-		
-			if prepare_for_pandemic1 % only has access to one set of signals but one month later
-				prep_start_month = 1;
-			else
-				if is_pandemic_0
-					prep_start_month = 2;
-				else
-					prep_start_month = NaN; % correctly anticipated no pandemic
-				end
-			end
-		
-		end
-
-		prep_start_month_arr(i) = prep_start_month;
-		
+	if enhanced_surveillance
+		% Enhanced surveillance logic
+		prep_start_month_arr(prepare_decision1) = 0;
+		prep_start_month_arr(~prepare_decision1 & prepare_decision2) = 1;
+	else
+		% No surveillance logic
+		prep_start_month_arr(prepare_decision1) = 1;
 	end
+
+	% Handle cases where no pandemic was correctly anticipated
+	no_pandemic_correctly_anticipated = ~is_pandemic & ...
+		((~enhanced_surveillance & ~prepare_decision1) | ...
+		 (enhanced_surveillance & ~prepare_decision1 & ~prepare_decision2));
+	prep_start_month_arr(no_pandemic_correctly_anticipated) = NaN;
+
+	% Ensure prep_start_month_arr is a column vector
+	prep_start_month_arr = prep_start_month_arr(:);
 end

@@ -4,7 +4,7 @@ sim_periods: 200
 outdir: "./output"
 scenario_configs: "./config/scenario_configs/test"
 seed: 1
-include_false_positives: 1
+include_false_positives: 0
 add_datetime_to_outdir: 0
 sim_scens_path: null # Load previously created pandemic simulations (rather than creating new ones with parameters below)
 save_output: 1
@@ -20,21 +20,9 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-minimum_pandemic_intensity_threshold: 0.16 # Half of COVID-19 intensity
-pandemic_dur_probs: [0.5, 0.2 ,0.3]
-arrival: # Arrival distribution parameters
-  sigma: 0.0113
-  xi: 1.408
-  alpha: 0.62
-  mu_prime: 10e-4 # Epidemic lower bound (note difference between scientific and e notation)
-  mu_prime_prime: 17.7939 # Upper bound based on Spanish flu death count
-  extinction: 1000
-  w: 20
-  ones: 7
-  twos: 0
-  threes: 0
-  fours: 0
-  fives: 0
+minimum_pandemic_severity_threshold: 4.59 # Half of COVID-19 severity (9.17 deaths per 10,000)
+pandemic_dur_probs: [0.5, 0.2, 0.3]
+arrival_dist_config: "./config/arrival_distributions/marani_inspired.yaml"
 
 # Capacity
 theta: 0.25 # Fraction reduction in pandemic-time investments due to advance capacity

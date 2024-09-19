@@ -20,7 +20,7 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-minimum_pandemic_intensity_threshold: 0.16 # Half of COVID-19 intensity
+minimum_pandemic_severity_threshold: 0.16 # Half of COVID-19 severity
 pandemic_dur_probs: [0.5, 0.2, 0.3]
 arrival: # Arrival distribution parameters
   sigma: 0.0113

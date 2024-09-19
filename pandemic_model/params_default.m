@@ -8,7 +8,7 @@ function params = params_default()
 	params.P0 = 7.91*10^9;	% base year population
 	params.Y0 = 12316.1;	% base year GDP per capita (World bank: https://data.worldbank.org/indicator/NY.GDP.PCAP.CD)
 
-    % this is the intensity threshold that doubles the prob of being in a pandemic that exceeds i_star (used for when assuming false pos rate is 50%) (NOT USED)
+    % this is the severity threshold that doubles the prob of being in a pandemic that exceeds i_star (used for when assuming false pos rate is 50%) (NOT USED)
     % this value is calculated in "arrival_distribution.m"
     % params.i_star_w_false = 0.0559;
 
