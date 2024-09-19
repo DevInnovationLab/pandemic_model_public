@@ -3,6 +3,42 @@ This repo contains the dataset and tools for forecasting pandemic losses, based 
 
 <br/>
 
+## Setup
+
+We use [pipenv](https://pipenv.pypa.io/en/latest/) for environment management.
+
+To set up the project environment:
+
+1. Create environment/install dependencies:
+   ```
+   pipenv install
+   ```
+
+2. Add new dependencies:
+   ```
+   pipenv install <package_name>
+   ```
+   This updates `Pipfile` and `Pipfile.lock` to ensure consistent package versions across collaborators.
+
+3. Install development dependencies:
+   ```
+   pipenv install <package_name> --dev
+   ```
+
+4. Activate the virtual environment:
+   ```
+   pipenv shell
+   ```
+
+5. Exit the virtual environment:
+   ```
+   exit
+   ```
+
+<br/>
+
+## Data
+
 ### Epidemic Dataset (1500–2024): `epidemics_240816.xlsx`
 This updated dataset from [Marani et al. (2021)](https://doi.org/10.1073/pnas.2105482118) provides information on historical epidemics, including start and end years, location, mortality and details of specific diseases involved.
 
