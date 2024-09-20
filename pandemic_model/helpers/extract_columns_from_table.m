@@ -1,11 +1,11 @@
-function [yr_start_arr, intensity_arr, natural_dur_arr, is_false_arr, state_arr, has_RD_benefit_arr, prep_start_month_arr] ...
+function [yr_start_arr, severity_arr, natural_dur_arr, is_false_arr, rd_state_arr, has_RD_benefit_arr, prep_start_month_arr] ...
         = extract_columns_from_table(sim_scens_s)
 
         yr_start_arr       = sim_scens_s.yr_start;
-        intensity_arr      = sim_scens_s.intensity;
+        severity_arr      = sim_scens_s.severity;
         natural_dur_arr    = sim_scens_s.natural_dur;
         is_false_arr       = sim_scens_s.is_false;
-        state_arr          = sim_scens_s.state;
+        rd_state_arr          = sim_scens_s.rd_state;
         has_RD_benefit_arr = sim_scens_s.has_RD_benefit;
         prep_start_month_arr = sim_scens_s.prep_start_month;
 end

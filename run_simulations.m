@@ -6,6 +6,7 @@ function run_simulations(job_config_path)
 
     % Load job config and set seed
     job_config = yaml.loadFile(job_config_path);
+    job_config = clean_job_config(job_config);
     rng(job_config.seed);
 
     % Create output dir
@@ -21,19 +22,18 @@ function run_simulations(job_config_path)
     create_folders_recursively(outdirpath);
     job_config.outdirpath = outdirpath;
 
-    % Create pandemic scenarios
-    if yaml.isNull(job_config.sim_scens_path) 
-        % Create pandemic viral family table
-        viral_family_frequency_table = create_viral_family_frequency_table(job_config.num_viral_families);
+    % Generate simulations
+    arrival_dist = load_arrival_dist(job_config.arrival_dist_config);
+    viral_family_frequency_table = create_viral_family_frequency_table(job_config.num_viral_families);
+    base_simulation_table = get_base_simulation_table(arrival_dist, viral_family_frequency_table, job_config);
 
-        % Simulate pandemic arrivals and return path
-        sim_scens_path = gen_all_sim_scens(job_config.arrival, job_config.include_false_positives, ...
-            job_config.num_simulations, job_config.minimum_pandemic_intensity_threshold, viral_family_frequency_table, ...
-            job_config.sim_periods, outdirpath);  
-    else
-        sim_scens_path = fullfile(job_config.sim_scens_path);
+    % Save the simulation table using the name of the job config
+    simulation_table_path = fullfile(outdirpath, "base_simulation_table.mat");
+    save(simulation_table_path, 'base_simulation_table');
+    
+    % Log the save operation
+    fprintf('Simulation table saved to: %s\n', simulation_table_path);
 
-    end
     % Create object storing job and scenario configurations that we will save.
     out_params = job_config;
     out_params.scenarios = {};
@@ -51,7 +51,14 @@ function run_simulations(job_config_path)
         % Add scenario specific parameter configucations
         simulation_params = update_params(job_config, scenario_params);
         simulation_params.scenario_name = scenario_name;
-        simulate_scenario(simulation_params, sim_scens_path);
+
+        % Run scenario
+        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, simulation_params);
+
+        % Save scenario simulation table so you can inspect
+        save(fullfile(outdirpath, "scenario_simulation_table.mat"), 'scenario_simulation_table');
+
+        simulate_scenario(scenario_simulation_table, simulation_params);
     end
 
     % Handle filepath list input for scenario configs
@@ -62,6 +69,12 @@ function run_simulations(job_config_path)
     yaml.dumpFile(config_outpath, out_params);
 
 end
+
+function config = clean_job_config(config)
+
+    config.pandemic_dur_probs = cell2mat(config.pandemic_dur_probs);
+    config.surveillance_thresholds = cell2mat(config.surveillance_thresholds);
+end 
 
 
 function updated_params = update_params(base_params, new_params)
@@ -94,10 +107,6 @@ function updated_params = update_params(base_params, new_params)
     updated_params.z_m = updated_params.share_target_advanced_capacity * z_m;
     updated_params.z_o = updated_params.share_target_advanced_capacity * z_o;
 
-    % Convert cell structs to arrays
-    updated_params.pandemic_dur_probs = cell2mat(updated_params.pandemic_dur_probs);
-    updated_params.surveillance_thresholds = cell2mat(updated_params.surveillance_thresholds);
-    
     validate_params(updated_params);
 
 end

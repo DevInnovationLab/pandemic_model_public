@@ -1,7 +1,7 @@
 # Pandemic Model
 
 ## Installation
-This repository uses YAML configuration files. If you don't already have the `yaml` directory in your repository, clone [this repository](https://github.com/MartinKoch123/yaml) into the root directory of the pandemic model repository.
+This repository uses YAML configuration files. Clone [this repository](https://github.com/MartinKoch123/yaml) into the root directory of the pandemic model repository to add YAML read and write functions.
 
 ## Configuring scenarios and model runs
 We distinguish between two types of configs: 
@@ -16,6 +16,7 @@ The distinction between job parameter and scenario parameters is not hard and fa
 
 ### Local
 To run the model locally, create a job config, a directory with scenario configs and run the following command:
+
 ```
 matlab  -nodesktop -nosplash -r "run_simulations({PATH_TO_JOB_CONFIG})"
 ```
