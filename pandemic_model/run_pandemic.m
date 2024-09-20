@@ -1,5 +1,5 @@
 function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom] = ...
-    run_pandemic(params, tau_A, RD_benefit, yr_start, pandemic_natural_dur, state, severity, cap_avail_m, cap_avail_o)
+    run_pandemic(params, tau_A, RD_benefit, yr_start, pandemic_natural_dur, rd_state, severity, cap_avail_m, cap_avail_o)
 
 	% run simulation for a pandemic of significant size (not false pos)
 
@@ -13,7 +13,7 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
     cap_o_arr = zeros(tot_months, 1); % vector of monthly production capacity for traditional platform, in million
     
     for tau = 1:tot_months
-        [~, x_arr] = production_capacity(tau, tau_A, params, state, cap_avail_m/12, cap_avail_o/12);
+        [~, x_arr] = production_capacity(tau, tau_A, params, rd_state, cap_avail_m/12, cap_avail_o/12);
         cap_m_arr(tau) = x_arr(1);
         cap_o_arr(tau) = x_arr(2);
     end
@@ -29,7 +29,8 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
 	end
 
     %%%%%%%%%% BENEFITS %%%%%%%%%%
-
+    
+    % Need to check that these formulas are correct.
     ML = (params.value_of_death * params.P0 / 1000) * severity ./ tot_months ./ 10^6; % mortality lossses for during pandemic (monthly, in million)
     % Update output losses to be estimated on severity
     OL = (params.Y0 * params.P0 / 100) * exp(0.7393) * (severity^0.4561) ./ 12 ./ 10^6; % output losses for during pandemic (monthly, in million)

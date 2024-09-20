@@ -20,7 +20,7 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-minimum_pandemic_severity_threshold: 4.59 # Half of COVID-19 severity (9.17 deaths per 10,000)
+response_threshold: 4.59 # Half of COVID-19 severity (9.17 deaths per 10,000)
 pandemic_dur_probs: [0.5, 0.2, 0.3]
 arrival_dist_config: "./config/arrival_distributions/marani_inspired.yaml"
 
