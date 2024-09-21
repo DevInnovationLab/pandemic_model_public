@@ -17,9 +17,14 @@ classdef ParametrizedArrivalDist < ArrivalDist
         
         function severity = get_severity(obj, unifrnd_draw)
             severity = zeros(size(unifrnd_draw));
-            above_threshold = unifrnd_draw > (1 - obj.min_severity_exceed_prob);
+
+            % Rescale rank distribution for Pareto iCDF. 
+            cum_prob_at_threshold = (1 - obj.min_severity_exceed_prob);
+            above_threshold = unifrnd_draw > cum_prob_at_threshold;
+            rescaled_rank = (unifrnd_draw(above_threshold) - cum_prob_at_threshold) .* (1 ./ obj.min_severity_exceed_prob);
+
             severity(~above_threshold) = obj.min_severity;
-            severity(above_threshold) = obj.pd.random(size(unifrnd_draw(above_threshold)));
+            severity(above_threshold) = obj.pd.icdf(rescaled_rank);
             severity(severity > obj.max_severity) = obj.max_severity;
         end
     end
