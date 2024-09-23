@@ -10,3 +10,4 @@ output/*
 ignore_folder/*
 
 *.log
+*.out

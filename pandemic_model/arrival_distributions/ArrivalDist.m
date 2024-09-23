@@ -1,3 +1,4 @@
+% Define arrival distribution interface
 classdef ArrivalDist
     properties
         max_severity
