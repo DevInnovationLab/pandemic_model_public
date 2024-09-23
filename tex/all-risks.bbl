@@ -1,0 +1,97 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.3 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{nyt/global//global/global/global}
+    \entry{marani_intensity_2021}{article}{}{}
+      \name{author}{4}{}{%
+        {{un=0,uniquepart=base,hash=c545c84b0a9c6db89e12ebf7864cfcfe}{%
+           family={Marani},
+           familyi={M\bibinitperiod},
+           given={Marco},
+           giveni={M\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=46231b0d49d16ab3310860bdc4b71285}{%
+           family={Katul},
+           familyi={K\bibinitperiod},
+           given={Gabriel\bibnamedelima G.},
+           giveni={G\bibinitperiod\bibinitdelim G\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=62219b4bd16e8cadfb8e0f48db312c20}{%
+           family={Pan},
+           familyi={P\bibinitperiod},
+           given={William\bibnamedelima K.},
+           giveni={W\bibinitperiod\bibinitdelim K\bibinitperiod},
+           givenun=0}}%
+        {{un=0,uniquepart=base,hash=064f4c577dfa309e3eef2be21767de7a}{%
+           family={Parolari},
+           familyi={P\bibinitperiod},
+           given={Anthony\bibnamedelima J.},
+           giveni={A\bibinitperiod\bibinitdelim J\bibinitperiod},
+           givenun=0}}%
+      }
+      \strng{namehash}{65f5dfd7be51a66ac6f7160e7a55e61a}
+      \strng{fullhash}{978cd17078011dd16c99245e4a8676dd}
+      \strng{fullhashraw}{978cd17078011dd16c99245e4a8676dd}
+      \strng{bibnamehash}{65f5dfd7be51a66ac6f7160e7a55e61a}
+      \strng{authorbibnamehash}{65f5dfd7be51a66ac6f7160e7a55e61a}
+      \strng{authornamehash}{65f5dfd7be51a66ac6f7160e7a55e61a}
+      \strng{authorfullhash}{978cd17078011dd16c99245e4a8676dd}
+      \strng{authorfullhashraw}{978cd17078011dd16c99245e4a8676dd}
+      \field{sortinit}{M}
+      \field{sortinithash}{4625c616857f13d17ce56f7d4f97d451}
+      \field{extradatescope}{labelyear}
+      \field{labeldatesource}{}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{abstract}{Observational knowledge of the epidemic intensity, defined as the number of deaths divided by global population and epidemic duration, and of the rate of emergence of infectious disease outbreaks is necessary to test theory and models and to inform public health risk assessment by quantifying the probability of extreme pandemics such as {COVID}-19. Despite its significance, assembling and analyzing a comprehensive global historical record spanning a variety of diseases remains an unexplored task. A global dataset of historical epidemics from 1600 to present is here compiled and examined using novel statistical methods to estimate the yearly probability of occurrence of extreme epidemics. Historical observations covering four orders of magnitude of epidemic intensity follow a common probability distribution with a slowly decaying power-law tail (generalized Pareto distribution, asymptotic exponent = −0.71). The yearly number of epidemics varies ninefold and shows systematic trends. Yearly occurrence probabilities of extreme epidemics, P y , vary widely: P y of an event with the intensity of the “Spanish influenza” (1918 to 1920) varies between 0.11 and 0.89\% from 1600 to present, while its mean recurrence time today is 879 y (95\% {CI}: 730 to 1081 y). The slow decay of probability with epidemic intensity implies that extreme epidemics are relatively likely, a property previously undetected due to short observational records and stationary analysis methods. Using recent estimates of the rate of increase in disease emergence from zoonotic reservoirs associated with environmental change, we estimate that the yearly probability of occurrence of extreme epidemics can increase up to threefold in the coming decades.}
+      \field{day}{31}
+      \field{issn}{0027-8424, 1091-6490}
+      \field{journaltitle}{Proceedings of the National Academy of Sciences}
+      \field{langid}{english}
+      \field{month}{8}
+      \field{number}{35}
+      \field{shortjournal}{Proc. Natl. Acad. Sci. U.S.A.}
+      \field{title}{Intensity and frequency of extreme novel epidemics}
+      \field{urlday}{16}
+      \field{urlmonth}{5}
+      \field{urlyear}{2024}
+      \field{volume}{118}
+      \field{year}{2021}
+      \field{dateera}{ce}
+      \field{urldateera}{ce}
+      \field{pages}{e2105482118}
+      \range{pages}{-1}
+      \verb{doi}
+      \verb 10.1073/pnas.2105482118
+      \endverb
+      \verb{file}
+      \verb Available Version (via Google Scholar):C\:\\Users\\Sebastian Quaade\\Zotero\\storage\\KIX2VT56\\Marani et al. - 2021 - Intensity and frequency of extreme novel epidemics.pdf:application/pdf
+      \endverb
+      \verb{urlraw}
+      \verb https://pnas.org/doi/10.1073/pnas.2105482118
+      \endverb
+      \verb{url}
+      \verb https://pnas.org/doi/10.1073/pnas.2105482118
+      \endverb
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

@@ -1,0 +1,39 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage[style=authoryear,backend=biber]{biblatex}
+\addbibresource{bib.bib}
+
+\title{All risks model}
+\author{Christopher Snyder \and Rachel Glennerster 
+        \and Sarrin Chethik \and Catherine Che \and Sebastian Quaade}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+% Abstract content goes here
+\end{abstract}
+
+
+
+\section{Methods}
+
+\subsection{Data}
+Forecasting the arrival rate of future pandemics raises methodological challenges germane to extreme value theory. Large scale pandemic outbreaks---which historically contributed most pandemic deaths---are historically rare events, meaning that a long time series is needed to accurately estimate their frequency. In practice, however, sufficiently long duree data on epidemic outbreaks are scarce. Even when such data is available, considerable variability in medical, environmental and other conditions over these time spans mean that long duree historical arrival rates may not reflect present-day risk. 
+
+To address these challenges one must appropriately integrate evidence on pandemic outbreaks over the long duree with pandemic outbreak data from periods that more closely reflect present-day conditions. \textcite{marani_intensity_2021} collect a dataset of global epidemic outbreaks from 1600 to 2019 and use this to estimate the arrival likelihood of pandemics of different intensities (in terms of deaths per thousand per year) over time. We build on \textcite{marani_intensity_2021} work, making two key modifications. First, we limit the data 
+
+\subsection{Modeling pandemic arrivals}
+
+We model the arrival of future pandemic outbreaks using probability distributions that describe the annual arrival likelihood of pandemics of varying severity (in terms of deaths per thousand). In our default specification, we adapt the methodology \textcite{marani_intensity_2021} to estimate an unconditional epidemic exceedance distribution. First, we 
+
+\subsubsection{Parametrized distribution}
+
+
+\printbibliography
+
+\end{document}
