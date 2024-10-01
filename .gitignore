@@ -3,8 +3,6 @@ monte_carlo_sims.m
 gen_sim_scens_old.m
 arrival_distribution_graph.m
 
-data/raw/*
-data/clean/*
 output/*
 
 ignore_folder/*
