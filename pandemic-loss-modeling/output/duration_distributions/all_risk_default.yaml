@@ -1,9 +1,7 @@
-dist_family: GeneralizedPareto
-max_severity: 280.0
-min_severity: 0.01
-min_severity_exceedance: 0.03333333333333333
+dist_family: Lognormal
+max_duration: 44.0
 params:
-  k: !!python/object/apply:numpy._core.multiarray.scalar
+  mu: !!python/object/apply:numpy._core.multiarray.scalar
   - &id001 !!python/object/apply:numpy.dtype
     args:
     - f8
@@ -19,9 +17,8 @@ params:
     - -1
     - 0
   - !!binary |
-    wEC4c2nYCEA=
+    oi1lsu6X9T8=
   sigma: !!python/object/apply:numpy._core.multiarray.scalar
   - *id001
   - !!binary |
-    yrZNlWDg5T8=
-  theta: 0.01
+    63G+stoC8j8=
