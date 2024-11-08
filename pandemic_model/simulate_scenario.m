@@ -11,10 +11,9 @@ function simulate_scenario(simulation_table, params)
 
     %%%%%%% LOAD SCENS
     % Consider moving this later
-    simulation_table = removevars(simulation_table, {'draw_natural_dur', 'posterior1', 'posterior2'}); % remove the random draw columns
+    simulation_table = removevars(simulation_table, {'posterior1', 'posterior2'}); % remove the random draw columns
     
     %%%%%%%%%%%%%%%% INITIALIZATION %%%%%%%%%%%%%%%%
-
     sim_cnt = max(params.num_simulations); % number of simulations
 
     vax_net_benefits_bn_arr = zeros(sim_cnt, 1); % array of net benefits for the simulations
@@ -87,9 +86,7 @@ function simulate_scenario(simulation_table, params)
     sim_out_arr_benefits_vaccine_nom  = zeros(params.sim_periods, sim_cnt);
     sim_out_arr_benefits_vaccine_PV  = zeros(params.sim_periods, sim_cnt);
 
-    % R&D costs
-    inp_RD_nom = params.inp_RD_cost * 1000; % mn of nominal
-
+    % Adv R&D costs
     time_arr = (1:params.adv_RD_benefit_start)';
     PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
     
@@ -108,7 +105,7 @@ function simulate_scenario(simulation_table, params)
     ticBytes(pool);
     parfor (s = 1:sim_cnt) % loop through each simulation scenario
     % for s =1:sim_cnt
-        idx = simulation_table.sim_num == s; % indices of rowsinu for sim s
+        idx = simulation_table.sim_num == s; % indices of rows for sim s
         row_cnt_s = sum(idx>0); % number of rows for this simulation
         sim_scens_s = simulation_table(idx, :); % filter sim_scens for rows relevant for this simulation
         [yr_start_arr, severity_arr, natural_dur_arr, is_false_arr, rd_state_arr, has_RD_benefit_arr, prep_start_month_arr] = ...
@@ -145,7 +142,7 @@ function simulate_scenario(simulation_table, params)
             sim_results = [sim_results; res];
 
         else
-            indx = yr_start_arr(1)-1;
+            indx = yr_start_arr(1)-1; % No idea what this part is doing now
             if indx > params.adv_cap_build_period
                 indx = params.adv_cap_build_period;
             end
@@ -186,6 +183,13 @@ function simulate_scenario(simulation_table, params)
                 end
 
                 pandemic_end_to_next_indx = (yr_pandemic_end+1):next_signal;
+
+                % Set response R&D costs
+                if has_RD_benefit == true
+                    inp_RD_nom = params.inp_RD_with_adv_RD * 1000; % mn of nominal
+                elseif has_RD_benefit == false
+                    inp_RD_nom = params.inp_RD_no_adv_RD * 1000; % mn of nominal
+                end
 
                 % Get existing advance capacity
                 adv_cap_m_current = adv_cap_m_over_time(yr_start-1);
@@ -241,7 +245,8 @@ function simulate_scenario(simulation_table, params)
                     surge_cap_stock_value_over_time(in_pandemic_indx) = surge_cap_stock_value_over_time(yr_start-1) + ...
                         surge_cap_capital_costs;
                     
-                    % fill and finish incurred at one month into prep start. 
+                    % fill and finish incurred at one month into prep start.
+                    % We are now applying fill and finish at each pandemic outbreak.
                     tailoring_PV = (1/(1+params.r))^(yr_start-1) * (1/(1+params.r))^(1/12 * (prep_start_month+1));
                     tailoring_nom_costs = adv_cap_m_current * (tailoring_fraction * params.k_m) + ...
                         adv_cap_o_current * (tailoring_fraction * params.k_o);

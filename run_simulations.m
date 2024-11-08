@@ -24,8 +24,9 @@ function run_simulations(job_config_path)
 
     % Generate simulations
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config);
-    viral_family_frequency_table = create_viral_family_frequency_table(job_config.num_viral_families);
-    base_simulation_table = get_base_simulation_table(arrival_dist, viral_family_frequency_table, job_config);
+    duration_dist = load_duration_dist(job_config.duration_dist_config);
+    viral_family_data = readtable(job_config.viral_family_data);
+    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config);
 
     % Save the simulation table using the name of the job config
     simulation_table_path = fullfile(outdirpath, "base_simulation_table.mat");
@@ -72,7 +73,6 @@ end
 
 function config = clean_job_config(config)
 
-    config.pandemic_dur_probs = cell2mat(config.pandemic_dur_probs);
     config.surveillance_thresholds = cell2mat(config.surveillance_thresholds);
 end 
 
@@ -89,18 +89,12 @@ function updated_params = update_params(base_params, new_params)
     end
 
     % Set pathogen family params. Should maybe do this elsewhere
-    updated_params.viral_families_researched = 1:updated_params.viral_families_to_research;
+    updated_params.viral_families_researched = parse_rd_investments(scenario_params.rd_investments, viral_family_data);
+    num_vfs_researched = length(update_params.viral_families_researched) % Check dimensions here
+
     updated_params.adv_RD_spend = updated_params.adv_RD_cost_per_pathogen * ...
         updated_params.pathogens_per_family * ... 
-        updated_params.viral_families_to_research;
-
-    if updated_params.viral_families_to_research == 0
-        updated_params.has_RD = 0;
-        updated_params.inp_RD_cost = updated_params.inp_RD_no_adv_RD;
-    else
-        updated_params.has_RD = 1;
-        updated_params.inp_RD_cost = updated_params.inp_RD_with_adv_RD;
-    end
+        num_vfs_researched;
 
     % Set advance capacity
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity
