@@ -1,24 +1,5 @@
 dist_family: Lognormal
 max_duration: 44.0
 params:
-  mu: !!python/object/apply:numpy._core.multiarray.scalar
-  - &id001 !!python/object/apply:numpy.dtype
-    args:
-    - f8
-    - false
-    - true
-    state: !!python/tuple
-    - 3
-    - <
-    - null
-    - null
-    - null
-    - -1
-    - -1
-    - 0
-  - !!binary |
-    oi1lsu6X9T8=
-  sigma: !!python/object/apply:numpy._core.multiarray.scalar
-  - *id001
-  - !!binary |
-    63G+stoC8j8=
+  mu: 1.3495928734363152
+  sigma: 1.125696848123989

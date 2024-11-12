@@ -11,6 +11,7 @@ openpyxl = "*"
 scipy = "*"
 statsmodels = "*"
 pyyaml = "*"
+scikit-learn = "*"
 
 [dev-packages]
 ipykernel = "*"
