@@ -1,0 +1,5 @@
+family: linear
+params:
+  coef:
+  - 0.5521764592108024
+  intercept: 4.290370887866348
