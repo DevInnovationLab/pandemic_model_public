@@ -19,27 +19,46 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	pathogen_family = randsample(viral_family_data.viral_family, num_response_scenario, true, viral_family_data.arrival_share);
 	rd_state = unifrnd(0, 1, num_response_scenario, 1); % Create a column of random variable to denote if RD successful (if there is RD)
 	natural_dur = duration_dist.get_duration(unifrnd(0, 1, num_response_scenario, 1));
+	intensity = severity ./ natural_dur; % Problem if dividing by zero
+	yr_end = min(yr_start + natural_dur - 1, params.sim_periods);
 
 	[posterior1, posterior2] = gen_surveil_signals(is_false);
 
 	% Create table of pandemic scenarios
 	response_table = table(sim_num, yr_start, severity, ...
 						   is_false, pathogen_family, rd_state, ...
-						   natural_dur, posterior1, posterior2);
+						   natural_dur, posterior1, posterior2, ...
+						   intensity, yr_end);
 
-		
-	% Identify and remove overlapping pandemics
-	sorted_table = sortrows(response_table, {'sim_num', 'yr_start'});
-	yr_end = sorted_table.yr_start + sorted_table.natural_dur - 1; % If you have zero duration it could cause problems here.
-	
-	% Identify overlapping pandemics within each simulation
-	is_overlapping = [false; ...
-		sorted_table.sim_num(2:end) == sorted_table.sim_num(1:(end-1)) & ...
-		sorted_table.yr_start(2:end) <= yr_end(1:(end-1))];
-	
-	% Keep only non-overlapping pandemics
-	response_table = sorted_table(~is_overlapping, :);
+	% Address overlapping pandemics
 	response_table = sortrows(response_table, {'sim_num', 'yr_start'});
+	
+	% Identify overlapping pandemics
+	% Note: actually have to do sequentially, you may be throwing out more than you want.
+	same_simulation = [false; response_table.sim_num(2:end) == response_table.sim_num(1:(end-1))];
+	is_overlapping = same_simulation & ...
+		[false; response_table.yr_start(2:end) <= response_table.yr_end(1:(end-1))]; % Next pandemic starts before previous over
+
+	% Remove pandemics that are smaller than ongoing one
+	smaller_outbreak = is_overlapping & [false; response_table.intensity(2:end) <= response_table.intensity(1:(end-1))];
+	response_table = response_table(~smaller_outbreak, :);
+	is_overlapping = is_overlapping(~smaller_outbreak);
+
+	% Snip current pandemic if new pandemic is more intense
+	% Make sam sim and is overlapping index first one rather than subsequent one now
+	same_simulation = [response_table.sim_num(2:end) == response_table.sim_num(1:(end-1)); false; ];
+	is_overlapping = same_simulation & ...
+		[response_table.yr_start(2:end) <= response_table.yr_end(1:(end-1)); false; ]; % Next pandemic starts before previous over
+	next_bigger = is_overlapping & [response_table.intensity(1:(end-1)) <= response_table.intensity(2:end); false];
+	response_table.yr_end(next_bigger) = response_table.yr_start([false; next_bigger(1:(end-1))]) - 1; % Snip before start of next pandemic
+
+	% Get effective severity
+	response_table.actual_dur = response_table.yr_end - response_table.yr_start + 1;
+
+	temp = response_table(1:100, :);
+	temp(temp.actual_dur > temp.natural_dur, :)
+
+	response_table.eff_severity = response_table.severity .* (response_table.actual_dur ./ response_table.natural_dur);
 
     % Add rows for simulations without pandemics
     all_sims = 1:params.num_simulations;

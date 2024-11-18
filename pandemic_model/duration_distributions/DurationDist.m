@@ -1,7 +1,7 @@
 % Define duration distribution interface
 classdef DurationDist
     properties
-        max_duration
+        max_duration = Inf
     end
 
     methods (Abstract)

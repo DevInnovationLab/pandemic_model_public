@@ -18,8 +18,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	new_simulation_table.has_RD_benefit = has_RD_benefit;
 
 	% Adjust thresholds for RD benefits when research eligible
-	rd_adjustment = params.RD_success_rate_increase_per_platform * [2, 1, 1];
-	adjusted_thresholds = rd_thresholds + (cumsum(rd_adjustment) * has_RD_benefit);
+	rd_adjustment = params.RD_success_rate_increase_per_platform .* [2, 1, 1];
+	adjusted_thresholds = rd_thresholds + (cumsum(rd_adjustment) .* has_RD_benefit);
 	new_simulation_table.rd_state = sum(new_simulation_table.rd_state >= adjusted_thresholds, 2) + 1;
 
     new_simulation_table.rd_state_desc = repmat({""}, size(new_simulation_table, 1), 1);
@@ -28,7 +28,6 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     new_simulation_table.rd_state_desc(new_simulation_table.rd_state==3) = {"trad_only"};
     new_simulation_table.rd_state_desc(new_simulation_table.rd_state==4) = {"none"};
     new_simulation_table.rd_state_desc(isnan(new_simulation_table.rd_state)) = {"no_pandemic"};
-
 end
 
 

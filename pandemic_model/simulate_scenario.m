@@ -1,4 +1,4 @@
-function simulate_scenario(simulation_table, params)
+function simulate_scenario(simulation_table, econ_loss_model, params)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % NOTE:
@@ -108,7 +108,7 @@ function simulate_scenario(simulation_table, params)
         idx = simulation_table.sim_num == s; % indices of rows for sim s
         row_cnt_s = sum(idx>0); % number of rows for this simulation
         sim_scens_s = simulation_table(idx, :); % filter sim_scens for rows relevant for this simulation
-        [yr_start_arr, severity_arr, natural_dur_arr, is_false_arr, rd_state_arr, has_RD_benefit_arr, prep_start_month_arr] = ...
+        [yr_start_arr, severity_arr, natural_dur_arr, actual_dur_arr, is_false_arr, rd_state_arr, has_RD_benefit_arr, prep_start_month_arr, yr_end_arr] = ...
             extract_columns_from_table(sim_scens_s); % unpack designated columns as arrays
         
         vax_benefits_s = 0; % total benefit in simulation (total across pandemics, in million)
@@ -163,14 +163,15 @@ function simulate_scenario(simulation_table, params)
                 % if i == 2
                 %     blah = 1+1;
                 % end
-                yr_start             = yr_start_arr(i);
+                yr_start = yr_start_arr(i);
                 pandemic_natural_dur = natural_dur_arr(i);
-                rd_state                = rd_state_arr(i);
-                severity            = severity_arr(i);
-                is_false             = is_false_arr(i);
-                has_RD_benefit       = has_RD_benefit_arr(i);
-                prep_start_month     = prep_start_month_arr(i); % interpret prep_start_month as the month where by the end of it, world starts preparing
-                yr_pandemic_end      = min(yr_start + pandemic_natural_dur - 1, params.sim_periods);
+                actual_dur = actual_dur_arr(i);
+                rd_state = rd_state_arr(i);
+                severity = severity_arr(i);
+                is_false = is_false_arr(i);
+                has_RD_benefit = has_RD_benefit_arr(i);
+                prep_start_month = prep_start_month_arr(i); % interpret prep_start_month as the month where by the end of it, world starts preparing
+                yr_pandemic_end = yr_end_arr(i);
                 if is_false == 1
                     yr_pandemic_end = yr_start;
                 end
@@ -274,7 +275,7 @@ function simulate_scenario(simulation_table, params)
                         inp_marg_costs_o_PV = zeros(tot_months, 1);
                     else
                         [vax_fraction_cum, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom] = ...
-                            run_pandemic(params, tau_A, has_RD_benefit, yr_start, pandemic_natural_dur, rd_state, severity, cap_avail_m, cap_avail_o);
+                            run_pandemic(params, econ_loss_model, tau_A, has_RD_benefit, yr_start, pandemic_natural_dur, actual_dur, rd_state, severity, cap_avail_m, cap_avail_o);
                     end
 
                     inp_marg_costs_PV = sum(inp_marg_costs_m_PV, 1) + sum(inp_marg_costs_o_PV, 1);
