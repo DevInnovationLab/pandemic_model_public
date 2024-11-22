@@ -5,7 +5,7 @@ import yaml
 import matplotlib.pyplot as plt
 from scipy.special import gammaln
 from sklearn.linear_model import LinearRegression, PoissonRegressor
-from sklearn.metrics import r2_score, log_loss
+from sklearn.metrics import r2_score
 
 
 # Set a consistent styling for academic figures
@@ -86,34 +86,39 @@ if __name__ == "__main__":
                 va='top',
                 color='darkblue')
 
-    # Fitted line for linear scale
-    log_xrange = np.linspace(np.log(econ_loss_clean['mortality_smu'].min() / 2), np.log(econ_loss_clean['mortality_smu'].max()), 100).reshape(-1, 1)
-    y_pred_linear = lm.predict(log_xrange)
-    y_pred_poisson = pm.predict(log_xrange)
-    ax.plot(np.exp(log_xrange), y_pred_linear, linewidth=2.5, color=col_linear, label='Linear')
-    ax.plot(np.exp(log_xrange), y_pred_poisson, linewidth=2.5, color=col_poisson, label='Poisson')
-    ax.set_xscale('log')
-
     # Labels and title
     ax.set_title(r"Pandemic deaths per 10,000 vs percent GDP loss")
     ax.set_xlabel("Mortality (Deaths per 10,000)")
     ax.set_ylabel(r"% GDP Loss")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
+    
+    # Log scale and tight layout 
+    ax.set_xscale('log')
+    plt.tight_layout()
 
-    # Add R^2 and Deviance values to the plot
+    # Fitted lines for linear scale
+    log_xrange = np.linspace(np.log(econ_loss_clean['mortality_smu'].min() / 2), np.log(econ_loss_clean['mortality_smu'].max()), 100).reshape(-1, 1)
+    y_pred_linear = lm.predict(log_xrange)
+    y_pred_poisson = pm.predict(log_xrange)
+
+    # Plot poisson curve and save
+    ax.plot(np.exp(log_xrange), y_pred_poisson, linewidth=2.5, color=col_poisson, label='Poisson')
+    poisson_label = ax.text(0.8, 0.45, "Poisson", transform=ax.transAxes, color=col_poisson)
+    ax.text(0.80, 0.10, rf"$R^2_{{\mathrm{{poisson}}}} = {r2_poisson:.3f}$", 
+                            transform=ax.transAxes, verticalalignment='top', color=col_poisson)
+    
+    plt.savefig("output/econ_loss_models/poisson_model.png", dpi=400)
+
+    # Add linear model and save
+    poisson_label.remove()
+    ax.plot(np.exp(log_xrange), y_pred_linear, linewidth=2.5, color=col_linear, label='Linear')
     ax.text(0.80, 0.15, rf"$R^2_{{\mathrm{{linear}}}} = {r2_linear:.3f}$", 
             transform=ax.transAxes, verticalalignment='top', color=col_linear)
-    ax.text(0.80, 0.10, rf"$R^2_{{\mathrm{{poisson}}}} = {r2_poisson:.3f}$", 
-            transform=ax.transAxes, verticalalignment='top', color=col_poisson)
-    
-    # Add line labels
     ax.text(0.45, 0.43, "Linear", transform=ax.transAxes, color=col_linear)
     ax.text(0.55, 0.25, "Poisson", transform=ax.transAxes, color=col_poisson)
 
-    # Save the plot
-    plt.tight_layout()
-    plt.savefig("output/econ_loss_models/default_models.png", dpi=400)
+    plt.savefig("output/econ_loss_models/linear_and_poisson_model.png", dpi=400)
 
     # ------ Save models -----------------------------------
 
