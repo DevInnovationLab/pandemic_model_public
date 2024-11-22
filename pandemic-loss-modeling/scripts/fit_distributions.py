@@ -95,7 +95,6 @@ if __name__ == "__main__":
 
     all_risk_dur_params = {
         'dist_family': "Lognormal",
-        'max_duration': float(df_all['duration'].max()), # With HIV/AIDS this is going to get us a massive number
         'params': {
             'mu': float(np.log(params_all_risk[2])),
             'sigma': float(params_all_risk[0])
@@ -104,7 +103,6 @@ if __name__ == "__main__":
 
     resp_dur_params = {
         'dist_family': "Lognormal",
-        'max_duration': float(df_resp['duration'].max()), # With HIV/AIDS this is going to get us a massive number
         'params': {
             'mu': float(np.log(params_resp[2])),
             'sigma': float(params_resp[0])

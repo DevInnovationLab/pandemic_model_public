@@ -3,10 +3,9 @@ import numpy as np
 import pandas as pd
 import yaml
 import matplotlib.pyplot as plt
-import statsmodels.api as sm
-from sklearn.base import BaseEstimator
+from scipy.special import gammaln
 from sklearn.linear_model import LinearRegression, PoissonRegressor
-from sklearn.metrics import r2_score, mean_poisson_deviance
+from sklearn.metrics import r2_score, log_loss
 
 
 # Set a consistent styling for academic figures
@@ -51,6 +50,19 @@ if __name__ == "__main__":
     pm.fit(X, y)
 
     # ------ Plot models -----------------------------------
+
+
+
+    # McFadden's Pseudo R^2
+    def mcf_pseudo_r2(y, y_pred):
+        # Log-likelihood of the fitted model
+        ll_model = np.sum(y * np.log(y_pred) - y_pred - gammaln(y + 1))
+    
+        # Log-likelihood of the null model (mean response)
+        mean_response = np.mean(y)
+        ll_null = np.sum(y * np.log(mean_response) - mean_response - gammaln(y + 1))
+
+        return 1 - (ll_model / ll_null)
     
     # Set colors
     col_linear = '#ff7f0e'
@@ -58,9 +70,7 @@ if __name__ == "__main__":
 
     # Calculate goodness of fit scores
     r2_linear = r2_score(y, lm.predict(X))
-    # d2_linear = mean_poisson_deviance(y, lm.predict(X)) Not computable due to exiting valid domain
-    r2_poisson = r2_score(y, pm.predict(X))
-    d2_poisson = mean_poisson_deviance(y, pm.predict(X))
+    r2_poisson = mcf_pseudo_r2(y, pm.predict(X))
 
     # Plot data 
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -68,8 +78,8 @@ if __name__ == "__main__":
 
     # Annotate each point with the disease name
     for i, disease in enumerate(econ_loss_clean['disease']):
-        ax.text(econ_loss_clean['mortality_smu'].iloc[i] + 0.2,
-                econ_loss_clean['pct_gdp_loss'].iloc[i] - 0.2, 
+        ax.text(econ_loss_clean['mortality_smu'].iloc[i] * 1.22,
+                econ_loss_clean['pct_gdp_loss'].iloc[i] * 0.98, 
                 disease, 
                 fontsize=12,
                 ha='left',
@@ -77,11 +87,12 @@ if __name__ == "__main__":
                 color='darkblue')
 
     # Fitted line for linear scale
-    x_range = np.linspace(1e-6, econ_loss_clean['mortality_smu'].max(), 100).reshape(-1, 1)
-    y_pred_linear = lm.predict(np.log(x_range))
-    y_pred_poisson = pm.predict(np.log(x_range))
-    ax.plot(x_range, y_pred_linear, linewidth=2.5, color=col_linear, label='Linear')
-    ax.plot(x_range, y_pred_poisson, linewidth=2.5, color=col_poisson, label='Poisson')
+    log_xrange = np.linspace(np.log(econ_loss_clean['mortality_smu'].min() / 2), np.log(econ_loss_clean['mortality_smu'].max()), 100).reshape(-1, 1)
+    y_pred_linear = lm.predict(log_xrange)
+    y_pred_poisson = pm.predict(log_xrange)
+    ax.plot(np.exp(log_xrange), y_pred_linear, linewidth=2.5, color=col_linear, label='Linear')
+    ax.plot(np.exp(log_xrange), y_pred_poisson, linewidth=2.5, color=col_poisson, label='Poisson')
+    ax.set_xscale('log')
 
     # Labels and title
     ax.set_title(r"Pandemic deaths per 10,000 vs percent GDP loss")
@@ -91,19 +102,14 @@ if __name__ == "__main__":
     ax.spines['right'].set_visible(False)
 
     # Add R^2 and Deviance values to the plot
-    ## Linear model
     ax.text(0.80, 0.15, rf"$R^2_{{\mathrm{{linear}}}} = {r2_linear:.3f}$", 
             transform=ax.transAxes, verticalalignment='top', color=col_linear)
-
-    ## Poisson model
     ax.text(0.80, 0.10, rf"$R^2_{{\mathrm{{poisson}}}} = {r2_poisson:.3f}$", 
-            transform=ax.transAxes, verticalalignment='top', color=col_poisson)
-    ax.text(0.80, 0.05, rf"$D_{{\mathrm{{poisson}}}} = {d2_poisson:.3f}$", 
             transform=ax.transAxes, verticalalignment='top', color=col_poisson)
     
     # Add line labels
-    ax.text(0.45, 0.68, "Linear", transform=ax.transAxes, color=col_linear)
-    ax.text(0.45, 0.85, "Poisson", transform=ax.transAxes, color=col_poisson)
+    ax.text(0.45, 0.43, "Linear", transform=ax.transAxes, color=col_linear)
+    ax.text(0.55, 0.25, "Poisson", transform=ax.transAxes, color=col_poisson)
 
     # Save the plot
     plt.tight_layout()
@@ -116,7 +122,7 @@ if __name__ == "__main__":
         'family': 'linear',
         'params': {
             'intercept': float(lm.intercept_),
-            'coef': [float(beta) for beta in lm.coef_]
+            'coefs': [float(beta) for beta in lm.coef_]
         }
     }
 
@@ -128,7 +134,7 @@ if __name__ == "__main__":
         'family': 'poisson',
         'params': {
             'intercept': float(pm.intercept_),
-            'coef': [float(beta) for beta in lm.coef_]
+            'coefs': [float(beta) for beta in lm.coef_]
         }
     }
 
