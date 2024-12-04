@@ -8,7 +8,7 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
     end
 
     monthly_intensity = severity / (pandemic_natural_dur * 12);
-    monthly_econ_loss = econ_loss_model.predict(severity) / (pandemic_natural_dur * 12); % total months of pandemic
+    monthly_econ_loss = econ_loss_model.predict(severity) ./ (pandemic_natural_dur * 12); % total months of pandemic
     actual_dur_months = actual_dur * 12;
 
 	cap_m_arr = zeros(actual_dur_months, 1); % vector of monthly production capacity for mRNA platform, in million

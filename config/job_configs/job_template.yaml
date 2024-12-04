@@ -20,7 +20,7 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-response_threshold: 4.59 # Half of COVID-19 severity (9.17 deaths per 10,000)
+response_threshold: 0.16 # Half of COVID-19 intensity (0.32 deaths per 1000 per year)
 arrival_dist_config: "./pandemic-loss-modeling/output/arrival_distributions/all_risk_default.yaml"
 duration_dist_config: "./pandemic-loss-modeling/output/duration_distributions/all_risk_default.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_select.csv"

@@ -1,11 +1,12 @@
 Viral family,Arrival rate,Arrival rate (answers ~sum to 100%),Prototype vaccine?
-Coronavirus,22%,17%,Yes
-Bunyaviridae,5%,3%,No
-Arenaviridae,2%,2%,No
-Henipavirus,6%,7%,No
-Togaviridae,6%,8%,Yes
-Filoviridae,4%,3%,Yes
-Flaviviridae,7%,5%,No
-Influenza,33%,40%,Yes
-Unknown,15%,15%,No
-Other,0%,0%,No
+Arenaviridae,1.61%,1.96%,No
+Bacteria/fungi,28.92%,2.45%,Yes
+Nairoviridae,1.17%,0.00%,No
+Phenuiviridae,2.73%,3.92%,No
+Coronaviridae,18.66%,19.90%,Yes
+Filoviridae,3.11%,3.20%,Yes
+Flaviviridae,5.93%,5.98%,No
+Paramyxoviridae,5.05%,7.84%,No
+Orthomyxoviridae,27.46%,46.09%,Yes
+Togaviridae,5.36%,8.66%,Yes
+Unknown,12.28%,17.55%,No

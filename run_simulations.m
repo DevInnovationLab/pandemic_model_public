@@ -76,8 +76,6 @@ function run_simulations(job_config_path)
     
     saveas(dur_severity_scatterhist, fullfile(job_config.outdirpath, "figures", "dur_severity_scatterhist.jpg"))
 
-    return
-
     % Create object storing job and scenario configurations that we will save.
     out_params = job_config;
     out_params.scenarios = {};
@@ -97,7 +95,7 @@ function run_simulations(job_config_path)
         simulation_params.scenario_name = scenario_name;
 
         % Run scenario
-        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, simulation_params);
+        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, econ_loss_model, simulation_params);
 
         % Save scenario simulation table so you can inspect
         save(fullfile(outdirpath, "scenario_simulation_table.mat"), 'scenario_simulation_table');
