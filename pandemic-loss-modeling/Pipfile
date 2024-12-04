@@ -11,6 +11,8 @@ openpyxl = "*"
 scipy = "*"
 statsmodels = "*"
 pyyaml = "*"
+scikit-learn = "*"
+seaborn = "*"
 
 [dev-packages]
 ipykernel = "*"
