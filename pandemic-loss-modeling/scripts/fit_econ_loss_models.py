@@ -8,7 +8,7 @@ from sklearn.linear_model import LinearRegression, PoissonRegressor
 from sklearn.metrics import r2_score
 
 
-# Set a consistent styling for academic figures
+# Set consistent figure style
 plt.style.use('seaborn-v0_8-white')
 plt.rcParams.update({
     'font.size': 14,
@@ -50,8 +50,6 @@ if __name__ == "__main__":
     pm.fit(X, y)
 
     # ------ Plot models -----------------------------------
-
-
 
     # McFadden's Pseudo R^2
     def mcf_pseudo_r2(y, y_pred):
