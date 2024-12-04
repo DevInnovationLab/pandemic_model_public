@@ -36,6 +36,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 
 	% Address overlapping pandemics
 	% Ensure parallel processing is enabled
+	disp("Pruning overlapping pandemics...");
 	if isempty(gcp('nocreate'))
 		parpool; % Create a parallel pool if not already available
 	end
@@ -47,7 +48,6 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	pruned_data = cell(length(sim_nums), 1);
 
 	% Parallel loop over each simulation number
-	disp("Pruning overlapping pandemics...");
 	parfor sim_idx = 1:length(sim_nums)
 		sim_num = sim_nums(sim_idx);  % Get the current simulation number
 		
