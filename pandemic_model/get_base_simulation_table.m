@@ -9,6 +9,51 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	response_idx = find(intensity_matrix > params.response_threshold); % indicator array for when severity triggers pandemic response
 	num_response_scenario = size(response_idx, 1);
 
+	% Plot intensity exceedance
+	% Plot intensity here
+	intensities_for_plot = sort(intensity_matrix(severity_matrix > arrival_dist.min_severity));
+	total_draws = params.num_simulations * params.sim_periods;
+	[unique_intensities, ~, ic] = unique(intensities_for_plot);
+	intensity_counts = histcounts(ic, 1:max(ic)+1); % Count occurrences of each unique intensity
+	emp_min_intensity_prob = 1 - sum(intensity_counts) / total_draws;
+	cdf = (cumsum(intensity_counts) / sum(intensity_counts)) * (sum(intensity_counts) / total_draws) + emp_min_intensity_prob;
+	exceedance = 1 - cdf;
+
+	% Plot the empirical intensity exceedance function
+	figure('Visible', 'off');
+	plot(unique_intensities, exceedance, 'b-', 'LineWidth', 1.5); % Plot with a blue line
+	grid on;
+	xlabel('Deaths per 10,000 per year'); % Label for x-axis
+	ylabel('Exceedance probability'); % Label for y-axis
+	title('Empirical pandemic intensity exceedance function'); % Plot title
+
+	% Customize plot appearance
+	set(gca, 'XScale', 'log');
+	set(gca, 'FontSize', 11); % Set axis font size
+	xlim([min(unique_intensities), max(unique_intensities)]);
+    ylim([min(exceedance), max(exceedance)]);
+
+	% Add intensity threshold to figure
+	threshold_x = params.response_threshold;
+	threshold_y = interp1(unique_intensities, exceedance, threshold_x); % May want to interpolate with a different method
+
+	hold on;
+	plot(threshold_x, threshold_y, 'rs', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
+
+	% Add dashed lines from the threshold point to the axes
+	plot([threshold_x threshold_x], [0 threshold_y], 'r--');  % Vertical line to x-axis
+	plot([min(unique_intensities) threshold_x], [threshold_y threshold_y], 'r--');  % Horizontal line to y-axis
+
+	% Add label to the point
+	text(threshold_x * 0.95, threshold_y * 0.95, sprintf('Pandemic response threshold: %.2f', threshold_x), ...
+		'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 10);
+	hold off;
+
+	saveas(gcf, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"))
+
+	% Plotting severity exceedance, do non nan effective severity
+	% Same with durations
+
 	% Create table of pandemic scenarios
 	sim_num = mod(response_idx - 1, size(severity_matrix, 1)) + 1;
 	yr_start = ceil(response_idx / size(severity_matrix, 1));
@@ -54,22 +99,24 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 		% Extract rows corresponding to the current simulation number
 		sim_data = response_table(response_table.sim_num == sim_num, :);
 		
-		% Start pruning for the current simulation
-		i = 2;  % Start from the second row
-		while i <= height(sim_data)
-			% Check if the current pandemic overlaps with the previous one
-			if sim_data.yr_start(i) <= sim_data.yr_end(i-1)
-				% If the current pandemic has a smaller intensity than the previous one, remove it
-				if sim_data.intensity(i) < sim_data.intensity(i-1)
-					sim_data(i, :) = [];  % Remove the smaller pandemic
-					continue;  % Skip to the next row (which has shifted)
-				else
-					% If the current pandemic is more intense, snip the previous one
-					sim_data.yr_end(i-1) = sim_data.yr_start(i) - 1;  % Snip the previous pandemic
+		% Start pruning procedure if more than one pandemic
+		if height(sim_data) > 1
+			i = 2;  % Start from the second row
+			while i <= height(sim_data)
+				% Check if the current pandemic overlaps with the previous one
+				if sim_data.yr_start(i) <= sim_data.yr_end(i-1)
+					% If the current pandemic has a smaller intensity than the previous one, remove it
+					if sim_data.intensity(i) < sim_data.intensity(i-1)
+						sim_data(i, :) = [];  % Remove the smaller pandemic
+						continue;  % Skip to the next row (which has shifted)
+					else
+						% If the current pandemic is more intense, snip the previous one
+						sim_data.yr_end(i-1) = sim_data.yr_start(i) - 1;  % Snip the previous pandemic
+					end
 				end
+				% Move to the next row
+				i = i + 1;
 			end
-			% Move to the next row
-			i = i + 1;
 		end
 
 		% Store the pruned data for this simulation in the cell array

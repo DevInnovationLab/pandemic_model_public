@@ -26,9 +26,10 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
     vax_costs_inp_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for in pandemic at risk capacity investments
     vax_costs_upf_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for adv capacity investments
 
-    sim_results = array2table(double.empty(0, 18), 'VariableNames', {'sim_num', 'yr_start', 'severity', 'is_false', 'pathogen_family', ...
-        'prep_start_month', 'rd_state', 'natural_dur', 'has_RD_benefit', 'rd_state_desc', ...
-        'cap_avail_m', 'cap_avail_o', 'vax_benefits', 'vax_fraction_cum', 'inp_marg_costs', 'inp_tailoring_costs', 'inp_RD_costs', 'inp_cap_costs'} );
+    sim_table_cols = simulation_table.Properties.VariableNames;
+    result_cols = {'cap_avail_m', 'cap_avail_o', 'vax_benefits', 'vax_fraction_cum', 'inp_marg_costs', 'inp_tailoring_costs', 'inp_RD_costs', 'inp_cap_costs'};
+    out_cols = [sim_table_cols, result_cols];
+    sim_results = array2table(double.empty(0, numel(out_cols)), 'VariableNames', out_cols);
 
     %%%%%%%%%%%%%%%% Initialize capacity %%%%%%%%%%%
 
@@ -288,11 +289,11 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                     vax_benefits_s = vax_benefits_s + vax_benefits; 
                 
                     if ~is_false 
-                        sim_out_arr_benefits_vaccine_PV(:, s)  = sim_out_arr_benefits_vaccine_PV(:, s) + agg_by_yr(vax_benefits_PV, pandemic_natural_dur, yr_start, params.sim_periods);
-                        sim_out_arr_benefits_vaccine_nom(:, s) = sim_out_arr_benefits_vaccine_nom(:, s) + agg_by_yr(vax_benefits_nom, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_benefits_vaccine_PV(:, s)  = sim_out_arr_benefits_vaccine_PV(:, s) + agg_by_yr(vax_benefits_PV, actual_dur, yr_start, params.sim_periods);
+                        sim_out_arr_benefits_vaccine_nom(:, s) = sim_out_arr_benefits_vaccine_nom(:, s) + agg_by_yr(vax_benefits_nom, actual_dur, yr_start, params.sim_periods);
 
-                        sim_out_arr_costs_inp_marg_PV(:, s) = sim_out_arr_costs_inp_marg_PV(:, s) + agg_by_yr(inp_marg_costs_o_PV + inp_marg_costs_m_PV, pandemic_natural_dur, yr_start, params.sim_periods);
-                        sim_out_arr_costs_inp_marg_nom(:, s) = sim_out_arr_costs_inp_marg_nom(:, s) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_costs_inp_marg_PV(:, s) = sim_out_arr_costs_inp_marg_PV(:, s) + agg_by_yr(inp_marg_costs_o_PV + inp_marg_costs_m_PV, actual_dur, yr_start, params.sim_periods);
+                        sim_out_arr_costs_inp_marg_nom(:, s) = sim_out_arr_costs_inp_marg_nom(:, s) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, actual_dur, yr_start, params.sim_periods);
                     end
                     
                     % Deal with capacity stuff
@@ -321,13 +322,13 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                 rental_income_fractions = repmat(params.rental_share, 1, params.sim_periods);
             end
 
-            assert(length(yr_start_arr) == length(natural_dur_arr))
+            assert(length(yr_start_arr) == length(actual_dur_arr))
             for j = 1:length(yr_start_arr)
                 yr_start = yr_start_arr(j);
                 if is_false_arr(j) == 1
                     yr_end = yr_start;
                 else
-                    yr_end = min(yr_start + natural_dur_arr(j) - 1, params.sim_periods);
+                    yr_end = min(yr_start + actual_dur_arr(j) - 1, params.sim_periods);
                 end
                 in_pandemic_indx = yr_start:yr_end;
                 rental_income_fractions(in_pandemic_indx) = 0;
@@ -408,6 +409,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
         vax_costs_surveil_bn_arr = repmat(surveil_spend_bn_PV, sim_cnt, 1);
     end
 
+    size(vax_net_benefits_bn_arr)
     net_value = mean(vax_net_benefits_bn_arr, 1);
     fprintf('Elapsed time (min): %0.1f\n', round(toc/60, 1));
     fprintf('Avg net value (bn): %d\n', round(net_value, 0));

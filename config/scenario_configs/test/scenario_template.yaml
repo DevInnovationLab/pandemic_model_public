@@ -1,7 +1,7 @@
 # Advance R&D params
 rd_investments: 
   strategy: top
-  num: 6
+  num: 3
 
 RD_speedup_months: 0 # % if R&D successful, how much tau_A is shortened by
 RD_success_rate_increase_per_platform: 0 # if R&D successful, how much the prob of vaccine is increased (for 2x for p_b, 1x for p_m, and 1x for p_o)
