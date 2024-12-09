@@ -2,7 +2,7 @@
 % Arrival rates obtained from expert surves, vaccine status primarily obtained from CDC website.
 % Run from command line with `matlab -batch "clean_viral_family_data"`
 
-vf_data = readtable(fullfile("../data/raw/Viral family review - Viral family summary.csv"));
+vf_data = readtable(fullfile("./data/raw/Viral family review - Viral family summary.csv"));
 
 % Rename columns
 vf_data.Properties.VariableNames = {...
@@ -49,6 +49,6 @@ for i = 1:numel(arrival_share_sources)
     clean_vf_data.Properties.VariableNames{arrival_share_col} = 'arrival_share';
     % Ought to order cols nicely
 
-    fp = sprintf("../data/clean/vf_data_arrival_%s.csv", source);
+    fp = sprintf("./data/clean/vf_data_arrival_%s.csv", source);
     writetable(clean_vf_data, fp);
 end
