@@ -19,10 +19,10 @@ function fig = plot_ex_ante_severity_exceedance(dist, n, logscale, visible)
     % Labels and title
     xlabel('Severity (Deaths / 10,000)', 'FontSize', 12);
     ylabel('Exceedance Probability', 'FontSize', 12);
-    title('Severity vs. Exceedance Probability', 'FontSize', 14, 'FontWeight', 'bold');
+    title('Pandemic severity exceedance function', 'FontSize', 14, 'FontWeight', 'bold');
     
     % Customize plot appearance
-    set(gca, 'FontSize', 11); % Set axis font size
+    set(gca, 'FontSize', 11, 'Box', 'off'); % Set axis font size
     xlim([min(x), max(x)]);
     ylim([min(y), max(y)]);
     

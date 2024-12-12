@@ -409,7 +409,6 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
         vax_costs_surveil_bn_arr = repmat(surveil_spend_bn_PV, sim_cnt, 1);
     end
 
-    size(vax_net_benefits_bn_arr)
     net_value = mean(vax_net_benefits_bn_arr, 1);
     fprintf('Elapsed time (min): %0.1f\n', round(toc/60, 1));
     fprintf('Avg net value (bn): %d\n', round(net_value, 0));

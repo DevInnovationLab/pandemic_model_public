@@ -81,7 +81,7 @@ function run_simulations(job_config_path)
     plot(duration_dist.pd);
     set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1.5);
     xlabel('Years', 'FontSize', 12);
-    ylabel('Probability', 'FontSize', 12);
+    ylabel('Probability density', 'FontSize', 12);
     title('Ex ante pandemic duration PDF', 'FontSize', 14, 'FontWeight', 'bold');
     hold off;
     saveas(ex_ante_dur_fig, fullfile(figure_path, "ex_ante_duration_pdf.jpg"));
