@@ -1,4 +1,4 @@
-function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom] = ...
+function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom, deaths_array] = ...
     run_pandemic(params, econ_loss_model, tau_A, RD_benefit, yr_start, pandemic_natural_dur, actual_dur, rd_state, severity, cap_avail_m, cap_avail_o)
 
 	% run simulation for a pandemic of significant size (not false pos)
@@ -14,10 +14,10 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
     % Get effective capacity over time during pandemic
     months_arr = (1:actual_dur_months)';
     [ind_m, ind_o] = get_capacity_indicators(rd_state);
-    monthly_capacity = get_pandemic_capacity(months_arr, tau_A, params, ind_m, ind_o, cap_avail_m/12, cap_avail_o/12);
+    [cap_m_arr, cap_o_arr] = get_pandemic_capacity(months_arr, tau_A, params, ind_m, ind_o, cap_avail_m/12, cap_avail_o/12);
 
 	% Get vaccination and damage mitigation over time.
-    vax_fractions_per_period = monthly_capacity.total * 10^6 / params.P0; % Don't you need two doses?
+    vax_fractions_per_period = (cap_m_arr + cap_o_arr)/ params.P0; % Don't you need two doses?
     vax_fractions_cum = cumsum(vax_fractions_per_period);
     vax_fractions_cum(vax_fractions_cum > 1) = 1; % Can't vaccinate more than population
     if params.conservative == 1 % Use beginning of period vaccinations (rather than end of period)
@@ -31,12 +31,14 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
     PV_factor = (1/(1+params.r))^(yr_start-1) .* (1/(1+params.r)).^(1/12 .* months_arr);
 
     %%%%%%%%%% BENEFITS %%%%%%%%%%
-    ML = (params.value_of_death .* params.P0 / 10000) .* monthly_intensity ./ 10^6; % mortality lossses for during pandemic (monthly, in million)
-    OL = (params.Y0 .* params.P0 / 100) .* monthly_econ_loss ./ 10^6; % output losses for during pandemic (monthly, in million)
+    deaths_array = params.P0 / 10000 .* monthly_intensity;
+    ML = params.value_of_death .* deaths_array; % mortality lossses for during pandemic
+    OL = (params.Y0 .* params.P0 / 100) .* monthly_econ_loss; % output losses for during pandemic
     LL = (10/13.8) .* OL; 
-    TL = ML + OL + LL; % in million
+    TL = ML + OL + LL;
     % We should get these as separate streams.
 
+    deaths_array = params.gamma .* deaths_array .* h_arr; % Vaccine mitigation of deaths
     vax_benefits_nom = params.gamma .* h_arr .* growth_rate .* TL; % in million
     vax_benefits_PV = vax_benefits_nom .* PV_factor; % in million
     vax_fraction_cum_end = vax_fractions_cum(end);
@@ -44,12 +46,11 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
     %%%%%%%%%% COSTS %%%%%%%%%%
     
     % marginal costs
-    inp_marg_costs_m_nom = params.c_m .* monthly_capacity.mrna; % in million
-    inp_marg_costs_m_PV = PV_factor .* inp_marg_costs_m_nom; % in million
+    inp_marg_costs_m_nom = params.c_m .* cap_m_arr;
+    inp_marg_costs_m_PV = PV_factor .* inp_marg_costs_m_nom;
     
-    inp_marg_costs_o_nom = params.c_o .* monthly_capacity.trad;
-    inp_marg_costs_o_PV = PV_factor .* inp_marg_costs_o_nom; % in million
-
+    inp_marg_costs_o_nom = params.c_o .* cap_o_arr;
+    inp_marg_costs_o_PV = PV_factor .* inp_marg_costs_o_nom;
 end
 
 

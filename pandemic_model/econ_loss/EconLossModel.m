@@ -18,22 +18,22 @@ classdef EconLossModel
             obj.coefs = coefs;
         end
 
-        function y_hat = predict(obj, X)
+        function y_hat = predict(obj, severity)
             arguments
                 obj
-                X (:,:) {mustBeNumeric}
+                severity (:,:) {mustBeNumeric}
             end
 
-            if height(obj.coefs) ~= width(X)
+            if height(obj.coefs) ~= width(severity)
                 error("Matrices must conform")
             end
 
             if obj.family == "linear"
-                y_hat = X * obj.coefs + obj.intercept;
+                y_hat = log(severity) * obj.coefs + obj.intercept;
             end
 
             if obj.family == "poisson"
-                y_hat = exp(X * obj.coefs + obj.intercept);
+                y_hat = exp(log(severity) * obj.coefs + obj.intercept);
             end
         end
     end

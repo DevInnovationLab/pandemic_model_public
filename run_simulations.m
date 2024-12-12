@@ -154,12 +154,6 @@ function run_simulations(job_config_path)
 
 end
 
-function config = clean_job_config(config)
-
-    config.surveillance_thresholds = cell2mat(config.surveillance_thresholds);
-end 
-
-
 function updated_params = update_params(job_config, scenario_config, viral_family_data)
 
     % New parameters override base parameters

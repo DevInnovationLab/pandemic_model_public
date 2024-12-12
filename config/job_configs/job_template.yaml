@@ -23,7 +23,7 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 response_threshold: 1.6 # Half of COVID-19 intensity (3.2 deaths per 10,000 per year)
 arrival_dist_config: "./pandemic-loss-modeling/output/arrival_distributions/all_risk_default.yaml"
 duration_dist_config: "./pandemic-loss-modeling/output/duration_distributions/all_risk_default.yaml"
-viral_family_data: "./data/clean/vf_data_arrival_select.csv"
+viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./pandemic-loss-modeling/output/econ_loss_models/poisson_model.yaml"
 
 # Capacity
@@ -55,13 +55,13 @@ tau_A: 14 # months to approve / prep for vaccination campaign (in status quo, is
 tau_m: 2 # months to repurpose mRNA candidate
 tau_o: 6 # months to repurpose traditional candidate
 pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.
-inp_RD_no_adv_RD: 0.776297560 # bn of nominal
-inp_RD_with_adv_RD: 0.531221781 # bn of nominal
-adv_RD_cost_per_pathogen: 1.4 # in billion, nominal over period specified by adv_RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
+inp_RD_no_adv_RD: 7.76297560e8 # $
+inp_RD_with_adv_RD: 5.31221781e8 # $
+adv_RD_cost_per_pathogen: 1.4e9 # nominal over period specified by adv_RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
 adv_RD_benefit_start: 15 # years until advance R&D benefits apply
 
 # Surveillance
 surveillance_thresholds: [0, 0] # First is for regular signal, second is for enhanced surveillance signal.
-surveil_annual_installation_spend: 5 # Initial spending to install enhanced surveillance, nom bn
-surveil_installation_years: 2 # Time initial costs are incurred, nom bn
-surveil_maintenance_spend: 1.25 # Maintenance spending on enhanced surveillance nom bn
+surveil_annual_installation_spend: 5e9 # Initial spending to install enhanced surveillance
+surveil_installation_years: 2e9 # Time initial costs are incurred
+surveil_maintenance_spend: 1.25e9 # Maintenance spending on enhanced surveillance

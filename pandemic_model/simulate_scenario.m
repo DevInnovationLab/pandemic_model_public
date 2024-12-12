@@ -79,7 +79,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
         surveil_spend_bn_arr = [surveil_spend_bn_init; surveil_spend_bn_maintenance];
         surveil_spend_bn_PV = sum(surveil_spend_bn_arr .* PV_factor_yr);
 
-        sim_out_arr_costs_surveil_nom = repmat(surveil_spend_bn_arr * 1000, 1, sim_cnt);
+        sim_out_arr_costs_surveil_nom = repmat(surveil_spend_bn_arr, 1, sim_cnt);
         sim_out_arr_costs_surveil_PV = sim_out_arr_costs_surveil_nom .* repmat(PV_factor_yr, 1, sim_cnt);
     end
     
@@ -94,7 +94,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
     adv_RD_spend_bn_arr = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, 1);
     adv_RD_spend_bn_PV = sum(adv_RD_spend_bn_arr .* PV_factor_yr);
 
-    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start * 1000, params.adv_RD_benefit_start, sim_cnt); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
+    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, sim_cnt); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
     sim_out_arr_costs_adv_RD_nom(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl;
     sim_out_arr_costs_adv_RD_PV(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl .* repmat(PV_factor_yr, 1, sim_cnt );
 
@@ -139,7 +139,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
             adv_cap_m_end = adv_cap_m_over_time(end);
             adv_cap_o_end = adv_cap_o_over_time(end);
             
-            res = gen_output_struct(sim_scens_s(1, :), adv_cap_m_end/10^3, adv_cap_o_end/10^3, 0, NaN, 0, 0, 0, 0);
+            res = gen_output_struct(sim_scens_s(1, :), adv_cap_m_end, adv_cap_o_end, 0, NaN, 0, 0, 0, 0);
             sim_results = [sim_results; res];
 
         else
@@ -188,9 +188,9 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
 
                 % Set response R&D costs
                 if has_RD_benefit == true
-                    inp_RD_nom = params.inp_RD_with_adv_RD * 1000; % mn of nominal
+                    inp_RD_nom = params.inp_RD_with_adv_RD; % mn of nominal
                 elseif has_RD_benefit == false
-                    inp_RD_nom = params.inp_RD_no_adv_RD * 1000; % mn of nominal
+                    inp_RD_nom = params.inp_RD_no_adv_RD; % mn of nominal
                 end
 
                 % Get existing advance capacity
@@ -213,7 +213,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                     surge_cap_stock_value_over_time(yr_start:next_signal) = ...
                         surge_cap_stock_value_over_time(yr_start-1) * params.capacity_kept;
 
-                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m/10^3, cap_avail_o/10^3, 0, NaN, 0, 0, 0, 0);
+                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m, cap_avail_o, 0, NaN, 0, 0, 0, 0);
 
                 else 
                     tau_A = params.tau_A;
@@ -233,8 +233,8 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                     % Build capacity
                     total_cap_m_before_build = adv_cap_m_current + surge_cap_m_current;
                     total_cap_o_before_build = adv_cap_o_current + surge_cap_o_current;
-                    surge_cap_m_build = min(x_m - total_cap_m_before_build, params.x_avail / 10^6 * params.mRNA_share);
-                    surge_cap_o_build = min(x_o - total_cap_o_before_build, params.x_avail / 10^6 * (1-params.mRNA_share));
+                    surge_cap_m_build = min(x_m - total_cap_m_before_build, params.x_avail * params.mRNA_share);
+                    surge_cap_o_build = min(x_o - total_cap_o_before_build, params.x_avail * (1-params.mRNA_share));
                     surge_cap_m_current = surge_cap_m_current + surge_cap_m_build;
                     surge_cap_o_current = surge_cap_o_current + surge_cap_o_build;
                     cap_avail_m = adv_cap_m_current + surge_cap_m_current;
@@ -275,7 +275,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         inp_marg_costs_m_PV = zeros(tot_months, 1);
                         inp_marg_costs_o_PV = zeros(tot_months, 1);
                     else
-                        [vax_fraction_cum, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom] = ...
+                        [vax_fraction_cum, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom, deaths_array] = ...
                             run_pandemic(params, econ_loss_model, tau_A, has_RD_benefit, yr_start, pandemic_natural_dur, actual_dur, rd_state, severity, cap_avail_m, cap_avail_o);
                     end
 
@@ -305,8 +305,8 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                     surge_cap_stock_value_over_time(pandemic_end_to_next_indx) = surge_cap_stock_value_over_time(yr_pandemic_end) .* params.capacity_kept; % This will result in errors unless you have 50-50 mRNA capacity ratios.
                     inp_cap_costs_PV = sum(surge_cap_capital_costs_over_time); % Note we have now changed what this number means.
 
-                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m / 10^3, cap_avail_o / 10^3, ...
-                        vax_benefits / 10^3, vax_fraction_cum, inp_marg_costs_PV / 10^3, inp_tailoring_costs_PV / 10^3, inp_RD_costs_PV / 10^3, inp_cap_costs_PV / 10^3);
+                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m , cap_avail_o, ...
+                        vax_benefits, vax_fraction_cum, inp_marg_costs_PV, inp_tailoring_costs_PV, inp_RD_costs_PV, inp_cap_costs_PV);
                 end
 
                 sim_results = [sim_results; res];
@@ -375,7 +375,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
         inp_cap_costs_PV_s = sum(total_surge_cap_costs_over_time_pv);
         cap_costs_tot = sum(total_adv_cap_costs_over_time_pv + total_surge_cap_costs_over_time_pv);
 
-        vax_costs_bn_s = (inp_marg_costs_PV_s + inp_tailoring_costs_PV_s + inp_RD_costs_PV_s + cap_costs_tot)/10^3;
+        vax_costs_bn_s = (inp_marg_costs_PV_s + inp_tailoring_costs_PV_s + inp_RD_costs_PV_s + cap_costs_tot);
         
         vax_costs_bn_s = vax_costs_bn_s + adv_RD_spend_bn_PV;
 
@@ -384,15 +384,15 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
         end
 
         % store sim results
-        vax_net_benefits_bn_arr(s) = vax_benefits_s / 10^3 - vax_costs_bn_s;
-        vax_benefits_bn_arr(s)     = vax_benefits_s / 10^3;
+        vax_net_benefits_bn_arr(s) = vax_benefits_s - vax_costs_bn_s;
+        vax_benefits_bn_arr(s)     = vax_benefits_s;
         vax_costs_bn_arr(s)        = vax_costs_bn_s;
         
-        vax_costs_inp_cap_bn_arr(s)       = inp_cap_costs_PV_s / 10^3;
-        vax_costs_inp_m_bn_arr(s)         = inp_marg_costs_PV_s / 10^3;
-        vax_costs_inp_tailoring_bn_arr(s) = inp_tailoring_costs_PV_s / 10^3;
-        vax_costs_inp_RD_bn_arr(s)        = inp_RD_costs_PV_s / 10^3;
-        vax_costs_upf_cap_bn_arr(s)       = upfront_cap_costs / 10^3;
+        vax_costs_inp_cap_bn_arr(s)       = inp_cap_costs_PV_s;
+        vax_costs_inp_m_bn_arr(s)         = inp_marg_costs_PV_s;
+        vax_costs_inp_tailoring_bn_arr(s) = inp_tailoring_costs_PV_s;
+        vax_costs_inp_RD_bn_arr(s)        = inp_RD_costs_PV_s;
+        vax_costs_upf_cap_bn_arr(s)       = upfront_cap_costs;
 
         if mod(s, 1000) == 0
            fprintf('finished sim num %d (elaspsed min: %d)\n', s, round(toc/60, 1));
@@ -411,7 +411,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
 
     net_value = mean(vax_net_benefits_bn_arr, 1);
     fprintf('Elapsed time (min): %0.1f\n', round(toc/60, 1));
-    fprintf('Avg net value (bn): %d\n', round(net_value, 0));
+    fprintf('Avg net value (bn): %d\n', round(net_value/10^9, 0));
 
     sim_results_sum0 = table(vax_net_benefits_bn_arr, vax_benefits_bn_arr, vax_costs_bn_arr, ...
         vax_costs_RD_bn_arr, vax_costs_surveil_bn_arr, vax_costs_upf_cap_bn_arr, vax_costs_inp_cap_bn_arr, vax_costs_inp_m_bn_arr, vax_costs_inp_tailoring_bn_arr, vax_costs_inp_RD_bn_arr);
