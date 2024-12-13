@@ -49,13 +49,12 @@ if __name__ == "__main__":
     all_risk_distr_params = {
         'dist_family': 'GeneralizedPareto', # makedist() format (MATLAB)
         'min_severity': float(params_all_risk[1]),
-        'min_severity_exceedance_prob': float(arrival_rate_all_risk),
+        'min_severity_exceed_prob': float(arrival_rate_all_risk),
         'max_severity': float(df_all['severity_smu'].max()),
         'params': {
             'k': float(params_all_risk[0]), # Shape
             'theta': float(params_all_risk[1]), # Location
             'sigma': float(params_all_risk[2]) # Scale
-
         }
     }
 
@@ -71,13 +70,12 @@ if __name__ == "__main__":
     resp_distr_params = {
         'dist_family': 'GeneralizedPareto', # makedist() format (MATLAB)
         'min_severity': float(params_resp[1]),
-        'min_severity_exceedance_prob': float(arrival_rate_resp),
+        'min_severity_exceed_prob': float(arrival_rate_resp),
         'max_severity': float(df_resp['severity_smu'].max()),
         'params': {
             'k': float(params_resp[0]), # Shape
             'theta': float(params_resp[1]), # Location
             'sigma': float(params_resp[2]) # Scale
-
         }
     }
 

@@ -1,7 +1,7 @@
 dist_family: GeneralizedPareto
 max_severity: 170.8215448673464
 min_severity: 0.01
-min_severity_exceedance_prob: 0.15
+min_severity_exceed_prob: 0.15
 params:
   k: 2.504882508798669
   sigma: 1.7457313371472198
