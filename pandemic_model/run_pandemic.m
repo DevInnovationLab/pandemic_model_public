@@ -17,11 +17,22 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
     [cap_m_arr, cap_o_arr] = get_pandemic_capacity(months_arr, tau_A, params, ind_m, ind_o, cap_avail_m/12, cap_avail_o/12);
 
 	% Get vaccination and damage mitigation over time.
-    vax_fractions_per_period = (cap_m_arr + cap_o_arr)/ params.P0; % Don't you need two doses?
-    vax_fractions_cum = cumsum(vax_fractions_per_period);
-    vax_fractions_cum(vax_fractions_cum > 1) = 1; % Can't vaccinate more than population
-    if params.conservative == 1 % Use beginning of period vaccinations (rather than end of period)
-        vax_fractions_cum = [0; vax_fractions_cum(1:end-1)];
+    if isfield(params, 'monthly_cum_vax') % If we have external vaccination path (for getting state of nature COVID-19)
+        monthly_cum_vax = params.monthly_cum_vax;
+        exog_vax_length = size(monthly_cum_vax, 1);
+        if exog_vax_length >= actual_dur_months
+            vax_fractions_cum = exog_vax_length(1:actual_dur_months);
+        else
+            vax_fractions_cum =  ...
+                [monthly_cum_vax; monthly_cum_vax(end) .* ones(actual_dur_months - exog_vax_length, 1)];
+        end
+    else
+        vax_fractions_per_period = (cap_m_arr + cap_o_arr)/ params.P0; % Don't you need two doses?
+        vax_fractions_cum = cumsum(vax_fractions_per_period);
+        vax_fractions_cum(vax_fractions_cum > 1) = 1; % Can't vaccinate more than population
+        if params.conservative == 1 % Use beginning of period vaccinations (rather than end of period)
+            vax_fractions_cum = [0; vax_fractions_cum(1:end-1)];
+        end
     end
 
     h_arr = h(vax_fractions_cum);
@@ -36,9 +47,8 @@ function [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_cost
     OL = (params.Y0 .* params.P0 / 100) .* monthly_econ_loss; % output losses for during pandemic
     LL = (10/13.8) .* OL; 
     TL = ML + OL + LL;
-    % We should get these as separate streams.
 
-    deaths_array = params.gamma .* deaths_array .* h_arr; % Vaccine mitigation of deaths
+    deaths_array = deaths_array .* (1 - h_arr * params.gamma); % Vaccine mitigation of deaths
     vax_benefits_nom = params.gamma .* h_arr .* growth_rate .* TL; % in million
     vax_benefits_PV = vax_benefits_nom .* PV_factor; % in million
     vax_fraction_cum_end = vax_fractions_cum(end);

@@ -7,17 +7,21 @@ function find_natural_severity_covid
     params = clean_job_config(yaml.loadFile("./config/job_configs/job_template.yaml"));
     params.tau_A = 11; % Months before vaccine available.
     params.rd_state = 1; % Both mRNA and traditional succeeded during COVID-19.
+    duration = 6; % COVID-19 duration according to our records. Need to check
+    monthly_cum_vax = readtable("./data/clean/covid19_cum_vax_over_time.csv");
+    params.monthly_cum_vax = monthly_cum_vax.cum_vax_rate;
 
     target_ex_post_severity = 9.17; % In Marani data
     init_severity_min = target_ex_post_severity;
     init_severity_max = 60;
     tolerance = 0.01;
     
-    duration_grid = (5:10)';
-    ex_ante_severities = zeros(size(duration_grid));
+    gamma_grid = (0.4:0.1:0.8)'; % Find principle for setting this
+    ex_ante_severities = zeros(size(gamma_grid));
 
-    for i = 1:length(duration_grid)
-        duration = duration_grid(i);
+    for i = 1:length(gamma_grid)
+        gamma = gamma_grid(i);
+        params.gamma = gamma;
         [ex_ante_severity, ~] = recurse_ex_ante_severity(target_ex_post_severity, ...
                                                          init_severity_min, ...
                                                          init_severity_max, ...
@@ -25,11 +29,10 @@ function find_natural_severity_covid
                                                          duration, ...
                                                          params);
         ex_ante_severities(i) = ex_ante_severity;
-
     end
 
-    results = array2table(zeros(length(ex_ante_severities), 2), 'VariableNames', ["duration", "ex_ante_severities"]);
-    results.duration = duration_grid;
+    results = array2table(zeros(length(ex_ante_severities), 2), 'VariableNames', ["gamma", "ex_ante_severities"]);
+    results.gamma = gamma_grid;
     results.ex_ante_severities = ex_ante_severities;
     
     disp(results)

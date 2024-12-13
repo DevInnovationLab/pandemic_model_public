@@ -1,5 +1,5 @@
 
-vf_data = readtable("./data/clean/vf_data_arrival_select.csv");
+vf_data = readtable("./data/clean/vf_data_arrival_all.csv");
 
 vf_data = sortrows(vf_data, 'arrival_share', 'descend');
 vf_data.viral_family = cellfun(@(x) strcat(upper(x(1)), lower(x(2:end))), vf_data.viral_family, 'UniformOutput', false); % Capitalize the first letter of each viral_family
