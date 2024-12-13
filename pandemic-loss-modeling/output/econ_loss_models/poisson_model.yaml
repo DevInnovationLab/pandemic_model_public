@@ -1,0 +1,5 @@
+family: poisson
+params:
+  coefs:
+  - 0.5521764592108024
+  intercept: 0.9881291666586793

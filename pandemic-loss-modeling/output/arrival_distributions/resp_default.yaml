@@ -1,0 +1,8 @@
+dist_family: GeneralizedPareto
+max_severity: 170.8215448673464
+min_severity: 0.01
+min_severity_exceed_prob: 0.1
+params:
+  k: 1.3911490201494356
+  sigma: 4.919578645628762
+  theta: 0.01

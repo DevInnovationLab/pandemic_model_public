@@ -1,0 +1,5 @@
+dist_family: Lognormal
+max_duration: 6.0
+params:
+  mu: 0.8553332238032111
+  sigma: 0.5865632728886827
