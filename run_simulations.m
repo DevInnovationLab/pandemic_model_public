@@ -1,5 +1,4 @@
 function run_simulations(job_config_path)
-
     % Add libraries to path
     addpath(genpath('./yaml'));
     addpath(genpath('./pandemic_model'));
@@ -21,11 +20,16 @@ function run_simulations(job_config_path)
     outdirpath = fullfile(job_config.outdir, foldername, "raw");
     create_folders_recursively(outdirpath);
     job_config.outdirpath = outdirpath;
+    figure_path = fullfile(outdirpath, "figures");
 
     % Generate simulations
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config);
-    viral_family_frequency_table = create_viral_family_frequency_table(job_config.num_viral_families);
-    base_simulation_table = get_base_simulation_table(arrival_dist, viral_family_frequency_table, job_config);
+    duration_dist = load_duration_dist(job_config.duration_dist_config);
+    viral_family_data = readtable(job_config.viral_family_data);
+    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config);
+
+    % Add econ loss params
+    econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
 
     % Save the simulation table using the name of the job config
     simulation_table_path = fullfile(outdirpath, "base_simulation_table.mat");
@@ -33,6 +37,86 @@ function run_simulations(job_config_path)
     
     % Log the save operation
     fprintf('Simulation table saved to: %s\n', simulation_table_path);
+
+    % Pandemics per simulation histogram
+    h = histogram(base_simulation_table.eff_severity, 'Visible', 'off');
+    counts = h.Values / job_config.num_simulations;
+    midpoints = h.BinEdges(1:end-1) + diff(h.BinEdges) / 2;
+    average_simulation_hist = figure('Visible', 'off');
+    bar(counts, midpoints);
+    xlabel("Effective severity");
+    ylabel("Average number of pandemics per simulation (200 years)");
+    title("Histogram of pandemic severities for average simulation");
+    saveas(average_simulation_hist, fullfile(figure_path, "average_simulation_hist.jpg"));
+
+    % Ex ante severity exceedance function
+    ex_ante_severity_fig = plot_ex_ante_severity_exceedance(arrival_dist);
+    saveas(ex_ante_severity_fig, fullfile(figure_path, "ex_ante_severity_exceedance.png"));
+
+    % Ex post severity exceedance function
+    ex_post_severity_fig = figure('Visible', 'off');
+    total_draws = job_config.num_simulations * job_config.sim_periods;
+    [unique_severities, ~, ic] = unique(sort(base_simulation_table.eff_severity));
+	severity_counts = histcounts(ic, 1:max(ic)+1); % Count occurrences of each unique intensity
+	emp_min_severity_prob = 1 - sum(severity_counts) / total_draws;
+	cdf = (cumsum(severity_counts) / sum(severity_counts)) * (sum(severity_counts) / total_draws) + emp_min_severity_prob;
+	exceedance = 1 - cdf;
+
+    plot(unique_severities, exceedance, 'b-', 'LineWidth', 1.5); % Plot with a blue line
+	grid on;
+	xlabel('Deaths per 10,000'); % Label for x-axis
+	ylabel('Exceedance probability'); % Label for y-axis
+	title('Ex post severity exceedance function'); % Plot title
+
+	% Customize plot appearance
+	set(gca, 'XScale', 'log');
+	set(gca, 'FontSize', 11); % Set axis font size
+
+    saveas(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.jpg"))
+
+    % Ex ante duration distribution
+    % Move to function later
+    ex_ante_dur_fig = figure('Visible', 'off');
+    hold on;
+    plot(duration_dist.pd);
+    set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1.5);
+    xlabel('Years', 'FontSize', 12);
+    ylabel('Probability density', 'FontSize', 12);
+    title('Ex ante pandemic duration PDF', 'FontSize', 14, 'FontWeight', 'bold');
+    hold off;
+    saveas(ex_ante_dur_fig, fullfile(figure_path, "ex_ante_duration_pdf.jpg"));
+
+    % Realized duration plots
+    ex_post_dur_fig = figure('Visible', 'off');
+    hold on;
+    histogram(base_simulation_table.actual_dur, 'Normalization', 'probability');
+    title("Ex post pandemic durations");
+    xlabel("Actual duration (years)");
+    ylabel("Empirical probability");
+    hold off;
+    saveas(ex_post_dur_fig, fullfile(figure_path, "ex_post_duration_hist.jpg"))
+
+    dur_severity_scatterhist = figure('Visible', 'off');
+    subplot(2, 2, 3);  % Bottom-left position for scatter plot
+    scatterhist(base_simulation_table.actual_dur, base_simulation_table.eff_severity, ...
+        'Kernel', 'on', 'Location', 'SouthEast');
+    xlabel('Actual duration (years)');
+    ylabel('Effective severity (deaths / 10,000)');
+    title('Effective severity vs pandemic duration');
+    grid on;
+    
+    saveas(dur_severity_scatterhist, fullfile(figure_path, "dur_severity_scatterhist.jpg"))
+
+    % 3d histogram of effective duration and severity
+    severity_dur_hist = figure('Visible', 'off');
+    histogram2(base_simulation_table.eff_severity, base_simulation_table.actual_dur, 'Normalization', 'probability');
+    view(3);
+    view(129, 28);
+    xlabel("Actual severity (Deaths per 1,0000)");
+    ylabel("Actual duration (years)");
+    zlabel("Probability");
+    title("Realized pandemic severity and duration histogram");
+    saveas(severity_dur_hist, fullfile(figure_path, 'dur_severity_histogram.jpg'));
 
     % Create object storing job and scenario configurations that we will save.
     out_params = job_config;
@@ -45,11 +129,11 @@ function run_simulations(job_config_path)
         scenario_config_path = fullfile(scenario_config_paths(i).folder, scenario_config_paths(i).name);
         [~, scenario_name, ~] = fileparts(scenario_config_path);
         disp(['Running configuration from file: ', scenario_config_path]);
-        scenario_params = yaml.loadFile(scenario_config_path);
-        out_params.scenarios.(scenario_name) = scenario_params;
+        scenario_config = yaml.loadFile(scenario_config_path);
+        out_params.scenarios.(scenario_name) = scenario_config;
 
         % Add scenario specific parameter configucations
-        simulation_params = update_params(job_config, scenario_params);
+        simulation_params = update_params(job_config, scenario_config, viral_family_data);
         simulation_params.scenario_name = scenario_name;
 
         % Run scenario
@@ -58,7 +142,7 @@ function run_simulations(job_config_path)
         % Save scenario simulation table so you can inspect
         save(fullfile(outdirpath, "scenario_simulation_table.mat"), 'scenario_simulation_table');
 
-        simulate_scenario(scenario_simulation_table, simulation_params);
+        simulate_scenario(scenario_simulation_table, econ_loss_model, simulation_params);
     end
 
     % Handle filepath list input for scenario configs
@@ -70,37 +154,24 @@ function run_simulations(job_config_path)
 
 end
 
-function config = clean_job_config(config)
-
-    config.pandemic_dur_probs = cell2mat(config.pandemic_dur_probs);
-    config.surveillance_thresholds = cell2mat(config.surveillance_thresholds);
-end 
-
-
-function updated_params = update_params(base_params, new_params)
+function updated_params = update_params(job_config, scenario_config, viral_family_data)
 
     % New parameters override base parameters
-    updated_params = base_params;
-    if ~isempty(new_params)
-        fns = fieldnames(new_params);
+    updated_params = job_config;
+    if ~isempty(scenario_config)
+        fns = fieldnames(scenario_config);
         for k=1:numel(fns)
-            updated_params.(fns{k}) = new_params.(fns{k});
+            updated_params.(fns{k}) = scenario_config.(fns{k});
         end
     end
 
-    % Set pathogen family params. Should maybe do this elsewhere
-    updated_params.viral_families_researched = 1:updated_params.viral_families_to_research;
+    % Set pathogen family params.
+    updated_params.viral_families_researched = parse_rd_investments(scenario_config.rd_investments, viral_family_data);
+    num_vfs_researched = length(updated_params.viral_families_researched); % Check dimensions here
+
     updated_params.adv_RD_spend = updated_params.adv_RD_cost_per_pathogen * ...
         updated_params.pathogens_per_family * ... 
-        updated_params.viral_families_to_research;
-
-    if updated_params.viral_families_to_research == 0
-        updated_params.has_RD = 0;
-        updated_params.inp_RD_cost = updated_params.inp_RD_no_adv_RD;
-    else
-        updated_params.has_RD = 1;
-        updated_params.inp_RD_cost = updated_params.inp_RD_with_adv_RD;
-    end
+        num_vfs_researched;
 
     % Set advance capacity
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity
@@ -115,6 +186,5 @@ function validate_params(params)
 
     assert(params.RD_speedup_months <= params.tau_A); % R&D speedup must be less or equal than baseline time.
     assert(params.RD_success_rate_increase_per_platform * 4 <= 1 - params.p_b - params.p_m - params.p_o);
-    assert(sum(params.pandemic_dur_probs)==1);
 
 end

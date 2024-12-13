@@ -1,27 +1,32 @@
-function y = h(vax_fraction_sum)
-
+function y = h(vax_fractions)
+	% Piecewise linear function for vaccination damage mitigati
     % per footnote 17 of IMF paper, the h function is specified as a
     % piecewise linear function pinned down by
     % h(0    ) = 0
     % h(0.13 ) = .395
     % h(0.5  ) = .816
     % h(>=0.7) = 1
-    slope_1 = 3.038462;
-    
+	
+	% Validate inputs 
+	assert(all(isbetween(vax_fractions, 0, 1)))
+
+	% Initialize constants and output container
+	slope_1 = 3.038462;
     slope_2 = 1.137838;
-    intercept_2 = 0.247081;
-
     slope_3 = 0.92;
-    intercept_3 = 0.356000;
+	intercept_2 = 0.395;
+    intercept_3 = 0.816;
+	y = zeros(size(vax_fractions));
+	
+	% Segment masks
+	mask1 = vax_fractions <= 0.13;
+	mask2 = vax_fractions > 0.13 & vax_fractions <= 0.5;
+	mask3 = vax_fractions > 0.5 & vax_fractions <= 0.7;
+	mask4 = vax_fractions > 0.7;
 
-    if vax_fraction_sum <= 0.13
-		y = 0 + slope_1 * vax_fraction_sum;
-	elseif vax_fraction_sum <= 0.5
-		y = intercept_2 + slope_2 * vax_fraction_sum;
-    elseif vax_fraction_sum <= 0.7
-		y = intercept_3 + slope_3 * vax_fraction_sum;
-	else
-		y = 1;
-    end
-
+	% Apply piecewise linear function
+	y(mask1) = slope_1 * vax_fractions(mask1);
+	y(mask2) = intercept_2 + slope_2 * (vax_fractions(mask2) - 0.13);
+	y(mask3) = intercept_3 + slope_3 * (vax_fractions(mask3) - 0.5);
+	y(mask4) = 1;
 end

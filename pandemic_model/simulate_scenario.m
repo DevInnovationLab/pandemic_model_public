@@ -1,4 +1,4 @@
-function simulate_scenario(simulation_table, params)
+function simulate_scenario(simulation_table, econ_loss_model, params)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % NOTE:
@@ -11,10 +11,9 @@ function simulate_scenario(simulation_table, params)
 
     %%%%%%% LOAD SCENS
     % Consider moving this later
-    simulation_table = removevars(simulation_table, {'draw_natural_dur', 'posterior1', 'posterior2'}); % remove the random draw columns
+    simulation_table = removevars(simulation_table, {'posterior1', 'posterior2'}); % remove the random draw columns
     
     %%%%%%%%%%%%%%%% INITIALIZATION %%%%%%%%%%%%%%%%
-
     sim_cnt = max(params.num_simulations); % number of simulations
 
     vax_net_benefits_bn_arr = zeros(sim_cnt, 1); % array of net benefits for the simulations
@@ -27,9 +26,10 @@ function simulate_scenario(simulation_table, params)
     vax_costs_inp_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for in pandemic at risk capacity investments
     vax_costs_upf_cap_bn_arr = zeros(sim_cnt, 1); % array of costs for adv capacity investments
 
-    sim_results = array2table(double.empty(0, 18), 'VariableNames', {'sim_num', 'yr_start', 'severity', 'is_false', 'pathogen_family', ...
-        'prep_start_month', 'rd_state', 'natural_dur', 'has_RD_benefit', 'rd_state_desc', ...
-        'cap_avail_m', 'cap_avail_o', 'vax_benefits', 'vax_fraction_cum', 'inp_marg_costs', 'inp_tailoring_costs', 'inp_RD_costs', 'inp_cap_costs'} );
+    sim_table_cols = simulation_table.Properties.VariableNames;
+    result_cols = {'cap_avail_m', 'cap_avail_o', 'vax_benefits', 'vax_fraction_cum', 'inp_marg_costs', 'inp_tailoring_costs', 'inp_RD_costs', 'inp_cap_costs'};
+    out_cols = [sim_table_cols, result_cols];
+    sim_results = array2table(double.empty(0, numel(out_cols)), 'VariableNames', out_cols);
 
     %%%%%%%%%%%%%%%% Initialize capacity %%%%%%%%%%%
 
@@ -79,7 +79,7 @@ function simulate_scenario(simulation_table, params)
         surveil_spend_bn_arr = [surveil_spend_bn_init; surveil_spend_bn_maintenance];
         surveil_spend_bn_PV = sum(surveil_spend_bn_arr .* PV_factor_yr);
 
-        sim_out_arr_costs_surveil_nom = repmat(surveil_spend_bn_arr * 1000, 1, sim_cnt);
+        sim_out_arr_costs_surveil_nom = repmat(surveil_spend_bn_arr, 1, sim_cnt);
         sim_out_arr_costs_surveil_PV = sim_out_arr_costs_surveil_nom .* repmat(PV_factor_yr, 1, sim_cnt);
     end
     
@@ -87,16 +87,14 @@ function simulate_scenario(simulation_table, params)
     sim_out_arr_benefits_vaccine_nom  = zeros(params.sim_periods, sim_cnt);
     sim_out_arr_benefits_vaccine_PV  = zeros(params.sim_periods, sim_cnt);
 
-    % R&D costs
-    inp_RD_nom = params.inp_RD_cost * 1000; % mn of nominal
-
+    % Adv R&D costs
     time_arr = (1:params.adv_RD_benefit_start)';
     PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
     
     adv_RD_spend_bn_arr = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, 1);
     adv_RD_spend_bn_PV = sum(adv_RD_spend_bn_arr .* PV_factor_yr);
 
-    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start * 1000, params.adv_RD_benefit_start, sim_cnt); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
+    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, sim_cnt); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
     sim_out_arr_costs_adv_RD_nom(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl;
     sim_out_arr_costs_adv_RD_PV(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl .* repmat(PV_factor_yr, 1, sim_cnt );
 
@@ -108,10 +106,10 @@ function simulate_scenario(simulation_table, params)
     ticBytes(pool);
     parfor (s = 1:sim_cnt) % loop through each simulation scenario
     % for s =1:sim_cnt
-        idx = simulation_table.sim_num == s; % indices of rowsinu for sim s
+        idx = simulation_table.sim_num == s; % indices of rows for sim s
         row_cnt_s = sum(idx>0); % number of rows for this simulation
         sim_scens_s = simulation_table(idx, :); % filter sim_scens for rows relevant for this simulation
-        [yr_start_arr, severity_arr, natural_dur_arr, is_false_arr, rd_state_arr, has_RD_benefit_arr, prep_start_month_arr] = ...
+        [yr_start_arr, severity_arr, natural_dur_arr, actual_dur_arr, is_false_arr, rd_state_arr, has_RD_benefit_arr, prep_start_month_arr, yr_end_arr] = ...
             extract_columns_from_table(sim_scens_s); % unpack designated columns as arrays
         
         vax_benefits_s = 0; % total benefit in simulation (total across pandemics, in million)
@@ -141,11 +139,11 @@ function simulate_scenario(simulation_table, params)
             adv_cap_m_end = adv_cap_m_over_time(end);
             adv_cap_o_end = adv_cap_o_over_time(end);
             
-            res = gen_output_struct(sim_scens_s(1, :), adv_cap_m_end/10^3, adv_cap_o_end/10^3, 0, NaN, 0, 0, 0, 0);
+            res = gen_output_struct(sim_scens_s(1, :), adv_cap_m_end, adv_cap_o_end, 0, NaN, 0, 0, 0, 0);
             sim_results = [sim_results; res];
 
         else
-            indx = yr_start_arr(1)-1;
+            indx = yr_start_arr(1)-1; % No idea what this part is doing now
             if indx > params.adv_cap_build_period
                 indx = params.adv_cap_build_period;
             end
@@ -166,14 +164,15 @@ function simulate_scenario(simulation_table, params)
                 % if i == 2
                 %     blah = 1+1;
                 % end
-                yr_start             = yr_start_arr(i);
+                yr_start = yr_start_arr(i);
                 pandemic_natural_dur = natural_dur_arr(i);
-                rd_state                = rd_state_arr(i);
-                severity            = severity_arr(i);
-                is_false             = is_false_arr(i);
-                has_RD_benefit       = has_RD_benefit_arr(i);
-                prep_start_month     = prep_start_month_arr(i); % interpret prep_start_month as the month where by the end of it, world starts preparing
-                yr_pandemic_end      = min(yr_start + pandemic_natural_dur - 1, params.sim_periods);
+                actual_dur = actual_dur_arr(i);
+                rd_state = rd_state_arr(i);
+                severity = severity_arr(i);
+                is_false = is_false_arr(i);
+                has_RD_benefit = has_RD_benefit_arr(i);
+                prep_start_month = prep_start_month_arr(i); % interpret prep_start_month as the month where by the end of it, world starts preparing
+                yr_pandemic_end = yr_end_arr(i);
                 if is_false == 1
                     yr_pandemic_end = yr_start;
                 end
@@ -186,6 +185,13 @@ function simulate_scenario(simulation_table, params)
                 end
 
                 pandemic_end_to_next_indx = (yr_pandemic_end+1):next_signal;
+
+                % Set response R&D costs
+                if has_RD_benefit == true
+                    inp_RD_nom = params.inp_RD_with_adv_RD; % mn of nominal
+                elseif has_RD_benefit == false
+                    inp_RD_nom = params.inp_RD_no_adv_RD; % mn of nominal
+                end
 
                 % Get existing advance capacity
                 adv_cap_m_current = adv_cap_m_over_time(yr_start-1);
@@ -207,7 +213,7 @@ function simulate_scenario(simulation_table, params)
                     surge_cap_stock_value_over_time(yr_start:next_signal) = ...
                         surge_cap_stock_value_over_time(yr_start-1) * params.capacity_kept;
 
-                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m/10^3, cap_avail_o/10^3, 0, NaN, 0, 0, 0, 0);
+                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m, cap_avail_o, 0, NaN, 0, 0, 0, 0);
 
                 else 
                     tau_A = params.tau_A;
@@ -227,8 +233,8 @@ function simulate_scenario(simulation_table, params)
                     % Build capacity
                     total_cap_m_before_build = adv_cap_m_current + surge_cap_m_current;
                     total_cap_o_before_build = adv_cap_o_current + surge_cap_o_current;
-                    surge_cap_m_build = min(x_m - total_cap_m_before_build, params.x_avail / 10^6 * params.mRNA_share);
-                    surge_cap_o_build = min(x_o - total_cap_o_before_build, params.x_avail / 10^6 * (1-params.mRNA_share));
+                    surge_cap_m_build = min(x_m - total_cap_m_before_build, params.x_avail * params.mRNA_share);
+                    surge_cap_o_build = min(x_o - total_cap_o_before_build, params.x_avail * (1-params.mRNA_share));
                     surge_cap_m_current = surge_cap_m_current + surge_cap_m_build;
                     surge_cap_o_current = surge_cap_o_current + surge_cap_o_build;
                     cap_avail_m = adv_cap_m_current + surge_cap_m_current;
@@ -241,7 +247,8 @@ function simulate_scenario(simulation_table, params)
                     surge_cap_stock_value_over_time(in_pandemic_indx) = surge_cap_stock_value_over_time(yr_start-1) + ...
                         surge_cap_capital_costs;
                     
-                    % fill and finish incurred at one month into prep start. 
+                    % fill and finish incurred at one month into prep start.
+                    % We are now applying fill and finish at each pandemic outbreak.
                     tailoring_PV = (1/(1+params.r))^(yr_start-1) * (1/(1+params.r))^(1/12 * (prep_start_month+1));
                     tailoring_nom_costs = adv_cap_m_current * (tailoring_fraction * params.k_m) + ...
                         adv_cap_o_current * (tailoring_fraction * params.k_o);
@@ -268,8 +275,8 @@ function simulate_scenario(simulation_table, params)
                         inp_marg_costs_m_PV = zeros(tot_months, 1);
                         inp_marg_costs_o_PV = zeros(tot_months, 1);
                     else
-                        [vax_fraction_cum, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom] = ...
-                            run_pandemic(params, tau_A, has_RD_benefit, yr_start, pandemic_natural_dur, rd_state, severity, cap_avail_m, cap_avail_o);
+                        [vax_fraction_cum, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom, deaths_array] = ...
+                            run_pandemic(params, econ_loss_model, tau_A, has_RD_benefit, yr_start, pandemic_natural_dur, actual_dur, rd_state, severity, cap_avail_m, cap_avail_o);
                     end
 
                     inp_marg_costs_PV = sum(inp_marg_costs_m_PV, 1) + sum(inp_marg_costs_o_PV, 1);
@@ -282,11 +289,11 @@ function simulate_scenario(simulation_table, params)
                     vax_benefits_s = vax_benefits_s + vax_benefits; 
                 
                     if ~is_false 
-                        sim_out_arr_benefits_vaccine_PV(:, s)  = sim_out_arr_benefits_vaccine_PV(:, s) + agg_by_yr(vax_benefits_PV, pandemic_natural_dur, yr_start, params.sim_periods);
-                        sim_out_arr_benefits_vaccine_nom(:, s) = sim_out_arr_benefits_vaccine_nom(:, s) + agg_by_yr(vax_benefits_nom, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_benefits_vaccine_PV(:, s)  = sim_out_arr_benefits_vaccine_PV(:, s) + agg_by_yr(vax_benefits_PV, actual_dur, yr_start, params.sim_periods);
+                        sim_out_arr_benefits_vaccine_nom(:, s) = sim_out_arr_benefits_vaccine_nom(:, s) + agg_by_yr(vax_benefits_nom, actual_dur, yr_start, params.sim_periods);
 
-                        sim_out_arr_costs_inp_marg_PV(:, s) = sim_out_arr_costs_inp_marg_PV(:, s) + agg_by_yr(inp_marg_costs_o_PV + inp_marg_costs_m_PV, pandemic_natural_dur, yr_start, params.sim_periods);
-                        sim_out_arr_costs_inp_marg_nom(:, s) = sim_out_arr_costs_inp_marg_nom(:, s) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, pandemic_natural_dur, yr_start, params.sim_periods);
+                        sim_out_arr_costs_inp_marg_PV(:, s) = sim_out_arr_costs_inp_marg_PV(:, s) + agg_by_yr(inp_marg_costs_o_PV + inp_marg_costs_m_PV, actual_dur, yr_start, params.sim_periods);
+                        sim_out_arr_costs_inp_marg_nom(:, s) = sim_out_arr_costs_inp_marg_nom(:, s) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, actual_dur, yr_start, params.sim_periods);
                     end
                     
                     % Deal with capacity stuff
@@ -298,8 +305,8 @@ function simulate_scenario(simulation_table, params)
                     surge_cap_stock_value_over_time(pandemic_end_to_next_indx) = surge_cap_stock_value_over_time(yr_pandemic_end) .* params.capacity_kept; % This will result in errors unless you have 50-50 mRNA capacity ratios.
                     inp_cap_costs_PV = sum(surge_cap_capital_costs_over_time); % Note we have now changed what this number means.
 
-                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m / 10^3, cap_avail_o / 10^3, ...
-                        vax_benefits / 10^3, vax_fraction_cum, inp_marg_costs_PV / 10^3, inp_tailoring_costs_PV / 10^3, inp_RD_costs_PV / 10^3, inp_cap_costs_PV / 10^3);
+                    res = gen_output_struct(sim_scens_s(i, :), cap_avail_m , cap_avail_o, ...
+                        vax_benefits, vax_fraction_cum, inp_marg_costs_PV, inp_tailoring_costs_PV, inp_RD_costs_PV, inp_cap_costs_PV);
                 end
 
                 sim_results = [sim_results; res];
@@ -315,13 +322,13 @@ function simulate_scenario(simulation_table, params)
                 rental_income_fractions = repmat(params.rental_share, 1, params.sim_periods);
             end
 
-            assert(length(yr_start_arr) == length(natural_dur_arr))
+            assert(length(yr_start_arr) == length(actual_dur_arr))
             for j = 1:length(yr_start_arr)
                 yr_start = yr_start_arr(j);
                 if is_false_arr(j) == 1
                     yr_end = yr_start;
                 else
-                    yr_end = min(yr_start + natural_dur_arr(j) - 1, params.sim_periods);
+                    yr_end = min(yr_start + actual_dur_arr(j) - 1, params.sim_periods);
                 end
                 in_pandemic_indx = yr_start:yr_end;
                 rental_income_fractions(in_pandemic_indx) = 0;
@@ -368,7 +375,7 @@ function simulate_scenario(simulation_table, params)
         inp_cap_costs_PV_s = sum(total_surge_cap_costs_over_time_pv);
         cap_costs_tot = sum(total_adv_cap_costs_over_time_pv + total_surge_cap_costs_over_time_pv);
 
-        vax_costs_bn_s = (inp_marg_costs_PV_s + inp_tailoring_costs_PV_s + inp_RD_costs_PV_s + cap_costs_tot)/10^3;
+        vax_costs_bn_s = (inp_marg_costs_PV_s + inp_tailoring_costs_PV_s + inp_RD_costs_PV_s + cap_costs_tot);
         
         vax_costs_bn_s = vax_costs_bn_s + adv_RD_spend_bn_PV;
 
@@ -377,15 +384,15 @@ function simulate_scenario(simulation_table, params)
         end
 
         % store sim results
-        vax_net_benefits_bn_arr(s) = vax_benefits_s / 10^3 - vax_costs_bn_s;
-        vax_benefits_bn_arr(s)     = vax_benefits_s / 10^3;
+        vax_net_benefits_bn_arr(s) = vax_benefits_s - vax_costs_bn_s;
+        vax_benefits_bn_arr(s)     = vax_benefits_s;
         vax_costs_bn_arr(s)        = vax_costs_bn_s;
         
-        vax_costs_inp_cap_bn_arr(s)       = inp_cap_costs_PV_s / 10^3;
-        vax_costs_inp_m_bn_arr(s)         = inp_marg_costs_PV_s / 10^3;
-        vax_costs_inp_tailoring_bn_arr(s) = inp_tailoring_costs_PV_s / 10^3;
-        vax_costs_inp_RD_bn_arr(s)        = inp_RD_costs_PV_s / 10^3;
-        vax_costs_upf_cap_bn_arr(s)       = upfront_cap_costs / 10^3;
+        vax_costs_inp_cap_bn_arr(s)       = inp_cap_costs_PV_s;
+        vax_costs_inp_m_bn_arr(s)         = inp_marg_costs_PV_s;
+        vax_costs_inp_tailoring_bn_arr(s) = inp_tailoring_costs_PV_s;
+        vax_costs_inp_RD_bn_arr(s)        = inp_RD_costs_PV_s;
+        vax_costs_upf_cap_bn_arr(s)       = upfront_cap_costs;
 
         if mod(s, 1000) == 0
            fprintf('finished sim num %d (elaspsed min: %d)\n', s, round(toc/60, 1));
@@ -404,7 +411,7 @@ function simulate_scenario(simulation_table, params)
 
     net_value = mean(vax_net_benefits_bn_arr, 1);
     fprintf('Elapsed time (min): %0.1f\n', round(toc/60, 1));
-    fprintf('Avg net value (bn): %d\n', round(net_value, 0));
+    fprintf('Avg net value (bn): %d\n', round(net_value/10^9, 0));
 
     sim_results_sum0 = table(vax_net_benefits_bn_arr, vax_benefits_bn_arr, vax_costs_bn_arr, ...
         vax_costs_RD_bn_arr, vax_costs_surveil_bn_arr, vax_costs_upf_cap_bn_arr, vax_costs_inp_cap_bn_arr, vax_costs_inp_m_bn_arr, vax_costs_inp_tailoring_bn_arr, vax_costs_inp_RD_bn_arr);
