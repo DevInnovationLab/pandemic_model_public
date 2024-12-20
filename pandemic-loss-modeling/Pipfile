@@ -13,6 +13,7 @@ statsmodels = "*"
 pyyaml = "*"
 scikit-learn = "*"
 seaborn = "*"
+ipykernel = "*"
 
 [dev-packages]
 ipykernel = "*"

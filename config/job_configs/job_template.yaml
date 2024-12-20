@@ -20,9 +20,9 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-response_threshold: 1.53 # Half of COVID-19 intensity (3.2 deaths per 10,000 per year)
-arrival_dist_config: "./pandemic-loss-modeling/output/arrival_distributions/all_risk_default.yaml"
-duration_dist_config: "./pandemic-loss-modeling/output/duration_distributions/all_risk_default.yaml"
+response_threshold_path: "./pandemic-loss-modeling/output/response_threshold.yaml"
+arrival_dist_config: "./pandemic-loss-modeling/output/arrival_distributions/all_risk_gamma_0.6.yaml"
+duration_dist_config: "./pandemic-loss-modeling/output/duration_distributions/all_risk_gamma_0.6.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./pandemic-loss-modeling/output/econ_loss_models/poisson_model.yaml"
 
@@ -49,6 +49,8 @@ rental_share: 0.4 # Share maintenance cost recuperated from pandemic in absence 
 adv_cap_build_period: 30 # number of years it takes to finish building adv capacity
 
 # Vaccine development
+times_to_vaccine: "./pandemic-loss-modeling/output/times_to_vaccine.csv"
+vaccine_ptrs: "./pandemic-loss-modeling/output/vaccine_ptrs.csv"
 p_b: 0.25 # prob both technologies are successful
 p_m: 0.075 # prob only mRNA successful
 p_o: 0.075 # prob only traditional platform successful

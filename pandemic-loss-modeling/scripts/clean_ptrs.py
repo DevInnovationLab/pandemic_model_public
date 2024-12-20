@@ -1,8 +1,12 @@
 import re
+import sys
 
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+
+sys.path.append("./pandemic-loss-modeling/scripts")
+from utils import viral_family_map
 
 ptrs_raw = pd.read_excel(
     "C:/Users/squaade/Box/CEPI Expert Survey (IRB coverage)/CEPI Expert Survey_May 21_2024_Sebastian_Updates.xlsx",
@@ -70,7 +74,7 @@ ptrs['value_max'] = ptrs['value_max'].astype(float)
 
 ptrs = ptrs.sort_index(level=['disease', 'respondent', 'platform'])
 
-
+# Should maybe do before 
 ptrs['ptrs_mean'] = (ptrs['value_max'] + ptrs['value_min']) / 2
 mean_ptrs_platform = ptrs \
     .groupby(['disease', 'platform'])['ptrs_mean'] \
@@ -96,3 +100,14 @@ plt.gca().spines['top'].set_visible(False)
 plt.gca().spines['right'].set_visible(False)
 plt.tight_layout()
 plt.savefig("ptrs.jpg")
+
+plot_df['disease'] = plot_df['disease'] \
+    .str.lower() \
+    .str.replace(' ', '_')
+
+# Remove COVID-19
+plot_df = plot_df[plot_df['disease'] != 'covid-19']
+plot_df['viral_family'] = plot_df['disease'].map(viral_family_map)
+assert(plot_df['viral_family'].notna().all())
+
+plot_df.to_csv("./pandemic-loss-modeling/output/vaccine_ptrs.csv")

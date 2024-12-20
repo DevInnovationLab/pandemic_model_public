@@ -1,8 +1,9 @@
 # Fit exceedance functions and pandemic duration distributions
-import yaml
+import argparse
 
 import numpy as np
 import pandas as pd
+import yaml
 from scipy.stats import lognorm, genpareto 
 
 
@@ -19,6 +20,13 @@ WINDOW_START = LAST_OBS_YEAR - WINDOW + 1
 if __name__ == "__main__":
     # Load and clean data ---------------------------
 
+    ## Load gamma (natural covid severity parameter)
+    parser = argparse.ArgumentParser(description='Fit exceedance distributions.')
+    parser.add_argument('--gamma', type=float, default=0.6)
+
+    args = parser.parse_args()
+    gamma = args.gamma
+
     ## Read epidemic data from Marani et al. 
     df = pd.read_excel("data/epidemics_marani_240816.xlsx")
     df = df.sort_values(by='year_start', ascending=True).reset_index(drop=True)
@@ -26,6 +34,17 @@ if __name__ == "__main__":
     ## Subset data to 1900-present and to threshold-exceeding pandemics
     df = df[(df["year_start"] >= YRMIN)].reset_index(drop=True)
     df = df[(df["severity_smu"] >= SMU_THRESH)]
+
+    ## Change COVID-19 severity to ex ante estimate
+    ex_ante_covid_severities = pd.read_csv("../data/clean/inverted_covid_severities.csv")
+    ex_ante_covid_severities.set_index('gamma', inplace=True)
+
+    try:
+        ex_ante_covid_severity = ex_ante_covid_severities.loc[gamma].values
+    except KeyError:
+        raise ValueError(f"Gamma value {gamma} not found in ex_ante_covid_severities index.")
+    
+    df.loc[df['disease'] == 'covid-19', 'severity_smu'] = ex_ante_covid_severity
 
     ## Subset to all novel viral pandemics amd to respiratory viruses
     df_all = df[df['disease'].isin(['influenza', 'covid-19', 'ebola', 'hiv/aids'])
@@ -58,7 +77,7 @@ if __name__ == "__main__":
         }
     }
 
-    with open("./output/arrival_distributions/all_risk_default.yaml", 'w') as f:
+    with open(f"./output/arrival_distributions/all_risk_gamma_{gamma}.yaml", 'w') as f:
         yaml.dump(all_risk_distr_params, f)
 
 
@@ -79,8 +98,14 @@ if __name__ == "__main__":
         }
     }
 
-    with open("./output/arrival_distributions/resp_default.yaml", 'w') as f:
+    with open(f"./output/arrival_distributions/resp_gamma_{gamma}.yaml", 'w') as f:
         yaml.dump(resp_distr_params, f)
+
+    # Response threshold ---------------------
+    response_threshold = {'response_threshold': float((ex_ante_covid_severity / df.loc[df['disease'] == 'covid-19', 'duration'].values)[0])}
+
+    with open(f"./output/response_threshold.yaml", 'w') as f:
+        yaml.dump(response_threshold, f)
 
     # Duration distributions ---------------------------------
 
@@ -108,8 +133,8 @@ if __name__ == "__main__":
     }
 
     # Save
-    with open("./output/duration_distributions/all_risk_default.yaml", 'w') as f:
+    with open(f"./output/duration_distributions/all_risk_gamma_{gamma}.yaml", 'w') as f:
         yaml.dump(all_risk_dur_params, f)
 
-    with open("./output/duration_distributions/resp_default.yaml", 'w') as f:
+    with open(f"./output/duration_distributions/resp_gamma_{gamma}.yaml", 'w') as f:
         yaml.dump(resp_dur_params, f)
