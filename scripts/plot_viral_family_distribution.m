@@ -39,10 +39,10 @@ title('Viral family distribution of pandemics');
 
 % Add a custom legend% Add a custom legend manually
 hold on;
-dummy1 = plot(nan, nan, 's', 'Color', cmap(1, :), 'MarkerFaceColor', cmap(1, :));
-dummy2 = plot(nan, nan, 's', 'Color', cmap(2, :), 'MarkerFaceColor', cmap(2, :));
+dummy1 = plot(nan, nan, 's', 'Color', cmap(2, :), 'MarkerFaceColor', cmap(2, :));
+dummy2 = plot(nan, nan, 's', 'Color', cmap(1, :), 'MarkerFaceColor', cmap(1, :));
 dummy3 = plot(nan, nan, 's', 'Color', cmap(3, :), 'MarkerFaceColor', cmap(3, :));
-legend([dummy1, dummy2, dummy3], {'No prototype', 'Has prototype', 'Unknown'}, ...
+legend([dummy1, dummy2, dummy3], {'Has prototype', 'No prototype', 'Unknown'}, ...
     'Location', 'northeast', 'FontSize', 10);
 hold off;
 

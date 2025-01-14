@@ -1,11 +1,11 @@
 arrival_share,viral_family,has_adv_RD
-0.0193,arenaviridae,1
+0.0193,arenaviridae,0
 0.0141,nairoviridae,0
-0.0327,phenuiviridae,0
+0.0327,bunyaviridae,0
 0.2239,coronaviridae,1
 0.0373,filoviridae,1
-0.0711,flaviviridae,0
-0.0605,paramyxoviridae,0
+0.0711,flaviviridae,1
+0.0605,paramyxoviridae,1
 0.3294,orthomyxoviridae,1
 0.0643,togaviridae,1
 0.1473,unknown,0

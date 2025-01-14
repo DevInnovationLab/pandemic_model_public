@@ -24,8 +24,11 @@ function run_simulations(job_config_path)
 
     % Generate simulations
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config);
+    response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
     viral_family_data = readtable(job_config.viral_family_data);
+
+    job_config.response_threshold = response_threshold_dict.response_threshold; % So hacky, really should clean.
     base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config);
 
     % Add econ loss params

@@ -7,7 +7,7 @@ function find_natural_severity_covid
     params = clean_job_config(yaml.loadFile("./config/job_configs/job_template.yaml"));
     params.tau_A = 11; % Months before vaccine available.
     params.rd_state = 1; % Both mRNA and traditional succeeded during COVID-19.
-    duration = 6; % COVID-19 duration according to our records. Need to check
+    duration = 5; % COVID-19 duration according to our records.
     monthly_cum_vax = readtable("./data/clean/covid19_cum_vax_over_time.csv");
     params.monthly_cum_vax = monthly_cum_vax.cum_vax_rate;
 
@@ -34,8 +34,9 @@ function find_natural_severity_covid
     results = array2table(zeros(length(ex_ante_severities), 2), 'VariableNames', ["gamma", "ex_ante_severities"]);
     results.gamma = gamma_grid;
     results.ex_ante_severities = ex_ante_severities;
-    
+
     disp(results)
+    writetable(results, "./data/clean/inverted_covid_severities.csv");
 end
 
 

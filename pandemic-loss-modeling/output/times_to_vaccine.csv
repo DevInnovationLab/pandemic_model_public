@@ -1,0 +1,15 @@
+,disease,adv_RD,time_to_vaccine,viral_family
+0,cchf,False,4.75,nairoviridae
+1,cchf,True,2.75,nairoviridae
+2,lassa,False,4.75,arenaviridae
+3,lassa,True,2.125,arenaviridae
+4,mers,False,4.75,coronaviridae
+5,mers,True,2.75,coronaviridae
+6,nipah,False,4.25,paramyxoviridae
+7,nipah,True,1.9270833333333333,paramyxoviridae
+8,rift_valley_fever,False,5.625,phenuiviridae
+9,rift_valley_fever,True,2.75,phenuiviridae
+10,zika,False,5.625,flaviviridae
+11,zika,True,2.75,flaviviridae
+12,flu,False,3.5,orthmyxoviridae
+13,flu,True,1.6145833333333333,orthmyxoviridae
