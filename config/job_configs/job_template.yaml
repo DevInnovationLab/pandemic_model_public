@@ -9,6 +9,7 @@ add_datetime_to_outdir: 0
 sim_scens_path: null # Load previously created pandemic simulations (rather than creating new ones with parameters below)
 save_output: 1
 endogenous_rental: 0
+profile: true # Profile main parallel loop
 
 # Social value
 y: 0.016 # Growth rate
@@ -20,11 +21,11 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-response_threshold_path: "./pandemic-loss-modeling/output/response_threshold.yaml"
-arrival_dist_config: "./pandemic-loss-modeling/output/arrival_distributions/all_risk_gamma_0.6.yaml"
-duration_dist_config: "./pandemic-loss-modeling/output/duration_distributions/all_risk_gamma_0.6.yaml"
+response_threshold_path: "./output/response_threshold.yaml"
+arrival_dist_config: "./output/arrival_distributions/all_risk.yaml"
+duration_dist_config: "./output/duration_distributions/all_risk.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
-econ_loss_model_config: "./pandemic-loss-modeling/output/econ_loss_models/poisson_model.yaml"
+econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 
 # Capacity
 theta: 0.25 # Fraction reduction in pandemic-time investments due to advance capacity
@@ -49,8 +50,8 @@ rental_share: 0.4 # Share maintenance cost recuperated from pandemic in absence 
 adv_cap_build_period: 30 # number of years it takes to finish building adv capacity
 
 # Vaccine development
-times_to_vaccine: "./pandemic-loss-modeling/output/times_to_vaccine.csv"
-vaccine_ptrs: "./pandemic-loss-modeling/output/vaccine_ptrs.csv"
+times_to_vaccine: "./output/times_to_vaccine.csv"
+vaccine_ptrs: "./data/clean/vaccine_ptrs.csv"
 p_b: 0.25 # prob both technologies are successful
 p_m: 0.075 # prob only mRNA successful
 p_o: 0.075 # prob only traditional platform successful
