@@ -1,16 +1,19 @@
 % Example usage script
 function find_natural_severity_covid
-    addpath(genpath("./pandemic_model"));
-    addpath(genpath("./yaml"));
+    pwd
+    addpath(genpath("./matlab/pandemic_model"));
+    addpath(genpath("./matlab/yaml"));
     
     % Load params and overwrite with COVID-19 specific
     params = clean_job_config(yaml.loadFile("./config/job_configs/job_template.yaml"));
     params.tau_A = 11; % Months before vaccine available.
     params.rd_state = 1; % Both mRNA and traditional succeeded during COVID-19.
-    duration = 5; % COVID-19 duration according to our records.
+    years = 5; % COVID-19 duration according to our records.
+
+    % Load vaccination rates over time.
     monthly_cum_vax = readtable("./data/clean/covid19_cum_vax_over_time.csv");
     cum_vax_rate = monthly_cum_vax.cum_vax_rate;
-    params.monthly_cum_vax = [zeros(params.tau_A, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
+    monthly_cum_vax = [zeros(params.tau_A, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
 
     target_ex_post_severity = 9.17; % In Marani data
     fy_mortality_reduction = 0.63; % First year mortality reduction
@@ -22,7 +25,8 @@ function find_natural_severity_covid
     
     % Define function handle for fsolve
     fit_func = @(x) fit_ex_ante_severity(x(1), x(2), target_ex_post_severity, ...
-                                         duration, fy_mortality_reduction, params);
+                                         years, fy_mortality_reduction, monthly_cum_vax, ...
+                                         params);
     
     % Initial guess for [ex_ante_severity, gamma]
     x0 = [ex_ante_severity_init, gamma_init];
@@ -50,30 +54,38 @@ end
 function F = fit_ex_ante_severity(ex_ante_severity, ...
                                   gamma, ...
                                   target_ex_post_severity, ...
-                                  duration, ...
+                                  years, ...
                                   fy_mortality_reduction, ...
+                                  monthly_cum_vax, ...
                                   params)
-    % Get capacity from params
-    cap_avail_m = params.x_avail * params.mRNA_share;
-    cap_avail_o = params.x_avail * (1 - params.mRNA_share);
-    econ_loss_model = load_econ_loss_model(params.econ_loss_model_config);
-
     % Set parameters that don't matter for mortality quantfication
+    econ_loss_model = load_econ_loss_model(params.econ_loss_model_config);
     yr_start = 1; % Doesn't matter as won't do PV for deaths
-    RD_benefit = 0;  % Set success time using tau_A
-    run_params = params;
-    run_params.gamma = gamma; % Should probably load gamma within the function.
 
-    % Run pandemic
-    [vax_fraction_cum_end, vax_benefits_PV, vax_benefits_nom, inp_marg_costs_m_PV, inp_marg_costs_o_PV, inp_marg_costs_m_nom, inp_marg_costs_o_nom, m_deaths_array, raw_deaths_array] = ...
-        run_pandemic(run_params, econ_loss_model, params.tau_A, RD_benefit, yr_start, duration, duration, params.rd_state, ex_ante_severity, cap_avail_m, cap_avail_o);
+    % Get unmitigated pandemic losses
+    [u_deaths, ~, ~, ~] = ...
+        get_pandemic_losses(params, econ_loss_model, yr_start, years, years, ex_ante_severity);
     
-    vaccine_start_month = run_params.tau_A + 1;
-    year_available_month = vaccine_start_month + 12;
+    % Get vaccinations over time
+    months = years * 12;
+    exog_vax_length = size(monthly_cum_vax, 1);
+    if exog_vax_length >= months
+        vax_fractions_cum = exog_vax_length(1:months);
+    else
+        vax_fractions_cum =  ...
+            [monthly_cum_vax; monthly_cum_vax(end) .* ones(months - exog_vax_length, 1)];
+    end
+    
+    % Get ex post severity and share deaths mitigated
+    h_arr = h(vax_fractions_cum);
+    m_deaths = u_deaths .* (1 - h_arr) .* gamma;
+    growth_rate = (1+params.y)^(yr_start-1) .* (1+params.y).^(1/12 .* (1:height(m_deaths))');
+    ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000 .* growth_rate)), 1);
+    
+    vaccine_start_month = params.tau_A;
+    year_available_month = vaccine_start_month + 12 - 1;
     fy_idx = vaccine_start_month:year_available_month;
-    m_deaths_array = max(m_deaths_array, 0);
-    share_deaths_mitigated = sum(raw_deaths_array(fy_idx) - m_deaths_array(fy_idx)) / sum(raw_deaths_array(fy_idx));
-    ex_post_severity = sum(m_deaths_array) / (run_params.P0 / 10000);
+    share_deaths_mitigated = sum(u_deaths(fy_idx) - m_deaths(fy_idx)) / sum(u_deaths(fy_idx));
 
     % Check closeness to targets.
     severity_diff = ex_post_severity - target_ex_post_severity;

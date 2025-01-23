@@ -1,139 +1,139 @@
-disease,platform,respondent,value_min,value_max,viral_family
-cchf,Both mRNA and traditional,4,0.5,0.59,nairoviridae
-cchf,Traditional only,4,0.3,0.39,nairoviridae
-cchf,mRNA only,4,0.0,0.09,nairoviridae
-cchf,Traditional only,5,0.1,0.19,nairoviridae
-cchf,mRNA only,5,0.1,0.19,nairoviridae
-cchf,Both mRNA and traditional,11,,,nairoviridae
-cchf,Traditional only,11,,,nairoviridae
-cchf,mRNA only,11,,,nairoviridae
-cchf,mRNA only,12,0.2,0.29,nairoviridae
-cchf,Both mRNA and traditional,18,0.2,1.0,nairoviridae
-cchf,Traditional only,18,0.11,0.11,nairoviridae
-cchf,mRNA only,18,0.11,0.11,nairoviridae
-chikungunya,Both mRNA and traditional,4,0.7,0.7,togaviridae
-chikungunya,Traditional only,4,0.3,0.39,togaviridae
-chikungunya,mRNA only,4,0.1,0.19,togaviridae
-chikungunya,Traditional only,5,0.7,0.79,togaviridae
-chikungunya,mRNA only,5,0.7,0.79,togaviridae
-chikungunya,Both mRNA and traditional,11,0.7,1.0,togaviridae
-chikungunya,Traditional only,11,0.7,1.0,togaviridae
-chikungunya,mRNA only,11,0.7,0.79,togaviridae
-chikungunya,Both mRNA and traditional,12,0.9,1.0,togaviridae
-chikungunya,Traditional only,12,0.9,1.0,togaviridae
-chikungunya,mRNA only,12,0.3,0.39,togaviridae
-chikungunya,Both mRNA and traditional,18,0.4,1.0,togaviridae
-chikungunya,Traditional only,18,0.22,0.22,togaviridae
-chikungunya,mRNA only,18,0.22,0.22,togaviridae
-covid-19,Both mRNA and traditional,4,0.7,0.7,coronaviridae
-covid-19,Traditional only,4,0.3,0.39,coronaviridae
-covid-19,mRNA only,4,0.4,0.49,coronaviridae
-covid-19,Traditional only,5,0.5,0.59,coronaviridae
-covid-19,mRNA only,5,0.5,0.59,coronaviridae
-covid-19,Both mRNA and traditional,11,0.7,1.0,coronaviridae
-covid-19,Traditional only,11,0.7,1.0,coronaviridae
-covid-19,mRNA only,11,0.8,0.89,coronaviridae
-covid-19,Both mRNA and traditional,12,0.9,1.0,coronaviridae
-covid-19,Traditional only,12,0.9,1.0,coronaviridae
-covid-19,mRNA only,12,0.9,1.0,coronaviridae
-covid-19,Both mRNA and traditional,18,0.9,1.0,coronaviridae
-covid-19,Traditional only,18,0.9,1.0,coronaviridae
-covid-19,mRNA only,18,0.9,1.0,coronaviridae
-ebola,Both mRNA and traditional,4,0.6,0.69,filoviridae
-ebola,Traditional only,4,0.5,0.59,filoviridae
-ebola,mRNA only,4,0.0,0.09,filoviridae
-ebola,Traditional only,5,0.1,0.19,filoviridae
-ebola,mRNA only,5,0.1,0.19,filoviridae
-ebola,Both mRNA and traditional,11,0.7,1.0,filoviridae
-ebola,Traditional only,11,0.7,1.0,filoviridae
-ebola,mRNA only,11,0.7,0.79,filoviridae
-ebola,Both mRNA and traditional,12,0.9,1.0,filoviridae
-ebola,Traditional only,12,0.9,1.0,filoviridae
-ebola,mRNA only,12,0.2,0.29,filoviridae
-ebola,Both mRNA and traditional,18,0.75,1.0,filoviridae
-ebola,Traditional only,18,0.5,1.0,filoviridae
-ebola,mRNA only,18,0.5,1.0,filoviridae
-flu,Both mRNA and traditional,4,0.5,0.59,orthomyxoviridae
-flu,Traditional only,4,0.4,0.49,orthomyxoviridae
-flu,mRNA only,4,0.1,0.19,orthomyxoviridae
-flu,Traditional only,5,0.1,0.19,orthomyxoviridae
-flu,mRNA only,5,0.1,0.19,orthomyxoviridae
-flu,Both mRNA and traditional,11,0.7,1.0,orthomyxoviridae
-flu,Traditional only,11,0.7,1.0,orthomyxoviridae
-flu,mRNA only,11,0.5,0.59,orthomyxoviridae
-flu,Both mRNA and traditional,12,0.9,1.0,orthomyxoviridae
-flu,Traditional only,12,0.9,1.0,orthomyxoviridae
-flu,mRNA only,12,0.9,1.0,orthomyxoviridae
-flu,Both mRNA and traditional,18,0.9,1.0,orthomyxoviridae
-flu,Traditional only,18,0.9,1.0,orthomyxoviridae
-flu,mRNA only,18,0.5,1.0,orthomyxoviridae
-lassa,Both mRNA and traditional,4,0.4,0.49,arenaviridae
-lassa,Traditional only,4,0.5,0.59,arenaviridae
-lassa,mRNA only,4,0.0,0.09,arenaviridae
-lassa,Traditional only,5,0.4,0.49,arenaviridae
-lassa,mRNA only,5,0.4,0.49,arenaviridae
-lassa,Both mRNA and traditional,11,0.7,1.0,arenaviridae
-lassa,Traditional only,11,0.7,1.0,arenaviridae
-lassa,mRNA only,11,0.6,0.69,arenaviridae
-lassa,Both mRNA and traditional,12,0.9,1.0,arenaviridae
-lassa,Traditional only,12,0.9,1.0,arenaviridae
-lassa,mRNA only,12,0.4,0.49,arenaviridae
-lassa,Both mRNA and traditional,18,0.4,1.0,arenaviridae
-lassa,Traditional only,18,0.22,0.22,arenaviridae
-lassa,mRNA only,18,0.22,0.22,arenaviridae
-mers,Both mRNA and traditional,4,0.7,0.7,coronaviridae
-mers,Traditional only,4,0.4,0.49,coronaviridae
-mers,mRNA only,4,0.6,0.69,coronaviridae
-mers,Traditional only,5,0.0,0.09,coronaviridae
-mers,mRNA only,5,0.0,0.09,coronaviridae
-mers,Both mRNA and traditional,11,0.7,1.0,coronaviridae
-mers,Traditional only,11,0.7,1.0,coronaviridae
-mers,mRNA only,11,0.2,0.29,coronaviridae
-mers,Both mRNA and traditional,12,0.9,1.0,coronaviridae
-mers,Traditional only,12,0.9,1.0,coronaviridae
-mers,mRNA only,12,0.9,1.0,coronaviridae
-mers,Both mRNA and traditional,18,0.4,1.0,coronaviridae
-mers,Traditional only,18,0.22,0.22,coronaviridae
-mers,mRNA only,18,0.22,0.22,coronaviridae
-nipah,Both mRNA and traditional,4,0.4,0.49,paramyxoviridae
-nipah,Traditional only,4,0.3,0.39,paramyxoviridae
-nipah,mRNA only,4,0.0,0.09,paramyxoviridae
-nipah,Traditional only,5,0.5,0.59,paramyxoviridae
-nipah,mRNA only,5,0.5,0.59,paramyxoviridae
-nipah,Both mRNA and traditional,11,0.5,0.59,paramyxoviridae
-nipah,Traditional only,11,0.5,0.59,paramyxoviridae
-nipah,mRNA only,11,0.4,0.49,paramyxoviridae
-nipah,Both mRNA and traditional,12,0.8,0.89,paramyxoviridae
-nipah,Traditional only,12,0.7,0.79,paramyxoviridae
-nipah,mRNA only,12,0.3,0.39,paramyxoviridae
-nipah,Both mRNA and traditional,18,0.4,1.0,paramyxoviridae
-nipah,Traditional only,18,0.22,0.22,paramyxoviridae
-nipah,mRNA only,18,0.22,0.22,paramyxoviridae
-rift_valley_fever,Both mRNA and traditional,4,0.3,0.39,phenuiviridae
-rift_valley_fever,Traditional only,4,0.3,0.39,phenuiviridae
-rift_valley_fever,mRNA only,4,0.0,0.09,phenuiviridae
-rift_valley_fever,Traditional only,5,0.5,0.59,phenuiviridae
-rift_valley_fever,mRNA only,5,0.5,0.59,phenuiviridae
-rift_valley_fever,Both mRNA and traditional,11,0.4,0.49,phenuiviridae
-rift_valley_fever,Traditional only,11,0.3,0.39,phenuiviridae
-rift_valley_fever,mRNA only,11,0.4,0.49,phenuiviridae
-rift_valley_fever,Both mRNA and traditional,12,0.8,0.89,phenuiviridae
-rift_valley_fever,Traditional only,12,0.8,0.89,phenuiviridae
-rift_valley_fever,mRNA only,12,0.4,0.49,phenuiviridae
-rift_valley_fever,Both mRNA and traditional,18,0.4,1.0,phenuiviridae
-rift_valley_fever,Traditional only,18,0.22,0.22,phenuiviridae
-rift_valley_fever,mRNA only,18,0.22,0.22,phenuiviridae
-zika,Both mRNA and traditional,4,0.4,0.49,flaviviridae
-zika,Traditional only,4,0.3,0.39,flaviviridae
-zika,mRNA only,4,0.0,0.09,flaviviridae
-zika,Traditional only,5,0.0,0.09,flaviviridae
-zika,mRNA only,5,0.0,0.09,flaviviridae
-zika,Both mRNA and traditional,11,0.4,0.49,flaviviridae
-zika,Traditional only,11,0.4,0.49,flaviviridae
-zika,mRNA only,11,0.3,0.39,flaviviridae
-zika,Both mRNA and traditional,12,0.9,1.0,flaviviridae
-zika,Traditional only,12,0.8,0.89,flaviviridae
-zika,mRNA only,12,0.2,0.29,flaviviridae
-zika,Both mRNA and traditional,18,0.75,1.0,flaviviridae
-zika,Traditional only,18,0.5,1.0,flaviviridae
-zika,mRNA only,18,0.5,1.0,flaviviridae
+disease,platform,respondent,value_min,value_max,viral_family,has_adv_RD
+cchf,Both mRNA and traditional,4,0.5,0.59,nairoviridae,0
+cchf,Traditional only,4,0.3,0.39,nairoviridae,0
+cchf,mRNA only,4,0.0,0.09,nairoviridae,0
+cchf,Traditional only,5,0.1,0.19,nairoviridae,0
+cchf,mRNA only,5,0.1,0.19,nairoviridae,0
+cchf,Both mRNA and traditional,11,,,nairoviridae,0
+cchf,Traditional only,11,,,nairoviridae,0
+cchf,mRNA only,11,,,nairoviridae,0
+cchf,mRNA only,12,0.2,0.29,nairoviridae,0
+cchf,Both mRNA and traditional,18,0.2,1.0,nairoviridae,0
+cchf,Traditional only,18,0.11,0.11,nairoviridae,0
+cchf,mRNA only,18,0.11,0.11,nairoviridae,0
+chikungunya,Both mRNA and traditional,4,0.7,0.7,togaviridae,1
+chikungunya,Traditional only,4,0.3,0.39,togaviridae,1
+chikungunya,mRNA only,4,0.1,0.19,togaviridae,1
+chikungunya,Traditional only,5,0.7,0.79,togaviridae,1
+chikungunya,mRNA only,5,0.7,0.79,togaviridae,1
+chikungunya,Both mRNA and traditional,11,0.7,1.0,togaviridae,1
+chikungunya,Traditional only,11,0.7,1.0,togaviridae,1
+chikungunya,mRNA only,11,0.7,0.79,togaviridae,1
+chikungunya,Both mRNA and traditional,12,0.9,1.0,togaviridae,1
+chikungunya,Traditional only,12,0.9,1.0,togaviridae,1
+chikungunya,mRNA only,12,0.3,0.39,togaviridae,1
+chikungunya,Both mRNA and traditional,18,0.4,1.0,togaviridae,1
+chikungunya,Traditional only,18,0.22,0.22,togaviridae,1
+chikungunya,mRNA only,18,0.22,0.22,togaviridae,1
+covid-19,Both mRNA and traditional,4,0.7,0.7,coronaviridae,1
+covid-19,Traditional only,4,0.3,0.39,coronaviridae,1
+covid-19,mRNA only,4,0.4,0.49,coronaviridae,1
+covid-19,Traditional only,5,0.5,0.59,coronaviridae,1
+covid-19,mRNA only,5,0.5,0.59,coronaviridae,1
+covid-19,Both mRNA and traditional,11,0.7,1.0,coronaviridae,1
+covid-19,Traditional only,11,0.7,1.0,coronaviridae,1
+covid-19,mRNA only,11,0.8,0.89,coronaviridae,1
+covid-19,Both mRNA and traditional,12,0.9,1.0,coronaviridae,1
+covid-19,Traditional only,12,0.9,1.0,coronaviridae,1
+covid-19,mRNA only,12,0.9,1.0,coronaviridae,1
+covid-19,Both mRNA and traditional,18,0.9,1.0,coronaviridae,1
+covid-19,Traditional only,18,0.9,1.0,coronaviridae,1
+covid-19,mRNA only,18,0.9,1.0,coronaviridae,1
+ebola,Both mRNA and traditional,4,0.6,0.69,filoviridae,1
+ebola,Traditional only,4,0.5,0.59,filoviridae,1
+ebola,mRNA only,4,0.0,0.09,filoviridae,1
+ebola,Traditional only,5,0.1,0.19,filoviridae,1
+ebola,mRNA only,5,0.1,0.19,filoviridae,1
+ebola,Both mRNA and traditional,11,0.7,1.0,filoviridae,1
+ebola,Traditional only,11,0.7,1.0,filoviridae,1
+ebola,mRNA only,11,0.7,0.79,filoviridae,1
+ebola,Both mRNA and traditional,12,0.9,1.0,filoviridae,1
+ebola,Traditional only,12,0.9,1.0,filoviridae,1
+ebola,mRNA only,12,0.2,0.29,filoviridae,1
+ebola,Both mRNA and traditional,18,0.75,1.0,filoviridae,1
+ebola,Traditional only,18,0.5,1.0,filoviridae,1
+ebola,mRNA only,18,0.5,1.0,filoviridae,1
+flu,Both mRNA and traditional,4,0.5,0.59,orthomyxoviridae,1
+flu,Traditional only,4,0.4,0.49,orthomyxoviridae,1
+flu,mRNA only,4,0.1,0.19,orthomyxoviridae,1
+flu,Traditional only,5,0.1,0.19,orthomyxoviridae,1
+flu,mRNA only,5,0.1,0.19,orthomyxoviridae,1
+flu,Both mRNA and traditional,11,0.7,1.0,orthomyxoviridae,1
+flu,Traditional only,11,0.7,1.0,orthomyxoviridae,1
+flu,mRNA only,11,0.5,0.59,orthomyxoviridae,1
+flu,Both mRNA and traditional,12,0.9,1.0,orthomyxoviridae,1
+flu,Traditional only,12,0.9,1.0,orthomyxoviridae,1
+flu,mRNA only,12,0.9,1.0,orthomyxoviridae,1
+flu,Both mRNA and traditional,18,0.9,1.0,orthomyxoviridae,1
+flu,Traditional only,18,0.9,1.0,orthomyxoviridae,1
+flu,mRNA only,18,0.5,1.0,orthomyxoviridae,1
+lassa,Both mRNA and traditional,4,0.4,0.49,arenaviridae,0
+lassa,Traditional only,4,0.5,0.59,arenaviridae,0
+lassa,mRNA only,4,0.0,0.09,arenaviridae,0
+lassa,Traditional only,5,0.4,0.49,arenaviridae,0
+lassa,mRNA only,5,0.4,0.49,arenaviridae,0
+lassa,Both mRNA and traditional,11,0.7,1.0,arenaviridae,0
+lassa,Traditional only,11,0.7,1.0,arenaviridae,0
+lassa,mRNA only,11,0.6,0.69,arenaviridae,0
+lassa,Both mRNA and traditional,12,0.9,1.0,arenaviridae,0
+lassa,Traditional only,12,0.9,1.0,arenaviridae,0
+lassa,mRNA only,12,0.4,0.49,arenaviridae,0
+lassa,Both mRNA and traditional,18,0.4,1.0,arenaviridae,0
+lassa,Traditional only,18,0.22,0.22,arenaviridae,0
+lassa,mRNA only,18,0.22,0.22,arenaviridae,0
+mers,Both mRNA and traditional,4,0.7,0.7,coronaviridae,1
+mers,Traditional only,4,0.4,0.49,coronaviridae,1
+mers,mRNA only,4,0.6,0.69,coronaviridae,1
+mers,Traditional only,5,0.0,0.09,coronaviridae,1
+mers,mRNA only,5,0.0,0.09,coronaviridae,1
+mers,Both mRNA and traditional,11,0.7,1.0,coronaviridae,1
+mers,Traditional only,11,0.7,1.0,coronaviridae,1
+mers,mRNA only,11,0.2,0.29,coronaviridae,1
+mers,Both mRNA and traditional,12,0.9,1.0,coronaviridae,1
+mers,Traditional only,12,0.9,1.0,coronaviridae,1
+mers,mRNA only,12,0.9,1.0,coronaviridae,1
+mers,Both mRNA and traditional,18,0.4,1.0,coronaviridae,1
+mers,Traditional only,18,0.22,0.22,coronaviridae,1
+mers,mRNA only,18,0.22,0.22,coronaviridae,1
+nipah,Both mRNA and traditional,4,0.4,0.49,paramyxoviridae,1
+nipah,Traditional only,4,0.3,0.39,paramyxoviridae,1
+nipah,mRNA only,4,0.0,0.09,paramyxoviridae,1
+nipah,Traditional only,5,0.5,0.59,paramyxoviridae,1
+nipah,mRNA only,5,0.5,0.59,paramyxoviridae,1
+nipah,Both mRNA and traditional,11,0.5,0.59,paramyxoviridae,1
+nipah,Traditional only,11,0.5,0.59,paramyxoviridae,1
+nipah,mRNA only,11,0.4,0.49,paramyxoviridae,1
+nipah,Both mRNA and traditional,12,0.8,0.89,paramyxoviridae,1
+nipah,Traditional only,12,0.7,0.79,paramyxoviridae,1
+nipah,mRNA only,12,0.3,0.39,paramyxoviridae,1
+nipah,Both mRNA and traditional,18,0.4,1.0,paramyxoviridae,1
+nipah,Traditional only,18,0.22,0.22,paramyxoviridae,1
+nipah,mRNA only,18,0.22,0.22,paramyxoviridae,1
+rift_valley_fever,Both mRNA and traditional,4,0.3,0.39,phenuiviridae,0
+rift_valley_fever,Traditional only,4,0.3,0.39,phenuiviridae,0
+rift_valley_fever,mRNA only,4,0.0,0.09,phenuiviridae,0
+rift_valley_fever,Traditional only,5,0.5,0.59,phenuiviridae,0
+rift_valley_fever,mRNA only,5,0.5,0.59,phenuiviridae,0
+rift_valley_fever,Both mRNA and traditional,11,0.4,0.49,phenuiviridae,0
+rift_valley_fever,Traditional only,11,0.3,0.39,phenuiviridae,0
+rift_valley_fever,mRNA only,11,0.4,0.49,phenuiviridae,0
+rift_valley_fever,Both mRNA and traditional,12,0.8,0.89,phenuiviridae,0
+rift_valley_fever,Traditional only,12,0.8,0.89,phenuiviridae,0
+rift_valley_fever,mRNA only,12,0.4,0.49,phenuiviridae,0
+rift_valley_fever,Both mRNA and traditional,18,0.4,1.0,phenuiviridae,0
+rift_valley_fever,Traditional only,18,0.22,0.22,phenuiviridae,0
+rift_valley_fever,mRNA only,18,0.22,0.22,phenuiviridae,0
+zika,Both mRNA and traditional,4,0.4,0.49,flaviviridae,1
+zika,Traditional only,4,0.3,0.39,flaviviridae,1
+zika,mRNA only,4,0.0,0.09,flaviviridae,1
+zika,Traditional only,5,0.0,0.09,flaviviridae,1
+zika,mRNA only,5,0.0,0.09,flaviviridae,1
+zika,Both mRNA and traditional,11,0.4,0.49,flaviviridae,1
+zika,Traditional only,11,0.4,0.49,flaviviridae,1
+zika,mRNA only,11,0.3,0.39,flaviviridae,1
+zika,Both mRNA and traditional,12,0.9,1.0,flaviviridae,1
+zika,Traditional only,12,0.8,0.89,flaviviridae,1
+zika,mRNA only,12,0.2,0.29,flaviviridae,1
+zika,Both mRNA and traditional,18,0.75,1.0,flaviviridae,1
+zika,Traditional only,18,0.5,1.0,flaviviridae,1
+zika,mRNA only,18,0.5,1.0,flaviviridae,1

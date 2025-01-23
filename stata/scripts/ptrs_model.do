@@ -7,6 +7,8 @@ keep if platform == "Traditional only" | platform == "mRNA only"
 // Encode variables
 encode viral_family, gen(viral_family_enc)
 encode platform, gen(platform_enc)
+label define has_adv_rd_lbl 0 "No advance R&D" 1 "Has advance R&D"
+label values has_adv_rd has_adv_rd_lbl
 
 // Run regressions without clustering
 eststo m1_nc: intreg value_min value_max i.viral_family_enc i.platform_enc
@@ -94,3 +96,55 @@ graph export "./output/ptrs_estimates_plot_combined.png", replace width(2400)
 // Save individual plots
 graph export "./output/ptrs_estimates_plot_traditional.png", name(traditional) replace width(2400)
 graph export "./output/ptrs_estimates_plot_mrna.png", name(mrna) replace width(2400)
+
+// Fit model with advance R&D indicator
+eststo adv_rd_m: intreg value_min value_max i.has_adv_rd i.platform_enc, vce(cluster respondent)
+
+// Output regression table
+estout adv_rd_m using "./output/ptrs_adv_rd_results.tex", ///
+    cells(b(star fmt(3)) se(par fmt(3))) ///
+    starlevels(* 0.10 ** 0.05 *** 0.01) ///
+    label varlabels(_cons Constant) ///
+    title("\begin{table}[htbp] \centering \caption{Interval Regression Results: PTRS by R\&D Status} \label{tab:ptrs_adv_rd}") ///
+    prehead("\begin{longtable}{lc} \hline \hline") ///
+    posthead("\hline & \multicolumn{1}{c}{Vaccine PTRS} \\ \hline") ///
+    keep(*.has_adv_rd *.platform_enc _cons lnsigma) ///
+    order(*.has_adv_rd *.platform_enc _cons lnsigma) ///
+    prefoot("\hline") ///
+    postfoot("\hline \hline \multicolumn{2}{l}{\footnotesize{* \$p<0.10\$, ** \$p<0.05\$, *** \$p<0.01\$}} \\ \end{longtable} \end{table}") ///
+    style(tex) ///
+    stats(N r2 r2_p chi2, fmt(%9.0f %9.3f %9.3f %9.2f) ///
+        labels("Observations" "R-squared" "Pseudo R-squared" "Chi-squared")) ///
+    replace
+
+
+// Generate predictions with standard errors for plotting
+predict ptrs_adv_rd if e(sample), xb
+predict ptrs_adv_rd_se if e(sample), stdp
+
+// Generate confidence intervals
+generate ptrs_pred_lb = ptrs_adv_rd - 1.96 * ptrs_adv_rd_se
+generate ptrs_pred_ub = ptrs_adv_rd + 1.96 * ptrs_adv_rd_se
+
+generate has_adv_rd_traditional = (has_adv_rd - 0.05) / 2 if platform_enc == 1
+generate has_adv_rd_mrna = (has_adv_rd + 0.05) / 2 if platform_enc == 2
+
+graph twoway ///
+    (rcap ptrs_pred_lb ptrs_pred_ub has_adv_rd_traditional if platform_enc == 1, ///
+        vertical lcolor(navy%70)) ///
+    (scatter ptrs_adv_rd has_adv_rd_traditional if platform_enc == 1, ///
+        msymbol(O) mcolor(navy%70) msize(medium)) ///
+    (rcap ptrs_pred_lb ptrs_pred_ub has_adv_rd_mrna if platform_enc == 2, ///
+        vertical lcolor(maroon%70)) ///
+    (scatter ptrs_adv_rd has_adv_rd_mrna if platform_enc == 2, ///
+        msymbol(D) mcolor(maroon%70) msize(medium)), ///
+    title("Predicted PTRS by R&D Status and Platform", size(medium)) ///
+    xlabel(0 "No Advanced R&D" 0.5 "Advanced R&D", angle(0)) ///
+    ylabel(0(0.1)1, angle(0) format(%3.1f)) ///
+    ytitle("Predicted PTRS") ///
+    xtitle("R&D Status") ///
+    legend(order(2 "Traditional" 4 "mRNA") position(6) rows(1)) ///
+    scheme(s2color) graphregion(color(white)) bgcolor(white) ///
+    xscale(range(-0.2 0.7))
+
+graph export "./output/ptrs_estimates_plot_adv_rd.png", replace width(2400)

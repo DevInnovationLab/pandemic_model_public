@@ -276,7 +276,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         vax_fraction_end = vax_fractions_cum(end);
                         
                         h_arr = h(vax_fractions_cum);
-                        m_deaths = u_deaths .* h_arr .* params.gamma;
+                        m_deaths = u_deaths .* (1 - h_arr) .* params.gamma;
 
                         u_losses = [u_mortality_losses, u_output_losses, u_learning_losses]; % Unmitigated losses
                         m_losses = u_losses .* (1 - h_arr .* params.gamma);

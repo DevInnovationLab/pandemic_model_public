@@ -34,12 +34,17 @@ def extract_disease(text):
 
 if __name__ == "__main__":
 
+  # Load data -----------------------------
   ptrs_raw = pd.read_excel(
     "C:/Users/squaade/Box/CEPI Expert Survey (IRB coverage)/CEPI Expert Survey_May 21_2024_Sebastian_Updates.xlsx",
     sheet_name='PTRS By Disease',
     skiprows=1,
     header=None,
   )
+
+  vf_arrival_shares = pd.read_csv("./data/clean/vf_data_arrival_all.csv")
+
+  # Clean PTRS data -------------------------------------
   ptrs = ptrs_raw \
     .rename(columns={0: 'question_num', 1: 'question_text'}) \
     .drop(columns=[2, 3])
@@ -85,6 +90,10 @@ if __name__ == "__main__":
 
   ptrs = ptrs.sort_index(level=['disease', 'respondent', 'platform'])
   ptrs['viral_family'] = ptrs.index.get_level_values('disease').map(viral_family_map)
+
+  # Merge adv RD status onto PTRS data ----------------
+  vf_arrival_shares = vf_arrival_shares.set_index('viral_family')
+  ptrs['has_adv_RD'] = ptrs['viral_family'].map(vf_arrival_shares['has_adv_RD'])
 
   # Save df for interval regression
   out_df = ptrs.drop(columns='ptrs_range')
