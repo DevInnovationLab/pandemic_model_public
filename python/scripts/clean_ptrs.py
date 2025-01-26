@@ -13,11 +13,11 @@ def question_num_to_platform(q: str) -> str:
   if not isinstance(q, str):
     return None
   elif q.find("B3.21") > -1:
-    return "mRNA only"
+    return "mrna_only"
   elif q.find("B3.23") > -1:
-    return "Traditional only"
+    return "traditional_only"
   elif q.find("B3.25") > -1:
-    return "Both mRNA and traditional"
+    return "both"
   else:
     return None
 

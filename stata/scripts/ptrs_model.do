@@ -1,29 +1,29 @@
+/* Estimte vaccine success probabilities from cleaned expert survey responses */
+
 // Import data
 import delimited "./data/clean/vaccine_ptrs.csv", clear
 
 drop if viral_family == "covid-19"
-keep if platform == "Traditional only" | platform == "mRNA only"
+keep if platform == "traditional_only" | platform == "mrna_only"
 
 // Encode variables
 encode viral_family, gen(viral_family_enc)
 encode platform, gen(platform_enc)
-label define has_adv_rd_lbl 0 "No advance R&D" 1 "Has advance R&D"
-label values has_adv_rd has_adv_rd_lbl
+label define has_adv_rd 0 "no_adv_rd" 1 "has_adv_rd"
+label values has_adv_rd has_adv_rd
 
-// Run regressions without clustering
-eststo m1_nc: intreg value_min value_max i.viral_family_enc i.platform_enc
-eststo m2_nc: intreg value_min value_max i.viral_family_enc##i.platform_enc
+// Run regressions
+eststo vf_model: intreg value_min value_max i.viral_family_enc i.platform_enc, vce(cluster respondent)
+eststo rd_model: intreg value_min value_max i.has_adv_rd i.platform_enc, vce(cluster respondent)
 
-// Run regressions with clustering
-eststo m1: intreg value_min value_max i.viral_family_enc i.platform_enc, vce(cluster respondent)
-eststo m2: intreg value_min value_max i.viral_family_enc##i.platform_enc, vce(cluster respondent)
+// Output results *******
 
 // Create LaTeX table with enhanced formatting
-estout m1_nc m2_nc m1 m2 using "./output/ptrs_model_results.tex", ///
+estout vf_model using "./output/ptrs/vf_model.tex", ///
     cells(b(star fmt(3)) se(par fmt(3))) ///
     starlevels(* 0.10 ** 0.05 *** 0.01) ///
     label varlabels(_cons Constant) ///
-    title("\begin{table}[htbp] \centering \caption{Interval Regression Results} \label{tab:ptrs_results}") ///
+    title("\begin{table}[htbp] \centering \caption{Interval regression results} \label{tab:ptrs_results}") ///
     prehead("\begin{longtable}{lcccc} \hline \hline") ///
     posthead("\hline & \multicolumn{4}{c}{Vaccine PTRS} \\ \cline{2-5} & \multicolumn{2}{c}{Without Clustering} & \multicolumn{2}{c}{With Clustering} \\ \cline{2-5} & Base & Interactions & Base & Interactions \\ \hline") ///
     keep(*.viral_family_enc *.platform_enc _cons lnsigma) ///
@@ -35,73 +35,47 @@ estout m1_nc m2_nc m1 m2 using "./output/ptrs_model_results.tex", ///
         labels("Observations" "R-squared" "Pseudo R-squared" "Chi-squared")) ///
     replace
 
-// Generate predictions for each model
-estimates restore m1_nc
-predict ptrs_pred_m1nc if e(sample), xb
+// Export viral family model figure and coefficients.
+preserve
+    duplicates drop viral_family_enc platform_enc, force
 
-estimates restore m2_nc
-predict ptrs_pred_m2nc if e(sample), xb
+    // Generate predictions
+    estimates restore vf_model
+    predict preds, xb
+    predict ses, stdp
 
-estimates restore m1
-predict ptrs_pred_m1 if e(sample), xb
+    // Create confidence intervals
+    gen pred_lb = preds - 1.96*ses
+    gen pred_ub = preds + 1.96*ses
 
-estimates restore m2  
-predict ptrs_pred_m2 if e(sample), xb
+    // Generate x-axis positions to stack points
+    gen trad_xpos = viral_family_enc - 0.15 if platform == "traditional_only"
+    gen mrna_xpos = viral_family_enc + 0.15 if platform == "mrna_only"
 
-// Create combined graph with two panels
-grstyle init
-grstyle set plain
-grstyle set legend 6
+    // Plot predictions with confidence intervals by platform
+    twoway (scatter preds viral_family_enc, msize(0)) ///
+        (rcap pred_lb pred_ub trad_xpos if platform == "traditional_only", color(navy%70)) ///
+        (scatter preds trad_xpos if platform == "traditional_only", msymbol(O) mcolor(navy) msize(medium)) ///
+        (rcap pred_lb pred_ub mrna_xpos if platform == "mrna_only", color(maroon%70)) ///
+        (scatter preds mrna_xpos if platform == "mrna_only", msymbol(O) mcolor(maroon) msize(medium)), ///
+        xlabel(1(1)9, valuelabel angle(45)) ///
+        ylabel(0(0.1)1, angle(0)) ///
+        ytitle("Predicted PTRS") ///
+        xtitle("Viral Family") ///
+        legend(order(2 "Traditional" 4 "mRNA") rows(1)) ///
+        scheme(s2color)
 
-// Traditional vaccines subplot
-graph twoway (scatter ptrs_pred_m1nc viral_family_enc if platform_enc==1, msymbol(O) mcolor(navy%70) lcolor(navy%70)) ///
-       (scatter ptrs_pred_m2nc viral_family_enc if platform_enc==1, msymbol(D) mcolor(maroon%70) lcolor(maroon%70)) ///
-       (scatter ptrs_pred_m1 viral_family_enc if platform_enc==1, msymbol(S) mcolor(forest_green%70) lcolor(forest_green%70)) ///
-       (scatter ptrs_pred_m2 viral_family_enc if platform_enc==1, msymbol(T) mcolor(dkorange%70) lcolor(dkorange%70)), ///
-    name(traditional, replace) ///
-    title("Traditional Vaccines", size(medium)) ///
-    xlabel(1(1)9, valuelabel angle(45)) ///
-    ylabel(0(0.1)1, angle(0) format(%3.1f)) ///
-    ytitle("Predicted PTRS") ///
-    xtitle("Viral Family") ///
-    legend(off) ///
-    scheme(s2color) graphregion(color(white)) bgcolor(white)
+    // Save figure and estimates
+    graph export "./output/ptrs/vf_model_preds.png", replace width(2400)
 
-// mRNA vaccines subplot
-graph twoway (scatter ptrs_pred_m1nc viral_family_enc if platform_enc==2, msymbol(O) mcolor(navy%70) lcolor(navy%70)) ///
-       (scatter ptrs_pred_m2nc viral_family_enc if platform_enc==2, msymbol(D) mcolor(maroon%70) lcolor(maroon%70)) ///
-       (scatter ptrs_pred_m1 viral_family_enc if platform_enc==2, msymbol(S) mcolor(forest_green%70) lcolor(forest_green%70)) ///
-       (scatter ptrs_pred_m2 viral_family_enc if platform_enc==2, msymbol(T) mcolor(dkorange%70) lcolor(dkorange%70)), ///
-    name(mrna, replace) ///
-    title("mRNA Vaccines", size(medium)) ///
-    xlabel(1(1)9, valuelabel angle(45)) ///
-    ylabel(0(0.1)1, angle(0) format(%3.1f)) ///
-    ytitle("Predicted PTRS") ///
-    xtitle("Viral Family") ///
-    legend(order(1 "Base - no clustering" 2 "With interactions - no clustering" ///
-                 3 "Base - clustering" 4 "With interactions - clustering") ///
-           position(6) rows(2) size(small)) ///
-    scheme(s2color) graphregion(color(white)) bgcolor(white)
+    drop value_min value_max has_adv_rd* respondent *_enc *_lb *_ub ///
+        disease _est*
+    export delimited "./output/ptrs/vf_model_preds.csv", replace
+restore
 
-// Combine plots vertically
-graph combine traditional mrna, ///
-    title("Predicted Vaccine PTRS by Viral Family and Platform Type", size(medium)) ///
-    note("Note: Points show model predictions for each viral family" ///
-         "Base = no interactions between viral family and platform", size(small)) ///
-    cols(1) xsize(12) ysize(12) iscale(1.1) graphregion(color(white)) ///
-    commonscheme
-// Save combined plot
-graph export "./output/ptrs_estimates_plot_combined.png", replace width(2400)
 
-// Save individual plots
-graph export "./output/ptrs_estimates_plot_traditional.png", name(traditional) replace width(2400)
-graph export "./output/ptrs_estimates_plot_mrna.png", name(mrna) replace width(2400)
-
-// Fit model with advance R&D indicator
-eststo adv_rd_m: intreg value_min value_max i.has_adv_rd i.platform_enc, vce(cluster respondent)
-
-// Output regression table
-estout adv_rd_m using "./output/ptrs_adv_rd_results.tex", ///
+// Output regression table for R&D model.
+estout rd_model using "./output/ptrs/rd_model.tex", ///
     cells(b(star fmt(3)) se(par fmt(3))) ///
     starlevels(* 0.10 ** 0.05 *** 0.01) ///
     label varlabels(_cons Constant) ///
@@ -118,33 +92,45 @@ estout adv_rd_m using "./output/ptrs_adv_rd_results.tex", ///
     replace
 
 
-// Generate predictions with standard errors for plotting
-predict ptrs_adv_rd if e(sample), xb
-predict ptrs_adv_rd_se if e(sample), stdp
+// Export R&D model figure and coefficients.
+preserve
+    duplicates drop has_adv_rd platform_enc, force
 
-// Generate confidence intervals
-generate ptrs_pred_lb = ptrs_adv_rd - 1.96 * ptrs_adv_rd_se
-generate ptrs_pred_ub = ptrs_adv_rd + 1.96 * ptrs_adv_rd_se
+    // Generate predictions
+    estimates restore rd_model
+    predict preds, xb
+    predict ses, stdp
 
-generate has_adv_rd_traditional = (has_adv_rd - 0.05) / 2 if platform_enc == 1
-generate has_adv_rd_mrna = (has_adv_rd + 0.05) / 2 if platform_enc == 2
+    // Create confidence intervals
+    gen pred_lb = preds - 1.96*ses
+    gen pred_ub = preds + 1.96*ses
 
-graph twoway ///
-    (rcap ptrs_pred_lb ptrs_pred_ub has_adv_rd_traditional if platform_enc == 1, ///
-        vertical lcolor(navy%70)) ///
-    (scatter ptrs_adv_rd has_adv_rd_traditional if platform_enc == 1, ///
-        msymbol(O) mcolor(navy%70) msize(medium)) ///
-    (rcap ptrs_pred_lb ptrs_pred_ub has_adv_rd_mrna if platform_enc == 2, ///
-        vertical lcolor(maroon%70)) ///
-    (scatter ptrs_adv_rd has_adv_rd_mrna if platform_enc == 2, ///
-        msymbol(D) mcolor(maroon%70) msize(medium)), ///
-    title("Predicted PTRS by R&D Status and Platform", size(medium)) ///
-    xlabel(0 "No Advanced R&D" 0.5 "Advanced R&D", angle(0)) ///
-    ylabel(0(0.1)1, angle(0) format(%3.1f)) ///
-    ytitle("Predicted PTRS") ///
-    xtitle("R&D Status") ///
-    legend(order(2 "Traditional" 4 "mRNA") position(6) rows(1)) ///
-    scheme(s2color) graphregion(color(white)) bgcolor(white) ///
-    xscale(range(-0.2 0.7))
+    generate trad_xpos = (has_adv_rd - 0.05) / 2 if platform == "traditional_only"
+    generate mrna_xpos = (has_adv_rd + 0.05) / 2 if platform == "mrna_only"
 
-graph export "./output/ptrs_estimates_plot_adv_rd.png", replace width(2400)
+    // Plot predictions with confidence intervals by platform
+    graph twoway ///
+        (rcap pred_lb pred_ub trad_xpos if platform == "traditional_only", ///
+            vertical lcolor(navy%70)) ///
+        (scatter preds trad_xpos if platform == "traditional_only", ///
+            msymbol(O) mcolor(navy) msize(medium)) ///
+        (rcap pred_lb pred_ub mrna_xpos if platform == "mrna_only", ///
+            vertical lcolor(maroon%70)) ///
+        (scatter preds mrna_xpos if platform == "mrna_only", ///
+            msymbol(D) mcolor(maroon) msize(medium)), ///
+        title("Predicted PTRS by R&D Status and Platform", size(medium)) ///
+        xlabel(0 "No Advanced R&D" 0.5 "Advanced R&D", angle(0)) ///
+        ylabel(0(0.1)1, angle(0) format(%3.1f)) ///
+        ytitle("Predicted PTRS") ///
+        xtitle("R&D Status") ///
+        legend(order(2 "Traditional" 4 "mRNA") position(6) rows(1)) ///
+        scheme(s2color) graphregion(color(white)) bgcolor(white) ///
+        xscale(range(-0.2 0.7))
+
+    // Save figure and estimates
+    graph export "./output//ptrs/rd_model_preds.png", replace width(2400)
+
+    drop value_min value_max viral_family* respondent *_enc *_lb *_ub ///
+        disease _est*
+    export delimited "./output/ptrs/rd_model_preds.csv", replace
+restore
