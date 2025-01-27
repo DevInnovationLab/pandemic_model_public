@@ -1,8 +1,7 @@
 % Would love to clean this up later.
-function new_simulation_table = get_scenario_simulation_table(base_simulation_table, vaccine_ptrs_data, params)
+function new_simulation_table = get_scenario_simulation_table(base_simulation_table, vf_ptrs_model, adv_rd_ptrs_model, params)
 	% add vaccine success state to simulation scenarios table
     new_simulation_table = base_simulation_table;
-    rd_thresholds = cumsum([params.p_b, params.p_m, params.p_o]);
 
     % Add surveillance outcomes
     new_simulation_table.prep_start_month = run_surveillance(new_simulation_table.posterior1, ...

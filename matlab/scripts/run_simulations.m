@@ -1,7 +1,4 @@
 function run_simulations(job_config_path)
-    % Add libraries to path
-    addpath(genpath('./yaml'));
-    addpath(genpath('./pandemic_model'));
 
     % Load job config and set seed
     job_config = yaml.loadFile(job_config_path);
@@ -17,24 +14,29 @@ function run_simulations(job_config_path)
         foldername = foldername + "_" + char(currentDateTime);
     end
     
-    outdirpath = fullfile(job_config.outdir, foldername, "raw");
-    create_folders_recursively(outdirpath);
-    job_config.outdirpath = outdirpath;
-    figure_path = fullfile(outdirpath, "figures");
+    % Set results paths 
+    sim_results_path = fullfile(job_config.outdir, foldername);
+    raw_results_path = fullfile(sim_results_path, "raw");
+    figure_path = fullfile(sim_results_path, "figures");
+    job_config.outdirpath = sim_results_path;
 
-    % Generate simulations
+    create_folders_recursively(sim_results_path);
+    create_folders_recursively(raw_results_path);
+
+    % Load inputs from files
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config);
     response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
-    viral_family_data = readtable(job_config.viral_family_data);
-    vaccine_ptrs_data = readtable(job_config.vaccine_ptrs);
+    viral_family_data = readtable(job_config.viral_family_data, "TextType", "string");
+    vf_ptrs_model = readtable(job_config.vf_ptrs_model);
+    adv_rd_ptrs_model = readtable(job_config.adv_rd_ptrs_model);
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
 
     job_config.response_threshold = response_threshold_dict.response_threshold;
-    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config);
 
-    % Save the simulation table using the name of the job config
-    base_simulation_table_path = fullfile(outdirpath, "base_simulation_table.mat");
+    % Generate base simulation to be used across scenarios
+    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config);
+    base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
     save(base_simulation_table_path, 'base_simulation_table');
 
     % Pandemics per simulation histogram
@@ -139,7 +141,7 @@ function run_simulations(job_config_path)
         scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, vaccine_ptrs_data, simulation_params);
 
         % Save scenario simulation table so you can inspect
-        save(fullfile(outdirpath, "scenario_simulation_table.mat"), 'scenario_simulation_table');
+        save(fullfile(raw_results_path, "scenario_simulation_table.mat"), 'scenario_simulation_table');
 
         simulate_scenario(scenario_simulation_table, econ_loss_model, simulation_params);
     end
@@ -148,7 +150,7 @@ function run_simulations(job_config_path)
     % TO DO 
 
     % Save job and scenario params
-    config_outpath = fullfile(outdirpath, "job_config.yaml");
+    config_outpath = fullfile(sim_results_path, "job_config.yaml");
     yaml.dumpFile(config_outpath, out_params);
 
 end

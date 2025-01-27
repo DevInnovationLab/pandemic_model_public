@@ -137,14 +137,16 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	response_table.actual_dur = response_table.yr_end - response_table.yr_start + 1;
 	response_table.eff_severity = response_table.severity .* (response_table.actual_dur ./ response_table.natural_dur);
 
-    % Add rows for simulations without pandemics
-    all_sims = 1:params.num_simulations;
-    no_pandemic_sims = setdiff(all_sims, response_table.sim_num);
-    
     % Create a table for simulations without pandemics
-    no_response_table = array2table(nan(length(no_pandemic_sims), width(response_table)), 'VariableNames', response_table.Properties.VariableNames);
+	all_sims = 1:params.num_simulations;
+    no_pandemic_sims = setdiff(all_sims, response_table.sim_num);
+
+    no_response_table = table('Size', [length(no_pandemic_sims), width(response_table)], ...
+							  'VariableTypes', response_table.Properties.VariableTypes, ...
+							  'VariableNames', response_table.Properties.VariableNames);
     no_response_table.sim_num = no_pandemic_sims(:);
     
     % Combine the original response_table with the no_pandemic_table and sort
     simulation_table = sortrows([response_table; no_response_table], {'sim_num', 'yr_start'});
+	simulation_table.Properties.VariableTypes
 end

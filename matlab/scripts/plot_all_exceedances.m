@@ -31,12 +31,11 @@ madhav_exceedance_upper = madhav_exceedances.exceedance_upper(upper_idx);
 madhav_exceedance_lower = madhav_exceedances.exceedance_lower(lower_idx);
 
 
-
 % Calculate exceedance probabilities
 exceedance = (height(ex_ante_severity_sorted):-1:1)' ./ num_draws;
 
 % Create figure with appropriate size and style
-fig = figure('Position', [100 100 800 600])
+fig = figure('Position', [100 100 800 600]);
 hold on;
 
 % Plot exceedance functions

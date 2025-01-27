@@ -46,7 +46,7 @@ function save_to_file(scenario_name, outdirpath, sim_results, ...
     out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'inp_RD_p');
     writematrix(sim_out_arr_costs_inp_RD_PV, out_arr_name, 'Delimiter','comma', 'WriteMode', 'overwrite');
 
-    out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'benefits_p');
+    out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'benefits');
     writematrix(sim_out_arr_benefits_vaccine, out_arr_name, 'Delimiter','comma', 'WriteMode', 'overwrite');
 
     out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'u_deaths');
@@ -61,7 +61,7 @@ function save_to_file(scenario_name, outdirpath, sim_results, ...
     out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'm_output_losses');
     writematrix(sim_out_arr_m_output_losses, out_arr_name, 'Delimiter','comma', 'WriteMode', 'overwrite');
     
-    out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'learning_losses');
+    out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'm_learning_losses');
     writematrix(sim_out_arr_learning_losses, out_arr_name, 'Delimiter','comma', 'WriteMode', 'overwrite');
     fprintf('printed output time series to file\n');
 
