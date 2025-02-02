@@ -1,9 +1,8 @@
 # Advance R&D params
+rd_speedup_months: 12 # how much tau_A is shortened by with advance R&D (months)
 rd_investments: 
-  strategy: top
-  num: 3
-
-rd_speedup_months: 0 # % if R&D successful, how much tau_A is shortened by
+  strategy: none
+  num: 0
 
 # Advance capacity params
 share_target_advanced_capacity: 0

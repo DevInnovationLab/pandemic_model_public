@@ -1,18 +1,26 @@
 
 classdef ParametrizedArrivalDist < ArrivalDist
     properties
-        pd
+        pd % Probability distribuion
         min_severity
         min_severity_exceed_prob
     end
     
     methods
         function obj = ParametrizedArrivalDist(distName, min_severity_exceed_prob, min_severity, max_severity, distParams)
-            obj.min_severity = min_severity;
-            obj.max_severity = max_severity;
-            obj.min_severity_exceed_prob = min_severity_exceed_prob;
+            arguments
+                distName (1,1) string
+                min_severity_exceed_prob (1,1) double {mustBeInRange(min_severity_exceed_prob,0,1)}
+                min_severity (1,1) double {mustBePositive}
+                max_severity (1,1) double {mustBePositive}
+                distParams
+            end
+            
             distParams = struct_to_named_args(distParams);
             obj.pd = makedist(distName, distParams{:});
+            obj.min_severity = min_severity;
+            obj.min_severity_exceed_prob = min_severity_exceed_prob;
+            obj.max_severity = max_severity;
         end
         
         function severity = get_severity(obj, unifrnd_draw)

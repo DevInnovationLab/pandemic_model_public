@@ -2,7 +2,7 @@
 % https://ourworldindata.org/grapher/excess-deaths-cumulative-economist-single-entity
 % Run from command line with `matlab -batch "clean_covid19_mortality"`
 
-covid19_mortality = readtable(fullfile("./data/raw/excess-deaths-cumulative-economist-single-entity.csv"));
+covid19_mortality = readtable("./data/raw/excess-deaths-cumulative-economist-single-entity.csv");
 
 % Rename columns
 covid19_mortality.Properties.VariableNames = {...

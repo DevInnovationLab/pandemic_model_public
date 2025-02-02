@@ -19,17 +19,19 @@ function run_simulations(job_config_path)
     raw_results_path = fullfile(sim_results_path, "raw");
     figure_path = fullfile(sim_results_path, "figures");
     job_config.outdirpath = sim_results_path;
+    job_config.rawoutpath = raw_results_path;
 
-    create_folders_recursively(sim_results_path);
     create_folders_recursively(raw_results_path);
+    create_folders_recursively(figure_path);
 
     % Load inputs from files
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config);
+    arrival_dist.max_severity = min(arrival_dist.max_severity, 1e4); % Can't kill more people than exist.
     response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
     viral_family_data = readtable(job_config.viral_family_data, "TextType", "string");
-    vf_ptrs_model = readtable(job_config.vf_ptrs_model);
-    adv_rd_ptrs_model = readtable(job_config.adv_rd_ptrs_model);
+    ptrs_vf = readtable(job_config.ptrs_vf, "TextType", "string");
+    ptrs_rd = readtable(job_config.ptrs_rd, "TextType", "string");
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
 
     job_config.response_threshold = response_threshold_dict.response_threshold;
@@ -44,7 +46,7 @@ function run_simulations(job_config_path)
     counts = h.Values / job_config.num_simulations;
     midpoints = h.BinEdges(1:end-1) + diff(h.BinEdges) / 2;
     average_simulation_hist = figure('Visible', 'off');
-    bar(counts, midpoints);
+    bar(midpoints, counts);
     xlabel("Effective severity");
     ylabel("Average number of pandemics per simulation (200 years)");
     title("Histogram of pandemic severities for average simulation");
@@ -138,10 +140,11 @@ function run_simulations(job_config_path)
         simulation_params.scenario_name = scenario_name;
 
         % Run scenario
-        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, vaccine_ptrs_data, simulation_params);
-
-        % Save scenario simulation table so you can inspect
-        save(fullfile(raw_results_path, "scenario_simulation_table.mat"), 'scenario_simulation_table');
+        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
+                                                                  ptrs_vf, ...
+                                                                  ptrs_rd, ...
+                                                                  viral_family_data, ...
+                                                                  simulation_params);
 
         simulate_scenario(scenario_simulation_table, econ_loss_model, simulation_params);
     end
@@ -179,13 +182,5 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
     updated_params.z_m = updated_params.share_target_advanced_capacity * z_m;
     updated_params.z_o = updated_params.share_target_advanced_capacity * z_o;
 
-    validate_params(updated_params);
-
-end
-
-function validate_params(params)
-
-    assert(params.RD_speedup_months <= params.tau_A); % R&D speedup must be less or equal than baseline time.
-    assert(params.RD_success_rate_increase_per_platform * 4 <= 1 - params.p_b - params.p_m - params.p_o);
-
+    assert(updated_params.rd_speedup_months <= updated_params.tau_A); % R&D speedup must be less or equal than baseline time.
 end

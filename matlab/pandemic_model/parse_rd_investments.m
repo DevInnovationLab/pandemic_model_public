@@ -1,14 +1,17 @@
 function adv_RD_families = parse_rd_investments(rd_investment_config, vf_data)
     % Can pick specific diseases, random portfolio, and most profitable
+    % Consider handling success probabilities in here
 
     baseline_RD_families = vf_data.viral_family(vf_data.has_adv_RD == true);
     eligible_idx = ~vf_data.has_adv_RD & ~strcmp(vf_data.viral_family, "unknown");
     vfd_no_adv_RD = vf_data(eligible_idx, :); % Get viral families that don't already have advanced R&D
-
     rd_strategy = rd_investment_config.strategy;
 
-    if strcmp(rd_strategy, "top")
+    if strcmp(rd_strategy, "none")
+        adv_RD_families = baseline_RD_families;
+    elseif strcmp(rd_strategy, "top")
         invest_num = rd_investment_config.num;
+        assert(invest_num > 0, "Must invest in more than one viral family if rd_strategy is not none")
         sorted_vfs = sortrows(vfd_no_adv_RD, 'arrival_share', "descend");
         new_invested_families = sorted_vfs.viral_family(1:invest_num);
         adv_RD_families = [baseline_RD_families; new_invested_families];

@@ -1,5 +1,6 @@
 % Would love to clean this up later.
-function new_simulation_table = get_scenario_simulation_table(base_simulation_table, vf_ptrs_model, adv_rd_ptrs_model, params)
+function new_simulation_table = get_scenario_simulation_table(base_simulation_table, ptrs_vf, ...
+															  ptrs_rd, vf_data, params)
 	% add vaccine success state to simulation scenarios table
     new_simulation_table = base_simulation_table;
 
@@ -12,16 +13,37 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 
 	% Handle RD benefits
 	rd_eligible = new_simulation_table.yr_start > params.adv_RD_benefit_start;
-	family_researched = ismember(new_simulation_table.pathogen_family, params.viral_families_researched);
-	has_RD_benefit = rd_eligible & family_researched;
-	new_simulation_table.has_RD_benefit = has_RD_benefit;
+	family_researched = ismember(new_simulation_table.viral_family, params.viral_families_researched);
+	new_simulation_table.has_RD_benefit = rd_eligible & family_researched;
 
 	% Adjust thresholds for RD benefits when research eligible
-	trad_prob_map = dictionary(vaccine_ptrs_data.viral_family, vaccine_ptrs_data.trad_only);
-	mrna_prob_map = dictionary(vaccine_ptrs_data.viral_family, vaccine_ptrs_data.mrna_only);
-	trad_probs = trad_prob_map(new_simulation_table.pathogen_family);
-	mrna_probs = mrna_prob_map(new_simulation_table.pathogen_family);
+	trad_idx = strcmp(ptrs_vf.platform, "traditional_only");
+	mrna_idx = strcmp(ptrs_vf.platform, "mrna_only");
+	trad_prob_map = dictionary(ptrs_vf.viral_family(trad_idx), ptrs_vf.preds(trad_idx));
+	mrna_prob_map = dictionary(ptrs_vf.viral_family(mrna_idx), ptrs_vf.preds(mrna_idx));
+	
+	% Add PTRS for unknown diseases
+	adv_rd_idx = strcmp(ptrs_rd.has_adv_rd, "has_adv_rd");
+	rd_mrna_idx = strcmp(ptrs_rd.platform, "mrna_only");
+	trad_prob_map("unknown") = ptrs_rd.preds(~adv_rd_idx & ~rd_mrna_idx);
+	trad_prob_map(missing) = NaN;
+	mrna_prob_map("unknown") = ptrs_rd.preds(~adv_rd_idx & rd_mrna_idx);
+	mrna_prob_map(missing) = NaN;
 
+	trad_probs = trad_prob_map(new_simulation_table.viral_family);
+	mrna_probs = mrna_prob_map(new_simulation_table.viral_family);
+
+	% Adjust probabilities for vaccines invested in
+	% Clean this up later when better idea of what you wnat to do.
+	trad_increment = ptrs_rd.preds(~rd_mrna_idx & adv_rd_idx) - ptrs_rd.preds(~rd_mrna_idx & ~adv_rd_idx);
+	mrna_increment = ptrs_rd.preds(rd_mrna_idx & adv_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~adv_rd_idx);
+
+	vfs_no_adv = vf_data.viral_family(~vf_data.has_adv_RD);
+	increment_idx = ismember(new_simulation_table.viral_family, vfs_no_adv) & new_simulation_table.has_RD_benefit;
+	trad_probs(increment_idx) = trad_probs(increment_idx) + trad_increment;
+	mrna_probs(increment_idx) = mrna_probs(increment_idx) + mrna_increment;
+
+	% Get whether vaccine platforms succeeded
 	trad_success = trad_probs > new_simulation_table.trad_vax_state;
 	mrna_success = mrna_probs > new_simulation_table.mrna_vax_state;
 

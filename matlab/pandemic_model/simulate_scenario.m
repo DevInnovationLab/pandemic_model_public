@@ -131,7 +131,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
             sim_out_arr_costs_adv_cap_PV(:, s) = total_adv_cap_costs_over_time_pv';
 
             % Copy scenario parameters and initialize output row
-            outrows(1, :) = gen_output_struct(sim_scens_s(1,:), cap_avail_m, cap_avail_o, 0, 0, ...
+            outrows(1, :) = gen_output_row(sim_scens_s(1,:), cap_avail_m, cap_avail_o, 0, 0, ...
                                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
             sim_results{s} = outrows;
 
@@ -266,7 +266,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
 
                         % Get effective capacity over time during pandemic
                         if has_RD_benefit == true
-                            tau_A = tau_A - params.RD_speedup_months;
+                            tau_A = tau_A - params.rd_speedup_months;
                         end
 
                         [ind_m, ind_o] = get_capacity_indicators(rd_state);
@@ -420,7 +420,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
 
     if params.save_output == 1
         % Transpose matrices before saving to get simulations in rows.
-        save_to_file(params.scenario_name, params.outdirpath, sim_results, ...
+        save_to_file(params.scenario_name, params.rawoutpath, sim_results, ...
             sim_out_arr_costs_adv_cap_nom', sim_out_arr_costs_adv_cap_PV', ...
             sim_out_arr_costs_adv_RD_nom', sim_out_arr_costs_adv_RD_PV', ...
             sim_out_arr_costs_surveil_nom', sim_out_arr_costs_surveil_PV', ...

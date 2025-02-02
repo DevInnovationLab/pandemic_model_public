@@ -45,8 +45,8 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	plot([min(unique_intensities) threshold_x], [threshold_y threshold_y], 'r--');  % Horizontal line to y-axis
 
 	% Add label to the point
-	text(threshold_x * 0.95, threshold_y * 0.95, sprintf('Pandemic response threshold: %.2f', threshold_x), ...
-		'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 10);
+	text(threshold_x * 0.95, threshold_y * 0.95, sprintf('Pandemic response\nthreshold: %.2f', threshold_x), ...
+		'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 8);
 	hold off;
 
 	saveas(gcf, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"))
@@ -61,13 +61,13 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	natural_dur = duration_matrix(response_idx);
 	intensity = intensity_matrix(response_idx);
 	
-	if params.include_false_positives == 1
+	if params.include_false_positives
 		is_false = draw_is_false < unifrnd(0, 1, row_cnt, 1);
 	else
 		is_false = false(num_response_scenario, 1);
 	end
 
-	pathogen_family = randsample(viral_family_data.viral_family, num_response_scenario, true, viral_family_data.arrival_share);
+	viral_family = randsample(viral_family_data.viral_family, num_response_scenario, true, viral_family_data.arrival_share);
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	yr_end = min(yr_start + natural_dur - 1, params.sim_periods);
@@ -76,7 +76,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 
 	% Create table of pandemic scenarios
 	response_table = table(sim_num, yr_start, severity, ...
-						   is_false, pathogen_family, ...
+						   is_false, viral_family, ...
 						   mrna_vax_state, trad_vax_state, ...
 						   natural_dur, posterior1, posterior2, ...
 						   intensity, yr_end);
@@ -144,9 +144,23 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
     no_response_table = table('Size', [length(no_pandemic_sims), width(response_table)], ...
 							  'VariableTypes', response_table.Properties.VariableTypes, ...
 							  'VariableNames', response_table.Properties.VariableNames);
-    no_response_table.sim_num = no_pandemic_sims(:);
+
+    % Fill numeric columns with NaN
+    numeric_vars = varfun(@isnumeric, response_table, 'OutputFormat', 'uniform');
+    numeric_cols = response_table.Properties.VariableNames(numeric_vars);
+    no_response_table{:, numeric_cols} = NaN;
+
+    % Fill logical columns with false 
+    logical_vars = varfun(@islogical, response_table, 'OutputFormat', 'uniform');
+    logical_cols = response_table.Properties.VariableNames(logical_vars);
+    no_response_table{:, logical_cols} = false;
+
+    % Fill string/char columns with empty strings
+    string_vars = varfun(@isstring, response_table, 'OutputFormat', 'uniform');
+    string_cols = response_table.Properties.VariableNames(string_vars);
+    no_response_table{:, string_cols} = missing;
     
     % Combine the original response_table with the no_pandemic_table and sort
+	no_response_table.sim_num = no_pandemic_sims(:);
     simulation_table = sortrows([response_table; no_response_table], {'sim_num', 'yr_start'});
-	simulation_table.Properties.VariableTypes
 end

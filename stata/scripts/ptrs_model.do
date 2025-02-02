@@ -69,7 +69,7 @@ preserve
     graph export "./output/ptrs/vf_model_preds.png", replace width(2400)
 
     drop value_min value_max has_adv_rd* respondent *_enc *_lb *_ub ///
-        disease _est*
+        disease _est* *_xpos
     export delimited "./output/ptrs/vf_model_preds.csv", replace
 restore
 
@@ -131,6 +131,6 @@ preserve
     graph export "./output//ptrs/rd_model_preds.png", replace width(2400)
 
     drop value_min value_max viral_family* respondent *_enc *_lb *_ub ///
-        disease _est*
+        disease _est* *_xpos
     export delimited "./output/ptrs/rd_model_preds.csv", replace
 restore

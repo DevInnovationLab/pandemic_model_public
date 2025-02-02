@@ -65,8 +65,8 @@ function save_to_file(scenario_name, outdirpath, sim_results, ...
     writematrix(sim_out_arr_learning_losses, out_arr_name, 'Delimiter','comma', 'WriteMode', 'overwrite');
     fprintf('printed output time series to file\n');
 
-    out_filename = sprintf('%s/%s_results.xlsx', outdirpath, scenario_name);
-    writetable(sim_results, out_filename, 'Sheet', 1)
+    out_filename = sprintf('%s/%s_pandemic_table.csv', outdirpath, scenario_name);
+    writetable(sim_results, out_filename)
     fprintf('printed output to %s\n', out_filename);
 
 end

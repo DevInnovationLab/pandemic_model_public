@@ -1,11 +1,8 @@
 % Example usage script
-function find_natural_severity_covid
-    pwd
-    addpath(genpath("./matlab/pandemic_model"));
-    addpath(genpath("./matlab/yaml"));
+function find_natural_severity_covid(config_path)
     
     % Load params and overwrite with COVID-19 specific
-    params = clean_job_config(yaml.loadFile("./config/job_configs/job_template.yaml"));
+    params = clean_job_config(yaml.loadFile(config_path));
     params.tau_A = 11; % Months before vaccine available.
     params.rd_state = 1; % Both mRNA and traditional succeeded during COVID-19.
     years = 5; % COVID-19 duration according to our records.
@@ -24,9 +21,9 @@ function find_natural_severity_covid
     options = optimoptions('fsolve', 'Display', 'iter', 'FunctionTolerance', 1e-6);
     
     % Define function handle for fsolve
-    fit_func = @(x) fit_ex_ante_severity(x(1), x(2), target_ex_post_severity, ...
-                                         years, fy_mortality_reduction, monthly_cum_vax, ...
-                                         params);
+    fit_func = @(x) fit_ex_ante_severity(x(1), x(2), ...
+                                         target_ex_post_severity, years, ...
+                                         fy_mortality_reduction, monthly_cum_vax, params);
     
     % Initial guess for [ex_ante_severity, gamma]
     x0 = [ex_ante_severity_init, gamma_init];
