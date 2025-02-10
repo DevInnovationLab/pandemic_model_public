@@ -1,12 +1,12 @@
 function fig = plot_ex_ante_severity_exceedance(dist, n, logscale, visible)
     arguments
-        dist {mustBeA(dist, 'ArrivalDist')}
+        dist {mustBeA(dist, 'SeverityDist')}
         n (1,1) {mustBeNumeric} = 1000
         logscale (1,1) {mustBeNumericOrLogical} = true; 
         visible (1, 1) {mustBeNumericOrLogical} = false;
     end
 
-    y = linspace(dist.min_severity_exceed_prob, 0, n);
+    y = linspace(dist.arrival_rate, 0, n);
     x = dist.get_severity(1 - y);
     fig = figure('Visible', visible);
     plot(x, y, 'LineWidth', 1.5); % Plot the original curve

@@ -1,7 +1,7 @@
 # Run params
-num_simulations: 20000
+num_simulations: 2000
 sim_periods: 200
-outdir: "./output"
+outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/pilot"
 seed: 42
 add_datetime_to_outdir: 0
@@ -21,13 +21,13 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-arrival_dist_config: "./output/arrival_distributions/all_risk.yaml"
+severity_dist_config: "./output/severity_distributions/truncpareto_all_risk.yaml"
 duration_dist_config: "./output/duration_distributions/all_risk.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 ptrs_vf: "./output/ptrs/vf_model_preds.csv"
 ptrs_rd: "./output/ptrs/rd_model_preds.csv"
-include_false_positives: false
+false_positive_rate: 0
 
 # Capacity
 theta: 0.25 # Fraction reduction in pandemic-time investments due to advance capacity
@@ -66,5 +66,5 @@ adv_RD_benefit_start: 15 # years until advance R&D benefits apply
 # Surveillance
 surveillance_thresholds: [0, 0] # First is for regular signal, second is for enhanced surveillance signal.
 surveil_annual_installation_spend: 5e9 # Initial spending to install enhanced surveillance
-surveil_installation_years: 2e9 # Time initial costs are incurred
+surveil_installation_years: 2 # Time initial costs are incurred
 surveil_maintenance_spend: 1.25e9 # Maintenance spending on enhanced surveillance

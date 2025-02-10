@@ -20,7 +20,9 @@ function plot_raw_ts(results_dir)
                 array_path = strcat(scenario, "_ts_", var, ".csv");
                 ts_array = readmatrix(fullfile(rawdata_dir, array_path));
 
-                fig = plot_timeseries(ts_array, var, 'cumulative', true, 'samples', 1e3);
+                fig = plot_timeseries(ts_array, var, ...
+                                     'cumulative', true, ...
+                                     'plot_samples', 2e3);
                 figpath = fullfile(raw_ts_fig_dir, strcat(scenario, "_", var, ".png"));
                 saveas(fig, figpath);
             end
@@ -36,7 +38,9 @@ function plot_raw_ts(results_dir)
             array_path = strcat(scenario, "_ts_", var, ".csv");
             ts_array = readmatrix(fullfile(rawdata_dir, array_path));
 
-            fig = plot_timeseries(ts_array, var, 'cumulative', true, 'samples', 1e3);
+            fig = plot_timeseries(ts_array, var, ...
+                                 'cumulative', true,...
+                                 'plot_samples', 2e3);
             figpath = fullfile(raw_ts_fig_dir, strcat(scenario, "_", var, ".png"));
             saveas(fig, figpath);
         end

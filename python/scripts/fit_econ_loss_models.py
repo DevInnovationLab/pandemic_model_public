@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import yaml
 import matplotlib.pyplot as plt
-from scipy.special import gammaln
-from sklearn.linear_model import LinearRegression, PoissonRegressor
-from sklearn.metrics import r2_score
+from sklearn.linear_model import PoissonRegressor
+
+from pandemic_model.stats import mcf_pseudo_r2
 
 
 # Set consistent figure style
@@ -42,35 +42,18 @@ if __name__ == "__main__":
 
     # ------ Fit models --------------------------------
 
-    lm = LinearRegression()
-    pm = PoissonRegressor(alpha=0) # Presumably don't want regularization
 
     X = np.log(econ_loss_clean[['mortality_smu']]) # Log transform
     y = econ_loss_clean['pct_gdp_loss']
     
-    lm.fit(X, y)
+    pm = PoissonRegressor(alpha=0) # No regularization
     pm.fit(X, y)
+    mcf_poisson = mcf_pseudo_r2(y, pm.predict(X))
 
     # ------ Plot models -----------------------------------
-
-    # McFadden's Pseudo R^2
-    def mcf_pseudo_r2(y, y_pred):
-        # Log-likelihood of the fitted model
-        ll_model = np.sum(y * np.log(y_pred) - y_pred - gammaln(y + 1))
-    
-        # Log-likelihood of the null model (mean response)
-        mean_response = np.mean(y)
-        ll_null = np.sum(y * np.log(mean_response) - mean_response - gammaln(y + 1))
-
-        return 1 - (ll_model / ll_null)
     
     # Set colors
-    col_linear = '#ff7f0e'
     col_poisson = '#2ca02c'
-
-    # Calculate goodness of fit scores
-    r2_linear = r2_score(y, lm.predict(X))
-    r2_poisson = mcf_pseudo_r2(y, pm.predict(X))
 
     # Plot data 
     fig, ax = plt.subplots(figsize=(10, 8))
@@ -98,15 +81,17 @@ if __name__ == "__main__":
     plt.tight_layout()
 
     # Fitted lines for linear scale
-    log_xrange = np.linspace(np.log(econ_loss_clean['mortality_smu'].min() / 2), np.log(econ_loss_clean['mortality_smu'].max()), 100).reshape(-1, 1)
-    y_pred_linear = lm.predict(log_xrange)
+    log_xrange = np.linspace(
+        np.log(econ_loss_clean['mortality_smu'].min() / 2),
+        np.log(econ_loss_clean['mortality_smu'].max()), 100
+    ).reshape(-1, 1)
+
     y_pred_poisson = pm.predict(log_xrange)
 
     # Plot poisson curve and save
     ax.plot(np.exp(log_xrange), y_pred_poisson, linewidth=2.5, color=col_poisson, label='Poisson')
-    poisson_label = ax.text(0.8, 0.45, "Poisson", transform=ax.transAxes, color=col_poisson)
-    ax.text(0.80, 0.10, rf"$R^2_{{\mathrm{{McF}}}} = {r2_poisson:.3f}$", 
-                            transform=ax.transAxes, verticalalignment='top', color=col_poisson)
+    ax.text(0.80, 0.10, rf"$R^2_{{\mathrm{{McF}}}} = {mcf_poisson:.3f}$", 
+            transform=ax.transAxes, verticalalignment='top', color=col_poisson)
 
     # Save figure
     outdir = Path("./output/econ_loss_models").resolve()
@@ -115,38 +100,11 @@ if __name__ == "__main__":
     figpath = outdir / "poisson_model.png"
     plt.savefig(figpath, dpi=400)
 
-    # Add linear model and save
-    poisson_label.remove()
-    ax.plot(np.exp(log_xrange), y_pred_linear, linewidth=2.5, color=col_linear, label='Linear')
-    ax.text(0.80, 0.15, rf"$R^2_{{\mathrm{{linear}}}} = {r2_linear:.3f}$", 
-            transform=ax.transAxes, verticalalignment='top', color=col_linear)
-    ax.text(0.45, 0.43, "Linear", transform=ax.transAxes, color=col_linear)
-    ax.text(0.55, 0.25, "Poisson", transform=ax.transAxes, color=col_poisson)
-
-    figpath = outdir / "linear_and_poisson_model.png"
-    plt.savefig(figpath, dpi=400)
-
-    # ------ Save models -----------------------------------
-
-    # Linear model
-    lm_dict = {
-        'family': 'linear',
-        'params': {
-            'intercept': float(lm.intercept_),
-            'coefs': [float(beta) for beta in lm.coef_]
-        }
-    }
-
-    outpath = outdir / "linear_model.yaml"
-    with open(outpath, "w") as f:
-        yaml.dump(lm_dict, f)
-
-    # Poisson model
     poisson_dict = {
         'family': 'poisson',
         'params': {
             'intercept': float(pm.intercept_),
-            'coefs': [float(beta) for beta in lm.coef_]
+            'coefs': [float(beta) for beta in pm.coef_]
         }
     }
 

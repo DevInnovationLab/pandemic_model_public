@@ -5,7 +5,7 @@ addpath(genpath("./yaml"));
 outdir = fullfile("./output/job_template/raw");
 sim_results = readtable(fullfile(outdir, "scenario_template_results.xlsx"));
 job_config = yaml.loadFile(fullfile(outdir, "job_config.yaml"));
-arrival_dist = load_arrival_dist(job_config.arrival_dist_config);
+severity_dist = load_severity_dist(job_config.severity_dist_config);
 
 % Get severities from simulations
 ex_ante_severity = sim_results.severity;

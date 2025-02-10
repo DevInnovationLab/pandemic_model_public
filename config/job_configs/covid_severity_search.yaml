@@ -24,13 +24,13 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml"
-arrival_dist_config: "./output/arrival_distributions/all_risk.yaml"
+severity_dist_config: "./output/severity_distributions/all_risk.yaml"
 duration_dist_config: "./output/duration_distributions/all_risk.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 ptrs_vf: "./output/ptrs/vf_model_preds.csv"
 ptrs_rd: "./output/ptrs/rd_model_preds.csv"
-include_false_positives: false
+false_positive_rate: 0
 
 # Capacity
 theta: 0.25 # Fraction reduction in pandemic-time investments due to advance capacity

@@ -68,7 +68,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
     sim_out_arr_costs_surveil_nom = zeros(params.sim_periods, sim_cnt);
     sim_out_arr_costs_surveil_PV = zeros(params.sim_periods, sim_cnt);
     
-    if params.enhanced_surveillance == 1 
+    if params.enhanced_surveillance
         time_arr = (1:params.sim_periods)';
         PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
         surveil_spend_bn_init = repmat(params.surveil_annual_installation_spend, params.surveil_installation_years, 1);
@@ -80,12 +80,12 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
     end
     
     %%% losses and benefits
-    sim_out_arr_u_deaths   = zeros(params.sim_periods, sim_cnt); % Unmitigated deaths
-    sim_out_arr_m_deaths     = zeros(params.sim_periods, sim_cnt); % Mitigated deaths
-    sim_out_arr_m_mortality_losses     = zeros(params.sim_periods, sim_cnt); % Mitigated mortality losses
-    sim_out_arr_m_output_losses        = zeros(params.sim_periods, sim_cnt); % Mitigated output losses
-    sim_out_arr_learning_losses      = zeros(params.sim_periods, sim_cnt); % Mitigated learning losses
-    sim_out_arr_benefits_vaccine  = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_u_deaths                = zeros(params.sim_periods, sim_cnt); % Unmitigated deaths
+    sim_out_arr_m_deaths                = zeros(params.sim_periods, sim_cnt); % Mitigated deaths
+    sim_out_arr_m_mortality_losses      = zeros(params.sim_periods, sim_cnt); % Mitigated mortality losses
+    sim_out_arr_m_output_losses         = zeros(params.sim_periods, sim_cnt); % Mitigated output losses
+    sim_out_arr_learning_losses         = zeros(params.sim_periods, sim_cnt); % Mitigated learning losses
+    sim_out_arr_benefits_vaccine        = zeros(params.sim_periods, sim_cnt);
 
     % Adv R&D costs
     time_arr = (1:params.adv_RD_benefit_start)';
@@ -98,14 +98,10 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
     tic;
     fprintf('Starting simulations...');
 
-    cluster = parcluster;
-    pool = parpool(cluster);
-
     if params.profile == true
         mpiprofile on;
     end
 
-    ticBytes(pool);
     parfor (s = 1:sim_cnt) % loop through each simulation scenario
     % for s =1:sim_cnt
         idx = simulation_table.sim_num == s; % indices of rows for sim s
@@ -197,16 +193,14 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                     cap_avail_o = adv_cap_o_current + surge_cap_o_current;
 
                     % Add pandemic scenario outcomes
-                    outrow = gen_output_row(sim_scens_s(i,:), cap_avail_m, cap_avail_o, 0, 0, ...
-                                               0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                    outrow = gen_output_row(sim_scens_s(i,:), cap_avail_m, cap_avail_o, ...
+                                            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                     outrows(i, :) = outrow;
-
                 else 
                     tau_A = params.tau_A;
 
                     if ~is_false
                         tau_A = params.tau_A + prep_start_month; % in a real pandemic, when a vaccine is available depends on when you started
-                        % assert(tau_A < (pandemic_natural_dur * 12)) % sanity check, nothing interesting if it takes longer to prepare than the pandemic length 
                     end
 
                     %%% Case 1: false pos and decided to act -- wastage through tau_A
@@ -220,7 +214,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                     total_cap_m_before_build = adv_cap_m_current + surge_cap_m_current;
                     total_cap_o_before_build = adv_cap_o_current + surge_cap_o_current;
                     surge_cap_m_build = min(x_m - total_cap_m_before_build, params.x_avail * params.mRNA_share);
-                    surge_cap_o_build = min(x_o - total_cap_o_before_build, params.x_avail * (1-params.mRNA_share));
+                    surge_cap_o_build = min(x_o - total_cap_o_before_build, params.x_avail * (1 - params.mRNA_share));
                     surge_cap_m_current = surge_cap_m_current + surge_cap_m_build;
                     surge_cap_o_current = surge_cap_o_current + surge_cap_o_build;
                     cap_avail_m = adv_cap_m_current + surge_cap_m_current;
@@ -260,6 +254,14 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         vax_benefits_PV = zeros(tot_months, 1);
                         inp_marg_costs_m_PV = zeros(tot_months, 1);
                         inp_marg_costs_o_PV = zeros(tot_months, 1);
+                        u_deaths = zeros(tot_months, 1);
+                        m_deaths = zeros(tot_months, 1);
+                        m_mortality_losses = zeros(tot_months, 1);
+                        m_output_losses = zeros(tot_months, 1);
+                        m_learning_losses = zeros(tot_months, 1);
+                        ex_post_severity = 0;
+                        inp_marg_costs_m_nom = zeros(tot_months, 1);
+                        inp_marg_costs_o_nom = zeros(tot_months, 1);
                     else
                         [u_deaths, u_mortality_losses, u_output_losses, u_learning_losses] = ...
                             get_pandemic_losses(params, econ_loss_model, yr_start, pandemic_natural_dur, actual_dur, severity);
@@ -404,15 +406,12 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
         end
         
     end
-    tocBytes(pool)
     
     if params.profile == true
         mpiprofile viewer
     end
 
-    delete(pool);
-
-    net_value = mean(sum(sim_out_arr_benefits_vaccine, 1), 2);
+    net_value = mean(sum(sim_out_arr_benefits_vaccine, 1)); % Sum columns since transposed
     fprintf('Elapsed time (min): %0.1f\n', round(toc/60, 1));
     fprintf('Avg net value (bn): %d\n', round(net_value/10^9, 0));
 

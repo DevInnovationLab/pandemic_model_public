@@ -62,7 +62,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 end
 
 
-function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_false, enhanced_surveillance, threshold_surveil_arr)
+function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_false_arr, enhanced_surveillance, threshold_surveil_arr)
 	% only computes, no random number generation
 
 	% Extract thresholds
@@ -74,19 +74,19 @@ function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_fals
 	prepare_decision2 = posterior2 > threshold_surveil;
 
 	% Initialize prep_start_month_arr with default value
-	prep_start_month_arr = 2 * ones(size(is_false));
+	prep_start_month_arr = 2 * ones(size(is_false_arr));
 
 	if enhanced_surveillance
 		% Enhanced surveillance logic
 		prep_start_month_arr(prepare_decision1) = 0;
 		prep_start_month_arr(~prepare_decision1 & prepare_decision2) = 1;
 	else
-		% No surveillance logic
-		prep_start_month_arr(prepare_decision1) = 1;
+		% No enhanced surveillance logic
+		prep_start_month_arr(prepare_decision1) = 1; % We use prep decision 1 as we don't get better signal.
 	end
 
 	% Handle cases where no pandemic was correctly anticipated
-	no_pandemic_correctly_anticipated = ((~enhanced_surveillance & ~prepare_decision1) | (enhanced_surveillance & ~prepare_decision1 & ~prepare_decision2));
+	no_pandemic_correctly_anticipated = is_false_arr & ((~enhanced_surveillance & ~prepare_decision1) | (enhanced_surveillance & ~prepare_decision1 & ~prepare_decision2));
 	prep_start_month_arr(no_pandemic_correctly_anticipated) = NaN;
 
 	% Ensure prep_start_month_arr is a column vector

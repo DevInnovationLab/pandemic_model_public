@@ -1,0 +1,17 @@
+base_job_config: "./config/job_configs/no_mitigation.yaml"
+outdir: "./output/sensitivity"
+sensitivities:
+  severity_dist_config:
+    - "./output/severity_distributions/truncpareto_all_risk_half_arrival.yaml"
+    - "./output/severity_distributions/truncpareto_all_risk_double_arrival.yaml"
+    - "./output/severity_distributions/truncpareto_all_risk_truncate_half.yaml"
+  value_of_death:
+    - 1e6
+    - 1.6e6
+  y:
+    - 0.014
+    - 0.018
+  r:
+    - 0.02
+    - 0.06
+

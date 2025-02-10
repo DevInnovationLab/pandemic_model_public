@@ -8,4 +8,4 @@ rd_investments:
 share_target_advanced_capacity: 0.5
 
 # Enhanced surveillance
-enhanced_surveillance: 0
+enhanced_surveillance: false

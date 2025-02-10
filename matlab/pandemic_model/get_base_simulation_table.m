@@ -1,6 +1,9 @@
-function simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, params)
+function simulation_table = get_base_simulation_table(severity_dist, duration_dist, viral_family_data, seed, params)
 
-	severity_matrix = arrival_dist.get_severity(unifrnd(0, 1, params.num_simulations, params.sim_periods));
+	% Set seed
+	rng(seed);
+
+	severity_matrix = severity_dist.get_severity(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 	severity_matrix(:, 1) = 0;  % Assume no pandemics in first year so capacity logic works.
 	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 	duration_matrix(:, 1) = 0; % Assume no pandemics in first year so capacity logic works.
@@ -11,7 +14,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 
 	% Plot intensity exceedance
 	% Plot intensity here
-	intensities_for_plot = sort(intensity_matrix(severity_matrix > arrival_dist.min_severity));
+	intensities_for_plot = sort(intensity_matrix(severity_matrix > severity_dist.min_severity));
 	total_draws = params.num_simulations * params.sim_periods;
 	[unique_intensities, ~, ic] = unique(intensities_for_plot);
 	intensity_counts = histcounts(ic, 1:max(ic)+1); % Count occurrences of each unique intensity
@@ -60,19 +63,14 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	severity = severity_matrix(response_idx);
 	natural_dur = duration_matrix(response_idx);
 	intensity = intensity_matrix(response_idx);
-	
-	if params.include_false_positives
-		is_false = draw_is_false < unifrnd(0, 1, row_cnt, 1);
-	else
-		is_false = false(num_response_scenario, 1);
-	end
+	is_false = rand(num_response_scenario, 1) < params.false_positive_rate;
 
 	viral_family = randsample(viral_family_data.viral_family, num_response_scenario, true, viral_family_data.arrival_share);
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	yr_end = min(yr_start + natural_dur - 1, params.sim_periods);
 
-	[posterior1, posterior2] = gen_surveil_signals(is_false);
+	[posterior1, posterior2] = gen_surveil_signals(is_false, params.false_positive_rate);
 
 	% Create table of pandemic scenarios
 	response_table = table(sim_num, yr_start, severity, ...
