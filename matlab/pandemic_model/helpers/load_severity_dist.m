@@ -9,6 +9,7 @@ function severity_dist = load_severity_dist(severity_dist_config_path, false_pos
 
     % Adjust minimum severity probability for false positive rate
     min_exceed_prob = severity_dist_config.arrival_rate / (1 - false_positive_rate);
+    assert(min_exceed_prob <= 1, "Min exceedance probability cannot be greater than one. False positive rate too high.")
 
     if strcmpi(severity_dist_config.dist_family, 'TruncatedPareto') % If Truncated Pareto
         params = severity_dist_config.params;

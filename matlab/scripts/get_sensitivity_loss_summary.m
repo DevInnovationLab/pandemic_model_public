@@ -38,11 +38,14 @@ function get_sensitivity_loss_summary(sensitivity_dir)
         var_name = sensitivity_varData{i};
         var_values = sensitivity_config.sensitivities.(var_name);
         var_dir = fullfile(sensitivity_dir, var_name);
-        
+
         % Load results for each value
         for j = 1:length(var_values)
-            raw_dir = fullfile(var_dir, sprintf('value_%d', j), 'raw');
-            [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir);
+            value_dir = fullfile(var_dir, sprintf('value_%d', j));
+            run_config = yaml.loadFile(fullfile(value_dir, "job_config.yaml"));
+            r = run_config.r;
+            periods = run_config.sim_periods;
+            [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir, r, periods);
             [formatted_name, formatted_value] = format_names(var_name, var_values{j}, baseline_vsl, baseline_r, baseline_y);
             summary_table(row_idx,:) = {formatted_name, formatted_value, mortality_loss, economic_loss, learning_loss, total_loss};
             row_idx = row_idx + 1;
@@ -56,22 +59,24 @@ end
 
 
 % Function to load and process losses for a given directory
-function [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir)
+function [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir, r, periods)
     % Load and process mortality losses
+    annualization_factor = (1 - (1 + r).^-periods) ./ r;
+
     mortality_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_mortality_losses.csv'));
-    mortality_loss = mean(sum(mortality_ts, 2));
+    mortality_loss = mean(sum(mortality_ts, 2)) .* annualization_factor;
     
     % Load and process output losses
     output_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_output_losses.csv'));
-    economic_loss = mean(sum(output_ts, 2));
+    economic_loss = mean(sum(output_ts, 2)) .* annualization_factor;
     
     % Load and process learning losses
     learning_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_learning_losses.csv'));
-    learning_loss = mean(sum(learning_ts, 2));
+    learning_loss = mean(sum(learning_ts, 2)) .* annualization_factor;
     
     % Calculate total losses
     total_ts = mortality_ts + output_ts + learning_ts;
-    total_loss = mean(sum(total_ts, 2));
+    total_loss = mean(sum(total_ts, 2)) .* annualization_factor;
 end
 
 

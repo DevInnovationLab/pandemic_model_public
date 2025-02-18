@@ -34,7 +34,7 @@ function [posterior1, posterior2] = gen_surveil_signals(is_false_arr, false_rate
 	y2 = binornd(n, p2, cnt, 1); % draw of a set of signals for second round
 	
 	% Calculate posterior probabilities using Bayesian update
-	posterior1 = alpha + y1 / n + k;
-	posterior2 = alpha + y2 / n + k;
+	posterior1 = (alpha + y1) ./ (n + k);
+	posterior2 = (alpha + y2) ./ (n + k);
 	
 end

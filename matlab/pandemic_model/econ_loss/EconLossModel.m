@@ -8,7 +8,7 @@ classdef EconLossModel
     methods
         function obj = EconLossModel(family, intercept, coefs)
             arguments
-                family (1,1) {mustBeMember(family, {'linear', 'poisson'})}
+                family (1,1) {mustBeMember(family, {'linear', 'poisson', 'loglogreg'})}
                 intercept (1, 1) {mustBeNumeric}
                 coefs (:, 1) {mustBeNumeric}
             end
@@ -18,6 +18,7 @@ classdef EconLossModel
             obj.coefs = coefs;
         end
 
+        % Predict share GDP loss (fraction)
         function y_hat = predict(obj, severity)
             arguments
                 obj
@@ -28,11 +29,11 @@ classdef EconLossModel
                 error("Matrices must conform")
             end
 
-            if obj.family == "linear"
+            if obj.family == "loglogreg"
+                y_hat = exp(log(severity) * obj.coefs+ obj.intercept);
+            elseif obj.family == "linear"
                 y_hat = log(severity) * obj.coefs + obj.intercept;
-            end
-
-            if obj.family == "poisson"
+            elseif obj.family == "poisson"
                 y_hat = exp(log(severity) * obj.coefs + obj.intercept);
             end
         end

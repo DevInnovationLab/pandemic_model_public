@@ -75,27 +75,9 @@ function run_job(job_config_path)
 
     saveas(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.jpg"))
 
-    % Ex ante duration distribution
-    % Move to function later
-    ex_ante_dur_fig = figure('Visible', 'off');
-    hold on;
-    plot(duration_dist.pd);
-    set(findobj(gca, 'Type', 'Line'), 'LineWidth', 1.5);
-    xlabel('Years', 'FontSize', 12);
-    ylabel('Probability density', 'FontSize', 12);
-    title('Ex ante pandemic duration PDF', 'FontSize', 14, 'FontWeight', 'bold');
-    hold off;
-    saveas(ex_ante_dur_fig, fullfile(figure_path, "ex_ante_duration_pdf.jpg"));
-
-    % Realized duration plots
-    ex_post_dur_fig = figure('Visible', 'off');
-    hold on;
-    histogram(base_simulation_table.actual_dur, 'Normalization', 'probability');
-    title("Ex post pandemic durations");
-    xlabel("Actual duration (years)");
-    ylabel("Empirical probability");
-    hold off;
-    saveas(ex_post_dur_fig, fullfile(figure_path, "ex_post_duration_hist.jpg"))
+    % Plot duration distributions
+    plot_duration_distributions(duration_dist, base_simulation_table, figure_path, false); % No clipped durations
+    plot_duration_distributions(duration_dist, base_simulation_table, figure_path, true); % With clipped durations
 
     dur_severity_scatterhist = figure('Visible', 'off');
     subplot(2, 2, 3);  % Bottom-left position for scatter plot

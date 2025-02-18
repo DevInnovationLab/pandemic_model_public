@@ -14,6 +14,6 @@ function [deaths, mortality_losses, output_losses, learning_losses] = ...
     % Calc losses
     deaths = params.P0 / 10000 .* monthly_intensity .* growth_rate; % Growth rate accounts for population growth.
     mortality_losses = params.value_of_death .* deaths .* PV_factor; % mortality lossses during pandemic
-    output_losses = (params.Y0 .* params.P0 / 100) .* monthly_econ_loss .* growth_rate .* PV_factor; % output losses for during pandemic
+    output_losses = (params.Y0 .* params.P0) .* monthly_econ_loss .* growth_rate .* PV_factor; % output losses for during pandemic
     learning_losses = (10/13.8) .* output_losses; 
 end

@@ -5,12 +5,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
-from scipy.stats import lognorm, truncpareto
+from scipy.stats import genpareto, lognorm, truncpareto
 
 from pandemic_model.stats import fit_trunc_pareto, trunc_pareto_neg_log_likelihood
 
 
-def fit_truncated_pareto(data, lower_bound, upper_bound=1e4, verbose=False):
+def fit_truncated_pareto(data,
+                         lower_bound,
+                         upper_bound=1e4,
+                         init_values=None,
+                         verbose=False):
     """Fit truncated Pareto distribution to data using multiple initializations.
     
     Args:
@@ -22,11 +26,12 @@ def fit_truncated_pareto(data, lower_bound, upper_bound=1e4, verbose=False):
     Returns:
         tuple: Best fit parameters (b, loc, scale) and parameters dictionary for MATLAB
     """
-    init_values = [
-        (2.0, lower_bound * 0.1),  # (b_init, loc_init at 10% of lower bound)
-        (1.5, lower_bound * 0.01),  # 1% of lower bound
-        (3.0, lower_bound * 0.001)  # 0.1% of lower bound
-    ]
+    if init_values is None:
+        init_values = [
+            (2.0, lower_bound * 0.1),  # (b_init, loc_init at 10% of lower bound)
+            (1.5, lower_bound * 0.01),  # 1% of lower bound
+            (3.0, lower_bound * 0.001)  # 0.1% of lower bound
+        ]
 
     best_fit = None
     best_nll = float('inf')
@@ -85,7 +90,7 @@ def fit_truncated_pareto(data, lower_bound, upper_bound=1e4, verbose=False):
     return best_fit, params_dict
 
 
-def plot_severity_distributions(df: pd.DataFrame,
+def plot_truncpareto_exceedance(df: pd.DataFrame,
                                 dist: dict,
                                 title: str = "Severity exceedance probability") -> plt.Figure:
     """
@@ -215,6 +220,7 @@ if __name__ == "__main__":
     fig_dir = severity_dist_root / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
 
+
     ### Fit for all risks
     _, truncpareto_all_risk_params = fit_truncated_pareto(df_all['severity_smu'].values, SMU_THRESH, verbose=True)
     truncpareto_all_risk_params['arrival_rate'] = float(arrival_rate_all_risk)
@@ -223,6 +229,7 @@ if __name__ == "__main__":
     with open(outpath, 'w') as f:
         yaml.dump(truncpareto_all_risk_params, f)
     
+
     ### Half arrival rate
     truncpareto_all_risk_params_half_arrival = truncpareto_all_risk_params.copy()
     truncpareto_all_risk_params_half_arrival['arrival_rate'] = truncpareto_all_risk_params_half_arrival['arrival_rate'] / 2
@@ -230,6 +237,7 @@ if __name__ == "__main__":
     outpath = severity_dist_root / "truncpareto_all_risk_half_arrival.yaml"
     with open(outpath, 'w') as f:
         yaml.dump(truncpareto_all_risk_params_half_arrival, f)
+
 
     ### Double arrival rate
     truncpareto_all_risk_params_double_arrival = truncpareto_all_risk_params.copy()
@@ -239,6 +247,7 @@ if __name__ == "__main__":
     with open(outpath, 'w') as f:
         yaml.dump(truncpareto_all_risk_params_double_arrival, f)
 
+
     ### Truncate at half extinction
     _, truncpareto_all_risk_half_ext = fit_truncated_pareto(df_all['severity_smu'].values, lower_bound=SMU_THRESH, upper_bound=5e3, verbose=True)
     truncpareto_all_risk_half_ext['arrival_rate'] = float(arrival_rate_all_risk)
@@ -246,14 +255,35 @@ if __name__ == "__main__":
     outpath = severity_dist_root / "truncpareto_all_risk_truncate_half.yaml"
     with open(outpath, 'w') as f:
         yaml.dump(truncpareto_all_risk_half_ext, f)
-        
-    #### Fit for respiratory risks
+
+
+    ### Fit for respiratory risks
     _, truncpareto_resp_params = fit_truncated_pareto(df_resp['severity_smu'].values, SMU_THRESH, verbose=True)
     truncpareto_resp_params['arrival_rate'] = float(arrival_rate_resp)
     
     outpath = severity_dist_root / "truncpareto_resp.yaml"
     with open(outpath, 'w') as f:
         yaml.dump(truncpareto_resp_params, f)
+
+
+    ### Fit Generalized Pareto params to compare with old approach
+    shape, loc, scale = genpareto.fit(df_all['severity_smu'], floc=SMU_THRESH)
+
+    genpareto_all_risk_params = {
+        'dist_family': 'GeneralizedPareto', # makedist() format (MATLAB)
+        'min_severity': float(loc),
+        'arrival_rate': float(arrival_rate_all_risk),
+        'max_severity': float(df_all['severity_smu'].max()), # Truncate at Spanish flu
+        'params': {
+            'k': float(shape), # Shape
+            'theta': float(loc), # Location
+            'sigma': float(scale) # Scale
+        }
+    }
+
+    outpath = severity_dist_root / "genpareto_all_risk_trunc_spflu.yaml"
+    with open(outpath, 'w') as f:
+        yaml.dump(genpareto_all_risk_params, f)
 
 
     ## Plot severity distributions
@@ -269,26 +299,26 @@ if __name__ == "__main__":
         plt.legend()
 
     # Plot severity distributions
-    fig_all = plot_severity_distributions(df_all, truncpareto_all_risk_params, 
+    fig_all = plot_truncpareto_exceedance(df_all, truncpareto_all_risk_params, 
                                           title="Severity exceedance probability - All risks")
     add_original_covid_point()
     
     # Plot half arrival rate
-    fig_half = plot_severity_distributions(df_all, truncpareto_all_risk_params_half_arrival,
+    fig_half = plot_truncpareto_exceedance(df_all, truncpareto_all_risk_params_half_arrival,
                                            title="Severity exceedance probability - Half arrival rate")
     add_original_covid_point()
 
     # Plot double arrival rate
-    fig_double = plot_severity_distributions(df_all, truncpareto_all_risk_params_double_arrival,
+    fig_double = plot_truncpareto_exceedance(df_all, truncpareto_all_risk_params_double_arrival,
                                              title="Severity exceedance probability - Double arrival rate")
     add_original_covid_point()
 
     # Plot half extinction truncation
-    fig_trunc = plot_severity_distributions(df_all, truncpareto_all_risk_half_ext,
+    fig_trunc = plot_truncpareto_exceedance(df_all, truncpareto_all_risk_half_ext,
                                             title="Severity exceedance probability - Half extinction truncation")
     add_original_covid_point()
     
-    fig_resp = plot_severity_distributions(df_resp, truncpareto_resp_params,
+    fig_resp = plot_truncpareto_exceedance(df_resp, truncpareto_resp_params,
                                            title="Severity exceedance probability - Respiratory risks")
     add_original_covid_point(is_resp=True)
 
