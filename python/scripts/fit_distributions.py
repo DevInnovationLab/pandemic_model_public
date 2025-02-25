@@ -66,15 +66,15 @@ def fit_truncated_pareto(data,
         except RuntimeError as e:
             if verbose:
                 print(f"Fitting failed for init values b={b_init}, loc={loc_init}: {str(e)}\n")
-            else:
-                print(f"Fitting failed for init values b={b_init}, loc={loc_init}: {str(e)}")
             continue
     
     if best_fit is None:
         raise RuntimeError("Failed to fit truncated Pareto distribution with any initialization")
         
     b, loc, scale = best_fit
-    print(f"Best fit parameters: b={b:.4f}, loc={loc:.4f}, scale={scale:.4f}")
+
+    if verbose:
+        print(f"Best fit parameters: b={b:.4f}, loc={loc:.4f}, scale={scale:.4f}")
 
     # Create parameter dictionary for MATLAB
     params_dict = {
