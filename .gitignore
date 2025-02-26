@@ -4,5 +4,6 @@ ignore_folder/*
 
 *.log
 *.out
+*.pyc
 
 .env

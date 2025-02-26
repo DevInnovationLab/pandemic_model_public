@@ -7,7 +7,7 @@ import pandas as pd
 import yaml
 from scipy.stats import genpareto, lognorm, truncpareto
 
-from pandemic_model.stats import fit_trunc_pareto, trunc_pareto_neg_log_likelihood
+from pandemic_model.stats.pareto import fit_trunc_pareto, trunc_pareto_neg_log_likelihood
 
 
 def fit_truncated_pareto(data,
