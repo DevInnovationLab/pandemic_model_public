@@ -25,7 +25,7 @@ class mevd_gen(rv_continuous):
          a frozen SciPy distribution.
 
     Note that the API is not entirely equivalent to rv_continuous.
-        Methods without will not work.
+        Use the internal methods defined here rater than the standard public interface.
 
     Parameters
     ----------
