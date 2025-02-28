@@ -121,14 +121,65 @@ class mevd_gen(rv_continuous):
         return 1.0 - self._cdf(x)
 
     # This is going to get wonky with share_above_min adjustment.
-    def _ppf(self, q, min_x=-1e6, max_x=1e6):
+
+    def _ppf(self, q, min_x=1e-8, max_x=1e10):
         """
-        Solve F_MEVD(x) = q using a root-finding approach.
+        Vectorized and optimized version of the PPF (percent point function / quantile function).
+        
+        Args:
+            q: Array of quantile values to solve for (between 0 and 1)
+            min_x: Minimum x value to search from
+            max_x: Maximum x value to search to
+            
+        Returns:
+            Array of x values where F_MEVD(x) = q
         """
         q = np.asarray(q, dtype=float)
-
-        def objective(x_val, qq):
-            return self._cdf(x_val) - qq
-
-        return np.vectorize(lambda qq: brentq(objective, min_x, max_x, args=(qq,)))(q)
-    
+        
+        # Handle edge cases vectorized
+        result = np.zeros_like(q)
+        result[q <= 0] = min_x
+        result[q >= 1] = max_x
+        
+        # Find indices that need solving
+        mask = (q > 0) & (q < 1)
+        if not np.any(mask):
+            return result
+        
+        q_solve = q[mask]
+        
+        # Initial guess using exponential spacing
+        x_guess = np.exp(np.log(min_x) + (np.log(max_x) - np.log(min_x)) * q_solve)
+        
+        # Newton-Raphson method with safeguards
+        max_iter = 20
+        tolerance = 1e-8
+        x = x_guess.copy()
+        
+        for _ in range(max_iter):
+            cdf = self._cdf(x)
+            pdf = self._pdf(x)
+            
+            # Avoid division by zero
+            valid_pdf = (pdf > 1e-10)
+            if not np.any(valid_pdf):
+                break
+                
+            # Newton step
+            dx = (cdf - q_solve) / np.where(valid_pdf, pdf, 1.0)
+            x_new = x - dx
+            
+            # Apply bounds
+            x_new = np.clip(x_new, min_x, max_x)
+            
+            # Check convergence
+            if np.all(np.abs(x_new - x) < tolerance * np.abs(x)):
+                x = x_new
+                break
+                
+            # Update for next iteration
+            x = x_new
+        
+        # Store results
+        result[mask] = x
+        return result
