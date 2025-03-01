@@ -369,7 +369,7 @@ end
 
 
 function plot_baseline_npv_ts(job_dir)
-    % Plots baseline NPV time series with 95% confidence intervals using percentiles
+    % Plots baseline NPV time series showing both nominal and discounted benefits
     %
     % Args:
     %   job_dir (string): Directory containing job configuration and results
@@ -377,25 +377,21 @@ function plot_baseline_npv_ts(job_dir)
     % Load baseline NPV data
     processed_dir = fullfile(job_dir, "processed");
     baseline_npv = readmatrix(fullfile(processed_dir, "baseline_absolute_npv.csv"));
+    baseline_npv_nom = readmatrix(fullfile(processed_dir, "baseline_absolute_npv_nom.csv"));
     
-    % Calculate mean and percentiles
+    % Calculate means
     mean_npv = mean(baseline_npv, 1) / 1e12; % Convert to trillions
-    p95 = prctile(baseline_npv, 95, 1) / 1e12;
-    p5 = prctile(baseline_npv, 5, 1) / 1e12;
+    mean_npv_nom = mean(baseline_npv_nom, 1) / 1e12;
     
     % Create figure
     fig = figure('Position', [100 100 1200 800], 'Visible', 'off');
     hold on;
     
-    % Plot mean line and confidence interval
-    mean_line = plot(1:length(mean_npv), mean_npv, 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], ...
-                    'DisplayName', 'Mean NPV');
-    
-    % Add confidence interval
-    ci = fill([1:length(mean_npv) fliplr(1:length(mean_npv))], ...
-              [p95 fliplr(p5)], ...
-              [0, 0.4470, 0.7410], 'FaceAlpha', 0.2, 'EdgeColor', 'none', ...
-              'DisplayName', '95% Confidence Interval');
+    % Plot both lines
+    plot(1:length(mean_npv), mean_npv, 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], ...
+         'DisplayName', 'Discounted NPV');
+    plot(1:length(mean_npv_nom), mean_npv_nom, 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], ...
+         'DisplayName', 'Nominal NPV');
     
     % Add labels and styling
     title('Baseline net present value over time', 'FontSize', 14)
@@ -407,7 +403,7 @@ function plot_baseline_npv_ts(job_dir)
     set(gca, 'Box', 'on', 'XGrid', 'on', 'YGrid', 'on')
     
     % Add legend
-    legend([mean_line, ci], 'Location', 'northwest', 'FontSize', 10, 'Box', 'off')
+    legend('Location', 'northwest', 'FontSize', 10, 'Box', 'off')
     
     % Save figure
     figure_dir = fullfile(job_dir, "figures");
@@ -416,4 +412,3 @@ function plot_baseline_npv_ts(job_dir)
     saveas(fig, figpath);
     close(fig);
 end
-
