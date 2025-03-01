@@ -86,6 +86,8 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
     sim_out_arr_m_output_losses         = zeros(params.sim_periods, sim_cnt); % Mitigated output losses
     sim_out_arr_learning_losses         = zeros(params.sim_periods, sim_cnt); % Mitigated learning losses
     sim_out_arr_benefits_vaccine        = zeros(params.sim_periods, sim_cnt);
+    sim_out_arr_benefits_vaccine_nom    = zeros(params.sim_periods, sim_cnt); % Nominal benefits
+
 
     % Adv R&D costs
     time_arr = (1:params.adv_RD_benefit_start)';
@@ -263,9 +265,9 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         inp_marg_costs_m_nom = zeros(tot_months, 1);
                         inp_marg_costs_o_nom = zeros(tot_months, 1);
                     else
-                        [u_deaths, u_mortality_losses, u_output_losses, u_learning_losses] = ...
+                        [u_deaths, u_mortality_losses, u_output_losses, u_learning_losses, ...
+                         u_mortality_losses_nom, u_output_losses_nom, u_learning_losses_nom] = ...
                             get_pandemic_losses(params, econ_loss_model, yr_start, pandemic_natural_dur, actual_dur, severity);
-
                         % Get effective capacity over time during pandemic
                         if has_RD_benefit == true
                             tau_A = tau_A - params.rd_speedup_months;
@@ -279,14 +281,19 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         
                         h_arr = h(vax_fractions_cum);
                         m_deaths = u_deaths .* (1 - h_arr) .* params.gamma;
+                        
+                        % Nominal benefits
+                        u_losses_nom = [u_mortality_losses_nom, u_output_losses_nom, u_learning_losses_nom];
+                        m_losses_nom = u_losses_nom .* (1 - h_arr .* params.gamma);
+                        vax_benefits_nom = sum(u_losses_nom - m_losses_nom, 2);
 
                         u_losses = [u_mortality_losses, u_output_losses, u_learning_losses]; % Unmitigated losses
                         m_losses = u_losses .* (1 - h_arr .* params.gamma);
                         m_mortality_losses = m_losses(:, 1);
                         m_output_losses = m_losses(:, 2);
                         m_learning_losses = m_losses(:, 3);
-                        
                         vax_benefits_PV = sum(u_losses - m_losses, 2);
+
                         growth_rate = (1+params.y)^(yr_start-1) .* (1+params.y).^(1/12 .* months_arr);
                         ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000) .* growth_rate), 1);
 
@@ -309,6 +316,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         sim_out_arr_m_output_losses(:, s)    = sim_out_arr_m_output_losses(:, s) + agg_by_yr(m_output_losses, actual_dur, yr_start, params.sim_periods);
                         sim_out_arr_learning_losses(:, s)    = sim_out_arr_learning_losses(:, s) + agg_by_yr(m_learning_losses, actual_dur, yr_start, params.sim_periods);
                         sim_out_arr_benefits_vaccine(:, s)   = sim_out_arr_benefits_vaccine(:, s) + agg_by_yr(vax_benefits_PV, actual_dur, yr_start, params.sim_periods);
+                        sim_out_arr_benefits_vaccine_nom(:, s) = sim_out_arr_benefits_vaccine_nom(:, s) + agg_by_yr(vax_benefits_nom, actual_dur, yr_start, params.sim_periods);
                         sim_out_arr_costs_inp_marg_PV(:, s)  = sim_out_arr_costs_inp_marg_PV(:, s) + agg_by_yr(inp_marg_costs_o_PV + inp_marg_costs_m_PV, actual_dur, yr_start, params.sim_periods);
                         sim_out_arr_costs_inp_marg_nom(:, s) = sim_out_arr_costs_inp_marg_nom(:, s) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, actual_dur, yr_start, params.sim_periods);
                     end
@@ -429,6 +437,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
             sim_out_arr_costs_inp_RD_nom', sim_out_arr_costs_inp_RD_PV', ...
             sim_out_arr_u_deaths', sim_out_arr_m_deaths', ...
             sim_out_arr_m_mortality_losses', sim_out_arr_m_output_losses', ...
-            sim_out_arr_learning_losses', sim_out_arr_benefits_vaccine');
+            sim_out_arr_learning_losses', sim_out_arr_benefits_vaccine', ...
+            sim_out_arr_benefits_vaccine_nom');
     end
 end
