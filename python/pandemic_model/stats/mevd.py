@@ -54,6 +54,8 @@ class mevd_gen(rv_continuous):
     ):
         super().__init__(name=name)
         self.window_counts = np.asarray(window_counts, dtype=int)
+        self.non_zero_window_counts = self.window_counts[self.window_counts > 0]
+        self.share_zeros = 1 - len(self.non_zero_window_counts) / len(self.window_counts)
 
         # Store or create the base distribution
         if base_dist is not None:
@@ -71,12 +73,15 @@ class mevd_gen(rv_continuous):
                 loc   = dist_params['loc']
                 scale = dist_params['scale']
                 self._frozen_dist = genpareto(shape, loc=loc, scale=scale)
+                self.lower_bound = dist_params['loc']
             elif dist_type == 'truncpareto':
                 b = dist_params['b']
                 c = dist_params['c']
                 loc   = dist_params['loc']
                 scale = dist_params['scale']
                 self._frozen_dist = truncpareto(b, c, loc=loc, scale=scale)
+                self.lower_bound = dist_params['loc'] + dist_params['scale']
+                self.upper_bound = dist_params['loc'] + dist_params['scale'] * dist_params['c']
             else:
                 raise ValueError("dist_type must be 'genpareto' or 'truncpareto'")
 
@@ -108,10 +113,10 @@ class mevd_gen(rv_continuous):
         """
         x = np.asarray(x, dtype=float)
         F_base = self._base_cdf(x)
-        f_base = self._base_pdf(x)
+        f_base = self._base_pdf(x)    
         pdf_matrix = (
-            self.window_counts[:, None]
-            * np.power(F_base, (self.window_counts - 1)[:, None])
+            self.non_zero_window_counts[:, None]
+            * np.power(F_base, (self.non_zero_window_counts - 1)[:, None])
             * f_base[None, :]
         )
         return np.mean(pdf_matrix, axis=0)
@@ -122,7 +127,7 @@ class mevd_gen(rv_continuous):
 
     # This is going to get wonky with share_above_min adjustment.
 
-    def _ppf(self, q, min_x=1e-8, max_x=1e10):
+    def _ppf(self, q, min_x=None, max_x=None, max_iter=20, tol=1e-8):
         """
         Vectorized and optimized version of the PPF (percent point function / quantile function).
         
@@ -136,6 +141,10 @@ class mevd_gen(rv_continuous):
         """
         q = np.asarray(q, dtype=float)
         
+        min_x = self.lower_bound if min_x is None else min_x
+        max_x = self.upper_bound if max_x is None else max_x
+        max_x = max_x if max_x is not None else 2e32 # Some absurdly large number
+
         # Handle edge cases vectorized
         result = np.zeros_like(q)
         result[q <= 0] = min_x
@@ -152,11 +161,12 @@ class mevd_gen(rv_continuous):
         x_guess = np.exp(np.log(min_x) + (np.log(max_x) - np.log(min_x)) * q_solve)
         
         # Newton-Raphson method with safeguards
-        max_iter = 20
-        tolerance = 1e-8
+        max_iter = max_iter
+        tolerance = tol
         x = x_guess.copy()
+        converged = False
         
-        for _ in range(max_iter):
+        for i in range(max_iter):
             cdf = self._cdf(x)
             pdf = self._pdf(x)
             
@@ -175,10 +185,14 @@ class mevd_gen(rv_continuous):
             # Check convergence
             if np.all(np.abs(x_new - x) < tolerance * np.abs(x)):
                 x = x_new
+                converged = True
                 break
                 
             # Update for next iteration
             x = x_new
+        
+        if not converged:
+            print(f"Warning: Newton-Raphson method did not converge after {max_iter} iterations")
         
         # Store results
         result[mask] = x
