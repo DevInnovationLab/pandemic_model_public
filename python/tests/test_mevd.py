@@ -3,14 +3,14 @@ import numpy as np
 import pandas as pd
 from scipy.stats import genpareto
 
-from pandemic_model.stats.mevd import mevd_gen
+from pandemic_model.stats.mevd import MEVD
 
 
 class TestMEVD(unittest.TestCase):
     def setUp(self):
         arrival_counts = [10, 11, 12, 20, 21, 30, 31, 32, 33]
         self.params = {'shape': 0.3, 'loc': 0, 'scale': 1}
-        self.mevd = mevd_gen(
+        self.mevd = MEVD(
             arrival_counts,
             dist_type='genpareto',
             dist_params=self.params
@@ -43,7 +43,7 @@ class TestMEVD(unittest.TestCase):
         """Test that an MEVD with one observation per window is equal to the base distribution."""
         n_samples = 100
         arrival_counts = np.repeat(1, n_samples)
-        mevd = mevd_gen(arrival_counts, dist_type='genpareto', dist_params=self.params)
+        mevd = MEVD(arrival_counts, dist_type='genpareto', dist_params=self.params)
         x_vals = np.linspace(self.params['loc'], 1e6, 100)
         base_cdf = mevd._frozen_dist
         np.testing.assert_allclose(mevd._cdf(x_vals), base_cdf.cdf(x_vals), rtol=1e-3)

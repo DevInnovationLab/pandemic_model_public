@@ -1,14 +1,13 @@
 import numpy as np
-import pandas as pd
-from scipy.stats import genpareto, rv_continuous, truncpareto
-from scipy.optimize import brentq
+from scipy.stats import genpareto
+
+from .pareto import TruncatedGPD
 
 
-class mevd_gen(rv_continuous):
+class MEVD():
     """
     Metastatistical Extreme Value Distribution (MEVD) built from a base distribution
-    representing individual observations, then averaged over windows
-    using observation counts as geometric weights.
+    representing individual observations, then averaged over windows using observation counts as geometric weights.
 
     For each window i with n_i observations, the maximum's CDF is:
         F_i(x) = [F_base(x)]^(n_i).
@@ -18,14 +17,11 @@ class mevd_gen(rv_continuous):
     where N is the number of windows.
 
     You can specify the base distribution in one of two ways:
-      1) Pass in a pre-fitted frozen distribution (e.g., truncpareto or genpareto) via
+      1) Pass in a pre-fitted frozen distribution (e.g.,  genpareto) via
          `base_dist`. This must support .cdf(x) and .pdf(x).
       2) Specify dist_type='genpareto' or dist_type='truncpareto' along with the
          relevant parameters in `dist_params`. The code will internally create
          a frozen SciPy distribution.
-
-    Note that the API is not entirely equivalent to rv_continuous.
-        Use the internal methods defined here rater than the standard public interface.
 
     Parameters
     ----------
@@ -50,12 +46,9 @@ class mevd_gen(rv_continuous):
         base_dist=None,
         dist_type=None,
         dist_params=None,
-        name='mevd',
     ):
-        super().__init__(name=name)
         self.window_counts = np.asarray(window_counts, dtype=int)
         self.non_zero_window_counts = self.window_counts[self.window_counts > 0]
-        self.share_zeros = 1 - len(self.non_zero_window_counts) / len(self.window_counts)
 
         # Store or create the base distribution
         if base_dist is not None:
@@ -75,13 +68,13 @@ class mevd_gen(rv_continuous):
                 self._frozen_dist = genpareto(shape, loc=loc, scale=scale)
                 self.lower_bound = dist_params['loc']
             elif dist_type == 'truncpareto':
-                b = dist_params['b']
-                c = dist_params['c']
-                loc   = dist_params['loc']
+                xi = dist_params['xi']  # shape parameter
+                upper = dist_params['upper']  # upper truncation point
+                loc = dist_params['loc']
                 scale = dist_params['scale']
-                self._frozen_dist = truncpareto(b, c, loc=loc, scale=scale)
-                self.lower_bound = dist_params['loc'] + dist_params['scale']
-                self.upper_bound = dist_params['loc'] + dist_params['scale'] * dist_params['c']
+                self._frozen_dist = TruncatedGPD(xi, upper, loc=loc, scale=scale)
+                self.lower_bound = loc
+                self.upper_bound = upper
             else:
                 raise ValueError("dist_type must be 'genpareto' or 'truncpareto'")
 
@@ -89,15 +82,51 @@ class mevd_gen(rv_continuous):
     # The MEVD logic: F_MEVD(x) = average of [F_base(x)]^(n_i).
     # ----------------------------------------------------------------
     def _base_cdf(self, x):
+        """
+        Compute the CDF of the base distribution.
+        
+        Parameters
+        ----------
+        x : array-like
+            Points at which to evaluate the CDF.
+            
+        Returns
+        -------
+        array-like
+            CDF values at the specified points.
+        """
         return self._frozen_dist.cdf(x)
 
     def _base_pdf(self, x):
+        """
+        Compute the PDF of the base distribution.
+        
+        Parameters
+        ----------
+        x : array-like
+            Points at which to evaluate the PDF.
+            
+        Returns
+        -------
+        array-like
+            PDF values at the specified points.
+        """
         return self._frozen_dist.pdf(x)
 
     def _cdf(self, x):
         """
         CDF of the MEVD:
-            F_MEVD(x) = (1/N) * sum_{i=1}^N [F_gpd(x)]^(n_i).
+            F_MEVD(x) = (1/N) * sum_{i=1}^N [F_base(x)]^(n_i).
+        
+        Parameters
+        ----------
+        x : array-like
+            Points at which to evaluate the CDF.
+            
+        Returns
+        -------
+        array-like
+            CDF values at the specified points.
         """
         x = np.asarray(x, dtype=float)
         F_base = self._base_cdf(x)  # shape: (M,)
@@ -108,8 +137,18 @@ class mevd_gen(rv_continuous):
     def _pdf(self, x):
         """
         PDF of the MEVD:
-            f_MEVD(x) = (1/N) * sum_{i=1}^N n_i [F_gpd(x)]^(n_i - 1) * f_gpd(x).
-        (derivative of [F_g(x)]^(n_i) w.r.t. x)
+            f_MEVD(x) = (1/N) * sum_{i=1}^N n_i [F_base(x)]^(n_i - 1) * f_base(x).
+        (derivative of [F_base(x)]^(n_i) w.r.t. x)
+        
+        Parameters
+        ----------
+        x : array-like
+            Points at which to evaluate the PDF.
+            
+        Returns
+        -------
+        array-like
+            PDF values at the specified points.
         """
         x = np.asarray(x, dtype=float)
         F_base = self._base_cdf(x)
@@ -121,8 +160,20 @@ class mevd_gen(rv_continuous):
         )
         return np.mean(pdf_matrix, axis=0)
 
-    # Can likely remove this method as handled by base class.
     def _sf(self, x):
+        """
+        Survival function (1 - CDF) of the MEVD.
+        
+        Parameters
+        ----------
+        x : array-like
+            Points at which to evaluate the survival function.
+            
+        Returns
+        -------
+        array-like
+            Survival function values at the specified points.
+        """
         return 1.0 - self._cdf(x)
 
     # This is going to get wonky with share_above_min adjustment.
@@ -166,7 +217,7 @@ class mevd_gen(rv_continuous):
         x = x_guess.copy()
         converged = False
         
-        for i in range(max_iter):
+        for _ in range(max_iter):
             cdf = self._cdf(x)
             pdf = self._pdf(x)
             

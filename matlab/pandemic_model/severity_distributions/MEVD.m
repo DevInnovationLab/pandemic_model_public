@@ -1,15 +1,15 @@
 classdef MEVD < SeverityDist
     properties
+        base_pd
         window_counts
         non_zero_window_counts
-        share_zeros
         base_dist
         lower_bound
         upper_bound
     end
     
     methods
-        function obj = MEVD(window_counts, base_dist_type, base_dist_params, max_severity)
+        function obj = MEVD(window_counts, base_dist_params, trunc_type, upper_bound)
             % MEVD Metastatistical Extreme Value Distribution
             %
             % Metastatistical Extreme Value Distribution (MEVD) built from a base distribution
@@ -25,119 +25,46 @@ classdef MEVD < SeverityDist
             %
             % Parameters:
             %   window_counts - Array of sizes for each window (n_i)
-            %   base_dist_type - String specifying the base distribution ('genpareto' or 'truncpareto')
+            %   base_dist_type - String specifying the base distribution ('sharp' or 'truncpareto')
             %   base_dist_params - Structure with parameters for the base distribution
             %   max_severity - Maximum severity value
             
             arguments
                 window_counts (:,1) {mustBeInteger, mustBeNonnegative}
-                base_dist_type (1,1) string {mustBeMember(base_dist_type, ["genpareto", "truncpareto"])}
                 base_dist_params struct
-                max_severity (1,1) double {mustBePositive} = 1e32
+                trunc_type (1,1) string {mustBeMember(trunc_type, ["sharp", "formal"])}
+                upper_bound (1,1) double {mustBePositive} = Inf
             end
-            
             obj.window_counts = window_counts;
             obj.non_zero_window_counts = window_counts(window_counts > 0);
-            obj.max_severity = max_severity;
-            
-            % Create the base distribution
-            if base_dist_type == "genpareto"
-                obj.base_dist = struct(...
-                    'type', 'genpareto', ...
-                    'shape', base_dist_params.shape, ...
-                    'loc', base_dist_params.loc, ...
-                    'scale', base_dist_params.scale);
-                obj.lower_bound = base_dist_params.loc;
-                obj.upper_bound = obj.max_severity;
-                
-            elseif base_dist_type == "truncpareto"
-                obj.base_dist = struct(...
-                    'type', 'truncpareto', ...
-                    'b', base_dist_params.b, ...
-                    'c', base_dist_params.c, ...
-                    'loc', base_dist_params.loc, ...
-                    'scale', base_dist_params.scale);
-                obj.lower_bound = base_dist_params.loc + base_dist_params.scale;
-                obj.upper_bound = base_dist_params.loc + base_dist_params.scale * base_dist_params.c;
-            end
+
+            pd_params = struct_to_named_args(base_dist_params);
+            obj.base_pd = makedist(distName, pd_params{:});
+            obj.lower_bound = base_dist_params.theta;
+            obj.trunc_type = trunc_type;
+            obj.upper_bound = upper_bound;
         end
         
         function F = base_cdf(obj, x)
             % Compute the CDF of the base distribution
-            if obj.base_dist.type == "genpareto"
-                % Generalized Pareto CDF: 1 - (1 + shape*(x-loc)/scale)^(-1/shape)
-                shape = obj.base_dist.shape;
-                loc = obj.base_dist.loc;
-                scale = obj.base_dist.scale;
+            if obj.trunc_tpe == "sharp"
+                F = obj.base_pd.cdf(x);
+                F(x >= obj.upper_bound) = 1;
                 
-                % Vectorized computation
-                F = zeros(size(x));
-                valid_idx = x >= loc;
-                
-                if abs(shape) < 1e-10  % shape ≈ 0
-                    F(valid_idx) = 1 - exp(-(x(valid_idx) - loc) / scale);
-                else
-                    z = (x(valid_idx) - loc) / scale;
-                    F(valid_idx) = 1 - (1 + shape * z).^(-1/shape);
-                end
-                
-            elseif obj.base_dist.type == "truncpareto"
-                % Truncated Pareto CDF
-                b = obj.base_dist.b;
-                c = obj.base_dist.c;
-                loc = obj.base_dist.loc;
-                scale = obj.base_dist.scale;
-                
-                lower = loc + scale;
-                upper = loc + scale * c;
-                
-                % Vectorized computation with logical indexing
-                F = zeros(size(x));
-                valid_idx = (x >= lower) & (x <= upper);
-                F(x > upper) = 1;
-                
-                if any(valid_idx(:))
-                    z = (x(valid_idx) - loc) / scale;
-                    F(valid_idx) = (1 - z.^(-b)) / (1 - c^(-b));
-                end
+            elseif obj.trunc_tpe == "formal"
+                F_u = obj.base_pd.cdf(obj.upper_bound);
+                F = obj.base_pd.cdf(x) ./ F_u;
             end
         end
         
         function f = base_pdf(obj, x)
             % Compute the PDF of the base distribution
-            if obj.base_dist.type == "genpareto"
-                shape = obj.base_dist.shape;
-                loc = obj.base_dist.loc;
-                scale = obj.base_dist.scale;
-                
-                % Vectorized computation
-                f = zeros(size(x));
-                valid_idx = x >= loc;
-                
-                if abs(shape) < 1e-10  % shape ≈ 0
-                    f(valid_idx) = exp(-(x(valid_idx) - loc) / scale) / scale;
-                else
-                    z = (x(valid_idx) - loc) / scale;
-                    f(valid_idx) = (1 + shape * z).^(-1/shape - 1) / scale;
-                end
-                
-            elseif obj.base_dist.type == "truncpareto"
-                b = obj.base_dist.b;
-                c = obj.base_dist.c;
-                loc = obj.base_dist.loc;
-                scale = obj.base_dist.scale;
-                
-                lower = loc + scale;
-                upper = loc + scale * c;
-                
-                % Vectorized computation
-                f = zeros(size(x));
-                valid_idx = (x >= lower) & (x <= upper);
-                
-                if any(valid_idx(:))
-                    z = (x(valid_idx) - loc) / scale;
-                    f(valid_idx) = (b * z.^(-b-1)) / (scale * (1 - c^(-b)));
-                end
+            if obj.trunc_tpe == "sharp"
+                f = obj.base_pd.pdf(x);
+ 
+            elseif obj.trunc_tpe == "formal"
+                F_u = obj.base_pd.cdf(x);
+                f = obj.base_pd.pdf(x) ./ F_u;
             end
         end
         
@@ -223,9 +150,7 @@ classdef MEVD < SeverityDist
                 % For any points where fsolve failed, fall back to bisection
                 failed = (exitflag <= 0);
                 if any(failed)
-                    for i = find(failed)'
-                        x_solve(i) = bisection(obj, q_solve(i), min_x, max_x, tol);
-                    end
+                   warning('Solver failed for some points.')
                 end
                 x(mask) = x_solve;
                 return;
@@ -281,43 +206,3 @@ classdef MEVD < SeverityDist
         end
     end
 end
-
-
-function x = bisection(obj, target_q, a, b, tol)
-    % Bisection method for root finding when other methods fail
-    fa = obj.cdf(a) - target_q;
-    fb = obj.cdf(b) - target_q;
-    
-    % Check if solution is in interval
-    if sign(fa) == sign(fb) && fa ~= 0 && fb ~= 0
-        % Try to find a better interval
-        if abs(fa) < abs(fb)
-            x = a;
-        else
-            x = b;
-        end
-        return;
-    end
-    
-    % Bisection loop
-    while (b - a) > tol * max(1, abs(a))
-        c = (a + b) / 2;
-        fc = obj.cdf(c) - target_q;
-        
-        if abs(fc) < 1e-14
-            x = c;
-            return;
-        end
-        
-        if sign(fc) == sign(fa)
-            a = c;
-            fa = fc;
-        else
-            b = c;
-            fb = fc;
-        end
-    end
-    
-    x = (a + b) / 2;
-end
-
