@@ -48,3 +48,33 @@ deaths_per_year = [cumulative_deaths_annual(1);
 yearly_deaths = table(unique_years, deaths_per_year, 'VariableNames', {'Year', 'Deaths'});
 
 writetable(yearly_deaths, './data/clean/covid19_annual_excess_mortality_central.csv');
+
+%% Get COVID-19 intensity
+
+% Load population data
+population_data = readtable('./data/raw/population.csv', 'VariableNamingRule', 'preserve');
+
+% Clean population data
+% Rename columns for consistency
+population_clean = population_data(:, {'Year', 'Population - Sex: all - Age: all - Variant: estimates'});
+population_clean.Properties.VariableNames = {'Year', 'population'};
+
+% Merge the datasets
+merged_data = innerjoin(yearly_deaths, population_clean, 'Keys', 'Year');
+
+% Calculate deaths per 10,000 inhabitants (intensity)
+merged_data.intensity = (merged_data.Deaths ./ merged_data.population) * 10000;
+
+% Plot deaths per 10,000 inhabitants over time
+figure;
+plot(merged_data.Year, merged_data.intensity, 'r-', 'LineWidth', 2);
+title('COVID-19 Excess Deaths per 10,000');
+xlabel('Year');
+ylabel('Deaths per 10,000');
+grid on;
+
+% Save the figure to output
+saveas(gcf, './output/covid19_deaths_per_10k_plot.png');
+
+% Save the cleaned and merged data
+writetable(merged_data, './data/clean/covid19_deaths_per_10k.csv');
