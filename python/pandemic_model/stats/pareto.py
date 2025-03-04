@@ -279,7 +279,12 @@ class TruncatedGPD:
         # Optimize the negative log-likelihood over free parameters
         res = minimize(nll, x0, bounds=bnds)
         if not res.success:
-            raise RuntimeError("Optimization failed: " + res.message)
+            error_msg = f"Optimization failed: {res.message}\n"
+            error_msg += f"Status: {res.status}\n"
+            error_msg += f"Number of iterations: {res.nit}\n"
+            error_msg += f"Final function value: {res.fun}\n"
+            error_msg += f"Final parameters: {full_params(res.x)}"
+            raise RuntimeError(error_msg)
         
         fitted = full_params(res.x)
         
