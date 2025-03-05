@@ -1,6 +1,5 @@
 import numpy as np
 from scipy.optimize import minimize
-from scipy.stats import rv_continuous
 
 
 # Truncated generalized pareto distribution ---------------------
@@ -156,7 +155,7 @@ class TruncatedGPD:
         return 1 - self.cdf(x)
     
     @classmethod
-    def fit(self, data, initial_params=None, bounds=None, fixed=None):
+    def fit(self, data, initial_params=None, bounds=None, fixed=None, opt_kwargs=None):
         """
         Fit the truncated GPD to data using maximum likelihood estimation.
         
@@ -178,6 +177,9 @@ class TruncatedGPD:
         if fixed is None:
             fixed = {}
         
+        if opt_kwargs is None:
+            opt_kwargs = {}
+        
         free_names = [par for par in par_names if par not in fixed]
         
         # Set up default initial guesses for free parameters if not provided
@@ -198,24 +200,8 @@ class TruncatedGPD:
         # Set up default bounds for free parameters
         default_bounds = {}
         
-        # Compute standardized values z = (x - loc)/sigma
-        loc = init.get('loc', np.min(data))
-        scale = init.get('scale', np.std(data))
-        z_values = (data - loc) / scale
-        
-        # Check data compatibility with GPD
-        if np.any(z_values > 0) and np.any(z_values < 0):
-            raise ValueError(
-                "Data contains both positive and negative standardized values "
-                "((x - loc)/sigma). The GPD requires all values to be either "
-                "positive or negative."
-            )
-        
-        # Set parameter bounds based on data characteristics
-        all_positive = np.all(z_values > 0)
         if 'xi' in free_names:
-            # xi must be positive for positive z, negative for negative z
-            xi_bounds = (1e-6, 5) if all_positive else (-5, -1e-6)
+            xi_bounds = (-12000, 5000)
             default_bounds['xi'] = xi_bounds
             
         if 'upper' in free_names:
@@ -228,10 +214,13 @@ class TruncatedGPD:
             default_bounds['scale'] = (1e-6, np.std(data) * 10)
         
         # Update with any user-provided bounds
-        if bounds is not None:
+        if bounds == 'default':
+            bnds = list(default_bounds.values())
+        elif bounds is not None:
             default_bounds.update(bounds)
-        
-        bnds = [default_bounds[par] for par in free_names]
+            bnds = [default_bounds[par] for par in free_names]
+        else:
+            bnds = None
         
         # Helper to combine free and fixed parameters into a complete dictionary
         def full_params(free):
@@ -277,7 +266,15 @@ class TruncatedGPD:
             return -np.sum(log_pdf)
         
         # Optimize the negative log-likelihood over free parameters
-        res = minimize(nll, x0, bounds=bnds)
+        nelder_mead_opts = {
+            'maxiter': 10000,
+            'maxfev': 50000,
+            'xatol': 1e-4,
+            'fatol': 1e-4,
+            'adaptive': True
+        }
+
+        res = minimize(nll, x0, bounds=bnds, method='Nelder-Mead', options=nelder_mead_opts)
         if not res.success:
             error_msg = f"Optimization failed: {res.message}\n"
             error_msg += f"Status: {res.status}\n"
@@ -295,5 +292,3 @@ class TruncatedGPD:
             loc=fitted['loc'],
             scale=fitted['scale']
         )
-
-

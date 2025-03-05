@@ -4,7 +4,7 @@ from scipy.stats import genpareto
 from .pareto import TruncatedGPD
 
 
-class MEVD():
+class MEVD:
     """
     Metastatistical Extreme Value Distribution (MEVD) built from a base distribution
     representing individual observations, then averaged over windows using observation counts as geometric weights.
