@@ -113,7 +113,7 @@ class MEVD:
         """
         return self._frozen_dist.pdf(x)
 
-    def _cdf(self, x):
+    def cdf(self, x):
         """
         CDF of the MEVD:
             F_MEVD(x) = (1/N) * sum_{i=1}^N [F_base(x)]^(n_i).
@@ -134,7 +134,7 @@ class MEVD:
         cdf_matrix = np.power(F_base, self.window_counts[:, None])  # shape: (N, M)
         return np.mean(cdf_matrix, axis=0)
 
-    def _pdf(self, x):
+    def pdf(self, x):
         """
         PDF of the MEVD:
             f_MEVD(x) = (1/N) * sum_{i=1}^N n_i [F_base(x)]^(n_i - 1) * f_base(x).
@@ -160,7 +160,7 @@ class MEVD:
         )
         return np.mean(pdf_matrix, axis=0)
 
-    def _sf(self, x):
+    def sf(self, x):
         """
         Survival function (1 - CDF) of the MEVD.
         
@@ -174,11 +174,11 @@ class MEVD:
         array-like
             Survival function values at the specified points.
         """
-        return 1.0 - self._cdf(x)
+        return 1.0 - self.cdf(x)
 
     # This is going to get wonky with share_above_min adjustment.
 
-    def _ppf(self, q, min_x=None, max_x=None, max_iter=20, tol=1e-8):
+    def ppf(self, q, min_x=None, max_x=None, max_iter=20, tol=1e-8):
         """
         Vectorized and optimized version of the PPF (percent point function / quantile function).
         
@@ -218,8 +218,8 @@ class MEVD:
         converged = False
         
         for _ in range(max_iter):
-            cdf = self._cdf(x)
-            pdf = self._pdf(x)
+            cdf = self.cdf(x)
+            pdf = self.pdf(x)
             
             # Avoid division by zero
             valid_pdf = (pdf > 1e-10)
