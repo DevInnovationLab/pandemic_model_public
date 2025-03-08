@@ -195,14 +195,15 @@ class MEVD:
         min_x = self.lower_bound if min_x is None else min_x
         max_x = self.upper_bound if max_x is None else max_x
         max_x = max_x if max_x is not None else 2e32 # Some absurdly large number
+        q_const = 1 - len(self.non_zero_window_counts) / len(self.window_counts)
 
         # Handle edge cases vectorized
         result = np.zeros_like(q)
-        result[q <= 0] = min_x
+        result[q <= q_const] = min_x
         result[q >= 1] = max_x
         
         # Find indices that need solving
-        mask = (q > 0) & (q < 1)
+        mask = (q > q_const) & (q < 1)
         if not np.any(mask):
             return result
         
