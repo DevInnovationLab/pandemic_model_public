@@ -8,8 +8,9 @@ vf_data = readtable(fullfile("./data/raw/Viral family review - Viral family summ
 vf_data.Properties.VariableNames = {...
     'viral_family', ...
     'arrival_share_all', ...
-    'arrival_share_select', ... # Based on expert survey answers whose percentages (almost) summed to 100%.
-    'has_adv_RD'
+    'arrival_share_select', ... % Based on expert survey answers whose percentages (almost) summed to 100%.
+    'has_adv_RD', ...
+    'airborne' ...
     };
 
 % Make viral families lower case
@@ -47,8 +48,16 @@ for i = 1:numel(arrival_share_sources)
     % Subset and rename to arrival share
     clean_vf_data = vf_data(:, keep_cols);
     clean_vf_data.Properties.VariableNames{arrival_share_col} = 'arrival_share';
-    % Ought to order cols nicely
 
     fp = sprintf("./data/clean/vf_data_arrival_%s.csv", source);
     writetable(clean_vf_data, fp);
+    
+    % Create airborne dataset
+    airborne_data = clean_vf_data(strcmpi(vf_data.airborne, 'Yes') | strcmpi(vf_data.airborne, 'Unknown'), :);
+    
+    % Reweight arrival shares to sum to 1
+    airborne_data.arrival_share = airborne_data.arrival_share ./ sum(airborne_data.arrival_share);
+    
+    fp_airborne = sprintf("./data/clean/vf_data_arrival_%s_airborne.csv", source);
+    writetable(airborne_data, fp_airborne);
 end

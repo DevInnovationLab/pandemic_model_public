@@ -1,5 +1,5 @@
 # Run params
-num_simulations: 80000
+num_simulations: 10000
 sim_periods: 200
 outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/no_mitigation"
@@ -21,9 +21,9 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-severity_dist_config: "./output/severity_distributions/truncpareto_resp.yaml"
-duration_dist_config: "./output/duration_distributions/resp.yaml"
-viral_family_data: "./data/clean/vf_data_arrival_all.csv"
+severity_dist_config: "./output/severity_distributions/airborne_base.yaml"
+duration_dist_config: "./output/duration_distributions/airborne_base.yaml"
+viral_family_data: "./data/clean/vf_data_arrival_all_airborne.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 ptrs_vf: "./output/ptrs/vf_model_preds.csv"
 ptrs_rd: "./output/ptrs/rd_model_preds.csv"

@@ -1,12 +1,12 @@
-Viral family,Arrival rate,Arrival rate (answers ~sum to 100%),Prototype vaccine?
-Arenaviridae,1.93%,1.70%,No
-Nairoviridae,1.41%,0.00%,No
-Phenuiviridae,3.27%,3.40%,No
-Coronaviridae,22.39%,17.29%,Yes
-Filoviridae,3.73%,2.78%,Yes
-Flaviviridae,7.11%,5.20%,Yes
-Paramyxoviridae,6.05%,6.81%,Yes
-Orthomyxoviridae,32.94%,40.05%,Yes
-Togaviridae,6.43%,7.53%,Yes
-Unknown,14.73%,15.25%,No
-Other,0.00%,0.00%,No
+Viral family,Arrival rate,Arrival rate (answers ~sum to 100%),Prototype vaccine?,Airborne?
+Arenaviridae,1.93%,1.70%,No,No
+Nairoviridae,1.41%,0.00%,No,No
+Phenuiviridae,3.27%,3.40%,No,No
+Coronaviridae,22.39%,17.29%,Yes,Yes
+Filoviridae,3.73%,2.78%,Yes,No
+Flaviviridae,7.11%,5.20%,Yes,No
+Paramyxoviridae,6.05%,6.81%,Yes,No
+Orthomyxoviridae,32.94%,40.05%,Yes,Yes
+Togaviridae,6.43%,7.53%,Yes,No
+Unknown,14.73%,15.25%,No,Unknown
+Other,0.00%,0.00%,No,Unknown
