@@ -2,7 +2,7 @@
 num_simulations: 10000
 sim_periods: 200
 outdir: "./output/jobs"
-scenario_configs: "./config/scenario_configs/no_mitigation"
+scenario_configs: "./config/scenario_configs/standard"
 seed: 42
 add_datetime_to_outdir: 0
 sim_scens_path: null # Load previously created pandemic simulations (rather than creating new ones with parameters below)
@@ -21,7 +21,7 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-severity_dist_config: "./output/severity_distributions/airborne_base.yaml"
+arrival_dist_config: "./output/severity_distributions/airborne_base.yaml"
 duration_dist_config: "./output/duration_distributions/airborne_base.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_all_airborne.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"

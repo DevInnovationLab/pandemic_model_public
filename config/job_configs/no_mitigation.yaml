@@ -21,8 +21,8 @@ gamma: 0 # fraction of remaining harm mitigated by vaccine. None since no mitiga
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-severity_dist_config: "./output/severity_distributions/truncpareto_all_risk.yaml"
-duration_dist_config: "./output/duration_distributions/all_risk.yaml"
+arrival_dist_config: "./output/severity_distributions/allrisk_base.yaml"
+duration_dist_config: "./output/duration_distributions/allrisk_base.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 ptrs_vf: "./output/ptrs/vf_model_preds.csv"

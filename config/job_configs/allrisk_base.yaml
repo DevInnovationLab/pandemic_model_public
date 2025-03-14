@@ -2,7 +2,7 @@
 num_simulations: 10000
 sim_periods: 200
 outdir: "./output/jobs"
-scenario_configs: "./config/scenario_configs/allrisk_base"
+scenario_configs: "./config/scenario_configs/standard"
 seed: 42
 add_datetime_to_outdir: 0
 sim_scens_path: null # Load previously created pandemic simulations (rather than creating new ones with parameters below)
