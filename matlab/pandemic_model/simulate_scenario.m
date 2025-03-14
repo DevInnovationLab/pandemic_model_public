@@ -122,6 +122,8 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
             rental_income_fractions = get_rental_fractions(params, adv_cap_m_over_time, adv_cap_o_over_time);
             adv_cap_maintenance_cost_over_time_rent_adjusted = adv_cap_maintenance_cost_over_time .* (1-rental_income_fractions);
             total_adv_cap_costs_over_time = adv_cap_maintenance_cost_over_time_rent_adjusted + adv_cap_capital_costs_over_time;
+            cap_avail_m = adv_cap_m_over_time(end);
+            cap_avail_o = adv_cap_o_over_time(end);
             
             % Calculate present_value
             total_adv_cap_costs_over_time_pv = total_adv_cap_costs_over_time .* (1./((1+params.r).^(1:params.sim_periods)));
@@ -254,6 +256,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         
                         vax_fraction_end = NaN;
                         vax_benefits_PV = zeros(tot_months, 1);
+                        vax_benefits_nom = zeros(tot_months, 1);
                         inp_marg_costs_m_PV = zeros(tot_months, 1);
                         inp_marg_costs_o_PV = zeros(tot_months, 1);
                         u_deaths = zeros(tot_months, 1);
