@@ -1,6 +1,8 @@
 # Project-wide Python utilities.
 
+import matplotlib.pyplot as plt
 import pandas as pd
+import seaborn as sns
 
 viral_family_map = {
     'cchf': 'nairoviridae',
@@ -15,6 +17,23 @@ viral_family_map = {
     'lassa': 'arenaviridae',
     'covid-19': 'coronaviridae'
 }
+
+def set_standard_plot_theme():
+    # Set seaborn style for publication-quality figures
+    sns.set_theme(style="whitegrid", context="paper")
+    plt.rcParams.update({
+    'font.family': 'sans-serif',
+    'font.sans-serif': ['Arial'],
+    'font.size': 10,
+    'axes.titlesize': 12,
+    'axes.labelsize': 11,
+    'xtick.labelsize': 10,
+    'ytick.labelsize': 10,
+    'legend.fontsize': 10,
+    'legend.title_fontsize': 11
+    })
+
+    return
 
 
 def get_annual_arrival_counts(df: pd.DataFrame, start_year: int, end_year: int) -> pd.Series:

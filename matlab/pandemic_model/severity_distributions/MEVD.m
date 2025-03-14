@@ -26,15 +26,15 @@ classdef MEVD
             %
             % Parameters:
             %   window_counts - Array of sizes for each window (n_i)
-            %   base_dist_type - String specifying the base distribution ('sharp' or 'truncpareto')
+            %   dist_name - String specifying the base distribution type
             %   base_dist_params - Structure with parameters for the base distribution
-            %   max_severity - Maximum severity value
-            
+            %   trunc_type - String specifying truncation type ('sharp' or 'smooth')
+            %   upper_bound - Maximum value for truncation (default: Inf)
             arguments
                 window_counts (:,1) {mustBeInteger, mustBeNonnegative}
                 dist_name (1,1) string
                 base_dist_params struct
-                trunc_type (1,1) string {mustBeMember(trunc_type, ["sharp", "formal"])}
+                trunc_type (1,1) string {mustBeMember(trunc_type, ["sharp", "smooth"])}
                 upper_bound (1,1) double {mustBePositive} = Inf
             end
             obj.window_counts = window_counts;
@@ -53,7 +53,7 @@ classdef MEVD
                 F = obj.base_pd.cdf(x);
                 F(x >= obj.upper_bound) = 1;
                 
-            elseif obj.trunc_type == "formal"
+            elseif obj.trunc_type == "smooth"
                 F_u = obj.base_pd.cdf(obj.upper_bound);
                 F = obj.base_pd.cdf(x) ./ F_u;
             end
@@ -64,7 +64,7 @@ classdef MEVD
             if obj.trunc_type == "sharp"
                 f = obj.base_pd.pdf(x);
  
-            elseif obj.trunc_type == "formal"
+            elseif obj.trunc_type == "smooth"
                 F_u = obj.base_pd.cdf(obj.upper_bound);
                 f = obj.base_pd.pdf(x) ./ F_u;
             end

@@ -194,7 +194,7 @@ class MEVD:
         
         min_x = self.lower_bound if min_x is None else min_x
         max_x = self.upper_bound if max_x is None else max_x
-        max_x = max_x if max_x is not None else 2e32 # Some absurdly large number
+        max_x_guess = max_x if max_x is not None else 2e32 # Some absurdly large number
         q_const = 1 - len(self.non_zero_window_counts) / len(self.window_counts)
 
         # Handle edge cases vectorized
@@ -210,7 +210,7 @@ class MEVD:
         q_solve = q[mask]
         
         # Initial guess using exponential spacing
-        x_guess = np.exp(np.log(min_x) + (np.log(max_x) - np.log(min_x)) * q_solve)
+        x_guess = np.exp(np.log(min_x) + (np.log(max_x_guess) - np.log(min_x)) * q_solve)
         
         # Newton-Raphson method with safeguards
         max_iter = max_iter
