@@ -66,12 +66,11 @@ if __name__ == "__main__":
 
     for df in [bernstein_intersect_ds, modern_resp_ds]:
         df.loc[df['disease'] == 'covid-19', 'severity'] = ex_ante_covid_severity
-        df.loc[df['disease'] == 'hiv/aids', 'duration'] = 40
+        df.loc[df['disease'] == 'hiv/aids', 'duration'] = 46 # Double length of time to peak
 
 
     bernstein_intersect_ds['intensity'] = bernstein_intersect_ds['severity'] / bernstein_intersect_ds['duration']
     modern_resp_ds['intensity'] = modern_resp_ds['severity'] / modern_resp_ds['duration']
-
 
     # Fit distributions --------------------------------
 

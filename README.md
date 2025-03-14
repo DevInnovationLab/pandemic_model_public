@@ -44,3 +44,6 @@ matlab  -nodesktop -nosplash -r "run('./matlab/load_project'); run_simulations({
 
 ### Cluster using SLURM
 If we ever want to run on a cluster, we will likely want to refactor the simulation script so that each simulation stores its results on disk and then the results are combined at the end in a single process. Or some other way that will allow us to allocate the minimum required memory to each process and still merge all the results at the end.
+
+
+### Running Matlab Tests

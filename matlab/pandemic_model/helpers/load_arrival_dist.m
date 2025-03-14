@@ -16,7 +16,7 @@ function [metric, arrival_dist] = load_arrival_dist(arrival_dist_config_path)
 
     % Extract parameters from config
     metric = arrival_dist_config.metric;
-    window_counts = arrival_dist_config.arrival_counts;
+    window_counts = cell2mat(arrival_dist_config.arrival_counts);
     base_dist_family = arrival_dist_config.base_dist_family;
     base_dist_params = arrival_dist_config.base_dist_params;
     truncation = arrival_dist_config.truncation;

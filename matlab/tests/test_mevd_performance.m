@@ -9,19 +9,8 @@ classdef test_mevd_performance < matlab.unittest.TestCase
     methods(TestMethodSetup)
         function setup(testCase)
             % Create a test MEVD instance with realistic parameters
-            dist_name = 'GeneralizedPareto';
-            base_params = struct(...
-                'k', 3.048, ...
-                'sigma', 1.366, ...
-                'theta', 0.01);
-            
-            % Create window counts similar to real data
-            window_counts = zeros(50,1);
-            window_counts(19) = 1; % Based on provided context files
-            window_counts(25) = 1;
-            window_counts(36) = 1;
-            
-            testCase.mevd = MEVD(window_counts, dist_name, base_params, "sharp", 170.82);
+            dist_config_path = '../../output/severity_distributions/allrisk_base.yaml'; % For now just test with one we have at hand.
+            [~, testCase.mevd] = load_arrival_dist(dist_config_path);
             testCase.n_samples = 10000;
         end
     end
@@ -29,23 +18,16 @@ classdef test_mevd_performance < matlab.unittest.TestCase
     methods(Test)
         function test_unit_window_counts(testCase)
             % Test that when all window counts are 1, the MEVD CDF matches the base CDF
-            
-            % Create new MEVD with all window counts = 1
-            dist_name = 'GeneralizedPareto';
-            base_params = struct(...
-                'k', 3.048, ...
-                'sigma', 1.366, ...
-                'theta', 0.01);
-            
             window_counts = ones(50,1);
-            unit_mevd = MEVD(window_counts, dist_name, base_params, "sharp", 170.82);
-            
+            mevd_copy = testCase.mevd;
+            mevd_copy.window_counts = window_counts;
+
             % Test points across the domain
-            x = linspace(unit_mevd.lower_bound, unit_mevd.upper_bound, 1000)';
+            x = linspace(mevd_copy.lower_bound, mevd_copy.upper_bound, 1000)';
             
             % Get CDFs
-            mevd_cdf = unit_mevd.cdf(x);
-            base_cdf = unit_mevd.base_cdf(x);
+            mevd_cdf = mevd_copy.cdf(x);
+            base_cdf = mevd_copy.base_cdf(x);
             
             % Verify they are equal
             testCase.verifyEqual(mevd_cdf, base_cdf, 'AbsTol', 1e-10, ...
@@ -61,7 +43,8 @@ classdef test_mevd_performance < matlab.unittest.TestCase
                 
                 % Time the ppf computation
                 tic;
-                x = testCase.mevd.ppf(q, 'max_iter', 200);
+                reltol = 1e-6;
+                x = testCase.mevd.ppf(q, 'max_iter', 1000, 'reltol', reltol, 'abstol', 1e-32);
                 elapsed = toc;
                 
                 % Basic validation
@@ -85,7 +68,7 @@ classdef test_mevd_performance < matlab.unittest.TestCase
                 % Verify round-trip accuracy
                 const_q = sum(testCase.mevd.window_counts == 0) / length(testCase.mevd.window_counts);
                 q(q <= const_q) = const_q;
-                testCase.verifyEqual(q_back, q, 'AbsTol', 1e-3);
+                testCase.verifyEqual(q_back, q, 'RelTol', reltol);
             end
         end
         
