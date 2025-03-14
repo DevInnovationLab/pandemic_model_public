@@ -19,7 +19,7 @@ viral_family_map = {
 }
 
 def set_standard_plot_theme():
-    # Set seaborn style for publication-quality figures
+    # Set seaborn style for publication-quality figures. Not sure this should be the standard, but worry about it later.
     sns.set_theme(style="whitegrid", context="paper")
     plt.rcParams.update({
     'font.family': 'sans-serif',

@@ -124,7 +124,7 @@ classdef MEVD
                 q {mustBeNumeric, mustBeReal, mustBeInRange(q, 0, 1)}
                 min_x double = obj.lower_bound
                 max_x double = obj.upper_bound
-                options.max_iter double = 20
+                options.max_iter double = 200
                 options.abstol double = 1e-4
                 options.reltol double = 1e-6
                 options.bisect_fallback logical = true

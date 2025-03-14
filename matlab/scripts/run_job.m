@@ -73,7 +73,6 @@ function run_job(job_config_path)
 
     % Plot duration distributions
     plot_duration_distributions(duration_dist, base_simulation_table, figure_path, false); % No clipped durations
-    plot_duration_distributions(duration_dist, base_simulation_table, figure_path, true); % With clipped durations
 
     dur_severity_scatterhist = figure('Visible', 'off');
     subplot(2, 2, 3);  % Bottom-left position for scatter plot
