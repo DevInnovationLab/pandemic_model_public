@@ -4,7 +4,7 @@ function [deaths, mortality_losses, output_losses, learning_losses, ...
 
     % run simulation for a pandemic of significant size (not false pos)
     monthly_intensity = severity / (pandemic_natural_dur * 12);
-    monthly_econ_loss = econ_loss_model.predict(severity) / (pandemic_natural_dur * 12); % total months of pandemic
+    monthly_econ_loss = econ_loss_model.predict(monthly_intensity * 12) / 12; % Econ loss is predicted as % annual GPD loss from annual intensity
     actual_dur_months = actual_dur * 12;
 
     % Calculate growth rate and pv factor
