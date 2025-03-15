@@ -54,6 +54,14 @@ class MEVD:
         if base_dist is not None:
             # The user provides a pre-fitted frozen distribution
             self._frozen_dist = base_dist
+
+            if isinstance(self._frozen_dist, TruncatedGPD):
+                self.lower_bound = self._frozen_dist.loc
+                self.upper_bound = self._frozen_dist.upper
+            elif isinstance(self._frozen_dist, genpareto):
+                self.lower_bound = self._frozen_dist.kwds['loc']
+                self.upper_bound = np.inf
+            
         else:
             # We create a frozen distribution from dist_type and dist_params
             if dist_type is None:
@@ -176,9 +184,7 @@ class MEVD:
         """
         return 1.0 - self.cdf(x)
 
-    # This is going to get wonky with share_above_min adjustment.
-
-    def ppf(self, q, min_x=None, max_x=None, max_iter=20, tol=1e-8):
+    def ppf(self, q, min_x=None, max_x=None, max_iter=1000, tol=1e-6):
         """
         Vectorized and optimized version of the PPF (percent point function / quantile function).
         

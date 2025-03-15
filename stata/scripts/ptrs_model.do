@@ -39,6 +39,16 @@ estout vf_model using "./output/ptrs/vf_model.tex", ///
 preserve
     duplicates drop viral_family_enc platform_enc, force
 
+    // Create a temporary capitalized label for viral family
+    label copy viral_family_enc viral_family_enc_cap
+    foreach v of numlist 1/9 { // Magic number so bad
+        local lab : label viral_family_enc `v'
+        label define viral_family_enc_cap `v' "`=proper("`lab'")'", modify
+    }
+
+    // Apply capitalized labels temporarily for plotting
+    label values viral_family_enc viral_family_enc_cap
+
     // Generate predictions
     estimates restore vf_model
     predict preds, xb
@@ -63,10 +73,13 @@ preserve
         ytitle("Predicted PTRS") ///
         xtitle("Viral Family") ///
         legend(order(2 "Traditional" 4 "mRNA") rows(1)) ///
-        scheme(s2color)
+        scheme(s2color) graphregion(color(white)) bgcolor(white)
 
     // Save figure and estimates
     graph export "./output/ptrs/vf_model_preds.png", replace width(2400)
+
+    // Put lower case value labels back
+    label values viral_family_enc viral_family_enc
 
     drop value_min value_max has_adv_rd* respondent *_enc *_lb *_ub ///
         disease _est* *_xpos

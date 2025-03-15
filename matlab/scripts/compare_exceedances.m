@@ -1,11 +1,10 @@
 % Compare Madhav et al. exceedance and our respiratory risk exceedance function. 
 
-outdir = fullfile("./output/jobs/resp");
+outdir = fullfile("./output/jobs/airborne_base");
 rawdir = fullfile(outdir, "raw");
 
 sim_results = readtable(fullfile(rawdir, "baseline_pandemic_table.csv"));
 job_config = yaml.loadFile(fullfile(outdir, "job_config.yaml"));
-severity_dist = load_severity_dist(job_config.severity_dist_config, job_config.false_positive_rate);
 
 % Get severities from simulations
 ex_ante_severity = sim_results.severity;

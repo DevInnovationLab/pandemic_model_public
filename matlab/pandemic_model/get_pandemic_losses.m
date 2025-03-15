@@ -13,10 +13,10 @@ function [deaths, mortality_losses, output_losses, learning_losses, ...
     PV_factor = (1/(1+params.r))^(yr_start-1) .* (1/(1+params.r)).^(1/12 .* months_arr); % Discount factor
 
     % Calc losses
-    deaths = params.P0 / 10000 .* monthly_intensity .* growth_rate; % Growth rate accounts for population growth.
+    deaths = params.P0 / 10000 .* monthly_intensity .* ones(size(months_arr));
 
     % Calculate nominal losses first
-    mortality_losses_nom = params.value_of_death .* deaths; % nominal mortality losses
+    mortality_losses_nom = params.value_of_death .* deaths .* growth_rate; % nominal mortality losses
     output_losses_nom = (params.Y0 .* params.P0) .* monthly_econ_loss .* growth_rate; % nominal output losses
     learning_losses_nom = (10/13.8) .* output_losses_nom; % nominal learning losses
 

@@ -124,8 +124,8 @@ classdef MEVD
                 q {mustBeNumeric, mustBeReal, mustBeInRange(q, 0, 1)}
                 min_x double = obj.lower_bound
                 max_x double = obj.upper_bound
-                options.max_iter double = 200
-                options.abstol double = 1e-4
+                options.max_iter double = 1000
+                options.abstol double = 1e-8
                 options.reltol double = 1e-6
                 options.bisect_fallback logical = true
             end
@@ -210,7 +210,7 @@ classdef MEVD
                 x_mid = x_current(not_done);
                 
                 % Bisection method for remaining points
-                max_bisect_iter = 20;  % Increase from 10 to 20
+                max_bisect_iter = 500;  % Increase from 10 to 20
                 for j = 1:max_bisect_iter
                     cdf_mid = obj.cdf(x_mid);
                     too_low = cdf_mid < q_remain;

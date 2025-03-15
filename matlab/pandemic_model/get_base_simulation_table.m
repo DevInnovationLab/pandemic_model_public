@@ -68,7 +68,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 	sim_nums = unique(response_table.sim_num);
 	pruned_data = cell(length(sim_nums), 1);
 
-	% Parallel loop over each simulation number
+	% Loop over each simulation number
 	parfor sim_idx = 1:length(sim_nums)
 		sim_num = sim_nums(sim_idx);  % Get the current simulation number
 		

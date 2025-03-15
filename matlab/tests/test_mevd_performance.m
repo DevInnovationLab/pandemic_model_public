@@ -10,7 +10,8 @@ classdef test_mevd_performance < matlab.unittest.TestCase
         function setup(testCase)
             % Create a test MEVD instance with realistic parameters
             dist_config_path = '../../output/severity_distributions/allrisk_base.yaml'; % For now just test with one we have at hand.
-            [~, testCase.mevd] = load_arrival_dist(dist_config_path);
+            false_positive_rate = 0;
+            [~, testCase.mevd] = load_arrival_dist(dist_config_path, false_positive_rate);
             testCase.n_samples = 10000;
         end
     end
@@ -36,26 +37,27 @@ classdef test_mevd_performance < matlab.unittest.TestCase
 
         function test_ppf_performance(testCase)
             % Test performance of ppf function with different sample sizes
-            sample_sizes = [100, 1000, 10000, 100000, 1000000];
+            square_sizes = [100, 1000];
             
-            for n = sample_sizes
-                q = linspace(0, 1, n)';
+            for n = square_sizes
+                q_line = linspace(0, 1, n)';
+                q = repmat(q_line, 1, n);
                 
                 % Time the ppf computation
                 tic;
                 reltol = 1e-6;
-                x = testCase.mevd.ppf(q, 'max_iter', 1000, 'reltol', reltol, 'abstol', 1e-32);
+                x = testCase.mevd.ppf(q, 'max_iter', 100, 'reltol', reltol, 'abstol', 1e-4);
                 elapsed = toc;
                 
                 % Basic validation
-                testCase.verifySize(x, [n, 1]);
-                testCase.verifyEqual(x(1), testCase.mevd.lower_bound);
-                testCase.verifyEqual(x(end), testCase.mevd.upper_bound);
+                testCase.verifySize(x, [n, n]);
+                testCase.verifyEqual(x(1,:), ones(size(x(1,:))) .* testCase.mevd.lower_bound);
+                testCase.verifyEqual(x(end,:), ones(size(x(end,:))) .* testCase.mevd.upper_bound);
                 testCase.verifyGreaterThanOrEqual(x, testCase.mevd.lower_bound);
                 testCase.verifyLessThanOrEqual(x, testCase.mevd.upper_bound);
                 
                 fprintf('PPF computation for %d samples took %.3f seconds\n', ...
-                    n, elapsed);
+                    n.^2, elapsed);
                 
                 % Test round-trip accuracy
                 tic;

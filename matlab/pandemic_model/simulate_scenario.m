@@ -296,9 +296,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         m_output_losses = m_losses(:, 2);
                         m_learning_losses = m_losses(:, 3);
                         vax_benefits_PV = sum(u_losses - m_losses, 2);
-
-                        growth_rate = (1+params.y)^(yr_start-1) .* (1+params.y).^(1/12 .* months_arr);
-                        ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000) .* growth_rate), 1);
+                        ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000)), 1);
 
                         % marginal capacity costs
                         inp_marg_costs_m_nom = params.c_m .* cap_m_arr;

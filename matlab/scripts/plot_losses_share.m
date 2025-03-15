@@ -8,14 +8,21 @@ function plot_losses_share(job_dir)
     pandemic_table = pandemic_table(~pandemic_table.is_false, :); % Remove false positives
 
     % Create logarithmic bins in base 10 for severity
-    severity = pandemic_table.severity;
-    min_exp = floor(log10(min(severity)));
-    max_exp = ceil(log10(max(severity)));
-    bin_edges = 10.^(min_exp:1:max_exp); % Create edges at powers of 10
-    [~, ~, bin_indices] = histcounts(severity, bin_edges);
+    intensity = pandemic_table.intensity;
+    % Get min and max values
+    min_val = min(intensity);
+    max_val = max(intensity);
+    
+    % Get powers of 10 between min and max
+    min_exp = ceil(log10(min_val));
+    max_exp = floor(log10(max_val));
+    
+    % Create edges array starting with min value, then powers of 10, then max value
+    bin_edges = [min_val, 10.^(min_exp:max_exp), max_val];
+    [~, ~, bin_indices] = histcounts(intensity, bin_edges);
 
     % Calculate share of events in each bin
-    event_counts = histcounts(severity, bin_edges, 'Normalization', 'probability');
+    event_counts = histcounts(intensity, bin_edges, 'Normalization', 'probability');
 
     % Calculate share of losses in each bin
     pandemic_losses = sum(pandemic_table{:, ["m_mortality_losses", "m_output_losses", "m_learning_losses"]}, 2);
@@ -66,17 +73,17 @@ function plot_losses_share(job_dir)
     % Plot share of events
     subplot(1,2,1)
     barh(bin_labels, event_counts)
-    title('Share of events by severity')
+    title('Share of events by intensity')
     xlabel('Share of events')
-    ylabel('Severity (deaths / 10,000)')
+    ylabel('Intensity (deaths / 10,000 / year)')
     grid on
 
     % Plot share of losses 
     subplot(1,2,2)
     barh(bin_labels, loss_shares)
-    title('Share of losses by severity')
+    title('Share of losses by intensity')
     xlabel('Share of losses')
-    ylabel('Severity (deaths / 10,000)')
+    ylabel('Intensity (deaths / 10,000 / year)')
     grid on
 
     % Save figure
