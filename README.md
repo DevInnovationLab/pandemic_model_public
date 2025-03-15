@@ -39,8 +39,24 @@ We have also added **sensitivity configs**, which we use for runs that conduct s
 To run the model locally, create a job config, a directory with scenario configs and run the following command:
 
 ```
-matlab  -nodesktop -nosplash -r "run('./matlab/load_project'); run_simulations({PATH_TO_JOB_CONFIG})"
+matlab  -nodesktop -nosplash -r "run('./matlab/load_project'); run_job({PATH_TO_JOB_CONFIG})"
 ```
 
-### Cluster using SLURM
-If we ever want to run on a cluster, we will likely want to refactor the simulation script so that each simulation stores its results on disk and then the results are combined at the end in a single process. Or some other way that will allow us to allocate the minimum required memory to each process and still merge all the results at the end.
+### Running Matlab tests
+
+This is easiest to do in the Matlab GUI. Open our Matlab project in the GUI to load our scripts onto path and run
+```
+runtests({path_to_matlab_test});
+```
+
+### Running Stata
+
+Running Stata from the command line is a little janky. You will first need to add your Stata executable to PATH.
+
+Suppose that executable is called StataMP-64, as mine is. After adding it to PATH, you then run:
+
+```
+StataMP-64 -batch "{path_to_stata_do_file}"
+```
+
+This runs the do file and creates a log file with the same name in your working directory which will record Stata's execution of the program.

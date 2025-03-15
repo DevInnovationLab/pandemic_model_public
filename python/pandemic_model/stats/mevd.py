@@ -54,6 +54,14 @@ class MEVD:
         if base_dist is not None:
             # The user provides a pre-fitted frozen distribution
             self._frozen_dist = base_dist
+
+            if isinstance(self._frozen_dist, TruncatedGPD):
+                self.lower_bound = self._frozen_dist.loc
+                self.upper_bound = self._frozen_dist.upper
+            elif isinstance(self._frozen_dist, genpareto):
+                self.lower_bound = self._frozen_dist.kwds['loc']
+                self.upper_bound = np.inf
+            
         else:
             # We create a frozen distribution from dist_type and dist_params
             if dist_type is None:
@@ -113,7 +121,7 @@ class MEVD:
         """
         return self._frozen_dist.pdf(x)
 
-    def _cdf(self, x):
+    def cdf(self, x):
         """
         CDF of the MEVD:
             F_MEVD(x) = (1/N) * sum_{i=1}^N [F_base(x)]^(n_i).
@@ -134,7 +142,7 @@ class MEVD:
         cdf_matrix = np.power(F_base, self.window_counts[:, None])  # shape: (N, M)
         return np.mean(cdf_matrix, axis=0)
 
-    def _pdf(self, x):
+    def pdf(self, x):
         """
         PDF of the MEVD:
             f_MEVD(x) = (1/N) * sum_{i=1}^N n_i [F_base(x)]^(n_i - 1) * f_base(x).
@@ -160,7 +168,7 @@ class MEVD:
         )
         return np.mean(pdf_matrix, axis=0)
 
-    def _sf(self, x):
+    def sf(self, x):
         """
         Survival function (1 - CDF) of the MEVD.
         
@@ -174,11 +182,9 @@ class MEVD:
         array-like
             Survival function values at the specified points.
         """
-        return 1.0 - self._cdf(x)
+        return 1.0 - self.cdf(x)
 
-    # This is going to get wonky with share_above_min adjustment.
-
-    def _ppf(self, q, min_x=None, max_x=None, max_iter=20, tol=1e-8):
+    def ppf(self, q, min_x=None, max_x=None, max_iter=1000, tol=1e-6):
         """
         Vectorized and optimized version of the PPF (percent point function / quantile function).
         
@@ -194,22 +200,23 @@ class MEVD:
         
         min_x = self.lower_bound if min_x is None else min_x
         max_x = self.upper_bound if max_x is None else max_x
-        max_x = max_x if max_x is not None else 2e32 # Some absurdly large number
+        max_x_guess = max_x if max_x is not None else 2e32 # Some absurdly large number
+        q_const = 1 - len(self.non_zero_window_counts) / len(self.window_counts)
 
         # Handle edge cases vectorized
         result = np.zeros_like(q)
-        result[q <= 0] = min_x
+        result[q <= q_const] = min_x
         result[q >= 1] = max_x
         
         # Find indices that need solving
-        mask = (q > 0) & (q < 1)
+        mask = (q > q_const) & (q < 1)
         if not np.any(mask):
             return result
         
         q_solve = q[mask]
         
         # Initial guess using exponential spacing
-        x_guess = np.exp(np.log(min_x) + (np.log(max_x) - np.log(min_x)) * q_solve)
+        x_guess = np.exp(np.log(min_x) + (np.log(max_x_guess) - np.log(min_x)) * q_solve)
         
         # Newton-Raphson method with safeguards
         max_iter = max_iter
@@ -218,8 +225,8 @@ class MEVD:
         converged = False
         
         for _ in range(max_iter):
-            cdf = self._cdf(x)
-            pdf = self._pdf(x)
+            cdf = self.cdf(x)
+            pdf = self.pdf(x)
             
             # Avoid division by zero
             valid_pdf = (pdf > 1e-10)

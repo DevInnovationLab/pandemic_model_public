@@ -19,22 +19,22 @@ classdef EconLossModel
         end
 
         % Predict share GDP loss (fraction)
-        function y_hat = predict(obj, severity)
+        function y_hat = predict(obj, intensity)
             arguments
                 obj
-                severity (:,:) {mustBeNumeric}
+                intensity (:,:) {mustBeNumeric}
             end
 
-            if height(obj.coefs) ~= width(severity)
+            if height(obj.coefs) ~= width(intensity)
                 error("Matrices must conform")
             end
 
             if obj.family == "loglogreg"
-                y_hat = exp(log(severity) * obj.coefs+ obj.intercept);
+                y_hat = exp(log(intensity) * obj.coefs+ obj.intercept);
             elseif obj.family == "linear"
-                y_hat = log(severity) * obj.coefs + obj.intercept;
+                y_hat = log(intensity) * obj.coefs + obj.intercept;
             elseif obj.family == "poisson"
-                y_hat = exp(log(severity) * obj.coefs + obj.intercept);
+                y_hat = exp(log(intensity) * obj.coefs + obj.intercept);
             end
         end
     end

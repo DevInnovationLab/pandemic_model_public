@@ -33,17 +33,17 @@ if __name__ == "__main__":
     econ_loss_raw = pd.read_excel("./data/raw/Economic damages source review.xlsx", sheet_name="Updated numbers")
 
     # Rename and preprocess columns
-    econ_loss = econ_loss_raw.rename(columns={'Fraction GDP losses': 'share_gdp_loss',
-                                              'Mortality (SMU)': 'mortality_smu',
+    econ_loss = econ_loss_raw.rename(columns={'Annual fraction GPD losses': 'annual_share_gdp_loss',
+                                              'Intensity (SMU)': 'intensity',
                                               'Disease': 'disease'})
-    econ_loss['pct_gdp_loss'] = econ_loss['share_gdp_loss'] * 100
-    econ_loss = econ_loss[['share_gdp_loss', 'pct_gdp_loss', 'mortality_smu', 'disease']]
+    econ_loss['annual_pct_gdp_loss'] = econ_loss['annual_share_gdp_loss'] * 100
+    econ_loss = econ_loss[['annual_share_gdp_loss', 'annual_pct_gdp_loss', 'intensity', 'disease']]
     econ_loss_clean = econ_loss.dropna(axis=0) # Drop rows with missing values
 
     # ------ Fit poisson model --------------------------------
 
-    X = np.log(econ_loss_clean[['mortality_smu']]) # Log transform
-    y = econ_loss_clean['share_gdp_loss']
+    X = np.log(econ_loss_clean[['intensity']]) # Log transform
+    y = econ_loss_clean['annual_share_gdp_loss']
     
     # Add constant for statsmodels
     X_sm = sm.add_constant(X)
@@ -63,12 +63,12 @@ if __name__ == "__main__":
 
     # Plot data 
     fig, ax = plt.subplots(figsize=(10, 8))
-    ax.scatter(econ_loss_clean['mortality_smu'], econ_loss_clean['pct_gdp_loss'], color="steelblue", s=80, alpha=0.7, label="Data Points")
+    ax.scatter(econ_loss_clean['intensity'], econ_loss_clean['annual_pct_gdp_loss'], color="steelblue", s=80, alpha=0.7, label="Data Points")
 
     # Annotate each point with the disease name
     for i, disease in enumerate(econ_loss_clean['disease']):
-        ax.text(econ_loss_clean['mortality_smu'].iloc[i] * 1.22,
-                econ_loss_clean['pct_gdp_loss'].iloc[i] * 0.98, 
+        ax.text(econ_loss_clean['intensity'].iloc[i] * 1.22,
+                econ_loss_clean['annual_pct_gdp_loss'].iloc[i] * 0.98, 
                 disease, 
                 fontsize=12,
                 ha='left',
@@ -76,9 +76,9 @@ if __name__ == "__main__":
                 color='darkblue')
 
     # Labels and title
-    ax.set_title(r"Pandemic deaths per 10,000 vs percent GDP loss")
-    ax.set_xlabel("Mortality (Deaths per 10,000)")
-    ax.set_ylabel(r"% GDP Loss")
+    ax.set_title(r"Pandemic intensity vs percent annual GDP loss")
+    ax.set_xlabel("Intensity (Deaths per 10,000)")
+    ax.set_ylabel("Annual GDP Loss (%)")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
@@ -88,8 +88,8 @@ if __name__ == "__main__":
 
     # Fitted lines for linear scale
     log_xrange = np.linspace(
-        np.log(econ_loss_clean['mortality_smu'].min() / 2),
-        np.log(econ_loss_clean['mortality_smu'].max()), 100
+        np.log(econ_loss_clean['intensity'].min() / 2),
+        np.log(econ_loss_clean['intensity'].max()), 100
     ).reshape(-1, 1)
 
     # Add constant to prediction range
@@ -130,14 +130,14 @@ if __name__ == "__main__":
     latex_table = (
         "\\begin{table}[h]\n"
         "\\centering\n"
-        "\\caption{Poisson Regression Results with HC3 Robust Standard Errors}\n"
+        "\\caption{Poisson Regression Results with HC0 Robust Standard Errors}\n"
         "\\label{tab:poisson_results}\n"
         "\\begin{tabular}{lcccc}\n"
         "\\toprule\n"
         "Parameter & Coefficient & Std. Error & z-value & p-value \\\\\n"
         "\\midrule\n"
         f"Intercept & {pm_results.params[0]:.3f} & {std_errors[0]:.3f} & {z_scores[0]:.3f} & {p_values[0]:.3f} \\\\\n"
-        f"log(Mortality) & {pm_results.params[1]:.3f} & {std_errors[1]:.3f} & {z_scores[1]:.3f} & {p_values[1]:.3f} \\\\\n"
+        f"log(Intensity) & {pm_results.params[1]:.3f} & {std_errors[1]:.3f} & {z_scores[1]:.3f} & {p_values[1]:.3f} \\\\\n"
         "\\midrule\n"
         f"Deviance & \\multicolumn{{4}}{{l}}{{{model_deviance:.3f}}} \\\\\n"
         "\\bottomrule\n"
@@ -152,8 +152,8 @@ if __name__ == "__main__":
 
     # ------ Fit log log regression --------------------------------
     
-    X = np.log(econ_loss_clean[['mortality_smu']])
-    y = np.log(econ_loss_clean['share_gdp_loss'])
+    X = np.log(econ_loss_clean[['intensity']])
+    y = np.log(econ_loss_clean['annual_share_gdp_loss'])
 
     llreg = LinearRegression()
     llreg.fit(X, y)
@@ -167,13 +167,13 @@ if __name__ == "__main__":
     col_loglog = '#e74c3c'  # A red color to contrast with the green poisson plot
 
     # Plot data points
-    ax.scatter(econ_loss_clean['mortality_smu'], econ_loss_clean['share_gdp_loss'] * 100,
+    ax.scatter(econ_loss_clean['intensity'], econ_loss_clean['annual_share_gdp_loss'] * 100,
               alpha=0.6, color=col_loglog)
 
     # Add labels and title
-    ax.set_xlabel('Deaths per 10,000 population')
-    ax.set_ylabel('GDP Loss (%)')
-    ax.set_title('Economic Loss vs. Pandemic Severity (Log-Log Model)')
+    ax.set_xlabel('Deaths / 10,000 / year')
+    ax.set_ylabel('Annual GDP Loss (%)')
+    ax.set_title('Economic Loss vs. pandemic intensity (log-log model)')
 
     # Remove top and right spines
     ax.spines['top'].set_visible(False)
@@ -185,8 +185,8 @@ if __name__ == "__main__":
 
     # Fitted line for log-log regression
     log_xrange = np.linspace(
-        np.log(econ_loss_clean['mortality_smu'].min() / 2),
-        np.log(econ_loss_clean['mortality_smu'].max()), 100
+        np.log(econ_loss_clean['intensity'].min() / 2),
+        np.log(econ_loss_clean['intensity'].max()), 100
     ).reshape(-1, 1)
 
     y_pred_loglog = np.exp(llreg.predict(log_xrange)) * 100  # Scale to percentage
@@ -196,7 +196,7 @@ if __name__ == "__main__":
     
     # Calculate R^2 in both log and linear space
     r2_log = r2_score(y, llreg.predict(X))
-    r2_linear = r2_score(econ_loss_clean['share_gdp_loss'], 
+    r2_linear = r2_score(econ_loss_clean['annual_share_gdp_loss'], 
                         np.exp(llreg.predict(X)))
     
     # Display both R^2 values
@@ -234,7 +234,7 @@ if __name__ == "__main__":
     y_pred_loglog_ext = np.exp(llreg.predict(log_xrange_extended)) * 100
 
     # Plot data points
-    ax.scatter(econ_loss_clean['mortality_smu'], econ_loss_clean['share_gdp_loss'] * 100,
+    ax.scatter(econ_loss_clean['intensity'], econ_loss_clean['annual_share_gdp_loss'] * 100,
               alpha=0.6, color='gray', label='Data')
 
     # Plot both curves
@@ -244,9 +244,9 @@ if __name__ == "__main__":
             linewidth=2.5, color=col_loglog, label='Log-Log')
 
     # Add labels and title
-    ax.set_xlabel('Deaths per 10,000 population')
-    ax.set_ylabel('GDP Loss (%)')
-    ax.set_title('Economic Loss Models Comparison')
+    ax.set_xlabel('Deaths per 10,000 / year')
+    ax.set_ylabel('Annual GDP loss (%)')
+    ax.set_title('Economic loss models comparison')
 
     # Remove top and right spines
     ax.spines['top'].set_visible(False)

@@ -24,7 +24,7 @@ function run_job(job_config_path)
     create_folders_recursively(figure_path);
 
     % Load inputs from files
-    severity_dist = load_severity_dist(job_config.severity_dist_config, job_config.false_positive_rate);
+    [metric, arrival_dist] = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
     viral_family_data = readtable(job_config.viral_family_data, "TextType", "string");
     ptrs_vf = readtable(job_config.ptrs_vf, "TextType", "string");
@@ -35,7 +35,7 @@ function run_job(job_config_path)
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
     % Generate base simulation to be used across scenarios
-    base_simulation_table = get_base_simulation_table(severity_dist, duration_dist, viral_family_data, job_config.seed, job_config);
+    base_simulation_table = get_base_simulation_table(arrival_dist, metric, duration_dist, viral_family_data, job_config.seed, job_config);
     base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
     save(base_simulation_table_path, 'base_simulation_table');
 
@@ -49,10 +49,6 @@ function run_job(job_config_path)
     ylabel("Average number of pandemics per simulation (200 years)");
     title("Histogram of pandemic severities for average simulation");
     saveas(average_simulation_hist, fullfile(figure_path, "average_simulation_hist.jpg"));
-
-    % Ex ante severity exceedance function
-    ex_ante_severity_fig = plot_ex_ante_severity_exceedance(severity_dist);
-    saveas(ex_ante_severity_fig, fullfile(figure_path, "ex_ante_severity_exceedance.png"));
 
     % Ex post severity exceedance function
     ex_post_severity_fig = figure('Visible', 'off');
@@ -77,7 +73,6 @@ function run_job(job_config_path)
 
     % Plot duration distributions
     plot_duration_distributions(duration_dist, base_simulation_table, figure_path, false); % No clipped durations
-    plot_duration_distributions(duration_dist, base_simulation_table, figure_path, true); % With clipped durations
 
     dur_severity_scatterhist = figure('Visible', 'off');
     subplot(2, 2, 3);  % Bottom-left position for scatter plot

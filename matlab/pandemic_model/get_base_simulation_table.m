@@ -1,65 +1,41 @@
-function simulation_table = get_base_simulation_table(severity_dist, duration_dist, viral_family_data, seed, params)
+function simulation_table = get_base_simulation_table(arrival_dist, metric, duration_dist, viral_family_data, seed, params)
 
 	% Set seed
 	rng(seed);
 
-	severity_matrix = severity_dist.get_severity(unifrnd(0, 1, params.num_simulations, params.sim_periods));
-	severity_matrix(:, 1) = 0;  % Assume no pandemics in first year so capacity logic works.
 	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 	duration_matrix(:, 1) = 0; % Assume no pandemics in first year so capacity logic works.
-	intensity_matrix = severity_matrix ./ duration_matrix;
+
+	if strcmp(metric, 'severity')
+		severity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
+		severity_matrix(:, 1) = 0;  % Assume no pandemics in first year so capacity logic works.
+		intensity_matrix = severity_matrix ./ duration_matrix;
+	end
+		
+	if strcmp(metric, 'intensity')
+		intensity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
+		intensity_matrix(:, 1) = 0;
+		severity_matrix = intensity_matrix .* duration_matrix;
+	end
+
 	intensity_matrix(duration_matrix == 0) = 0; % No intensity when pandemic has zero duration.
+	
 	response_idx = find(intensity_matrix > params.response_threshold); % indicator array for when severity triggers pandemic response
 	num_response_scenario = size(response_idx, 1);
 
-	% Plot intensity exceedance
-	% Plot intensity here
-	intensities_for_plot = sort(intensity_matrix(severity_matrix > severity_dist.min_severity));
-	total_draws = params.num_simulations * params.sim_periods;
-	[unique_intensities, ~, ic] = unique(intensities_for_plot);
-	intensity_counts = histcounts(ic, 1:max(ic)+1); % Count occurrences of each unique intensity
-	emp_min_intensity_prob = 1 - sum(intensity_counts) / total_draws;
-	cdf = (cumsum(intensity_counts) / sum(intensity_counts)) * (sum(intensity_counts) / total_draws) + emp_min_intensity_prob;
-	exceedance = 1 - cdf;
+	% Plot empirical intensity exceedance
+	if strcmp(metric, 'severity')
+		condition_matrix = severity_matrix;
+	elseif strcmp(metric, 'intensity')
+		condition_matrix = intensity_matrix;
+	end
 
-	% Plot the empirical intensity exceedance function
-	figure('Visible', 'off');
-	plot(unique_intensities, exceedance, 'b-', 'LineWidth', 1.5); % Plot with a blue line
-	grid on;
-	xlabel('Deaths per 10,000 per year'); % Label for x-axis
-	ylabel('Exceedance probability'); % Label for y-axis
-	title('Empirical pandemic intensity exceedance function'); % Plot title
-
-	% Customize plot appearance
-	set(gca, 'XScale', 'log');
-	set(gca, 'FontSize', 11); % Set axis font size
-	xlim([min(unique_intensities), max(unique_intensities)]);
-    ylim([min(exceedance), max(exceedance)]);
-
-	% Add intensity threshold to figure
-	threshold_x = params.response_threshold;
-	threshold_y = interp1(unique_intensities, exceedance, threshold_x); % May want to interpolate with a different method
-
-	hold on;
-	plot(threshold_x, threshold_y, 'rs', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
-
-	% Add dashed lines from the threshold point to the axes
-	plot([threshold_x threshold_x], [0 threshold_y], 'r--');  % Vertical line to x-axis
-	plot([min(unique_intensities) threshold_x], [threshold_y threshold_y], 'r--');  % Horizontal line to y-axis
-
-	% Add label to the point
-	text(threshold_x * 0.95, threshold_y * 0.95, sprintf('Pandemic response\nthreshold: %.2f', threshold_x), ...
-		'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 8);
-	hold off;
-
-	saveas(gcf, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"))
-
-	% Plotting severity exceedance, do non nan effective severity
-	% Same with durations
+	empirical_intensity_exceed_fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_matrix, arrival_dist.lower_bound, params);
+	saveas(empirical_intensity_exceed_fig, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"))
 
 	% Create table of pandemic scenarios
-	sim_num = mod(response_idx - 1, size(severity_matrix, 1)) + 1;
-	yr_start = ceil(response_idx / size(severity_matrix, 1));
+	sim_num = mod(response_idx - 1, size(duration_matrix, 1)) + 1;
+	yr_start = ceil(response_idx / size(duration_matrix, 1));
 	severity = severity_matrix(response_idx);
 	natural_dur = duration_matrix(response_idx);
 	intensity = intensity_matrix(response_idx);
@@ -92,7 +68,7 @@ function simulation_table = get_base_simulation_table(severity_dist, duration_di
 	sim_nums = unique(response_table.sim_num);
 	pruned_data = cell(length(sim_nums), 1);
 
-	% Parallel loop over each simulation number
+	% Loop over each simulation number
 	parfor sim_idx = 1:length(sim_nums)
 		sim_num = sim_nums(sim_idx);  % Get the current simulation number
 		

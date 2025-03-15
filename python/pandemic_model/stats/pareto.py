@@ -38,6 +38,15 @@ class TruncatedGPD:
             raise ValueError("Scale parameter must be positive")
         if upper is not None and upper <= loc:
             raise ValueError("Upper bound must be greater than location parameter")
+        
+    @property
+    def params(self):
+        """Get the distribution parameters as a tuple.
+        
+        Returns:
+            tuple: Distribution parameters (xi, upper, loc, scale)
+        """
+        return (self.xi, self.upper, self.loc, self.scale)
     
     def pdf(self, x):
         """Probability density function.

@@ -18,26 +18,26 @@ class TestMEVD(unittest.TestCase):
         self.x_vals = np.linspace(self.params['loc'], 1e6, 100)
 
     def test_cdf_range(self):
-        cdf_vals = self.mevd._cdf(self.x_vals)
+        cdf_vals = self.mevd.cdf(self.x_vals)
         self.assertTrue(np.all((cdf_vals >= 0) & (cdf_vals <= 1)))
 
     def test_sf_cdf_relationship(self):
-        cdf_vals, sf_vals = self.mevd._cdf(self.x_vals), self.mevd._sf(self.x_vals)
+        cdf_vals, sf_vals = self.mevd.cdf(self.x_vals), self.mevd.sf(self.x_vals)
         np.testing.assert_allclose(cdf_vals + sf_vals, np.ones_like(self.x_vals), rtol=1e-5)
 
     def test_pdf_positivity(self):
-        self.assertTrue(np.all(self.mevd._pdf(self.x_vals) >= 0))
+        self.assertTrue(np.all(self.mevd.pdf(self.x_vals) >= 0))
 
     def test_cdf_monotonicity(self):
-        self.assertTrue(np.all(np.diff(self.mevd._cdf(self.x_vals)) >= -1e-6))
+        self.assertTrue(np.all(np.diff(self.mevd.cdf(self.x_vals)) >= -1e-6))
 
     def test_ppf_inverse(self):
         x_test = np.linspace(self.params['loc'] + 0.1, 15, 10)
-        np.testing.assert_allclose(self.mevd._ppf(self.mevd._cdf(x_test)), x_test, rtol=1e-3)
+        np.testing.assert_allclose(self.mevd.ppf(self.mevd.cdf(x_test)), x_test, rtol=1e-3)
 
     def test_ppf_scalar_vs_array(self):
         q_scalar, q_array = 0.5, np.array([0.5])
-        np.testing.assert_allclose(self.mevd._ppf(q_scalar), self.mevd._ppf(q_array)[0], rtol=1e-6)
+        np.testing.assert_allclose(self.mevd.ppf(q_scalar), self.mevd.ppf(q_array)[0], rtol=1e-6)
 
     def test_gpd_equivalence(self):
         """Test that an MEVD with one observation per window is equal to the base distribution."""
@@ -45,8 +45,8 @@ class TestMEVD(unittest.TestCase):
         arrival_counts = np.repeat(1, n_samples)
         mevd = MEVD(arrival_counts, dist_type='genpareto', dist_params=self.params)
         x_vals = np.linspace(self.params['loc'], 1e6, 100)
-        base_cdf = mevd._frozen_dist
-        np.testing.assert_allclose(mevd._cdf(x_vals), base_cdf.cdf(x_vals), rtol=1e-3)
+        base_cdf = mevd.frozen_dist
+        np.testing.assert_allclose(mevd.cdf(x_vals), base_cdf.cdf(x_vals), rtol=1e-3)
 
 if __name__ == "__main__":
     unittest.main()

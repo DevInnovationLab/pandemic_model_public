@@ -122,6 +122,8 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
             rental_income_fractions = get_rental_fractions(params, adv_cap_m_over_time, adv_cap_o_over_time);
             adv_cap_maintenance_cost_over_time_rent_adjusted = adv_cap_maintenance_cost_over_time .* (1-rental_income_fractions);
             total_adv_cap_costs_over_time = adv_cap_maintenance_cost_over_time_rent_adjusted + adv_cap_capital_costs_over_time;
+            cap_avail_m = adv_cap_m_over_time(end);
+            cap_avail_o = adv_cap_o_over_time(end);
             
             % Calculate present_value
             total_adv_cap_costs_over_time_pv = total_adv_cap_costs_over_time .* (1./((1+params.r).^(1:params.sim_periods)));
@@ -254,6 +256,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         
                         vax_fraction_end = NaN;
                         vax_benefits_PV = zeros(tot_months, 1);
+                        vax_benefits_nom = zeros(tot_months, 1);
                         inp_marg_costs_m_PV = zeros(tot_months, 1);
                         inp_marg_costs_o_PV = zeros(tot_months, 1);
                         u_deaths = zeros(tot_months, 1);
@@ -293,9 +296,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         m_output_losses = m_losses(:, 2);
                         m_learning_losses = m_losses(:, 3);
                         vax_benefits_PV = sum(u_losses - m_losses, 2);
-
-                        growth_rate = (1+params.y)^(yr_start-1) .* (1+params.y).^(1/12 .* months_arr);
-                        ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000) .* growth_rate), 1);
+                        ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000)), 1);
 
                         % marginal capacity costs
                         inp_marg_costs_m_nom = params.c_m .* cap_m_arr;

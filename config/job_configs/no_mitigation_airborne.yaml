@@ -1,8 +1,8 @@
 # Run params
-num_simulations: 5000
+num_simulations: 10000
 sim_periods: 200
 outdir: "./output/jobs"
-scenario_configs: "./config/scenario_configs/pilot"
+scenario_configs: "./config/scenario_configs/no_mitigation"
 seed: 42
 add_datetime_to_outdir: 0
 sim_scens_path: null # Load previously created pandemic simulations (rather than creating new ones with parameters below)
@@ -17,13 +17,13 @@ P0: 7.91e9 # Base year population (2021)
 Y0: 12316.1 # Base year GDP
 value_of_death: 1.3e6
 conservative: 1 # Whether harm avoided is calculated at beginning (conservative) or end of period (not conservative)
-gamma: 0.5 # fraction of remaining harm mitigated by vaccine
+gamma: 0 # fraction of remaining harm mitigated by vaccine. None since no mitigation
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-severity_dist_config: "./output/severity_distributions/truncpareto_all_risk.yaml"
-duration_dist_config: "./output/duration_distributions/all_risk.yaml"
-viral_family_data: "./data/clean/vf_data_arrival_all.csv"
+arrival_dist_config: "./output/severity_distributions/airborne_base.yaml"
+duration_dist_config: "./output/duration_distributions/airborne_base.yaml"
+viral_family_data: "./data/clean/vf_data_arrival_all_airborne.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 ptrs_vf: "./output/ptrs/vf_model_preds.csv"
 ptrs_rd: "./output/ptrs/rd_model_preds.csv"
@@ -66,5 +66,5 @@ adv_RD_benefit_start: 15 # years until advance R&D benefits apply
 # Surveillance
 surveillance_thresholds: [0, 0] # First is for regular signal, second is for enhanced surveillance signal.
 surveil_annual_installation_spend: 5e9 # Initial spending to install enhanced surveillance
-surveil_installation_years: 2 # Time initial costs are incurred
+surveil_installation_years: 2e9 # Time initial costs are incurred
 surveil_maintenance_spend: 1.25e9 # Maintenance spending on enhanced surveillance

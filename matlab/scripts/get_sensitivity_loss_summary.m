@@ -17,13 +17,14 @@ function get_sensitivity_loss_summary(sensitivity_dir)
     baseline_vsl = baseline_config.value_of_death;
     baseline_r = baseline_config.r;
     baseline_y = baseline_config.y;
+    baseline_periods = baseline_config.sim_periods;
 
     % First get baseline results from raw directory
     baseline_dir = fullfile(sensitivity_dir, 'baseline', 'raw');
 
     % Get baseline losses
     [baseline_mortality, baseline_economic, baseline_learning, baseline_total] = ...
-        get_losses_for_dir(baseline_dir);
+        get_losses_for_dir(baseline_dir, baseline_r, baseline_periods);
 
     % Initialize summary table with baseline
     summary_table = table('Size', [1 6], 'VariableTypes', {'string', 'string', 'double', 'double', 'double', 'double'});
@@ -42,6 +43,7 @@ function get_sensitivity_loss_summary(sensitivity_dir)
         % Load results for each value
         for j = 1:length(var_values)
             value_dir = fullfile(var_dir, sprintf('value_%d', j));
+            raw_dir = fullfile(value_dir, "raw");
             run_config = yaml.loadFile(fullfile(value_dir, "job_config.yaml"));
             r = run_config.r;
             periods = run_config.sim_periods;
@@ -61,7 +63,7 @@ end
 % Function to load and process losses for a given directory
 function [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir, r, periods)
     % Load and process mortality losses
-    annualization_factor = (1 - (1 + r).^-periods) ./ r;
+    annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
 
     mortality_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_mortality_losses.csv'));
     mortality_loss = mean(sum(mortality_ts, 2)) .* annualization_factor;
@@ -106,7 +108,10 @@ function write_to_latex(summary_data, outpath)
     fprintf(fileID, '\\midrule\n');
 
     % Identify unique scenario categories (Variable column)
+    % Get unique variables and ensure baseline comes first
     uniqueVars = unique(summary_data.Variable);
+    baselineIdx = strcmp(uniqueVars, 'Baseline');
+    uniqueVars = [uniqueVars(baselineIdx); uniqueVars(~baselineIdx)];
 
     for i = 1:length(uniqueVars)
         % Get rows for the current scenario
@@ -167,14 +172,14 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             elseif var_value > baseline_vsl
                 formatted_value = sprintf("Increase to \\$%g million", var_value/1e6);
             end
-        case "severity_dist_config"
-            formatted_name = "Severity distribution";
+        case "arrival_dist_config"
+            formatted_name = "Arrival distribution";
             if contains(var_value, "half_arrival")
                 formatted_value = "Halve arrival rate";
             elseif contains(var_value, "double_arrival")
                 formatted_value = "Double arrival rate";
-            elseif contains(var_value, "truncate_half")
-                formatted_value = "Halve upper truncation";
+            elseif contains(var_value, "ext")
+                formatted_value = "Run to extinction";
             end
         case "y"
             formatted_name = "GDP growth rate $y$";

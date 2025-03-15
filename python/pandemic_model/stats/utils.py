@@ -11,3 +11,10 @@ def mcf_pseudo_r2(y, y_pred):
   ll_null = np.sum(y * np.log(mean_response) - mean_response - gammaln(y + 1))
 
   return 1 - (ll_model / ll_null)
+
+# Transforms to right unbounded domain from Cirillo and Taleb (2020)
+def taleb_transform(x, lower, upper):
+		return lower - upper * np.log((upper - x) / (upper - lower))
+
+def taleb_inverse(x, lower, upper):
+		return upper - (upper - lower) * np.exp((lower - x) / upper)
