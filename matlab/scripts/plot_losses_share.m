@@ -1,5 +1,5 @@
 function plot_losses_share(job_dir)
-    % Plots share of losses and share of events by pandemic severity bins
+    % Plots share of losses and share of events by pandemic severity bins, along with Lorenz curve
     % Args:
     %   job_dir: Directory containing job configuration and results
 
@@ -13,12 +13,8 @@ function plot_losses_share(job_dir)
     min_val = min(intensity);
     max_val = max(intensity);
     
-    % Get powers of 10 between min and max
-    min_exp = ceil(log10(min_val));
-    max_exp = floor(log10(max_val));
-    
-    % Create edges array starting with min value, then powers of 10, then max value
-    bin_edges = [min_val, 10.^(min_exp:max_exp), max_val];
+    % Create 5 logarithmic bins between min and max
+    bin_edges = logspace(log10(min_val), log10(max_val), 6);
     [~, ~, bin_indices] = histcounts(intensity, bin_edges);
 
     % Calculate share of events in each bin
@@ -64,31 +60,75 @@ function plot_losses_share(job_dir)
         
         bin_labels{i} = sprintf('%s - %s', label_start, label_end);
     end
-    % Convert to categorical and preserve order
-    bin_labels = categorical(bin_labels, 'Ordinal', true);
+    
+    % Ensure bins are ordered by size (smallest to largest)
+    % Convert to categorical with explicit ordering
+    bin_labels_cat = categorical(bin_labels);
+    bin_labels_cat = reordercats(bin_labels_cat, bin_labels);
 
-    % Create figure
-    fig = figure('Position', [100 100 1200 500]);
+    % Create figure for bar plots
+    fig1 = figure('Position', [100 100 1000 500]);
 
     % Plot share of events
     subplot(1,2,1)
-    barh(bin_labels, event_counts)
+    b1 = bar(bin_labels_cat, event_counts);
     title('Share of events by intensity')
-    xlabel('Share of events')
-    ylabel('Intensity (deaths / 10,000 / year)')
+    ylabel('Share of events')
+    xlabel('Intensity (deaths / 10,000 / year)')
+    xtickangle(45)
+    box off
     grid on
+    ax = gca;
+    ax.GridAlpha = 0.1;
 
     % Plot share of losses 
     subplot(1,2,2)
-    barh(bin_labels, loss_shares)
+    b2 = bar(bin_labels_cat, loss_shares);
     title('Share of losses by intensity')
-    xlabel('Share of losses')
-    ylabel('Intensity (deaths / 10,000 / year)')
+    ylabel('Share of losses')
+    xlabel('Intensity (deaths / 10,000 / year)')
+    xtickangle(45)
+    box off
     grid on
+    ax = gca;
+    ax.GridAlpha = 0.1;
 
-    % Save figure
+    % Save bar plots figure
     comparisons_dir = fullfile(job_dir, "figures", "comparison");
     create_folders_recursively(comparisons_dir);
-    saveas(fig, fullfile(comparisons_dir, "losses_share.png"));
-    close(fig);
+    % Save high resolution figure using print instead of saveas
+    print(fig1, fullfile(comparisons_dir, "losses_share_bars.png"), '-dpng', '-r450');
+    close(fig1);
+
+    % Create separate figure for Lorenz curve
+    fig2 = figure('Position', [100 100 800 600]);
+
+    % Sort intensities and corresponding losses
+    sorted_losses = sort(pandemic_losses);
+    cum_event_share = (1:length(sorted_losses))' / length(sorted_losses);
+    cum_loss_share = cumsum(sorted_losses) / sum(sorted_losses);
+    
+    % Calculate Gini coefficient
+    % Gini = A/(A+B) where A is area between Lorenz curve and equality line
+    % and A+B is total area under equality line (0.5)
+    area_under_lorenz = trapz([0; cum_event_share], [0; cum_loss_share]);
+    gini = 1 - 2*area_under_lorenz;
+    
+    % Add perfect equality line
+    plot([0 1], [0 1], '--k', 'LineWidth', 1)
+    hold on
+    % Plot Lorenz curve
+    plot([0; cum_event_share], [0; cum_loss_share], 'b-', 'LineWidth', 2)
+    title(sprintf('Lorenz curve for pandemic losses\nGini coefficient: %.2f', gini))
+    xlabel('Cumulative share of events')
+    ylabel('Cumulative share of losses')
+    ylim([0 1])
+    box off
+    grid on
+    ax = gca;
+    ax.GridAlpha = 0.1;
+
+    % Save high resolution figure using print instead of saveas
+    print(fig2, fullfile(comparisons_dir, "losses_share_lorenz.png"), '-dpng', '-r450');
+    close(fig2);
 end

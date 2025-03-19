@@ -1,14 +1,4 @@
 function simulate_scenario(simulation_table, econ_loss_model, params)
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    % NOTE:
-    % In these codes, capacity units are in outright levels, whereas anything denominated
-    % in dollars is calculated / passed in millions (save for the end, when we dump results out
-    % for display, for which we put capacity and anything in dollars into bn of units)
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    %%%%%%%%%%%%%%%% PARAMETERS
-
     %%%%%%% LOAD SCENS
     % Consider moving this later
     simulation_table = removevars(simulation_table, {'posterior1', 'posterior2'}); % remove the random draw columns
@@ -90,12 +80,14 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
 
 
     % Adv R&D costs
-    time_arr = (1:params.adv_RD_benefit_start)';
-    PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
+    if params.adv_RD
+        time_arr = (1:params.adv_RD_benefit_start)';
+        PV_factor_yr = (1+params.r).^(-time_arr); % array of discount factors
 
-    adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, sim_cnt); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
-    sim_out_arr_costs_adv_RD_nom(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl;
-    sim_out_arr_costs_adv_RD_PV(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl .* repmat(PV_factor_yr, 1, sim_cnt );
+        adv_RD_spend_bn_tbl = repmat(params.adv_RD_spend / params.adv_RD_benefit_start, params.adv_RD_benefit_start, sim_cnt); % in millions (consistent with the fact that everthing in codes is in mn, and all time series are in mn as well)
+        sim_out_arr_costs_adv_RD_nom(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl;
+        sim_out_arr_costs_adv_RD_PV(1:params.adv_RD_benefit_start, :) = adv_RD_spend_bn_tbl .* repmat(PV_factor_yr, 1, sim_cnt);
+    end
 
     tic;
     fprintf('Starting simulations...');

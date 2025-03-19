@@ -101,7 +101,14 @@ function run_job(job_config_path)
     out_params.scenarios = {};
     
     % Handle folderpath input for scenario configs
-    scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
+    if isfolder(job_config.scenario_configs)
+        scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
+    elseif isfile(job_config.scenario_configs)
+        scenario_config_paths = dir(fullfile(job_config.scenario_configs));
+    else
+        print("Improper scenario config")
+    end
+
     for i = 1:length(scenario_config_paths)
         % Load scenario config
         scenario_config_path = fullfile(scenario_config_paths(i).folder, scenario_config_paths(i).name);
@@ -145,8 +152,15 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
     end
 
     % Set pathogen family params.
+    invest_strategy =scenario_config.rd_investments.strategy;
+    num_vfs_researched = scenario_config.rd_investments.num;
     updated_params.viral_families_researched = parse_rd_investments(scenario_config.rd_investments, viral_family_data);
-    num_vfs_researched = length(updated_params.viral_families_researched); % Check dimensions here
+
+    if strcmp(invest_strategy, "top") || strcmp(invest_strategy, "random")
+        updated_params.adv_RD = true;
+    else
+        updated_params.adv_RD = false;
+    end
 
     updated_params.adv_RD_spend = updated_params.adv_RD_cost_per_pathogen * ...
         updated_params.pathogens_per_family * ... 

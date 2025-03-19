@@ -30,7 +30,16 @@ function run_multiparameter_sensitivity(sensitivity_config)
     % Runs sensitivity analysis where each variation changes multiple parameters
     % E.g. compare_old.yaml style configs
     
+    % Get base config and apply any fixed parameter overrides
     base_config = get_base_config(sensitivity_config);
+    if isfield(sensitivity_config, 'fix_params') && ~isempty(sensitivity_config.fix_params)
+        fix_params = sensitivity_config.fix_params;
+        param_names = fieldnames(fix_params);
+        for k = 1:length(param_names)
+            base_config.(param_names{k}) = fix_params.(param_names{k});
+        end
+    end
+    
     base_dir = setup_sensitivity_dirs(sensitivity_config);
     run_baseline(base_config, base_dir);
     
@@ -49,7 +58,7 @@ function run_multiparameter_sensitivity(sensitivity_config)
             
         % Update all parameters in this combination
         param_names = fieldnames(vary_params);
-        for k = 1:length(vary_params)
+        for k = 1:length(param_names)
             run_config.(param_names{k}) = vary_params.(param_names{k});
         end
         
@@ -64,7 +73,16 @@ function run_oneparameter_sensitivity(sensitivity_config)
     % Runs sensitivity analysis where each variation changes one parameter
     % E.g. no_mitigation.yaml style configs
     
+    % Get base config and apply any fixed parameter overrides
     base_config = get_base_config(sensitivity_config);
+    if isfield(sensitivity_config, 'fix_params') && ~isempty(sensitivity_config.fix_params)
+        fix_params = sensitivity_config.fix_params;
+        param_names = fieldnames(fix_params);
+        for k = 1:length(param_names)
+            base_config.(param_names{k}) = fix_params.(param_names{k});
+        end
+    end
+    
     base_dir = setup_sensitivity_dirs(sensitivity_config);
     run_baseline(base_config, base_dir);
     

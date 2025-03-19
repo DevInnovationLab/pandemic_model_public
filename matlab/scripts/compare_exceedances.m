@@ -57,7 +57,7 @@ box off;
 % Add labels and title
 xlabel('Severity (Deaths per 10,000)', 'FontSize', 12);
 ylabel('Exceedance Probability', 'FontSize', 12);
-title('Respirator Pandemic Severity Exceedance Functions', 'FontSize', 14, 'FontWeight', 'bold');
+title('Exceedance function comparison (respiratory pandemics)', 'FontSize', 18, 'FontWeight', 'normal');
 
 % Add legend
 legend('Location', 'southwest', 'FontSize', 11);
@@ -66,4 +66,4 @@ legend('Location', 'southwest', 'FontSize', 11);
 xlim([min([ex_ante_severity_sorted; ex_post_severity_sorted; madhav_exceedances.severity_central]) ...
       max([ex_ante_severity_sorted; ex_post_severity_sorted; madhav_exceedances.severity_central])]);
     
-saveas(fig, fullfile(outdir, "resp_exeedance_comparison.jpg"));
+exportgraphics(fig, fullfile(outdir, "resp_exeedance_comparison.png"), 'Resolution', 400);

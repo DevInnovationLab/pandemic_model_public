@@ -1,5 +1,8 @@
-base_job_config: "./config/job_configs/no_mitigation_allrisk.yaml"
+base_job_config: "./config/job_configs/allrisk_base.yaml"
 outdir: "./output/sensitivity"
+fix_params:
+  gamma: 0
+  scenario_configs: "./config/scenario_configs/standard/baseline.yaml"
 sensitivities:
   arrival_dist_config:
     - "./output/severity_distributions/allrisk_base_half_arrival.yaml"

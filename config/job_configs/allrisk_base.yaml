@@ -37,8 +37,8 @@ capacity_kept: 0.5 # Share response capacity kept after a pandemic
 k_m: 1.5 # Per course cost of mRNA capacity ($/course)
 k_o: 3 # Per course cost of traditional capacity ($/course)
 tailoring_fraction: 0.33 # Share capital cost paid at pandemic onset.
-c_m: 34 # marginal cost of producing mRNA vaccines (LB per course)
-c_o: 17 # marginal cost of producing traditional vaccines (LB per course)
+c_m: 34 # marginal cost of producing mRNA vaccines ($ per course) (LB)
+c_o: 17 # marginal cost of producing traditional vaccines ($ per course) (LB)
 epsilon: 1 # decreasing returns to capacity investments during pandemic
 beta: 100e6 # in-pandemic kink in capital cost function
 x_target: 15.7e9 # target total capacity in annual courses (x^{\prime\prime} in paper)
@@ -55,8 +55,8 @@ adv_cap_build_period: 30 # number of years it takes to finish building adv capac
 times_to_vaccine: "./output/times_to_vaccine.csv"
 vaccine_ptrs: "./data/clean/vaccine_ptrs.csv"
 tau_A: 23 # months to develop / approve / prep for vaccination campaign (in status quo, is it tau_A + 1, as surveillance generates possibility of one month quicker)
-tau_m: 2 # months to repurpose mRNA candidate
-tau_o: 6 # months to repurpose traditional candidate
+tau_m: 2 # months to repurpose mRNA capacity
+tau_o: 6 # months to repurpose traditional capacity
 pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.
 inp_RD_no_adv_RD: 7.76297560e8 # $
 inp_RD_with_adv_RD: 5.31221781e8 # $

@@ -99,12 +99,13 @@ function write_to_latex(summary_data, outpath)
 
     % Write LaTeX table header
     fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
+    fprintf(fileID, '\\caption{Expected annual global pandemic losses}\n');
     fprintf(fileID, '\\begin{tabular}{l r r r r}\n');
     fprintf(fileID, '\\toprule\n');
-    fprintf(fileID, '\\textbf{Scenario} & \\multicolumn{4}{c}{Expected annual pandemic losses (trillion dollars)} \\\\\n');
+    fprintf(fileID, 'Scenario & \\multicolumn{4}{c}{Expected annual pandemic losses (trillion dollars)} \\\\\n');
     fprintf(fileID, '\\cmidrule{2-5}\n');
     fprintf(fileID, '& Mortality & Economic & Learning & Total \\\\\n');
-    fprintf(fileID, '& $AV(ML)$ & $AV(OL)$ & $AV(LL)$ & $AV(TL)$ \\\\\n');
+    fprintf(fileID, '& $AV\\left(\\bar{ML}\\right)$ & $AV\\left(\\bar{OL}\\right)$ & $AV\\left(\\bar{LL}\\right)$ & $AV\\left(\\bar{TL}\\right)$ \\\\\n');
     fprintf(fileID, '\\midrule\n');
 
     % Identify unique scenario categories (Variable column)
@@ -119,7 +120,11 @@ function write_to_latex(summary_data, outpath)
         varData = summary_data(varRows, :);
         
         % Print main scenario name (not indented)
-        fprintf(fileID, '%s \\\\\n', uniqueVars{i});
+        if strcmp(uniqueVars{i}, 'Baseline')
+            fprintf(fileID, '%s ', uniqueVars{i});
+        else
+            fprintf(fileID, '%s \\\\\n', uniqueVars{i});
+        end
 
         for j = 1:height(varData)
             % Format the value with indentation
@@ -134,7 +139,6 @@ function write_to_latex(summary_data, outpath)
 
     % Write LaTeX table footer
     fprintf(fileID, '\\bottomrule\n\\end{tabular}\n');
-    fprintf(fileID, '\\caption{Expected annual global pandemic losses}\n');
     fprintf(fileID, '\\label{tab:pandemic_losses}\n');
     fprintf(fileID, '\\end{table}\n');
 
@@ -179,7 +183,7 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             elseif contains(var_value, "double_arrival")
                 formatted_value = "Double arrival rate";
             elseif contains(var_value, "ext")
-                formatted_value = "Run to extinction";
+                formatted_value = "Truncate at extinction";
             end
         case "y"
             formatted_name = "GDP growth rate $y$";

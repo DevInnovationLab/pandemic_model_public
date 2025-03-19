@@ -77,8 +77,8 @@ if __name__ == "__main__":
 
     # Labels and title
     ax.set_title(r"Pandemic intensity vs percent annual GDP loss")
-    ax.set_xlabel("Intensity (Deaths per 10,000)")
-    ax.set_ylabel("Annual GDP Loss (%)")
+    ax.set_xlabel("Intensity (deaths per 10,000 / year)")
+    ax.set_ylabel("Annual GDP loss (%)")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     
@@ -98,8 +98,6 @@ if __name__ == "__main__":
 
     # Plot poisson curve and save
     ax.plot(np.exp(log_xrange), y_pred_poisson, linewidth=2.5, color=col_poisson, label='Poisson')
-    ax.text(0.80, 0.10, f"Deviance = {model_deviance:.3f}", 
-            transform=ax.transAxes, verticalalignment='top', color=col_poisson)
 
     # Save figure
     outdir = Path("./output/econ_loss_models").resolve()
@@ -172,8 +170,8 @@ if __name__ == "__main__":
 
     # Add labels and title
     ax.set_xlabel('Deaths / 10,000 / year')
-    ax.set_ylabel('Annual GDP Loss (%)')
-    ax.set_title('Economic Loss vs. pandemic intensity (log-log model)')
+    ax.set_ylabel('Annual GDP loss (%)')
+    ax.set_title('Economic loss vs. pandemic intensity (log-log model)')
 
     # Remove top and right spines
     ax.spines['top'].set_visible(False)

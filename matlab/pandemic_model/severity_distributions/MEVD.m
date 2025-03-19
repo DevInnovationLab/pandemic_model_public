@@ -56,6 +56,7 @@ classdef MEVD
             elseif obj.trunc_type == "smooth"
                 F_u = obj.base_pd.cdf(obj.upper_bound);
                 F = obj.base_pd.cdf(x) ./ F_u;
+                F(x >= obj.upper_bound) = 1;
             end
         end
         
@@ -67,6 +68,7 @@ classdef MEVD
             elseif obj.trunc_type == "smooth"
                 F_u = obj.base_pd.cdf(obj.upper_bound);
                 f = obj.base_pd.pdf(x) ./ F_u;
+                f(x >= obj.upper_bound) = 0;
             end
         end
         
@@ -210,7 +212,7 @@ classdef MEVD
                 x_mid = x_current(not_done);
                 
                 % Bisection method for remaining points
-                max_bisect_iter = 500;  % Increase from 10 to 20
+                max_bisect_iter = 100;
                 for j = 1:max_bisect_iter
                     cdf_mid = obj.cdf(x_mid);
                     too_low = cdf_mid < q_remain;

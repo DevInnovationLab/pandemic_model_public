@@ -42,6 +42,12 @@ To run the model locally, create a job config, a directory with scenario configs
 matlab  -nodesktop -nosplash -r "run('./matlab/load_project'); run_job({PATH_TO_JOB_CONFIG})"
 ```
 
+Use the same basic structure to run any matlab script in the codebase with a Matlab command window. To run without a command window, use
+
+```
+matlab -batch "run('./matlab/load_project'); {matlab_script}"
+```
+
 ### Running Matlab tests
 
 This is easiest to do in the Matlab GUI. Open our Matlab project in the GUI to load our scripts onto path and run

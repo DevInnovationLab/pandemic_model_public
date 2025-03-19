@@ -131,11 +131,11 @@ preserve
             vertical lcolor(maroon%70)) ///
         (scatter preds mrna_xpos if platform == "mrna_only", ///
             msymbol(D) mcolor(maroon) msize(medium)), ///
-        title("Predicted PTRS by R&D Status and Platform", size(medium)) ///
-        xlabel(0 "No Advanced R&D" 0.5 "Advanced R&D", angle(0)) ///
+        title("Predicted PTRS by platform and prototype vaccine status", size(medium)) ///
+        xlabel(0 "No prototype" 0.5 "Has prototype", angle(0)) ///
         ylabel(0(0.1)1, angle(0) format(%3.1f)) ///
         ytitle("Predicted PTRS") ///
-        xtitle("R&D Status") ///
+        xtitle("R&D status") ///
         legend(order(2 "Traditional" 4 "mRNA") position(6) rows(1)) ///
         scheme(s2color) graphregion(color(white)) bgcolor(white) ///
         xscale(range(-0.2 0.7))

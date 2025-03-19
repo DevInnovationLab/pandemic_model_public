@@ -48,12 +48,12 @@ function get_npv(job_dir)
     
     % Calculate relative NPV using confirmed baseline (for both PV and nominal)
     baseline_npv = absolute_npv(:,:,baseline_idx);
-    baseline_npv_nom = absolute_npv_nom(:,:,baseline_idx);
+    baseline_nom = absolute_npv_nom(:,:,baseline_idx);
     
     for i = 1:length(scenarios)
         % Calculate and save relative NPV
         relative_npv(:,:,i) = absolute_npv(:,:,i) - baseline_npv;
-        relative_npv_nom(:,:,i) = absolute_npv_nom(:,:,i) - baseline_npv_nom;
+        relative_npv_nom(:,:,i) = absolute_npv_nom(:,:,i) - baseline_nom;
         
         % Save relative NPV results
         writematrix(relative_npv(:,:,i), fullfile(processed_dir, strcat(scenarios(i), "_relative_npv.csv")));
@@ -64,6 +64,7 @@ function get_npv(job_dir)
     plot_npv_timeseries(job_dir, false);
     plot_npv_boxplots(processed_dir, fullfile(job_dir, "figures"), scenarios, "baseline");
     plot_baseline_npv_ts(job_dir);
+    create_npv_summary_table(job_dir);
 end
 
 
@@ -243,10 +244,10 @@ function plot_npv_timeseries(job_dir, include_ci)
     
     grid on
     box on
-    xlabel('Time (years)', 'FontSize', 10)
-    ylabel('Net Present Value ($ trillions)', 'FontSize', 10)
-    title('Average Net Present Value Over Time by Scenario', 'FontSize', 14)
-    set(gca, 'FontSize', 9)
+    xlabel('Time (years)', 'FontSize', 14)
+    ylabel('Net Present Value ($ trillions)', 'FontSize', 14)
+    title('Average Net Present Value Over Time by Scenario', 'FontSize', 20)
+    set(gca, 'FontSize', 912)
     legend('Location', 'best')
     hold off
     
@@ -281,11 +282,11 @@ function plot_npv_timeseries(job_dir, include_ci)
     end
     
     grid on
-    box on
-    xlabel('Time (years)', 'FontSize', 10)
-    ylabel('Net Present Value Relative to Baseline ($ trillions)', 'FontSize', 10)
-    title('Average Relative Net Present Value Over Time by Scenario', 'FontSize', 14)
-    set(gca, 'FontSize', 9)
+    box off
+    xlabel('Time (years)', 'FontSize', 14)
+    ylabel('Net present value relative to baseline ($ trillions)', 'FontSize', 14)
+    title('Average NPV of advance investment programs relative to baseline', 'FontSize', 20)
+    set(gca, 'FontSize', 12)
     legend('Location', 'best')
     hold off
     
@@ -354,9 +355,10 @@ function plot_npv_boxplots(processed_dir, figures_dir, scenarios, baseline)
     labels = categorical(scenario_labels, ordered_labels, 'Ordinal', true);
     boxchart(labels, abs_data)
     grid on
-    ylabel('Total net present value ($ trillions)', 'FontSize', 10)
-    title('Distribution of total net present value by scenario', 'FontSize', 14)
-    set(gca, 'FontSize', 9)
+    xlabel('Advance investment scenario', 'FontSize', 14)
+    ylabel('Total NPV ($ trillions)', 'FontSize', 14)
+    title('Distribution of advance investment program total NPV by scenario', 'FontSize', 20)
+    set(gca, 'FontSize', 12)
     xtickangle(45)
     
     % Save absolute NPV box plot
@@ -372,9 +374,10 @@ function plot_npv_boxplots(processed_dir, figures_dir, scenarios, baseline)
     labels = categorical(rel_scenario_labels, ordered_rel_labels, 'Ordinal', true);
     boxchart(labels, rel_data)
     grid on
-    ylabel('Total net present value relative to baseline ($ trillions)', 'FontSize', 10)
-    title('Distribution of total net present value (relative to baseline) by cenario', 'FontSize', 14)
-    set(gca, 'FontSize', 9)
+    xlabel('Advance investment scenario', 'FontSize', 14)
+    ylabel('Total NPV relative to baseline ($ trillions)', 'FontSize', 14)
+    title('Distribution of advance investment program total NPV (relative to baseline)', 'FontSize', 14)
+    set(gca, 'FontSize', 12)
     xtickangle(45)
     
     % Save relative NPV box plot
@@ -392,11 +395,11 @@ function plot_baseline_npv_ts(job_dir)
     % Load baseline NPV data
     processed_dir = fullfile(job_dir, "processed");
     baseline_npv = readmatrix(fullfile(processed_dir, "baseline_absolute_npv.csv"));
-    baseline_npv_nom = readmatrix(fullfile(processed_dir, "baseline_absolute_npv_nom.csv"));
+    baseline_nom = readmatrix(fullfile(processed_dir, "baseline_absolute_npv_nom.csv"));
     
     % Calculate means
     mean_npv = mean(baseline_npv, 1) / 1e12; % Convert to trillions
-    mean_npv_nom = mean(baseline_npv_nom, 1) / 1e12;
+    mean_nom = mean(baseline_nom, 1) / 1e12;
     
     % Create figure
     fig = figure('Position', [100 100 1200 800], 'Visible', 'off');
@@ -404,21 +407,28 @@ function plot_baseline_npv_ts(job_dir)
     
     % Plot both lines
     plot(1:length(mean_npv), mean_npv, 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], ...
-         'DisplayName', 'Discounted NPV');
-    plot(1:length(mean_npv_nom), mean_npv_nom, 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], ...
-         'DisplayName', 'Nominal NPV');
+         'DisplayName', 'Discounted');
+    plot(1:length(mean_nom), mean_nom, 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], ...
+         'DisplayName', 'Nominal');
+         
+    % Add value labels at year 160
+    total_npv = sum(mean_npv);
+    total_nom = sum(mean_nom);
+    text(160, mean_npv(160), ['Total: $' num2str(total_npv,'%.1f') 'T'], ...
+         'VerticalAlignment', 'bottom', 'FontSize', 14, 'Color', [0, 0.4470, 0.7410]);
+    text(160, mean_nom(160) + 0.1, ['Total: $' num2str(total_nom,'%.1f') 'T'], ...
+         'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Color', [0.8500, 0.3250, 0.0980]);
     
     % Add labels and styling
-    title('Baseline net present value over time', 'FontSize', 18)
-    xlabel('Year', 'FontSize', 14)
-    ylabel('Net present value ($ trillions)', 'FontSize', 14)
+    title('Baseline net value over time', 'FontSize', 20)
+    xlabel('Year', 'FontSize', 16)
+    ylabel('Net value ($ trillions)', 'FontSize', 16)
     grid on
-    box on
-    set(gca, 'FontSize', 11)
-    set(gca, 'Box', 'on', 'XGrid', 'on', 'YGrid', 'on')
+    set(gca, 'FontSize', 14)
+    set(gca, 'XGrid', 'on', 'YGrid', 'on')
     
     % Add legend
-    legend('Location', 'northwest', 'FontSize', 11, 'Box', 'off')
+    legend('Location', 'northwest', 'FontSize', 14)
     
     % Save figure
     figure_dir = fullfile(job_dir, "figures");
@@ -426,4 +436,104 @@ function plot_baseline_npv_ts(job_dir)
     figpath = fullfile(figure_dir, "baseline_npv_ts.png");
     saveas(fig, figpath);
     close(fig);
+end
+
+
+function create_npv_summary_table(job_dir)
+    % Creates a table summarizing costs and NPV differences from baseline for each scenario
+    %
+    % Args:
+    %   job_dir (string): Directory containing job configuration and results
+    
+    % Load baseline data
+    processed_dir = fullfile(job_dir, "processed");
+    baseline_npv = readmatrix(fullfile(processed_dir, "baseline_absolute_npv.csv"));
+    baseline_costs = readmatrix(fullfile(processed_dir, "baseline_pv_costs.csv"));
+    
+    % Calculate total baseline values
+    total_baseline_npv = sum(mean(baseline_npv, 1));
+    total_baseline_costs = sum(mean(baseline_costs, 1));
+    
+    % Get list of all scenario directories
+    scenario_dir = fullfile(job_dir, "scenarios");
+    scenarios = dir(fullfile(scenario_dir, '*'));
+    scenarios = scenarios([scenarios.isdir]);
+    scenarios = scenarios(~ismember({scenarios.name}, {'.', '..'}));
+    
+    % Initialize table with baseline row
+    summary_table = table('Size', [length(scenarios)+1 4], ...
+        'VariableTypes', {'string', 'string', 'double', 'double'});
+    summary_table.Properties.VariableNames = {...
+        'Scenario', 'Value', 'NPVDiff', 'CostDiff'};
+    
+    % Add baseline row
+    summary_table(1,:) = {'Baseline', '', 0, 0};
+    
+    % Process each scenario
+    for i = 1:length(scenarios)
+        scen_name = scenarios(i).name;
+        
+        % Load scenario data
+        scen_npv = readmatrix(fullfile(scenario_dir, scen_name, "absolute_npv.csv"));
+        scen_costs = readmatrix(fullfile(scenario_dir, scen_name, "pv_costs.csv"));
+        
+        % Calculate differences from baseline
+        total_scen_npv = sum(mean(scen_npv, 1));
+        total_scen_costs = sum(mean(scen_costs, 1));
+        
+        npv_diff = total_scen_npv - total_baseline_npv;
+        cost_diff = total_scen_costs - total_baseline_costs;
+        
+        % Add to table
+        summary_table(i+1,:) = {scen_name, '', npv_diff, cost_diff};
+    end
+    
+    % Save table to CSV
+    writetable(summary_table, fullfile(processed_dir, 'npv_summary.csv'));
+    
+    % Write to LaTeX
+    write_advance_investment_table_latex(summary_table, fullfile(processed_dir, 'advance_investment_npv_summary.tex'));
+end
+
+
+function write_advance_investment_table_latex(summary_data, outpath)
+    % Convert to trillions
+    summary_data.NPVDiff = summary_data.NPVDiff / 1e12;
+    summary_data.CostDiff = summary_data.CostDiff / 1e12;
+    
+    % Open LaTeX file for writing
+    fileID = fopen(outpath, 'w');
+    
+    % Write LaTeX table header
+    fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
+    fprintf(fileID, '\\caption{Net present value and cost relative to baseline}\n');
+    fprintf(fileID, '\\begin{tabular}{l r r}\n');
+    fprintf(fileID, '\\toprule\n');
+    fprintf(fileID, 'Scenario & \\multicolumn{2}{c}{Difference from baseline (trillion dollars)} \\\\\n');
+    fprintf(fileID, '\\cmidrule{2-3}\n');
+    fprintf(fileID, '& NPV & Costs \\\\\n');
+    fprintf(fileID, '\\midrule\n');
+    
+    % Write data rows
+    for i = 1:height(summary_data)
+        if i == 1
+            fprintf(fileID, '%s & %.1f & %.1f \\\\\n', ...
+                summary_data.Scenario{i}, ...
+                summary_data.NPVDiff(i), ...
+                summary_data.CostDiff(i));
+        else
+            fprintf(fileID, '\\hspace{3mm} %s & %.1f & %.1f \\\\\n', ...
+                summary_data.Scenario{i}, ...
+                summary_data.NPVDiff(i), ...
+                summary_data.CostDiff(i));
+        end
+    end
+    
+    % Write LaTeX table footer
+    fprintf(fileID, '\\bottomrule\n\\end{tabular}\n');
+    fprintf(fileID, '\\label{tab:npv_summary}\n');
+    fprintf(fileID, '\\end{table}\n');
+    
+    % Close the file
+    fclose(fileID);
 end

@@ -28,9 +28,8 @@ function plot_disagg_cost_comparison(job_dir)
     n_scenarios = length(delta_scenarios);
     n_rows = floor(sqrt(n_scenarios));
     n_cols = ceil(n_scenarios/n_rows);
-    
-    % Create figure with extra height for legend and more width
-    fig = figure('Position', [100 100 1500 800], 'Visible', 'off');
+    % Create wide figure with space for legend at bottom
+    fig = figure('Position', [100 100 1800 1200], 'Visible', 'off');
     
     % Professional color scheme
     colors = {[0, 0.4470, 0.7410], ... % Blue
@@ -40,8 +39,9 @@ function plot_disagg_cost_comparison(job_dir)
               [0.3010, 0.7450, 0.9330], ... % Light blue
               [0.6350, 0.0780, 0.1840]}; % Dark red
     
-    % Create subplot layout
-    sgtitle('Costs Relative to Baseline', 'FontSize', 14)
+    % Create subplot layout with space at bottom for legend
+    tiledlayout(n_rows, n_cols, 'TileSpacing', 'compact', 'Padding', 'compact');
+    sgtitle('Costs relative to baseline', 'FontSize', 20)
     
     % Track axis limits to make them equal later
     y_min = Inf;
@@ -72,7 +72,7 @@ function plot_disagg_cost_comparison(job_dir)
     % Plot each scenario
     for i = 1:n_scenarios
         scenario = delta_scenarios(i);
-        subplot(n_rows, n_cols, i)
+        nexttile
         hold on;
         
         % Plot each cost variable
@@ -98,35 +98,34 @@ function plot_disagg_cost_comparison(job_dir)
             plot(1:length(mean_rel), mean_rel, 'Color', colors{j}, 'LineWidth', 2, 'DisplayName', convert_varnames(var));
         end
         
-        title(convert_varnames(scenario), 'Interpreter', 'None', 'FontSize', 11)
+        title(convert_varnames(scenario), 'Interpreter', 'None', 'FontSize', 14)
         
         % Only add x labels to bottom row
         if i > n_scenarios - n_cols
-            xlabel('Year', 'FontSize', 10)
+            xlabel('Year', 'FontSize', 12)
         end
         
         % Only add y labels to leftmost column
         if mod(i-1, n_cols) == 0
-            ylabel('Costs ($ billions)', 'FontSize', 10, "Interpreter", 'none')
+            ylabel('Costs ($ billions)', 'FontSize', 12, "Interpreter", 'none')
         end
         
         % Set consistent axis limits and appearance
         ylim([y_min y_max])
         grid on
-        box on
-        set(gca, 'FontSize', 9)
+        box off
+        set(gca, 'FontSize', 11)
         set(gca, 'Box', 'on', 'XGrid', 'on', 'YGrid', 'on')
     end
-    
-    % Add legend below all subplots
-    legend('NumColumns', 3, ...
-           'Position', [0.1 0.02 0.8 0.05], ...
-           'FontSize', 9, ...
-           'Box', 'off');
-    
-    % Save figure
+
+    % Add legend at bottom with good spacing
+    leg = legend('NumColumns', 3, ...
+           'Orientation', 'horizontal', ...
+           'FontSize', 11);
+    leg.Layout.Tile = 'south'; % Place legend below plots
+    % Save figure with adjusted dimensions
     figpath = fullfile(comparisons_dir, "cost_vars_relative_comparison.png");
-    saveas(fig, figpath);
+    exportgraphics(fig, figpath, 'Resolution', 400);
     close(fig);
 
 end
