@@ -244,9 +244,9 @@ function plot_npv_timeseries(job_dir, include_ci)
     
     grid on
     box on
-    xlabel('Time (years)', 'FontSize', 14)
-    ylabel('Net Present Value ($ trillions)', 'FontSize', 14)
-    title('Average Net Present Value Over Time by Scenario', 'FontSize', 20)
+    xlabel('Year', 'FontSize', 14)
+    ylabel('Net present vlue ($ trillions)', 'FontSize', 14)
+    title('Advance investment program average net present value over time', 'FontSize', 20)
     set(gca, 'FontSize', 912)
     legend('Location', 'best')
     hold off
@@ -283,9 +283,9 @@ function plot_npv_timeseries(job_dir, include_ci)
     
     grid on
     box off
-    xlabel('Time (years)', 'FontSize', 14)
-    ylabel('Net present value relative to baseline ($ trillions)', 'FontSize', 14)
-    title('Average NPV of advance investment programs relative to baseline', 'FontSize', 20)
+    xlabel('Year', 'FontSize', 14)
+    ylabel('Net present value ($ trillions)', 'FontSize', 14)
+    title('Average NPV of advance investment programs', 'FontSize', 20)
     set(gca, 'FontSize', 12)
     legend('Location', 'best')
     hold off
@@ -355,9 +355,9 @@ function plot_npv_boxplots(processed_dir, figures_dir, scenarios, baseline)
     labels = categorical(scenario_labels, ordered_labels, 'Ordinal', true);
     boxchart(labels, abs_data)
     grid on
-    xlabel('Advance investment scenario', 'FontSize', 14)
+    xlabel('Program', 'FontSize', 14)
     ylabel('Total NPV ($ trillions)', 'FontSize', 14)
-    title('Distribution of advance investment program total NPV by scenario', 'FontSize', 20)
+    title('Advance investment program net present value across simulations', 'FontSize', 20)
     set(gca, 'FontSize', 12)
     xtickangle(45)
     
@@ -374,9 +374,9 @@ function plot_npv_boxplots(processed_dir, figures_dir, scenarios, baseline)
     labels = categorical(rel_scenario_labels, ordered_rel_labels, 'Ordinal', true);
     boxchart(labels, rel_data)
     grid on
-    xlabel('Advance investment scenario', 'FontSize', 14)
-    ylabel('Total NPV relative to baseline ($ trillions)', 'FontSize', 14)
-    title('Distribution of advance investment program total NPV (relative to baseline)', 'FontSize', 14)
+    xlabel('Program', 'FontSize', 14)
+    ylabel('Total NPV ($ trillions)', 'FontSize', 14)
+    title('Advance investment program net present value across simulations', 'FontSize', 14)
     set(gca, 'FontSize', 12)
     xtickangle(45)
     
@@ -454,38 +454,44 @@ function create_npv_summary_table(job_dir)
     total_baseline_npv = sum(mean(baseline_npv, 1));
     total_baseline_costs = sum(mean(baseline_costs, 1));
     
-    % Get list of all scenario directories
-    scenario_dir = fullfile(job_dir, "scenarios");
-    scenarios = dir(fullfile(scenario_dir, '*'));
-    scenarios = scenarios([scenarios.isdir]);
-    scenarios = scenarios(~ismember({scenarios.name}, {'.', '..'}));
+    % Get scenarios from config
+    config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    scenarios = string(fieldnames(config.scenarios));
+    scenarios = scenarios(~strcmp(scenarios, 'baseline'));
+    % Move combined_invest to end
+    combined_idx = find(strcmp(scenarios, 'combined_invest'));
+    if ~isempty(combined_idx)
+        scenarios = [scenarios(1:(combined_idx-1)); 
+                    scenarios((combined_idx+1):end);
+                    scenarios(combined_idx)];
+    end
     
     % Initialize table with baseline row
-    summary_table = table('Size', [length(scenarios)+1 4], ...
-        'VariableTypes', {'string', 'string', 'double', 'double'});
+    summary_table = table('Size', [length(scenarios) 5], ...
+        'VariableTypes', {'string', 'string', 'double', 'double', 'double'});
     summary_table.Properties.VariableNames = {...
-        'Scenario', 'Value', 'NPVDiff', 'CostDiff'};
-    
-    % Add baseline row
-    summary_table(1,:) = {'Baseline', '', 0, 0};
+        'Scenario', 'Value', 'NPVDiff', 'BenefitDiff', 'CostDiff'};
     
     % Process each scenario
     for i = 1:length(scenarios)
-        scen_name = scenarios(i).name;
+        scen_name = scenarios(i);
         
         % Load scenario data
-        scen_npv = readmatrix(fullfile(scenario_dir, scen_name, "absolute_npv.csv"));
-        scen_costs = readmatrix(fullfile(scenario_dir, scen_name, "pv_costs.csv"));
+        scen_npv = readmatrix(fullfile(processed_dir, strcat(scen_name, "_absolute_npv.csv")));
+        scen_costs = readmatrix(fullfile(processed_dir, strcat(scen_name, "_pv_costs.csv")));
+        scen_benefits = scen_npv + scen_costs; % Benefits = NPV + Costs
         
         % Calculate differences from baseline
         total_scen_npv = sum(mean(scen_npv, 1));
         total_scen_costs = sum(mean(scen_costs, 1));
+        total_scen_benefits = sum(mean(scen_benefits, 1));
         
         npv_diff = total_scen_npv - total_baseline_npv;
         cost_diff = total_scen_costs - total_baseline_costs;
+        benefit_diff = total_scen_benefits - (total_baseline_npv + total_baseline_costs);
         
         % Add to table
-        summary_table(i+1,:) = {scen_name, '', npv_diff, cost_diff};
+        summary_table(i,:) = {scen_name, '', npv_diff, benefit_diff, cost_diff};
     end
     
     % Save table to CSV
@@ -497,9 +503,10 @@ end
 
 
 function write_advance_investment_table_latex(summary_data, outpath)
-    % Convert to trillions
-    summary_data.NPVDiff = summary_data.NPVDiff / 1e12;
-    summary_data.CostDiff = summary_data.CostDiff / 1e12;
+    % Convert to appropriate units
+    summary_data.NPVDiff = summary_data.NPVDiff / 1e12; % Convert to trillions
+    summary_data.BenefitDiff = summary_data.BenefitDiff / 1e12; % Convert to trillions
+    summary_data.CostDiff = summary_data.CostDiff / 1e8; % Convert to hundreds of millions
     
     % Open LaTeX file for writing
     fileID = fopen(outpath, 'w');
@@ -507,27 +514,22 @@ function write_advance_investment_table_latex(summary_data, outpath)
     % Write LaTeX table header
     fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
     fprintf(fileID, '\\caption{Net present value and cost relative to baseline}\n');
-    fprintf(fileID, '\\begin{tabular}{l r r}\n');
+    fprintf(fileID, '\\begin{tabular}{l r r r}\n');
     fprintf(fileID, '\\toprule\n');
-    fprintf(fileID, 'Scenario & \\multicolumn{2}{c}{Difference from baseline (trillion dollars)} \\\\\n');
-    fprintf(fileID, '\\cmidrule{2-3}\n');
-    fprintf(fileID, '& NPV & Costs \\\\\n');
+    fprintf(fileID, 'Scenario & \\multicolumn{3}{c}{Difference from baseline scenario} \\\\\n');
+    fprintf(fileID, '\\cmidrule{2-4}\n');
+    fprintf(fileID, '& Costs & Benefits & Net present value \\\\\n');
+    fprintf(fileID, '& (hundred millions \\$) & (trillion \\$) & (trillion \\$) \\\\\n');
     fprintf(fileID, '\\midrule\n');
     
     % Write data rows
     for i = 1:height(summary_data)
-        if i == 1
-            fprintf(fileID, '%s & %.1f & %.1f \\\\\n', ...
-                summary_data.Scenario{i}, ...
-                summary_data.NPVDiff(i), ...
-                summary_data.CostDiff(i));
-        else
-            fprintf(fileID, '\\hspace{3mm} %s & %.1f & %.1f \\\\\n', ...
-                summary_data.Scenario{i}, ...
-                summary_data.NPVDiff(i), ...
-                summary_data.CostDiff(i));
-        end
-    end
+        fprintf(fileID, '%s & %.0f & %.1f & %.1f \\\\\n', ...
+            summary_data.Scenario{i}, ...
+            summary_data.CostDiff(i), ...
+            summary_data.BenefitDiff(i), ...
+            summary_data.NPVDiff(i));
+     end
     
     % Write LaTeX table footer
     fprintf(fileID, '\\bottomrule\n\\end{tabular}\n');

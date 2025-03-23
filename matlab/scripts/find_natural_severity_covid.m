@@ -3,14 +3,14 @@ function find_natural_severity_covid(config_path)
     
     % Load params and overwrite with COVID-19 specific
     params = clean_job_config(yaml.loadFile(config_path));
-    params.tau_A = 11; % Months before vaccine available.
+    params.tau_a = 11; % Months before vaccine available.
     params.rd_state = 1; % Both mRNA and traditional succeeded during COVID-19.
     years = 5; % COVID-19 duration according to our records.
 
     % Load vaccination rates over time.
     monthly_cum_vax = readtable("./data/clean/covid19_cum_vax_over_time.csv");
     cum_vax_rate = monthly_cum_vax.cum_vax_rate;
-    monthly_cum_vax = [zeros(params.tau_A, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
+    monthly_cum_vax = [zeros(params.tau_a, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
 
     target_ex_post_severity = 9.17; % In Marani data
     fy_mortality_reduction = 0.63; % First year mortality reduction
@@ -79,7 +79,7 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     growth_rate = (1+params.y)^(yr_start-1) .* (1+params.y).^(1/12 .* (1:height(m_deaths))');
     ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000 .* growth_rate)), 1);
     
-    vaccine_start_month = params.tau_A;
+    vaccine_start_month = params.tau_a;
     year_available_month = vaccine_start_month + 12 - 1;
     fy_idx = vaccine_start_month:year_available_month;
     share_deaths_mitigated = sum(u_deaths(fy_idx) - m_deaths(fy_idx)) / sum(u_deaths(fy_idx));

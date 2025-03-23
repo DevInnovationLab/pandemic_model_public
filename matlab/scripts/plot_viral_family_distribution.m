@@ -34,8 +34,8 @@ ax.Box = 'off';
 
 % Add labels and title
 xlabel('Viral family');
-ylabel('Share pandemics');
-title('Viral family distribution of pandemics');
+ylabel('Share of pandemics');
+title('Viral family distribution');
 
 % Add a custom legend% Add a custom legend manually
 hold on;
@@ -46,4 +46,4 @@ legend([dummy1, dummy2, dummy3], {'Has prototype', 'No prototype', 'Unknown'}, .
     'Location', 'northeast', 'FontSize', 10);
 hold off;
 
-saveas(gca, fullfile("output/pandemic_viral_family_share_all.jpg"));
+print(gcf, fullfile("output/pandemic_viral_family_share_all.jpg"), '-djpeg', '-r400');

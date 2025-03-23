@@ -36,18 +36,16 @@ fig = figure('Position', [100 100 800 600]);
 hold on;
 
 % Plot exceedance functions
-plot(ex_ante_severity_sorted, exceedance, 'LineWidth', 2, 'Color', [0 0.4470 0.7410], 'DisplayName', 'Ex Ante Severity');
-plot(ex_post_severity_sorted, exceedance, 'LineWidth', 2, 'Color', [0.8500 0.3250 0.0980], 'DisplayName', 'Ex Post Severity');
+ex_ante_color = [0 0.4470 0.7410];
+ex_post_color = [0.8500 0.3250 0.0980];
+
+plot(ex_ante_severity_sorted, exceedance, 'LineWidth', 2, 'Color', ex_ante_color, 'DisplayName', 'Without vaccination');
+plot(ex_post_severity_sorted, exceedance, 'LineWidth', 2, 'Color', ex_post_color, 'DisplayName', 'With baseline vaccination');
 
 % Plot Madhav data
+madhav_color = [0.4940 0.1840 0.5560];
 plot(madhav_severity_central, madhav_exceedance_central / 100', ...
-    'LineWidth', 2, 'Color', [0.4940 0.1840 0.5560], 'DisplayName', 'Madhav et al. Central');
-% Plot Madhav upper and lower curves
-plot(madhav_severity_upper, madhav_exceedance_upper / 100', ...
-    'LineWidth', 1.5, 'LineStyle', '--', 'Color', [0.4940 0.1840 0.5560], 'HandleVisibility', 'off');
-plot(madhav_severity_lower, madhav_exceedance_lower / 100', ...
-    'LineWidth', 1.5, 'LineStyle', '--', 'Color', [0.4940 0.1840 0.5560], 'HandleVisibility', 'off');
-
+    'LineWidth', 2, 'Color', madhav_color, 'DisplayName', 'Madhav et al. (2023)');
 
 % Customize plot appearance
 set(gca, 'XScale', 'log');
@@ -57,13 +55,21 @@ box off;
 % Add labels and title
 xlabel('Severity (Deaths per 10,000)', 'FontSize', 12);
 ylabel('Exceedance Probability', 'FontSize', 12);
-title('Exceedance function comparison (respiratory pandemics)', 'FontSize', 18, 'FontWeight', 'normal');
+title('Exceedance function comparison', 'FontSize', 16, 'FontWeight', 'normal');
 
-% Add legend
-legend('Location', 'southwest', 'FontSize', 11);
+% Add direct labels to lines
+text(madhav_severity_central(2), madhav_exceedance_central(2)/100, ['Madhav et al.' '(2023)'], ...
+    'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', madhav_color);
+text(ex_ante_severity_sorted(1), exceedance(1), 'Without vaccination', ...
+    'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_ante_color);
+text(ex_post_severity_sorted(20000), exceedance(20000), 'With baseline vaccination', ...
+    'FontSize', 11, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top', 'Color', ex_post_color);
+
+% Remove legend since we're using direct labels
+legend('off');
 
 % Set axis limits based on all data including Madhav
 xlim([min([ex_ante_severity_sorted; ex_post_severity_sorted; madhav_exceedances.severity_central]) ...
       max([ex_ante_severity_sorted; ex_post_severity_sorted; madhav_exceedances.severity_central])]);
     
-exportgraphics(fig, fullfile(outdir, "resp_exeedance_comparison.png"), 'Resolution', 400);
+print(fig, fullfile(outdir, "resp_exeedance_comparison.png"), '-dpng', '-r400');

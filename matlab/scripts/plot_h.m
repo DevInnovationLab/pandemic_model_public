@@ -27,9 +27,9 @@ scatter(points_x, points_y, 75, 'filled', 'MarkerFaceColor', [0.8500, 0.3250, 0.
 % Add styling
 grid on
 box off
-xlabel('Vaccination fraction', 'FontSize', 14)
-ylabel('Damage mitigation factor', 'FontSize', 14)
-title('Vaccination damage mitigation function (h(\cdot))', 'FontSize', 18)
+xlabel('Share population vaccinated', 'FontSize', 14)
+ylabel('Damage mitigation', 'FontSize', 14)
+title('Vaccination damage mitigation (h(x))', 'FontSize', 18, 'FontWeight', 'Normal')
 set(gca, 'FontSize', 11)
 xlim([0 1.05])
 ylim([0 1.05])
@@ -43,7 +43,6 @@ text(0.15, 0.40, '(0.13, 0.395)', 'FontSize', 11)
 text(0.53, 0.816, '(0.5, 0.816)', 'FontSize', 11)
 text(0.7, 0.97, '(0.7, 1)', 'FontSize', 11)
 
-
 % Save figure
-exportgraphics(fig, './output/h_function.png', 'Resolution', 450)
+print(fig, './output/h_function.png', '-dpng', '-r450');
 close(fig)

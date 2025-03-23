@@ -193,16 +193,16 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                                             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
                     outrows(i, :) = outrow;
                 else 
-                    tau_A = params.tau_A;
+                    tau_a = params.tau_a;
 
                     if ~is_false
-                        tau_A = params.tau_A + prep_start_month; % in a real pandemic, when a vaccine is available depends on when you started
+                        tau_a = params.tau_a + prep_start_month; % in a real pandemic, when a vaccine is available depends on when you started
                     end
 
-                    %%% Case 1: false pos and decided to act -- wastage through tau_A
+                    %%% Case 1: false pos and decided to act -- wastage through tau_a
                     %%% Case 2: real pandemic and decided to act -- saved time
                     %%% Case 3: real pandemic and didn't decide to act -- no saved time
-                    %%% (Case 2 and 3 are reflected in a longer tau_A)
+                    %%% (Case 2 and 3 are reflected in a longer tau_a)
 
                     % capacity costs should be incurred at one month into prep start
 
@@ -244,7 +244,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                     inp_RD_costs_PV = tailoring_PV * inp_RD_nom;
 
                     if is_false % putting these in array formats to match the other if-clause
-                        tot_months = tau_A;
+                        tot_months = tau_a;
                         
                         vax_fraction_end = NaN;
                         vax_benefits_PV = zeros(tot_months, 1);
@@ -265,12 +265,12 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                             get_pandemic_losses(params, econ_loss_model, yr_start, pandemic_natural_dur, actual_dur, severity);
                         % Get effective capacity over time during pandemic
                         if has_RD_benefit == true
-                            tau_A = tau_A - params.rd_speedup_months;
+                            tau_a = tau_a - params.rd_speedup_months;
                         end
 
                         [ind_m, ind_o] = get_capacity_indicators(rd_state);
                         months_arr = (1:height(u_deaths))';
-                        [cap_m_arr, cap_o_arr] = get_pandemic_capacity(months_arr, tau_A, params, ind_m, ind_o, cap_avail_m/12, cap_avail_o/12);
+                        [cap_m_arr, cap_o_arr] = get_pandemic_capacity(months_arr, tau_a, params, ind_m, ind_o, cap_avail_m/12, cap_avail_o/12);
                         vax_fractions_cum = get_vax_fractions(params, cap_m_arr, cap_o_arr);
                         vax_fraction_end = vax_fractions_cum(end);
                         

@@ -6,7 +6,7 @@ end
 function test_basic_scenario(testCase)
     % Test a basic scenario with simple input parameters
     months = (1:6)';
-    tau_A = 0;
+    tau_a = 0;
     params = struct(...
         'tau_m', 3, ...   % mRNA repmaturposing time
         'tau_o', 4, ...   % Traditional capacity repmaturposing
@@ -21,7 +21,7 @@ function test_basic_scenario(testCase)
     x_o_tau = 80;   % Initial traditional vaccine production capacity
     
     % Call the function
-    capacity = get_pandemic_capacity(months, tau_A, params, ind_m, ind_o, x_m_tau, x_o_tau);
+    capacity = get_pandemic_capacity(months, tau_a, params, ind_m, ind_o, x_m_tau, x_o_tau);
     
     % Verify the structure of the output
     testCase.verifyClass(capacity, 'table');
@@ -47,7 +47,7 @@ end
 function test_zero_indicators(testCase)
     % Test scenario with zero indicators for both vaccine types
     months = (1:6)';
-    tau_A = 0;
+    tau_a = 0;
     params = struct(...
         'tau_m', 3, ...
         'tau_o', 4, ...
@@ -62,7 +62,7 @@ function test_zero_indicators(testCase)
     x_o_tau = 80;
     
     % Call the function
-    capacity = get_pandemic_capacity(months, tau_A, params, ind_m, ind_o, x_m_tau, x_o_tau);
+    capacity = get_pandemic_capacity(months, tau_a, params, ind_m, ind_o, x_m_tau, x_o_tau);
     
     % Verify all capacity values are zero
     testCase.verifyEqual(capacity.mrna, zeros(size(months)), 'AbsTol', 1e-10);
@@ -70,10 +70,10 @@ function test_zero_indicators(testCase)
     testCase.verifyEqual(capacity.total, zeros(size(months)), 'AbsTol', 1e-10);
 end
 
-function test_different_tau_A(testCase)
-    % Test with a non-zero tau_A (delayed start)
+function test_different_tau_a(testCase)
+    % Test with a non-zero tau_a (delayed start)
     months = (1:6)';
-    tau_A = 2;  % Delayed start by 2 months
+    tau_a = 2;  % Delayed start by 2 months
     params = struct(...
         'tau_m', 3, ...
         'tau_o', 4, ...
@@ -88,7 +88,7 @@ function test_different_tau_A(testCase)
     x_o_tau = 80;
     
     % Call the function
-    capacity = get_pandemic_capacity(months, tau_A, params, ind_m, ind_o, x_m_tau, x_o_tau);
+    capacity = get_pandemic_capacity(months, tau_a, params, ind_m, ind_o, x_m_tau, x_o_tau);
     exp_mrna_before = x_m_tau * params.f_m;
     exp_mrna_after = x_m_tau * (params.f_m + params.g_m);
     exp_trad_before = x_o_tau * params.f_o;

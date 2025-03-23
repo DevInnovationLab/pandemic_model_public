@@ -171,5 +171,5 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
     updated_params.z_m = updated_params.share_target_advanced_capacity * z_m;
     updated_params.z_o = updated_params.share_target_advanced_capacity * z_o;
 
-    assert(updated_params.rd_speedup_months <= updated_params.tau_A); % R&D speedup must be less or equal than baseline time.
+    assert(updated_params.rd_speedup_months <= updated_params.tau_a); % R&D speedup must be less or equal than baseline time.
 end

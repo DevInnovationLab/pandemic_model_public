@@ -29,7 +29,7 @@ function plot_disagg_cost_comparison(job_dir)
     n_rows = floor(sqrt(n_scenarios));
     n_cols = ceil(n_scenarios/n_rows);
     % Create wide figure with space for legend at bottom
-    fig = figure('Position', [100 100 1800 1200], 'Visible', 'off');
+    fig = figure('Position', [100 100 1800 1000], 'Visible', 'off');
     
     % Professional color scheme
     colors = {[0, 0.4470, 0.7410], ... % Blue
@@ -41,7 +41,7 @@ function plot_disagg_cost_comparison(job_dir)
     
     % Create subplot layout with space at bottom for legend
     tiledlayout(n_rows, n_cols, 'TileSpacing', 'compact', 'Padding', 'compact');
-    sgtitle('Costs relative to baseline', 'FontSize', 20)
+    sgtitle('Nominal costs (relative to baseline)', 'FontSize', 20)
     
     % Track axis limits to make them equal later
     y_min = Inf;
@@ -95,7 +95,9 @@ function plot_disagg_cost_comparison(job_dir)
             mean_rel = mean(scenario_array - baseline_array, 1) / 1e9;
             
             % Plot with professional styling
-            plot(1:length(mean_rel), mean_rel, 'Color', colors{j}, 'LineWidth', 2, 'DisplayName', convert_varnames(var));
+            line_label = convert_varnames(var);
+            line_label = strrep(line_label, ' (nominal value)', '');
+            plot(1:length(mean_rel), mean_rel, 'Color', colors{j}, 'LineWidth', 2, 'DisplayName', line_label);
         end
         
         title(convert_varnames(scenario), 'Interpreter', 'None', 'FontSize', 14)
@@ -121,7 +123,8 @@ function plot_disagg_cost_comparison(job_dir)
     % Add legend at bottom with good spacing
     leg = legend('NumColumns', 3, ...
            'Orientation', 'horizontal', ...
-           'FontSize', 11);
+           'FontSize', 11, ...
+           'Box', 'off');
     leg.Layout.Tile = 'south'; % Place legend below plots
     % Save figure with adjusted dimensions
     figpath = fullfile(comparisons_dir, "cost_vars_relative_comparison.png");

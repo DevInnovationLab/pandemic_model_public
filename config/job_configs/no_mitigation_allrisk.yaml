@@ -54,7 +54,7 @@ adv_cap_build_period: 30 # number of years it takes to finish building adv capac
 # Vaccine development
 times_to_vaccine: "./output/times_to_vaccine.csv"
 vaccine_ptrs: "./data/clean/vaccine_ptrs.csv"
-tau_A: 23 # months to develop / approve / prep for vaccination campaign (in status quo, is it tau_A + 1, as surveillance generates possibility of one month quicker)
+tau_a: 23 # months to develop / approve / prep for vaccination campaign (in status quo, is it tau_a + 1, as surveillance generates possibility of one month quicker)
 tau_m: 2 # months to repurpose mRNA candidate
 tau_o: 6 # months to repurpose traditional candidate
 pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.

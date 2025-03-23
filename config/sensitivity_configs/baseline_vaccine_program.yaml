@@ -8,22 +8,10 @@ sensitivities:
   gamma:  # Fraction remaining harm mitigated by vaccine
     - 0.3    # 30%
     - 0.7    # 70%
-  
-  theta:  # Reduction of pandemic-time investments
-    - 0.0    # 0%
-    - 0.5    # 50%
-
-  delta:  # Annual maintenance cost as fraction of capital value
-    - 0.1
-    - 0.3
 
   capacity_kept: # Share response capacity kept after a pandemic
     - 0.25
     - 0.75
-
-  tailoring_fraction: # Share capital cost paid at pandemic onset.
-    - 0.15
-    - 0.5
   
   k_m:  # Unit cost of advance mRNA capacity
     - 0.75   # $0.75 per annual course
@@ -68,10 +56,6 @@ sensitivities:
   tau_o:  # Time to repurpose other capacity
     - 3      # 3 months
     - 9      # 9 months
-  
-  rental_share:  # Rental recovery fraction
-    - 0.2    # 50%
-    - 0.6    # 90%
 
   tau_a:  # Time to vaccine without existing prototype
     - 15
