@@ -410,14 +410,10 @@ function plot_baseline_npv_ts(job_dir)
          'DisplayName', 'Discounted');
     plot(1:length(mean_nom), mean_nom, 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], ...
          'DisplayName', 'Nominal');
-         
-    % Add value labels at year 160
-    total_npv = sum(mean_npv);
-    total_nom = sum(mean_nom);
-    text(160, mean_npv(160), ['Total: $' num2str(total_npv,'%.1f') 'T'], ...
-         'VerticalAlignment', 'bottom', 'FontSize', 14, 'Color', [0, 0.4470, 0.7410]);
-    text(160, mean_nom(160) + 0.1, ['Total: $' num2str(total_nom,'%.1f') 'T'], ...
-         'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Color', [0.8500, 0.3250, 0.0980]);
+
+    % Label lines
+    text(140, mean_npv(140), 'Present value', 'VerticalAlignment', 'bottom', 'FontSize', 14, 'Color', [0, 0.4470, 0.7410]);
+    text(156, mean_nom(156), 'Nominal', 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Color', [0.8500, 0.3250, 0.0980]);
     
     % Add labels and styling
     title('Baseline net value over time', 'FontSize', 20)
@@ -428,7 +424,7 @@ function plot_baseline_npv_ts(job_dir)
     set(gca, 'XGrid', 'on', 'YGrid', 'on')
     
     % Add legend
-    legend('Location', 'northwest', 'FontSize', 14)
+    legend('off');
     
     % Save figure
     figure_dir = fullfile(job_dir, "figures");

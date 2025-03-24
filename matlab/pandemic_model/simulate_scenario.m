@@ -124,7 +124,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
 
             % Copy scenario parameters and initialize output row
             outrows(1, :) = gen_output_row(sim_scens_s(1,:), cap_avail_m, cap_avail_o, 0, 0, ...
-                                              0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+                                              0, 0, 0, 0, nan, 0, 0, 0, 0, 0);
             sim_results{s} = outrows;
 
         else
@@ -314,7 +314,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         sim_out_arr_costs_inp_marg_nom(:, s) = sim_out_arr_costs_inp_marg_nom(:, s) + agg_by_yr(inp_marg_costs_o_nom + inp_marg_costs_m_nom, actual_dur, yr_start, params.sim_periods);
                     end
                     
-                    % Deal with capacity stuff
+                    % Deal with capacity changes
                     % If we change ratios from 50-50 I will have to rewrite.
                     surge_cap_m_over_time(in_pandemic_indx) = surge_cap_m_current;
                     surge_cap_o_over_time(in_pandemic_indx) = surge_cap_o_current;

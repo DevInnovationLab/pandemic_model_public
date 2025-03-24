@@ -90,13 +90,10 @@ function benefits = calculate_vaccine_benefits(scenario_dir)
     r = config.r;
     periods = config.sim_periods;
     
-    % Calculate annualization factor
-    annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
-    
     % Calculate total benefits
     raw_dir = fullfile(scenario_dir, 'raw');
     benefits_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_benefits.csv'));
-    benefits = mean(sum(benefits_ts, 2)) * annualization_factor;
+    benefits = mean(sum(benefits_ts, 2));
 end
 
 
@@ -115,20 +112,20 @@ function formatted_name = format_parameter_name(param_name)
     param_map('value_of_death') = 'Value of statistical life (VSL)';
     param_map('y') = 'GDP growth rate';
     param_map('r') = 'Social discount rate';
-    param_map('gamma') = 'Fraction harm mitigated by vaccine';
-    param_map('capacity_kept') = 'Surge capacity kept after vaccine';
-    param_map('k_m') = 'Unit cost of advance mRNA capacity';
-    param_map('k_o') = 'Unit cost of advance traditional capacity';
-    param_map('c_m') = 'Marginal cost of mRNA vaccines';
-    param_map('c_o') = 'Marginal cost of traditional vaccines';
-    param_map('epsilon') = 'Decreasing returns to surge capacity spending';
-    param_map('f_m') = 'Fraction at-risk capacity immediately successful (mRNA)';
-    param_map('f_o') = 'Fraction at-risk capacity immediately successful (traditional)';
-    param_map('g_m') = 'Fraction at-risk capacity repurposable (mRNA)';
-    param_map('g_o') = 'Fraction at-risk capacity repurposable (traditional)';
-    param_map('tau_a') = 'Time to vaccine without existing prototype';
-    param_map('tau_m') = 'Time to repurpose mRNA vaccine candidate';
-    param_map('tau_o') = 'Time to repurpose traditional vaccine candidate';
+    param_map('gamma') = 'Harm mitigated by vaccine';
+    param_map('capacity_kept') = 'Surge capacity kept after pandemic';
+    param_map('k_m') = 'mRNA capacity unit cost';
+    param_map('k_o') = 'Traditional capacity unit cost';
+    param_map('c_m') = 'mRNA vaccine unit cost';
+    param_map('c_o') = 'Traditional vaccine unit cost';
+    param_map('epsilon') = 'Decreasing returns to surge capacity';
+    param_map('f_m') = 'mRNA capacity successful';
+    param_map('f_o') = 'Traditional capacity successful';
+    param_map('g_m') = 'mRNA capacity repurposable';
+    param_map('g_o') = 'Traditional capacity repurposable';
+    param_map('tau_a') = 'Time to vaccine without prototype';
+    param_map('tau_m') = 'Repurposing delay mRNA';
+    param_map('tau_o') = 'Repurposing delay traditional';
     param_map('rental_share') = 'Advance capacity rental share';
     
     % Return formatted name if available, otherwise return original
@@ -156,19 +153,15 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
     fprintf(fileID, '\\caption{Benefits from baseline vaccine program}\n');
     fprintf(fileID, '\\begin{tabular}{p{5.5cm}ccc}\n');
     fprintf(fileID, '\\toprule\n');
-    fprintf(fileID, 'Parameter & Default value & Sensitivity & Net present value \\\\\n');
+    fprintf(fileID, 'Parameter & Default & Sensitivity & Net present value \\\\\n');
     fprintf(fileID, ' & & & (trillion \\$) \\\\\n');
     fprintf(fileID, '\\midrule\n');
     
     % Write baseline row
-    fprintf(fileID, '\\textbf{Default parameters} & & & %.2f \\\\\n', baseline_benefits/1e12);
+    fprintf(fileID, '\\textbf{Default parameters} & & & \\textbf{%.0f} \\\\\n', baseline_benefits/1e12);
 
     % Parameters that should be displayed as percentages
-    percentage_params = {'y', 'r', 'gamma', 'theta', 'f_m', 'f_o', 'g_m', 'g_o', 'rental_share'};
-
-    % Parameters that should be displayed in millions
-    million_params = {'value_of_death'};
-        
+    percentage_params = {'y', 'r', 'gamma', 'theta', 'f_m', 'f_o', 'g_m', 'g_o', 'rental_share', 'capacity_kept'};
     
     % Write parameter rows
     for i = 2:height(summary_table)
@@ -182,16 +175,16 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
         
         % Only add units to first and last values in range
         if any(strcmp(raw_param, percentage_params))
-            fprintf(fileID, '%s & %s & %.0f--%.0f\\%% & %.2f--%.2f \\\\\n', ...
+            fprintf(fileID, '%s & %s & %.0f--%.0f\\%% & %.0f--%.0f \\\\\n', ...
                 param, baseline_val, low_val*100, high_val*100, low_benefit, high_benefit);
         elseif contains(raw_param, 'tau')
-            fprintf(fileID, '%s & %s & %.0f--%.0f months & %.2f--%.2f \\\\\n', ...
+            fprintf(fileID, '%s & %s & %.0f--%.0f months & %.0f--%.0f \\\\\n', ...
                 param, baseline_val, low_val, high_val, low_benefit, high_benefit);
         elseif startsWith(raw_param, 'k_') || startsWith(raw_param, 'c_')
-            fprintf(fileID, '%s & %s & \\$%.0f--%.0f & %.2f--%.2f \\\\\n', ...
+            fprintf(fileID, '%s & %s & \\$%.0f--%.0f & %.0f--%.0f \\\\\n', ...
                 param, baseline_val, low_val, high_val, low_benefit, high_benefit);
         else
-            fprintf(fileID, '%s & %s & %.2f--%.2f & %.2f--%.2f \\\\\n', ...
+            fprintf(fileID, '%s & %s & %.2f--%.2f & %.0f--%.0f \\\\\n', ...
                 param, baseline_val, low_val, high_val, low_benefit, high_benefit);
         end
     end
@@ -218,7 +211,7 @@ function formatted_value = format_value(value, param_name)
     %   formatted_value (string): Formatted value string
     
     % Parameters that should be displayed as percentages
-    percentage_params = {'y', 'r', 'gamma', 'theta', 'f_m', 'f_o', 'g_m', 'g_o', 'rental_share'};
+    percentage_params = {'y', 'r', 'gamma', 'theta', 'f_m', 'f_o', 'g_m', 'g_o', 'rental_share', 'capacity_kept'};
     
     % Parameters that should be displayed in millions
     million_params = {'value_of_death'};
