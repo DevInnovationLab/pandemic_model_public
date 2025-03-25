@@ -3,7 +3,7 @@ function plot_agg_cost_comparison(job_dir)
     % Args:
     %   job_dir: Directory containing job configuration and results
 
-    get_total_costs(job_dir); % Make sure we have calculated total nominal costs.
+    process_total_costs(job_dir); % Make sure we have calculated total nominal costs.
 
     config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));

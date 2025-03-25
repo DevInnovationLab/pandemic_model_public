@@ -1,4 +1,4 @@
-function get_total_costs(results_dir)
+function process_total_costs(results_dir)
 
     config = yaml.loadFile(fullfile(results_dir, "job_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));

@@ -1,4 +1,4 @@
-function get_expected_lives_saved(job_dir)
+function get_exp_lives_saved_invest(job_dir)
     % Calculates and writes a table of expected lives saved for different advance investment
     % programs relative to baseline over 10 and 30 year periods
     %
