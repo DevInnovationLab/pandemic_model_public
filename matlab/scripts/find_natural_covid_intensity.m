@@ -12,45 +12,45 @@ function find_natural_severity_covid(config_path)
     cum_vax_rate = monthly_cum_vax.cum_vax_rate;
     monthly_cum_vax = [zeros(params.tau_a, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
 
-    target_ex_post_severity = 9.17; % In Marani data
+    target_ex_post_intensity = 1.834625; % In Marani data
     fy_mortality_reduction = 0.63; % First year mortality reduction
     gamma_init = 0.2;
-    ex_ante_severity_init = 10;
+    ex_ante_intensity_init = 2;
     
     % Set up optimization options
     options = optimoptions('fsolve', 'Display', 'iter', 'FunctionTolerance', 1e-6);
     
     % Define function handle for fsolve
-    fit_func = @(x) fit_ex_ante_severity(x(1), x(2), ...
-                                         target_ex_post_severity, years, ...
+    fit_func = @(x) fit_ex_ante_intensity(x(1), x(2), ...
+                                         target_ex_post_intensity, years, ...
                                          fy_mortality_reduction, monthly_cum_vax, params);
     
     % Initial guess for [ex_ante_severity, gamma]
-    x0 = [ex_ante_severity_init, gamma_init];
+    x0 = [ex_ante_intensity_init, gamma_init];
     
     % Solve system of equations
     [x_sol, fval, exitflag] = fsolve(fit_func, x0, options);
     
     % Extract solutions
-    ex_ante_severity = x_sol(1);
+    ex_ante_intensity = x_sol(1);
     gamma = x_sol(2);
     
     % Display results
-    fprintf('Solved ex-ante severity: %.4f\n', ex_ante_severity);
+    fprintf('Solved ex-ante intensity: %.4f\n', ex_ante_intensity);
     fprintf('Solved gamma: %.4f\n', gamma);
     fprintf('Function values at solution: [%.2e, %.2e]\n', fval(1), fval(2));
     
     % Consider writing output to file
-    results.ex_ante_severity = ex_ante_severity;
+    results.ex_ante_intensity = ex_ante_intensity;
     results.gamma = gamma;
     
-    yaml.dumpFile("./data/clean/inverted_covid_severity.yaml", results);
+    yaml.dumpFile("./data/clean/inverted_covid_intensity.yaml", results);
 end
 
 
-function F = fit_ex_ante_severity(ex_ante_severity, ...
+function F = fit_ex_ante_intensity(ex_ante_intensity, ...
                                   gamma, ...
-                                  target_ex_post_severity, ...
+                                  target_ex_post_intensity, ...
                                   years, ...
                                   fy_mortality_reduction, ...
                                   monthly_cum_vax, ...
@@ -58,6 +58,7 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     % Set parameters that don't matter for mortality quantfication
     econ_loss_model = load_econ_loss_model(params.econ_loss_model_config);
     yr_start = 1; % Doesn't matter as won't do PV for deaths
+    ex_ante_severity = ex_ante_intensity * years;
 
     % Get unmitigated pandemic losses
     [u_deaths, ~, ~, ~] = ...
@@ -77,7 +78,7 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     h_arr = h(vax_fractions_cum);
     m_deaths = u_deaths .* (1 - h_arr) .* gamma;
     growth_rate = (1+params.y)^(yr_start-1) .* (1+params.y).^(1/12 .* (1:height(m_deaths))');
-    ex_post_severity = sum(m_deaths ./ ((params.P0 / 10000 .* growth_rate)), 1);
+    ex_post_intensity = sum(m_deaths ./ ((params.P0 / 10000 .* growth_rate)), 1) / years;
     
     vaccine_start_month = params.tau_a;
     year_available_month = vaccine_start_month + 12 - 1;
@@ -85,7 +86,7 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     share_deaths_mitigated = sum(u_deaths(fy_idx) - m_deaths(fy_idx)) / sum(u_deaths(fy_idx));
 
     % Check closeness to targets.
-    severity_diff = ex_post_severity - target_ex_post_severity;
+    severity_diff = ex_post_intensity - target_ex_post_intensity;
     m_reduction_diff = share_deaths_mitigated - fy_mortality_reduction;
 
     F = [severity_diff; m_reduction_diff];

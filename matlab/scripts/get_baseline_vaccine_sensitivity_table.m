@@ -87,9 +87,7 @@ function benefits = calculate_vaccine_benefits(scenario_dir)
     
     % Load configuration to get discount rate
     config = yaml.loadFile(fullfile(scenario_dir, 'job_config.yaml'));
-    r = config.r;
-    periods = config.sim_periods;
-    
+   
     % Calculate total benefits
     raw_dir = fullfile(scenario_dir, 'raw');
     benefits_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_benefits.csv'));
