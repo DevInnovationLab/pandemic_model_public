@@ -1,7 +1,5 @@
 import unittest
 import numpy as np
-import pandas as pd
-from scipy.stats import genpareto
 
 from pandemic_model.stats.mevd import MEVD
 

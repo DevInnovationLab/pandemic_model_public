@@ -25,8 +25,6 @@ arrival_dist_config: "./output/severity_distributions/allrisk_base.yaml"
 duration_dist_config: "./output/duration_distributions/allrisk_base.yaml"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
-ptrs_vf: "./output/ptrs/vf_model_preds.csv"
-ptrs_rd: "./output/ptrs/rd_model_preds.csv"
 false_positive_rate: 0
 
 # Capacity
@@ -52,8 +50,9 @@ rental_share: 0.4 # Share maintenance cost recuperated from pandemic in absence 
 adv_cap_build_period: 30 # number of years it takes to finish building adv capacity
 
 # Vaccine development
-times_to_vaccine: "./output/times_to_vaccine.csv"
-vaccine_ptrs: "./data/clean/vaccine_ptrs.csv"
+ptrs_vf: "./output/ptrs/vf_model_preds.csv" # Viral family vaccine probability of success
+ptrs_rd: "./output/ptrs/rd_model_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
+rd_timelines: "./output/rd_timelines/vf_model_preds.csv"
 tau_a: 23 # months to develop / approve / prep for vaccination campaign (in status quo, is it tau_a + 1, as surveillance generates possibility of one month quicker)
 tau_m: 2 # months to repurpose mRNA capacity
 tau_o: 6 # months to repurpose traditional capacity
