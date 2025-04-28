@@ -14,7 +14,7 @@ function [deaths, mortality_losses, output_losses, learning_losses, ...
 
     % Calc losses
     deaths = params.P0 / 10000 .* monthly_intensity .* ones(size(months_arr));
-
+    
     % Calculate nominal losses first
     mortality_losses_nom = params.value_of_death .* deaths .* growth_rate; % nominal mortality losses
     output_losses_nom = (params.Y0 .* params.P0) .* monthly_econ_loss .* growth_rate; % nominal output losses

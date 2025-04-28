@@ -4,6 +4,9 @@
 This repository uses YAML configuration files. Clone [this repository](https://github.com/MartinKoch123/yaml) into the root directory of the pandemic model repository to add YAML read and write functions.
 
 ## Python
+
+You may need to install C/C++ and Fortran compilers to install some of the packages (aesara).
+
 We use [poetry](https://python-poetry.org/) for Python package and environment management.
 
 Install poetry following the instructions [here](https://python-poetry.org/docs/#installation). Then run the following commands

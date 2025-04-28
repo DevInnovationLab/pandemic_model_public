@@ -8,7 +8,7 @@ function y = h(vax_fractions)
     % h(>=0.7) = 1
 	
 	% Validate inputs 
-	assert(all(isbetween(vax_fractions, 0, 1)))
+	assert(all(isbetween(vax_fractions, 0, 1), 'all'))
 
 	% Initialize constants and output container
 	slope_1 = 3.038462;

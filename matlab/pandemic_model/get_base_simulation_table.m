@@ -56,55 +56,9 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 						   intensity, yr_end);
 
 	% Address overlapping pandemics
-	% Ensure parallel processing is enabled
-	disp("Pruning overlapping pandemics...");
-	if isempty(gcp('nocreate'))
-		parpool; % Create a parallel pool if not already available
-	end
-
-	response_table = sortrows(response_table, {'sim_num', 'yr_start'});
-
-	% Initialize a cell array to store pruned simulation data
-	sim_nums = unique(response_table.sim_num);
-	pruned_data = cell(length(sim_nums), 1);
-
-	% Loop over each simulation number
-	parfor sim_idx = 1:length(sim_nums)
-		sim_num = sim_nums(sim_idx);  % Get the current simulation number
-		
-		% Extract rows corresponding to the current simulation number
-		sim_data = response_table(response_table.sim_num == sim_num, :);
-		
-		% Start pruning procedure if more than one pandemic
-		if height(sim_data) > 1
-			i = 2;  % Start from the second row
-			while i <= height(sim_data)
-				% Check if the current pandemic overlaps with the previous one
-				if sim_data.yr_start(i) <= sim_data.yr_end(i-1)
-					% If the current pandemic has a smaller intensity than the previous one, remove it
-					if sim_data.intensity(i) < sim_data.intensity(i-1)
-						sim_data(i, :) = [];  % Remove the smaller pandemic
-						continue;  % Skip to the next row (which has shifted)
-					else
-						% If the current pandemic is more intense, snip the previous one
-						sim_data.yr_end(i-1) = sim_data.yr_start(i) - 1;  % Snip the previous pandemic
-					end
-				end
-				% Move to the next row
-				i = i + 1;
-			end
-		end
-
-		% Store the pruned data for this simulation in the cell array
-		pruned_data{sim_idx} = sim_data;
-	end
-
-	% After pruning, update the response table with all pruned simulations
-	pruned_table = vertcat(pruned_data{:});
-	response_table = pruned_table;
-
-	delete(gcp);  % Close the parallel pool once all work is done
-	disp("Done.");
+	sim_groups  = findgroups(response_table.sim_num);
+	pruned_tables  = splitapply(@trim_overlaps, response_table, sim_groups); % cell array
+	response_table = vertcat(pruned_tables{:}); % final result
 
 	% Get effective severity
 	% Effective severity is severity after snipping pandemics
@@ -137,4 +91,50 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
     % Combine the original response_table with the no_pandemic_table and sort
 	no_response_table.sim_num = no_pandemic_sims(:);
     simulation_table = sortrows([response_table; no_response_table], {'sim_num', 'yr_start'});
+end
+
+
+function tbl = trim_overlaps(tbl)
+% PRE: tbl has columns yr_start, duration OR yr_end, and intensity.
+%      All rows belong to one sim_num and are unsorted.
+%
+% POST: tbl is sorted, overlap–free, and the earlier interval is snipped
+%       if a later, more intense one collides with it.
+    tbl = sortrows(tbl, 'yr_start'); % O(n log n)
+
+	n = height(tbl);
+    keep = true(n,1);    % rows to keep
+    active_idx = 1;      % index of current "active" interval
+
+    for k = 2:n
+        % If current interval starts after active ends, update active interval
+        if tbl.yr_start(k) > tbl.yr_end(active_idx)
+            active_idx = k;
+            continue;
+        end
+
+        % Current interval overlaps with active interval(s)
+        if tbl.intensity(k) > tbl.intensity(active_idx)
+            % Current interval stronger: remove active interval
+            keep(active_idx) = false;
+            active_idx = k;  % current becomes new active interval
+
+            % Re-check backwards in case there are multiple overlaps
+            j = active_idx - 1;
+            while j >= 1 && tbl.yr_end(j) >= tbl.yr_start(active_idx)
+                if tbl.intensity(j) < tbl.intensity(active_idx)
+                    keep(j) = false;
+                else
+                    tbl.yr_end(j) = tbl.yr_start(active_idx) - 1; % snip older, stronger
+                end
+                j = j - 1;
+            end
+        else
+            % Current interval weaker: remove current interval
+            keep(k) = false;
+        end
+    end
+
+    % Final slicing
+    tbl = tbl(keep,:);
 end

@@ -78,7 +78,6 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
     sim_out_arr_benefits_vaccine        = zeros(params.sim_periods, sim_cnt);
     sim_out_arr_benefits_vaccine_nom    = zeros(params.sim_periods, sim_cnt); % Nominal benefits
 
-
     % Adv R&D costs
     if params.adv_RD
         time_arr = (1:params.adv_RD_benefit_start)';
@@ -275,7 +274,7 @@ function simulate_scenario(simulation_table, econ_loss_model, params)
                         vax_fraction_end = vax_fractions_cum(end);
                         
                         h_arr = h(vax_fractions_cum);
-                        m_deaths = u_deaths .* (1 - h_arr) .* params.gamma;
+                        m_deaths = u_deaths .* (1 - h_arr .* params.gamma);
                         
                         % Nominal benefits
                         u_losses_nom = [u_mortality_losses_nom, u_output_losses_nom, u_learning_losses_nom];
