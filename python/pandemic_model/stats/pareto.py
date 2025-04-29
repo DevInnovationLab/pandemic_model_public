@@ -329,3 +329,5 @@ class TruncatedGPD:
         obj = TruncatedGPD(**fitted)
         obj.cov = cov_full
         obj.se = dict(zip(par_names, se_full))
+
+        return obj
