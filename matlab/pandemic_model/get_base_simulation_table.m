@@ -56,8 +56,9 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 						   intensity, yr_end);
 
 	% Address overlapping pandemics
-	sim_groups  = findgroups(response_table.sim_num);
-	pruned_tables  = splitapply(@trim_overlaps, response_table, sim_groups); % cell array
+	[~, ~, sim_groups] = unique(response_table.sim_num);
+	pruned_tables = accumarray(sim_groups, (1:height(response_table))', [], ...
+		@(x) {trim_overlaps(response_table(x,:))}); % cell array
 	response_table = vertcat(pruned_tables{:}); % final result
 
 	% Get effective severity
@@ -113,22 +114,11 @@ function tbl = trim_overlaps(tbl)
             continue;
         end
 
-        % Current interval overlaps with active interval(s)
+        % Current interval overlaps with active interval
         if tbl.intensity(k) > tbl.intensity(active_idx)
-            % Current interval stronger: remove active interval
-            keep(active_idx) = false;
+            % Current interval stronger: make active interval end before current starts
+            tbl.yr_end(active_idx) = tbl.yr_start(k) - 1;
             active_idx = k;  % current becomes new active interval
-
-            % Re-check backwards in case there are multiple overlaps
-            j = active_idx - 1;
-            while j >= 1 && tbl.yr_end(j) >= tbl.yr_start(active_idx)
-                if tbl.intensity(j) < tbl.intensity(active_idx)
-                    keep(j) = false;
-                else
-                    tbl.yr_end(j) = tbl.yr_start(active_idx) - 1; % snip older, stronger
-                end
-                j = j - 1;
-            end
         else
             % Current interval weaker: remove current interval
             keep(k) = false;

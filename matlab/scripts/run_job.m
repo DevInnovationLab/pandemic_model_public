@@ -128,7 +128,7 @@ function run_job(job_config_path)
                                                                   viral_family_data, ...
                                                                   simulation_params);
 
-        simulate_scenario(scenario_simulation_table, econ_loss_model, simulation_params);
+        event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
     end
 
     % Handle filepath list input for scenario configs
