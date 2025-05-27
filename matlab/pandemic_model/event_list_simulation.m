@@ -23,10 +23,8 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     adv_RD = event_sim_table.has_RD_benefit;
     prep_start_month = event_sim_table.prep_start_month;
     false_pos_detected = isnan(prep_start_month) & is_false;
-    month_vaccine_ready = (...
-        params.tau_a ... % Baseline vaccine readiness
-        + ~is_false .* prep_start_month ... % Add time to detection when not false
-        - adv_RD .* params.rd_speedup_months); % Subtract speedup time from advance R&D
+    ufv_protection = event_sim_table.ufv_protection;
+    month_vaccine_ready = event_sim_table.month_vaccine_ready;
 
     % Array denoting which matrix elements correspond to active pandemics
     active_idx = (month_dur >= (1:max_month_dur)) .* ~is_false; % E x M
@@ -112,6 +110,9 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
         vax_fraction_cum = [zeros(num_events, 1), vax_fraction_cum(:, 1:end-1)];
     end
 
+    % Add protection from universal flu vaccine when relevant
+    vax_fraction_cum = vax_fraction_cum + params.initial_share_ufv .* ufv_protection;
+
     first_vax_idx = vax_fraction_cum <= 1;
     vax_fraction_cum(vax_fraction_cum > 1) = 1;
     h_arr = params.gamma .* h(vax_fraction_cum); % Protection factor
@@ -160,12 +161,21 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     surveil_costs_pv = surveil_costs_nom .* pv_factors_annual;
 
     % 3. R&D costs
+    % Viral family specific R&D costs
     adv_rd_costs_nom = zeros(1, max_years);
     if params.adv_RD
         adv_rd_spend_rate = params.adv_RD_spend / params.adv_RD_benefit_start;
         adv_rd_costs_nom(1:params.adv_RD_benefit_start) = adv_rd_spend_rate;
     end
     adv_rd_costs_pv = adv_rd_costs_nom .* pv_factors_annual;
+
+    % Advance universal flu vaccine R&D costs
+    ufv_rd_costs_nom = zeros(1, max_years);
+    if params.ufv_invest
+        ufv_rd_spend_rate = params.ufv_spend / params.adv_RD_benefit_start;
+        ufv_rd_costs_nom(1:params.adv_RD_benefit_start) = ufv_rd_spend_rate;
+    end
+    ufv_rd_costs_pv = ufv_rd_costs_nom .* pv_factors_annual;
 
     % 4. In-pandemic costs
     % Vaccination costs
@@ -186,7 +196,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     % In-pandemic R&D costs
     event_inp_rd_nom = adv_RD .* params.inp_RD_with_adv_RD + ~adv_RD .* params.inp_RD_no_adv_RD;
     inp_rd_costs_nom = zeros(num_sims, max_years);
-    inp_rd_costs_nom(event_start_idx) = event_inp_rd_nom .* ~false_pos_detected;
+    inp_rd_costs_nom(event_start_idx) = event_inp_rd_nom .* ~false_pos_detected .* ~ufv_protection;
     inp_rd_costs_pv = inp_rd_costs_nom .* pv_factors_annual;
 
     % 5. Impact costs
@@ -218,7 +228,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     result_cols = {'cap_avail_m', 'cap_avail_o', 'u_deaths', 'm_deaths', 'vax_benefits', ...
                     'm_mortality_losses', 'm_output_losses', 'm_learning_losses', 'ex_post_severity', ...
-                   'vax_fraction_end', 'inp_marg_costs_PV', 'inp_tailoring_costs_PV', 'inp_RD_costs_PV', ...
+                    'ufv_protection', 'vax_fraction_end', 'inp_marg_costs_PV', 'inp_tailoring_costs_PV', 'inp_RD_costs_PV', ...
                    'inp_cap_costs_PV'};
     result_var_types = repmat({'double'}, [1, numel(result_cols)]);
     
@@ -259,6 +269,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
         save_to_file(params.scenario_name, params.rawoutpath, sim_results, ...
             adv_cap_total_costs_nom, adv_cap_total_costs_pv, ...
             repmat(adv_rd_costs_nom, num_sims, 1), repmat(adv_rd_costs_pv, num_sims, 1), ...
+            repmat(ufv_rd_costs_nom, num_sims, 1), repmat(ufv_rd_costs_pv, num_sims, 1), ...
             repmat(surveil_costs_nom, num_sims, 1), repmat(surveil_costs_pv, num_sims, 1), ...
             surge_cap_total_costs_nom, surge_cap_total_costs_pv, ...
             sim_marginal_costs_nom, sim_marginal_costs_pv, ...

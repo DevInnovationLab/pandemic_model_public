@@ -1,8 +1,12 @@
-# Advance R&D params
+# Neglected viral family advance R&D params
 rd_speedup_months: 12 # how much tau_a is shortened by with advance R&D (months)
 rd_investments: 
-  strategy: top
-  num: 3
+  strategy: none
+  num: 0
+
+# Universal flu vaccine (UFV) R&D params
+ufv_invest: true
+initial_share_ufv: 0.5
 
 # Advance capacity params
 share_target_advanced_capacity: 0

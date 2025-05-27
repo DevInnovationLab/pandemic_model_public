@@ -11,9 +11,14 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
                                                              params.enhanced_surveillance, ...
                                                              params.surveillance_thresholds);
 
+	% Unpack vectors for code readability
+	viral_family = new_simulation_table.viral_family;
+	yr_start = new_simulation_table.yr_start;
+	is_false = new_simulation_table.is_false;
+
 	% Handle RD benefits
-	rd_eligible = new_simulation_table.yr_start > params.adv_RD_benefit_start;
-	family_researched = ismember(new_simulation_table.viral_family, params.viral_families_researched);
+	rd_eligible = yr_start > params.adv_RD_benefit_start;
+	family_researched = ismember(viral_family, params.viral_families_researched);
 	new_simulation_table.has_RD_benefit = rd_eligible & family_researched;
 
 	% Adjust thresholds for RD benefits when research eligible
@@ -30,8 +35,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_prob_map("unknown") = ptrs_rd.preds(~adv_rd_idx & rd_mrna_idx);
 	mrna_prob_map(missing) = NaN;
 
-	trad_probs = trad_prob_map(new_simulation_table.viral_family);
-	mrna_probs = mrna_prob_map(new_simulation_table.viral_family);
+	trad_probs = trad_prob_map(viral_family);
+	mrna_probs = mrna_prob_map(viral_family);
 
 	% Adjust probabilities for vaccines invested in
 	% Clean this up later when better idea of what you wnat to do.
@@ -39,7 +44,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_increment = ptrs_rd.preds(rd_mrna_idx & adv_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~adv_rd_idx);
 
 	vfs_no_adv = vf_data.viral_family(~vf_data.has_adv_RD);
-	increment_idx = ismember(new_simulation_table.viral_family, vfs_no_adv) & new_simulation_table.has_RD_benefit;
+	increment_idx = ismember(viral_family, vfs_no_adv) & new_simulation_table.has_RD_benefit;
 	trad_probs(increment_idx) = trad_probs(increment_idx) + trad_increment;
 	mrna_probs(increment_idx) = mrna_probs(increment_idx) + mrna_increment;
 
@@ -47,11 +52,34 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	trad_success = trad_probs > new_simulation_table.trad_vax_state;
 	mrna_success = mrna_probs > new_simulation_table.mrna_vax_state;
 
+	% Handle universal flu vaccine investment
+	flu_vax_success_prob = trad_probs("influenza"); % Assume made using traditional platform
+	new_simulation_table.ufv_protection = (...
+		params.ufv_invest & ... % Investment was made
+		strcmp(viral_family, "influenza") & ... % Dealing with influenza
+		yr_start > params.adv_RD_benefit_start & ... % After R&D benefit starts
+		flu_vax_success_prob > new_simulation_table.ufv_vax_state ... % Vaccine successfully provides protection
+	);
+
+	% Universal vaccine gives you an extra shot at goal
+	trad_success(strcmp(viral_family, "influenza")) = trad_success(strcmp(viral_family, "influenza")) | new_simulation_table.ufv_protection;
+	% Don't invest in mRNA if universal vaccine works
+	mrna_success(strcmp(viral_family, "influenza")) = mrna_success(strcmp(viral_family, "influenza")) & ~new_simulation_table.ufv_protection;
+
+	month_vaccine_ready = (...
+        params.tau_a ... % Baseline vaccine readiness
+        + ~is_false .* new_simulation_table.prep_start_month ... % Add time to detection when not false
+        - adv_RD .* params.rd_speedup_months); % Subtract speedup time from advance R&D
+	
+	month_vaccine_ready(ufv_protection) = ~is_false .* new_simulation_table.prep_start_month(ufv_protection); % When universal vaccine works it's immediately ready
+	new_simulation_table.month_vaccine_ready = month_vaccine_ready;
+
+	% Encode non universal vaccine R&D states
 	new_simulation_table.rd_state = 4 * ones(size(trad_success)); % Initialize all to state 4 (none successful)
 	new_simulation_table.rd_state(mrna_success & trad_success) = 1; % Both successful
 	new_simulation_table.rd_state(mrna_success & ~trad_success) = 2; % Only mRNA successful  
 	new_simulation_table.rd_state(~mrna_success & trad_success) = 3; % Only traditional successful
-	new_simulation_table.rd_state(isnan(new_simulation_table.yr_start)) = nan; % Set to nan if no pandemic
+	new_simulation_table.rd_state(isnan(yr_start)) = nan; % Set to nan if no pandemic
 
     new_simulation_table.rd_state_desc = repmat({""}, size(new_simulation_table, 1), 1);
     new_simulation_table.rd_state_desc(new_simulation_table.rd_state==1) = {"both"};
@@ -59,6 +87,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     new_simulation_table.rd_state_desc(new_simulation_table.rd_state==3) = {"trad_only"};
     new_simulation_table.rd_state_desc(new_simulation_table.rd_state==4) = {"none"};
     new_simulation_table.rd_state_desc(isnan(new_simulation_table.rd_state)) = {"no_pandemic"};
+
+	
 end
 
 

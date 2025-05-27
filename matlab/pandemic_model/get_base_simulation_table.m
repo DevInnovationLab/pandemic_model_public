@@ -44,6 +44,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 	viral_family = randsample(viral_family_data.viral_family, num_response_scenario, true, viral_family_data.arrival_share);
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
+	ufv_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	yr_end = min(yr_start + natural_dur - 1, params.sim_periods);
 
 	[posterior1, posterior2] = gen_surveil_signals(is_false, params.false_positive_rate);
@@ -51,7 +52,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 	% Create table of pandemic scenarios
 	response_table = table(sim_num, yr_start, severity, ...
 						   is_false, viral_family, ...
-						   mrna_vax_state, trad_vax_state, ...
+						   mrna_vax_state, trad_vax_state, ufv_vax_state, ...
 						   natural_dur, posterior1, posterior2, ...
 						   intensity, yr_end);
 

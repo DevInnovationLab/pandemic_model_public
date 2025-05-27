@@ -166,6 +166,8 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
         updated_params.pathogens_per_family * ... 
         num_vfs_researched;
 
+    updated_params.ufv_spend = updated_params.adv_RD_cost_per_pathogen * updated_params.pathogens_per_family;
+
     % Set advance capacity
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity
     updated_params.z_m = updated_params.share_target_advanced_capacity * z_m;
