@@ -71,8 +71,8 @@ function run_job(job_config_path)
 
     saveas(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.jpg"))
 
-    % Plot duration distributions
-    plot_duration_distributions(duration_dist, base_simulation_table, figure_path, false); % No clipped durations
+    % Plot duration distribution
+    plot_duration_distributions(base_simulation_table, figure_path, false); % No clipped durations
 
     dur_severity_scatterhist = figure('Visible', 'off');
     subplot(2, 2, 3);  % Bottom-left position for scatter plot

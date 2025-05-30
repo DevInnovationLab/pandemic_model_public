@@ -5,11 +5,11 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     new_simulation_table = base_simulation_table;
 
     % Add surveillance outcomes
-    new_simulation_table.prep_start_month = run_surveillance(new_simulation_table.posterior1, ...
-                                                             new_simulation_table.posterior2, ...
-                                                             new_simulation_table.is_false, ...
-                                                             params.enhanced_surveillance, ...
-                                                             params.surveillance_thresholds);
+    prep_start_month = run_surveillance(new_simulation_table.posterior1, ...
+										new_simulation_table.posterior2, ...
+										new_simulation_table.is_false, ...
+										params.enhanced_surveillance, ...
+										params.surveillance_thresholds);
 
 	% Unpack vectors for code readability
 	viral_family = new_simulation_table.viral_family;
@@ -19,7 +19,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	% Handle RD benefits
 	rd_eligible = yr_start > params.adv_RD_benefit_start;
 	family_researched = ismember(viral_family, params.viral_families_researched);
-	new_simulation_table.has_RD_benefit = rd_eligible & family_researched;
+	has_RD_benefit = rd_eligible & family_researched;
 
 	% Adjust thresholds for RD benefits when research eligible
 	trad_idx = strcmp(ptrs_vf.platform, "traditional_only");
@@ -44,7 +44,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_increment = ptrs_rd.preds(rd_mrna_idx & adv_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~adv_rd_idx);
 
 	vfs_no_adv = vf_data.viral_family(~vf_data.has_adv_RD);
-	increment_idx = ismember(viral_family, vfs_no_adv) & new_simulation_table.has_RD_benefit;
+	increment_idx = ismember(viral_family, vfs_no_adv) & has_RD_benefit;
 	trad_probs(increment_idx) = trad_probs(increment_idx) + trad_increment;
 	mrna_probs(increment_idx) = mrna_probs(increment_idx) + mrna_increment;
 
@@ -53,26 +53,30 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_success = mrna_probs > new_simulation_table.mrna_vax_state;
 
 	% Handle universal flu vaccine investment
-	flu_vax_success_prob = trad_probs("influenza"); % Assume made using traditional platform
-	new_simulation_table.ufv_protection = (...
+	flu_vax_success_prob = trad_prob_map("orthomyxoviridae"); % Assume made using traditional platform
+	flu_outbreak_idx = strcmp(viral_family, "orthomyxoviridae");
+	ufv_protection = (...
 		params.ufv_invest & ... % Investment was made
-		strcmp(viral_family, "influenza") & ... % Dealing with influenza
+		flu_outbreak_idx & ... % Dealing with influenza
 		yr_start > params.adv_RD_benefit_start & ... % After R&D benefit starts
 		flu_vax_success_prob > new_simulation_table.ufv_vax_state ... % Vaccine successfully provides protection
 	);
 
-	% Universal vaccine gives you an extra shot at goal
-	trad_success(strcmp(viral_family, "influenza")) = trad_success(strcmp(viral_family, "influenza")) | new_simulation_table.ufv_protection;
-	% Don't invest in mRNA if universal vaccine works
-	mrna_success(strcmp(viral_family, "influenza")) = mrna_success(strcmp(viral_family, "influenza")) & ~new_simulation_table.ufv_protection;
+	trad_success(flu_outbreak_idx) = trad_success(flu_outbreak_idx) | ufv_protection(flu_outbreak_idx); % Universal vaccine gives you an extra shot at goal
+	mrna_success(flu_outbreak_idx) = mrna_success(flu_outbreak_idx) & ~ufv_protection(flu_outbreak_idx); % Don't invest in mRNA if universal vaccine works
 
 	month_vaccine_ready = (...
         params.tau_a ... % Baseline vaccine readiness
-        + ~is_false .* new_simulation_table.prep_start_month ... % Add time to detection when not false
-        - adv_RD .* params.rd_speedup_months); % Subtract speedup time from advance R&D
-	
-	month_vaccine_ready(ufv_protection) = ~is_false .* new_simulation_table.prep_start_month(ufv_protection); % When universal vaccine works it's immediately ready
+        + ~is_false .* prep_start_month ... % Add time to detection when not false
+        - has_RD_benefit .* params.rd_speedup_months); % Subtract speedup time from advance R&D
+
+	month_vaccine_ready(ufv_protection) = ~is_false(ufv_protection) .* prep_start_month(ufv_protection); % When universal vaccine works it's immediately ready
+
+	% Assign new variables
 	new_simulation_table.month_vaccine_ready = month_vaccine_ready;
+	new_simulation_table.prep_start_month = prep_start_month;
+	new_simulation_table.has_RD_benefit = has_RD_benefit;
+	new_simulation_table.ufv_protection = ufv_protection;
 
 	% Encode non universal vaccine R&D states
 	new_simulation_table.rd_state = 4 * ones(size(trad_success)); % Initialize all to state 4 (none successful)
@@ -87,8 +91,6 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     new_simulation_table.rd_state_desc(new_simulation_table.rd_state==3) = {"trad_only"};
     new_simulation_table.rd_state_desc(new_simulation_table.rd_state==4) = {"none"};
     new_simulation_table.rd_state_desc(isnan(new_simulation_table.rd_state)) = {"no_pandemic"};
-
-	
 end
 
 

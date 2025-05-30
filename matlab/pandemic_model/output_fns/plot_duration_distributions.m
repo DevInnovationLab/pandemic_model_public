@@ -1,4 +1,4 @@
-function plot_duration_distributions(duration_dist, base_simulation_table, figure_path, clipped)
+function plot_duration_distributions(base_simulation_table, figure_path, clipped)
     % Plot pandemic duration distributions comparing ex-ante theoretical distribution
     % with realized natural and actual durations from simulations
     %
@@ -11,12 +11,6 @@ function plot_duration_distributions(duration_dist, base_simulation_table, figur
     % Create figure
     fig = figure('Visible', 'off', 'Position', [100 100 800 500]);
     hold on;
-    
-    % Plot theoretical continuous distribution
-    x = linspace(0, max(base_simulation_table.natural_dur), 100);
-    y = pdf(duration_dist.pd, x);
-    plot(x, y, 'LineWidth', 2, 'Color', [0 0.4470 0.7410], ...
-         'DisplayName', 'Lognormal (continuous)');
     
     % Plot natural duration histogram
     histogram(base_simulation_table.natural_dur, 'Normalization', 'pdf', ...

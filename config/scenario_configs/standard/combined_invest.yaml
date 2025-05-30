@@ -5,7 +5,8 @@ rd_investments:
   num: 3
 
 # Universal flu vaccine R&D params
-universal_flu_invest: true
+ufv_invest: true
+initial_share_ufv: 0.5
 
 # Advance capacity params
 share_target_advanced_capacity: 0.5
