@@ -50,18 +50,15 @@ classdef ParametrizedSeveritySampler < SeverityDist
             lin = sub2ind(size(unifrnd_draw), row, col);
 
             % --- rescale uniforms to (0,1) conditional on being in the tail --------
-            u_raw = (unifrnd_draw(lin) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
-
-            % --- right-truncation constant  F_max = P(Y ≤ max | Y > threshold) -----
-            F_max = gpcdf(obj.max_severity, xi, sigma, obj.min_severity);% row-wise
-
-            % scale uniforms to (0 , F_max) so that we sample from the truncated tail
-            u_trunc = u_raw .* F_max(row);
+            u = (unifrnd_draw(lin) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
 
             % inverse CDF gives a draw in (min_severity , max_severity]
-            severity(lin) = gpinv(u_trunc, xi(row), sigma(row), obj.min_severity);
+            severity(lin) = taleb_inverse( ...
+                gpinv(u, xi(row), sigma(row), obj.min_severity), ...
+                obj.min_severity, ...
+                obj.max_severity ...
+            );
 
-            % Numerical jitter can push a few draws an epsilon above max; clip them
             assert(all(severity <= obj.max_severity, 'all'));
         end
 
@@ -81,25 +78,23 @@ classdef ParametrizedSeveritySampler < SeverityDist
             sigma = obj.param_table.sigma;
             cum_prob_at_th = 1 - p_tail;
 
-            % P(Y ≤ max | tail)  – same constant as in get_severity
-            F_max = gpcdf(obj.max_severity, xi, sigma, obj.min_severity);  % column-vector
-
             % Case 1: at or below the threshold (atom)
             idx_th = severity <= obj.min_severity;
             rank(idx_th) = cum_prob_at_th;
 
             % Case 2: between threshold and max_severity
             idx_mid = severity > obj.min_severity & severity < obj.max_severity;
+            [row_mid, col_mid] = find(idx_mid);
+
             if any(idx_mid(:))
-                F_y   = gpcdf(severity(idx_mid), xi, sigma, obj.min_severity);
-                row_m = mod(find(idx_mid)-1, height(obj.param_table))+1;   % row for each mid-value
-                rank(idx_mid) = cum_prob_at_th(row_m) ...
-                                + p_tail(row_m) .* (F_y ./ F_max(row_m));
+                unconstrained_sev = taleb_transform(severity(idx_mid), obj.min_severity, obj.max_severit);
+                F_y = gpcdf(unconstrained_sev, xi(row_mid), sigma(row_mid), obj.min_severity);
+                rank(idx_mid) = cum_prob_at_th(row_mid) ...
+                                + p_tail(row_mid) .* F_y;
             end
 
             % Case 3: at or above the upper truncation point
-            idx_top = severity >= obj.max_severity;
-            rank(idx_top) = 1.0;
+            assert(all(isbetween(rank, 0, 1), 'all'));
         end
 
         function severity = ppf(obj, unifrnd_draw)
