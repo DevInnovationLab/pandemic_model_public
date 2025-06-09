@@ -25,6 +25,7 @@ arviz = "^0.21.0"
 tqdm = "^4.67.1"
 numba = "^0.61.2"
 jax = "^0.6.0"
+numdifftools = "^0.9.41"
 
 
 [tool.poetry.group.dev.dependencies]

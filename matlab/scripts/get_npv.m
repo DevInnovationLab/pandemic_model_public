@@ -1,9 +1,11 @@
-function get_npv(job_dir)
-    
-    process_benefit_cost(job_dir);
-    plot_npv_histograms(job_dir);
+function get_npv(job_dir, recalculate_bc)
+    % Run NPV calculations and create figures
+    if recalculate_bc
+        process_benefit_cost(job_dir);
+    end
+
     plot_npv_timeseries(job_dir, false);
-    plot_npv_boxplots(processed_dir, fullfile(job_dir, "figures"), scenarios, "baseline");
+    plot_npv_boxplots(job_dir, "baseline");
     plot_baseline_npv_ts(job_dir);
     create_npv_summary_table(job_dir);
 end
@@ -237,7 +239,7 @@ function plot_npv_timeseries(job_dir, include_ci)
 end
 
 
-function plot_npv_boxplots(processed_dir, figures_dir, scenarios, baseline)
+function plot_npv_boxplots(job_dir, baseline)
     % Creates box plots comparing NPV distributions across scenarios, using total NPVs
     % summed over all simulations
     %
@@ -249,6 +251,11 @@ function plot_npv_boxplots(processed_dir, figures_dir, scenarios, baseline)
     %
     % Returns:
     %   None, but saves box plot figures to specified directory
+
+    processed_dir = fullfile(job_dir, "processed");
+    figures_dir = fullfile(job_dir, "figures");
+    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    scenarios = string(fieldnames(config.scenarios));
 
     % Get non-baseline scenarios
     non_baseline = scenarios(~strcmp(scenarios, baseline));

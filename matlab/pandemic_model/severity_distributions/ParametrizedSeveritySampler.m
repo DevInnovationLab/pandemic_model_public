@@ -6,7 +6,7 @@ classdef ParametrizedSeveritySampler < SeverityDist
     end
 
     methods
-        function obj = ParametrizedSeveritySampler(param_table, min_severity, max_severity)
+        function obj = ParametrizedSeveritySampler(param_table, min_severity)
             % Create a severity sampler that samples from multiple parameter combinations
             %
             % Args:
@@ -16,55 +16,90 @@ classdef ParametrizedSeveritySampler < SeverityDist
             arguments
                 param_table
                 min_severity (1,1) double {mustBePositive}
-                max_severity (1,1) double {mustBePositive}
             end
 
             obj.min_severity = min_severity;
             obj.lower_bound = min_severity;
-            obj.max_severity = max_severity;
             obj.param_table = param_table;
+
+            assert(all(param_table.max_value == param_table.max_value(1)));
+            obj.max_severity = obj.param_table.max_value(1);
+
         end
 
+        % ---------------------------------------------------------------------
         function severity = get_severity(obj, unifrnd_draw)
-            % Sample severities using parameter combinations from param_table
+            % Draw severities from a GPD tail that is
+            %  – left-truncated  at  min_severity  (threshold)
+            %  – right-truncated at  max_severity
             %
-            % Args:
-            %   unifrnd_draw: Matrix of uniform random draws, must have same number
-            %                 of rows as param_table
-            %
-            % Returns:
-            %   severity: Vector of sampled severities
-            
+            % The mass (1-p) sits at the threshold, the remaining p is spread
+            % over (min_severity , max_severity].
+
             assert(size(unifrnd_draw,1) == height(obj.param_table), ...
                 'Number of draws must match number of parameter combinations');
 
-            severity = zeros(size(unifrnd_draw));
+            severity = obj.min_severity * ones(size(unifrnd_draw));   % default
+            p_tail = obj.param_table.p;
+            xi = obj.param_table.xi;
+            sigma = obj.param_table.sigma;
 
-            cum_prob_at_threshold = 1 - obj.param_table.p;
-            [row_idx, col_idx] = find(unifrnd_draw > cum_prob_at_threshold);
-            linear_idx = sub2ind(size(unifrnd_draw), row_idx, col_idx);
-            rescaled_rank = (unifrnd_draw(linear_idx) - cum_prob_at_threshold(row_idx)) ./ obj.param_table.p(row_idx);
+            % --- which uniforms fall into the tail? --------------------------------
+            cum_prob_at_th = 1 - p_tail;                         % P(Y = min_severity)
+            [row, col] = find(unifrnd_draw > cum_prob_at_th);
+            lin = sub2ind(size(unifrnd_draw), row, col);
 
-            severity(:) = obj.min_severity;
-            severity(linear_idx) = gpinv(rescaled_rank, obj.param_table.xi(row_idx), obj.param_table.sigma(row_idx), obj.min_severity);
-            severity(severity > obj.max_severity) = obj.max_severity;
+            % --- rescale uniforms to (0,1) conditional on being in the tail --------
+            u_raw = (unifrnd_draw(lin) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
+
+            % --- right-truncation constant  F_max = P(Y ≤ max | Y > threshold) -----
+            F_max = gpcdf(obj.max_severity, xi, sigma, obj.min_severity);% row-wise
+
+            % scale uniforms to (0 , F_max) so that we sample from the truncated tail
+            u_trunc = u_raw .* F_max(row);
+
+            % inverse CDF gives a draw in (min_severity , max_severity]
+            severity(lin) = gpinv(u_trunc, xi(row), sigma(row), obj.min_severity);
+
+            % Numerical jitter can push a few draws an epsilon above max; clip them
+            assert(all(severity <= obj.max_severity, 'all'));
         end
 
+        % ---------------------------------------------------------------------
         function rank = get_severity_rank(obj, severity)
-            % Get rank (CDF value) for given severity values
+            % Truncated tail CDF mapped back to the mixed distribution:
+            %   F_trunc(y) = (F(y) - F(threshold)) / (F(max) - F(threshold))
             %
-            % Args:
-            %   severity: Vector of severity values
-            %
-            % Returns:
-            %   rank: Vector of CDF values
+            % Overall rank = (1-p)  on the atom  +  p · F_trunc(y)
             
+            assert(~(severity > obj.max_severity), "Severity out of range");
+
             rank = zeros(size(severity));
 
-            cum_prob_at_threshold = 1 - obj.param_table.p;
-            rank(severity <= obj.min_severity) = cum_prob_at_threshold;
-            rank(severity > obj.min_severity) = gpcdf(severity, obj.param_table.xi, obj.param_table.sigma, obj.min_severity) .* obj.param_table.p + cum_prob_at_threshold; % Rescale to interval
-            rank(severity >= obj.max_severity) = 1;
+            p_tail = obj.param_table.p;
+            xi = obj.param_table.xi;
+            sigma = obj.param_table.sigma;
+            cum_prob_at_th = 1 - p_tail;
+
+            % P(Y ≤ max | tail)  – same constant as in get_severity
+            F_max = gpcdf(obj.max_severity, xi, sigma, obj.min_severity);  % column-vector
+
+            % Case 1: at or below the threshold (atom)
+            idx_th = severity <= obj.min_severity;
+            rank(idx_th) = cum_prob_at_th;
+
+            % Case 2: between threshold and max_severity
+            idx_mid = severity > obj.min_severity & severity < obj.max_severity;
+            if any(idx_mid(:))
+                F_y   = gpcdf(severity(idx_mid), xi, sigma, obj.min_severity);
+                row_m = mod(find(idx_mid)-1, height(obj.param_table))+1;   % row for each mid-value
+                rank(idx_mid) = cum_prob_at_th(row_m) ...
+                                + p_tail(row_m) .* (F_y ./ F_max(row_m));
+            end
+
+            % Case 3: at or above the upper truncation point
+            idx_top = severity >= obj.max_severity;
+            rank(idx_top) = 1.0;
         end
 
         function severity = ppf(obj, unifrnd_draw)

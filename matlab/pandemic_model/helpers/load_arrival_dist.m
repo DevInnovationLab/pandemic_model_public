@@ -44,6 +44,6 @@ function [metric, arrival_dist] = load_arrival_dist(arrival_dist_config_path, fa
         % Hardcoding a bunch of stuff that really shouldn't be because I'm lazy.
         param_samples = readtable(arrival_dist_config_path);
         metric = 'intensity';
-        arrival_dist = ParametrizedSeveritySampler(param_samples, 0.01, 57);
+        arrival_dist = ParametrizedSeveritySampler(param_samples, 0.01);
     end
 end

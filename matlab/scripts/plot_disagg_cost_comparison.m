@@ -22,7 +22,7 @@ function plot_disagg_cost_comparison(job_dir)
     end
     
     % Define cost variables (nominal only)
-    cost_vars = {"adv_cap_n", "adv_RD_n", "inp_cap_n", "inp_marg_n", "inp_RD_n", "surveil_n"};
+    cost_vars = {"adv_cap_n", "adv_RD_n", "ufv_RD_n", "inp_cap_n", "inp_marg_n", "inp_RD_n", "surveil_n"};
     
     % Calculate number of rows and columns for subplots
     n_scenarios = length(delta_scenarios);
@@ -37,7 +37,8 @@ function plot_disagg_cost_comparison(job_dir)
               [0.4660, 0.6740, 0.1880], ... % Green
               [0.4940, 0.1840, 0.5560], ... % Purple
               [0.3010, 0.7450, 0.9330], ... % Light blue
-              [0.6350, 0.0780, 0.1840]}; % Dark red
+              [0.6350, 0.0780, 0.1840], ... % Dark red
+              [0.9290, 0.6940, 0.1250]}; % Yellow
     
     % Create subplot layout with space at bottom for legend
     tiledlayout(n_rows, n_cols, 'TileSpacing', 'compact', 'Padding', 'compact');
@@ -99,7 +100,6 @@ function plot_disagg_cost_comparison(job_dir)
             line_label = strrep(line_label, ' (nominal value)', '');
             plot(1:length(mean_rel), mean_rel, 'Color', colors{j}, 'LineWidth', 2, 'DisplayName', line_label);
         end
-        
         title(convert_varnames(scenario), 'Interpreter', 'None', 'FontSize', 14)
         
         % Only add x labels to bottom row
@@ -130,5 +130,4 @@ function plot_disagg_cost_comparison(job_dir)
     figpath = fullfile(comparisons_dir, "cost_vars_relative_comparison.png");
     exportgraphics(fig, figpath, 'Resolution', 400);
     close(fig);
-
 end
