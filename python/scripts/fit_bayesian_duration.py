@@ -12,7 +12,7 @@ from matplotlib.lines import Line2D
 from scipy.optimize import least_squares
 
 # Constants
-TRUNC_YEARS = 10
+DEFAULT_TRUNC_YEARS = 10
 plt.rc("axes.spines", top=False, right=False)
 
 class NIGBayesianUpdater:
@@ -240,7 +240,7 @@ def calibrate_nig_prior(mu_target, sigma_target, kappa0=1, alpha0=2):
 
 
 def plot_survival_from_nig(mu0, kappa0, alpha0, beta0, *,
-                           t_max=TRUNC_YEARS, n_points=1000, n_draws=50000, cred=0.90,
+                           t_max=DEFAULT_TRUNC_YEARS, n_points=1000, n_draws=50000, cred=0.90,
                            ax=None, label="NIG prior", color="C0"):
     """Visualise the distribution of survival curves implied by an NIG prior.
 
@@ -278,7 +278,8 @@ def plot_survival_from_nig(mu0, kappa0, alpha0, beta0, *,
 
 @click.command()
 @click.option('--n-samples', default=100_000, help='Number of samples to draw from the distribution')
-def main(n_samples):
+@click.option('--trunc_duration', default=DEFAULT_TRUNC_YEARS, help='Upper truncation.')
+def main(n_samples, trunc_duration):
     """Draw samples from the calibrated duration distribution."""
     click.echo(f"Drawing {n_samples} samples from the duration distribution...")
 
@@ -367,7 +368,7 @@ def main(n_samples):
     plt.figure(figsize=(10, 6))
 
     # Time points for survival function
-    t = np.linspace(0, TRUNC_YEARS, 1000)
+    t = np.linspace(0, trunc_duration, 1000)
 
     # NIG posterior samples from calibrated NIG updater
     cal_mu_samples, cal_sigma_samples = cal_nig_updater.sample_posterior(n_samples)
@@ -404,6 +405,7 @@ def main(n_samples):
     plt.grid(True)
     plt.savefig("./output/duration_distributions/allrisk_base_survival_fn.jpg", dpi=400)
 
+    nig_samples['trunc_value'] = trunc_duration
     nig_samples.to_csv("./output/duration_distributions/allrisk_base_mu_sigma_samples.csv", index=False)
 
 if __name__ == "__main__":
