@@ -11,7 +11,7 @@ function duration_dist = load_duration_dist(config_path)
         duration_dist = ParametrizedDurationDist(config.dist_family, config.params, config.max_duration);
     elseif strcmp(ext, ".csv")
         param_samples = readtable(config_path);
-        duration_dist = DurationSampler(param_samples, 10); % Beware that this is hardcoded
+        duration_dist = DurationSampler(param_samples); % Beware that this is hardcoded
     end
 
 end

@@ -21,7 +21,7 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-arrival_dist_config: "./output/severity_distributions/taleb_param_samples_mle.csv"
+arrival_dist_config: "./output/severity_distributions/taleb_params_samples_mle.csv"
 duration_dist_config: "./output/duration_distributions/allrisk_base_mu_sigma_samples.csv"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"

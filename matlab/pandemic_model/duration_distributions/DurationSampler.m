@@ -5,7 +5,7 @@ classdef DurationSampler < DurationDist
     end
 
     methods
-        function obj = DurationSampler(param_table, max_duration)
+        function obj = DurationSampler(param_table)
             % Create a duration sampler that samples from multiple parameter combinations
             %
             % Args:
@@ -14,11 +14,11 @@ classdef DurationSampler < DurationDist
             %   max_duration: Maximum allowed duration (default: Inf)
             arguments
                 param_table
-                max_duration = Inf
             end
 
-            obj.max_duration = max_duration;
             obj.param_table = param_table;
+            assert(all(param_table.trunc_value == param_table.trunc_value(1), 'all'));
+            obj.max_duration = param_table.trunc_value(1);
         end
 
         function duration = get_duration(obj, unifrnd_draw)

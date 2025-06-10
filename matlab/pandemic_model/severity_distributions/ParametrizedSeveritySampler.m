@@ -35,11 +35,10 @@ classdef ParametrizedSeveritySampler < SeverityDist
             %
             % The mass (1-p) sits at the threshold, the remaining p is spread
             % over (min_severity , max_severity].
-
             assert(size(unifrnd_draw,1) == height(obj.param_table), ...
                 'Number of draws must match number of parameter combinations');
 
-            severity = obj.min_severity * ones(size(unifrnd_draw));   % default
+            severity = obj.min_severity * ones(size(unifrnd_draw)); % default
             p_tail = obj.param_table.p;
             xi = obj.param_table.xi;
             sigma = obj.param_table.sigma;
@@ -87,7 +86,7 @@ classdef ParametrizedSeveritySampler < SeverityDist
             [row_mid, col_mid] = find(idx_mid);
 
             if any(idx_mid(:))
-                unconstrained_sev = taleb_transform(severity(idx_mid), obj.min_severity, obj.max_severit);
+                unconstrained_sev = taleb_transform(severity(idx_mid), obj.min_severity, obj.max_severity);
                 F_y = gpcdf(unconstrained_sev, xi(row_mid), sigma(row_mid), obj.min_severity);
                 rank(idx_mid) = cum_prob_at_th(row_mid) ...
                                 + p_tail(row_mid) .* F_y;

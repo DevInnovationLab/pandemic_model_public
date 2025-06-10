@@ -58,9 +58,9 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % Get surge capacity
     [surge_cap_m, surge_cap_m_cost] = ...
-        get_event_capacity(sim_nums, year_start, false_pos_detected, year_dur, max_years, base_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1);
+        get_event_capacity(sim_nums, year_start, false_pos_detected, year_dur, max_years, base_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
     [surge_cap_o, surge_cap_o_cost] = ...
-        get_event_capacity(sim_nums, year_start, false_pos_detected, year_dur, max_years, base_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0);
+        get_event_capacity(sim_nums, year_start, false_pos_detected, year_dur, max_years, base_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0, num_sims);
 
     % Total capacity
     all_cap_m = base_cap_m + adv_cap_m + surge_cap_m;

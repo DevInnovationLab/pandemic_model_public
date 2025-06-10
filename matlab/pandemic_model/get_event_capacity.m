@@ -1,6 +1,6 @@
 function [surge_cap, surge_cap_cost] = ...
     get_event_capacity(sim_num, year_start, false_pos_detected, duration, max_years, delta_cap, ...
-        surge_retained, base_cap, adv_cap, max_cap, params, is_mRNA)
+        surge_retained, base_cap, adv_cap, max_cap, params, is_mRNA, num_sims)
     % Inputs:
     %   sim_num     : [E×1] simulation index (1-based)
     %   month_start : [E×1] start month of pandemic
@@ -25,8 +25,8 @@ function [surge_cap, surge_cap_cost] = ...
         max_cap (1, 1)
         params
         is_mRNA
+        num_sims (1, 1)
     end
-    num_sims = max(sim_num);
     year_end = min(year_start + duration, max_years); % Month where capacity should be reduced
     event_start_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected), year_start(~false_pos_detected));
     event_end_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected), year_end(~false_pos_detected));
