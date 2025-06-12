@@ -51,17 +51,9 @@ classdef ParametrizedSeveritySampler < SeverityDist
             % --- rescale uniforms to (0,1) conditional on being in the tail --------
             u_raw = (unifrnd_draw(lin) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
 
-            % --- right-truncation constant  F_max = P(Y ≤ max | Y > threshold) -----
-            F_max = gpcdf(obj.max_severity, xi, sigma, obj.min_severity);% row-wise
-
-            % scale uniforms to (0 , F_max) so that we sample from the truncated tail
-            u_trunc = u_raw .* F_max(row);
-
             % inverse CDF gives a draw in (min_severity , max_severity]
-            severity(lin) = gpinv(u_trunc, xi(row), sigma(row), obj.min_severity);
-
-            % Numerical jitter can push a few draws an epsilon above max; clip them
-            assert(all(severity <= obj.max_severity, 'all'));
+            severity(lin) = gpinv(u_raw, xi(row), sigma(row), obj.min_severity);
+            severity(severity > obj.max_severity) = obj.max_severity;
         end
 
         % ---------------------------------------------------------------------
@@ -86,13 +78,11 @@ classdef ParametrizedSeveritySampler < SeverityDist
 
             % Case 2: between threshold and max_severity
             idx_mid = severity > obj.min_severity & severity < obj.max_severity;
-            [row_mid, col_mid] = find(idx_mid);
+            [row_mid, ~] = find(idx_mid);
 
             if any(idx_mid(:))
                 F_y   = gpcdf(severity(idx_mid), xi, sigma, obj.min_severity);
-                row_m = mod(find(idx_mid)-1, height(obj.param_table))+1;   % row for each mid-value
-                rank(idx_mid) = cum_prob_at_th(row_m) ...
-                                + p_tail(row_m) .* (F_y ./ F_max(row_m));
+                rank(idx_mid) = cum_prob_at_th(row_mid) + p_tail(row_mid) .* F_y;
             end
 
             % Case 3: at or above the upper truncation point
