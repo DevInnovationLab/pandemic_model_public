@@ -21,7 +21,7 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-arrival_dist_config: "./output/severity_distributions/mle_dist_param_samples_trunc_1000.csv"
+arrival_dist_config: "./output/severity_distributions/mle_central_params_sharp_trunc_10000.yaml"
 duration_dist_config: "./output/duration_distributions/allrisk_base_mu_sigma_samples.csv"
 viral_family_data: "./data/clean/vf_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
@@ -39,8 +39,7 @@ c_m: 34 # marginal cost of producing mRNA vaccines ($ per course) (LB)
 c_o: 17 # marginal cost of producing traditional vaccines ($ per course) (LB)
 epsilon: 1 # decreasing returns to capacity investments during pandemic
 beta: 100e6 # in-pandemic kink in capital cost function
-x_target: 15.7e9 # target total capacity in annual courses (x^{\prime\prime} in paper)
-x_adv_res: 2.25e9 # Total capacity reservation in advance of a pandemic
+x_max_target: 15.7e9 # target total capacity in annual courses (x^{\prime\prime} in paper)
 x_avail: 3.78e9 # total capacity in annual courses that can be achieved in pandemic (x^\prime in paper)
 f_m: 0.2 # fraction of at risk capacity successful in mRNA platform
 f_o: 0.2 # fraction of at risk capacity successful in traditional platform

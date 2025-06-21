@@ -1,13 +1,12 @@
 function get_npv(job_dir, recalculate_bc)
     % Run NPV calculations and create figures
     if recalculate_bc
-        process_benefit_cost(job_dir);
+        process_benefit_cost(job_dir, recalculate_bc);
     end
 
     plot_npv_timeseries(job_dir, false);
     plot_npv_boxplots(job_dir, "baseline");
     plot_baseline_npv_ts(job_dir);
-    create_npv_summary_table(job_dir);
 end
 
 

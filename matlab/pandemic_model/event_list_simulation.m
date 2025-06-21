@@ -4,7 +4,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     event_sim_table = simulation_table(~isnan(simulation_table.yr_start), :); % Remove simulations with no events
 
     % Basic simulation parameters
-    sim_nums = event_sim_table.sim_num;
+    sim_num = event_sim_table.sim_num;
     num_sims = params.num_simulations;
     num_events = height(event_sim_table);
     max_years = params.sim_periods;
@@ -36,8 +36,8 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     pv_factors_monthly = (1/(1 + params.r)).^((month_start + months_matrix - 1)/12);
     
     % Event indices for aggregation
-    event_start_idx = sub2ind([num_sims, max_years], sim_nums, year_start);
-    [sim_idx, year_idx] = get_event_list_to_sim_year_idx(sim_nums, month_start, month_dur);
+    event_start_idx = sub2ind([num_sims, max_years], sim_num, year_start);
+    [sim_idx, year_idx] = get_event_list_to_sim_year_idx(sim_num, month_start, month_dur);
 
     %% CAPACITY CALCULATIONS
     % Get target capacity
@@ -47,8 +47,8 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     build_rate_o = params.z_o / build_years;
 
     % Calculate advance and surge capacity
-    base_cap_m = params.x_avail * params.mRNA_share;
-    base_cap_o = params.x_avail * (1 - params.mRNA_share);
+    base_cap_m = params.x_avail .* (1 - params.theta) .* params.mRNA_share;
+    base_cap_o = params.x_avail .* (1 - params.theta) .* (1 - params.mRNA_share);
     [max_cap_m, max_cap_o] = get_target_capacity(params);
     frac_retained = params.capacity_kept;
     
@@ -58,9 +58,9 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % Get surge capacity
     [surge_cap_m, surge_cap_m_cost] = ...
-        get_event_capacity(sim_nums, year_start, false_pos_detected, year_dur, max_years, base_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
+        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, base_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
     [surge_cap_o, surge_cap_o_cost] = ...
-        get_event_capacity(sim_nums, year_start, false_pos_detected, year_dur, max_years, base_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0, num_sims);
+        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, base_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0, num_sims);
 
     % Total capacity
     all_cap_m = base_cap_m + adv_cap_m + surge_cap_m;
@@ -79,14 +79,13 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     surge_cap_annual_value = surge_cap_m_annual_value + surge_cap_o_annual_value;
 
     % Calculate rental income
-    rentable_cap_m = adv_cap_m + surge_cap_m;
-    rentable_cap_o = adv_cap_o + surge_cap_o;
-    rental_income_fractions = get_rental_fractions(params, rentable_cap_m, rentable_cap_o);
+    rentable_cap = (adv_cap_m + surge_cap_m) + (adv_cap_o + surge_cap_o);
+    rental_income_fractions = get_rental_fractions(rentable_cap, params.theta .* (base_cap_m + base_cap_o));
 
     % Zero out rental income during outbreaks
     true_outbreak_mat = zeros(num_sims, max_years);
-    true_outbreak_mat(sub2ind([num_sims, max_years], sim_nums(~is_false), year_start(~is_false))) = 1;
-    true_outbreak_mat(sub2ind([num_sims, max_years], sim_nums(~is_false), year_start(~is_false) + year_dur(~is_false) - 1)) = -1;
+    true_outbreak_mat(sub2ind([num_sims, max_years], sim_num(~is_false), year_start(~is_false))) = 1;
+    true_outbreak_mat(sub2ind([num_sims, max_years], sim_num(~is_false), year_start(~is_false) + year_dur(~is_false) - 1)) = -1;
     true_outbreak_mat = cumsum(true_outbreak_mat, 2) > 0;
     rental_income_fractions(true_outbreak_mat) = 0;
 
@@ -119,13 +118,16 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % Vaccinate at rate of capacity until all vaccinated, then annual
     % vaccination to maintain immunity.
+    share_cap_m = cap_m ./ (cap_tot + eps);
+    max_booster_rate = min(cap_tot, params.P0 / 12);
+
     monthly_courses_m = (...
         first_vax_idx .* cap_m + ...
-        ~first_vax_idx .* min(cap_tot, params.P0 / 12) .* (cap_m ./ (cap_tot + eps)) ...
+        ~first_vax_idx .* max_booster_rate .* share_cap_m ...
     ) .* active_idx;
     monthly_courses_o = (...
         first_vax_idx .* cap_o + ...
-        ~first_vax_idx .* min(cap_tot, params.P0 / 12) .* (cap_o ./ (cap_tot + eps)) ...
+        ~first_vax_idx .* max_booster_rate .* (1 - share_cap_m) ...
     ) .* active_idx;
 
     % Calculate mitigated losses and vaccine benefits
@@ -283,13 +285,13 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 end
 
 
-function [sim_idx, year_idx] = get_event_list_to_sim_year_idx(sim_nums, month_start, month_dur)
+function [sim_idx, year_idx] = get_event_list_to_sim_year_idx(sim_num, month_start, month_dur)
     % Create indices for converting event x month matrix to simulation x year matrix
     %
     % Args:
     %   values_matrix: Matrix of values with dimensions (events x months)
     %   event_months: Starting month for each event (1-based)
-    %   sim_nums: Array of simulation numbers for each event
+    %   sim_num: Array of simulation numbers for each event
     %   month_dur: Duration in months for each event
     %
     % Returns:
@@ -298,7 +300,7 @@ function [sim_idx, year_idx] = get_event_list_to_sim_year_idx(sim_nums, month_st
     %   values_flat: Flattened values from the input matrix
     
     % Get simulation indices by repeating each sim number by its duration
-    sim_idx = repelem(sim_nums, month_dur);
+    sim_idx = repelem(sim_num, month_dur);
     
     % Get month indices by expanding each event's start month
     month_idx = cell2mat(arrayfun(@(s,d) (s:(s+d-1))', ...
@@ -317,7 +319,7 @@ function sim_year_matrix = event_list_to_sim_year(values_matrix, sim_idx, year_i
     % Args:
     %   values_matrix: Matrix of values with dimensions (events x months)
     %   event_months: Starting month for each event (1-based)
-    %   sim_nums: Array of simulation numbers for each event
+    %   sim_num: Array of simulation numbers for each event
     %   month_dur: Duration in months for each event
     %   num_sims: Number of simulations
     %   max_years: Maximum number of years

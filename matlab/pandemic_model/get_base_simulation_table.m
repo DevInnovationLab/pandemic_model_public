@@ -1,21 +1,20 @@
-function simulation_table = get_base_simulation_table(arrival_dist, metric, duration_dist, viral_family_data, seed, params)
-
+function simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, seed, params)
 	% Set seed
 	rng(seed);
 
 	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 	duration_matrix(:, 1) = 0; % Assume no pandemics in first year so capacity logic works.
 
-	if strcmp(metric, 'severity')
+	if strcmp(arrival_dist.variable, 'severity')
 		severity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 		severity_matrix(:, 1) = 0;  % Assume no pandemics in first year so capacity logic works.
 		intensity_matrix = severity_matrix ./ duration_matrix;
-	end
-		
-	if strcmp(metric, 'intensity')
+	elseif strcmp(arrival_dist.variable, 'intensity')
 		intensity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 		intensity_matrix(:, 1) = 0;
 		severity_matrix = intensity_matrix .* duration_matrix;
+	else
+		error("Arrival distribution must be assigned variable 'intensity' or severity' to be used for simulation.")
 	end
 
 	intensity_matrix(duration_matrix == 0) = 0; % No intensity when pandemic has zero duration.
@@ -24,13 +23,15 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 	num_response_scenario = size(response_idx, 1);
 
 	% Plot empirical intensity exceedance
-	if strcmp(metric, 'severity')
+	if strcmp(arrival_dist.variable, 'severity')
 		condition_matrix = severity_matrix;
-	elseif strcmp(metric, 'intensity')
+		lower_bound = min(arrival_dist.dist_params.mu) ./ duration_matrix.max_value;
+	elseif strcmp(arrival_dist.variable, 'intensity')
 		condition_matrix = intensity_matrix;
+		lower_bound = min(arrival_dist.dist_params.mu);
 	end
 
-	empirical_intensity_exceed_fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_matrix, arrival_dist.lower_bound, params);
+	empirical_intensity_exceed_fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_matrix, lower_bound, params);
 	saveas(empirical_intensity_exceed_fig, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"))
 
 	% Create table of pandemic scenarios

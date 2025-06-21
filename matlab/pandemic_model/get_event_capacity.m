@@ -27,11 +27,14 @@ function [surge_cap, surge_cap_cost] = ...
         is_mRNA
         num_sims (1, 1)
     end
-    year_end = min(year_start + duration, max_years); % Month where capacity should be reduced
+    year_end = year_start + duration; % Month where capacity should be reduced
     event_start_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected), year_start(~false_pos_detected));
-    event_end_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected), year_end(~false_pos_detected));
+    
+    % Only reduce capacity if the end year is within simulation period
+    valid_end = year_end <= max_years;
+    event_end_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected & valid_end), year_end(~false_pos_detected & valid_end));
 
-    % Create capacity change matrix directly
+    % Create capacity change matrix
     % This could be more memory efficient if you just had event list with groups
     surge_cap = zeros(num_sims, max_years);
     surge_cap(event_start_idx) = delta_cap;

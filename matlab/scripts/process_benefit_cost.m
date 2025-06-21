@@ -1,5 +1,6 @@
 function process_benefit_cost(job_dir, recalculate_costs)
     % Get total costs first
+    recalculate_costs
     if recalculate_costs
         process_total_costs(job_dir);
     end
