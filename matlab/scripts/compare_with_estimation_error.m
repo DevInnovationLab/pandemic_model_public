@@ -67,13 +67,17 @@ function compare_with_estimation_error(job_base, trunc_thresholds)
         hold off;
     end
     
-    % Create and save comparison table
+    % Create and save comparison table for this job
     comparison_table = table(trunc_thresholds(:), mean_est_error_ann_npv, mean_mle_values_ann_npv, percent_diffs, ...
         'VariableNames', {'truncation', 'ann_npv_est_error', 'ann_npv_mle', 'percent_diff'});
-    writetable(comparison_table, './output/estimation_error_comparison.csv');
+    
+    % Save table with job name in filename
+    [~, job_name, ~] = fileparts(job_base);
+    output_path = sprintf('./output/estimation_error_comparison_%s.csv', job_name);
+    writetable(comparison_table, output_path);
 
     % Add row titles
-    annotation('textbox', [0.02 0.87 0.3 0.05], 'String', 'NPV distributions', ...
+    annotation('textbox', [0.02 0.91 0.3 0.05], 'String', 'NPV distributions', ...
                'EdgeColor', 'none', 'FontSize', 12, 'FontWeight', 'bold');
     annotation('textbox', [0.02 0.45 0.3 0.05], 'String', 'Exceedance functions', ...
                'EdgeColor', 'none', 'FontSize', 12, 'FontWeight', 'bold');

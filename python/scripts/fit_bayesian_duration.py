@@ -409,4 +409,5 @@ def main(n_samples, trunc_duration):
     nig_samples.to_csv("./output/duration_distributions/allrisk_base_mu_sigma_samples.csv", index=False)
 
 if __name__ == "__main__":
+    print("This script is deprecated. Use Notebook 38 instead.")
     main()
