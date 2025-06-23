@@ -22,7 +22,6 @@ classdef ArrivalDistSampler
             end
 
             obj.dist_params = dist_params;
-            head(dist_params)
             obj.false_positive_rate = false_positive_rate;
             obj.truncation_type = truncation_type;
             obj.variable = variable;
