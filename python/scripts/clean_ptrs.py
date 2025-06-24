@@ -2,9 +2,7 @@
 
 import re
 
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 
 from pandemic_model.utils import viral_family_map
 

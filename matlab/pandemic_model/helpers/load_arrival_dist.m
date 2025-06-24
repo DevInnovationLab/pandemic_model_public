@@ -14,7 +14,7 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
     end
 
     config = yaml.loadFile(config_path);
-    truncation_type = string(config.hyperparams.truncation_type);
+    trunc_method = string(config.hyperparams.trunc_method);
     variable = string(config.hyperparams.variable);
 
     % Create table with numeric arrays for each parameter
@@ -25,5 +25,5 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
     max_value = cell2mat(config.dist_params.max_value);
     dist_params = table(xi, sigma, p, mu, max_value, 'VariableNames', ["xi", "sigma", "p", "mu", "max_value"]);
 
-    arrival_dist = ArrivalDistSampler(dist_params, truncation_type, false_positive_rate, variable);
+    arrival_dist = ArrivalDistSampler(dist_params, trunc_method, false_positive_rate, variable);
 end

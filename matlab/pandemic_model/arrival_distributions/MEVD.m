@@ -4,13 +4,13 @@ classdef MEVD
         window_counts
         non_zero_window_counts
         base_dist
-        trunc_type
+        trunc_method
         lower_bound
         upper_bound
     end
     
     methods
-        function obj = MEVD(window_counts, dist_name, base_dist_params, trunc_type, upper_bound)
+        function obj = MEVD(window_counts, dist_name, base_dist_params, trunc_method, upper_bound)
             % MEVD Metastatistical Extreme Value Distribution
             %
             % Metastatistical Extreme Value Distribution (MEVD) built from a base distribution
@@ -28,13 +28,13 @@ classdef MEVD
             %   window_counts - Array of sizes for each window (n_i)
             %   dist_name - String specifying the base distribution type
             %   base_dist_params - Structure with parameters for the base distribution
-            %   trunc_type - String specifying truncation type ('sharp' or 'smooth')
+            %   trunc_method - String specifying truncation type ('sharp' or 'smooth')
             %   upper_bound - Maximum value for truncation (default: Inf)
             arguments
                 window_counts (:,1) {mustBeInteger, mustBeNonnegative}
                 dist_name (1,1) string
                 base_dist_params struct
-                trunc_type (1,1) string {mustBeMember(trunc_type, ["sharp", "smooth"])}
+                trunc_method (1,1) string {mustBeMember(trunc_method, ["sharp", "smooth"])}
                 upper_bound (1,1) double {mustBePositive} = Inf
             end
             obj.window_counts = window_counts;
@@ -43,17 +43,17 @@ classdef MEVD
             pd_params = struct_to_named_args(base_dist_params);
             obj.base_pd = makedist(dist_name, pd_params{:});
             obj.lower_bound = base_dist_params.theta;
-            obj.trunc_type = trunc_type;
+            obj.trunc_method = trunc_method;
             obj.upper_bound = upper_bound;
         end
         
         function F = base_cdf(obj, x)
             % Compute the CDF of the base distribution
-            if obj.trunc_type == "sharp"
+            if obj.trunc_method == "sharp"
                 F = obj.base_pd.cdf(x);
                 F(x >= obj.upper_bound) = 1;
                 
-            elseif obj.trunc_type == "smooth"
+            elseif obj.trunc_method == "smooth"
                 F_u = obj.base_pd.cdf(obj.upper_bound);
                 F = obj.base_pd.cdf(x) ./ F_u;
                 F(x >= obj.upper_bound) = 1;
@@ -62,10 +62,10 @@ classdef MEVD
         
         function f = base_pdf(obj, x)
             % Compute the PDF of the base distribution
-            if obj.trunc_type == "sharp"
+            if obj.trunc_method == "sharp"
                 f = obj.base_pd.pdf(x);
  
-            elseif obj.trunc_type == "smooth"
+            elseif obj.trunc_method == "smooth"
                 F_u = obj.base_pd.cdf(obj.upper_bound);
                 f = obj.base_pd.pdf(x) ./ F_u;
                 f(x >= obj.upper_bound) = 0;

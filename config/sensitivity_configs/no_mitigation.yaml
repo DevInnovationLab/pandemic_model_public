@@ -1,13 +1,13 @@
-base_job_config: "./config/job_configs/allrisk_base.yaml"
+base_job_config: "./config/job_configs/allrisk_base_event_sim.yaml"
 outdir: "./output/sensitivity"
 fix_params:
   gamma: 0
   scenario_configs: "./config/scenario_configs/standard/baseline.yaml"
 sensitivities:
   arrival_dist_config:
-    - "./output/severity_distributions/allrisk_base_half_arrival.yaml"
-    - "./output/severity_distributions/allrisk_base_double_arrival.yaml"
-    - "./output/severity_distributions/allrisk_base_ext.yaml"
+    - "./output/arrival_distributions/allrisk_base_half_arrival.yaml"
+    - "./output/arrival_distributions/allrisk_base_double_arrival.yaml"
+    - "./output/arrival_distributions/allrisk_base_ext.yaml"
   value_of_death:
     - 1e6
     - 1.6e6

@@ -1,4 +1,6 @@
 # Project-wide Python utilities.
+from pathlib import Path
+from typing import Tuple
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -34,6 +36,25 @@ def set_standard_plot_theme():
     })
 
     return
+
+
+def parse_epidemics_fp(fp: Path) -> Tuple[str]:
+    """Get metadata from filename of clean epidemics dataset."""
+    (scope, measure, lower_threshold, year_min) = Path(fp).stem.split("_")[2:]
+
+    lower_threshold = float(lower_threshold.replace('d', '.'))
+    year_min = int(year_min)
+
+    return scope, measure, lower_threshold, year_min
+
+def get_measure_units(measure: str) -> str:
+    "Get units associated with intensity or severity measure."
+    if measure == 'intensity':
+        return "Deaths per 10,000 per year"
+    elif measure == 'severity':
+        return "Deaths per 10,000"
+    else:
+        raise ValueError(f"Measure must be either 'intensity' or 'severity'. '{measure}' was passed.")
 
 
 def get_annual_arrival_counts(df: pd.DataFrame, start_year: int, end_year: int) -> pd.Series:

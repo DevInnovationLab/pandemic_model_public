@@ -2,12 +2,12 @@ classdef ArrivalDistSampler
     properties
         dist_params
         false_positive_rate
-        truncation_type
+        trunc_method
         variable
     end
 
     methods
-        function obj = ArrivalDistSampler(dist_params, truncation_type, false_positive_rate, variable)
+        function obj = ArrivalDistSampler(dist_params, trunc_method, false_positive_rate, variable)
             % Create a y_sample sampler that samples from multiple parameter combinations
             %
             % Args:
@@ -16,14 +16,14 @@ classdef ArrivalDistSampler
             %   max_y_sample: Maximum allowed y_sample
             arguments
                 dist_params (:,5) table
-                truncation_type (1,1) {mustBeMember(truncation_type, {'sharp', 'smooth'})}
+                trunc_method (1,1) {mustBeMember(trunc_method, {'sharp', 'smooth'})}
                 false_positive_rate (1,1) {mustBeNumeric, mustBeInRange(false_positive_rate, 0, 1)} = 0
                 variable (1,1) string = "undefined"
             end
 
             obj.dist_params = dist_params;
             obj.false_positive_rate = false_positive_rate;
-            obj.truncation_type = truncation_type;
+            obj.trunc_method = trunc_method;
             obj.variable = variable;
         end
 
@@ -54,11 +54,11 @@ classdef ArrivalDistSampler
             lin_idx = sub2ind(size(unifrnd_draw), row, col);
             u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
 
-            if strcmp(obj.truncation_type, "sharp")
+            if strcmp(obj.trunc_method, "sharp")
                 y_sample(lin_idx) = gpinv(u_raw, xi(row), sigma(row), mu(row)); % Check that this gives right answer.
                 [row_over, col_over] = find(y_sample > max_val);
                 y_sample(sub2ind([height(y_sample), width(y_sample)], row_over, col_over)) = max_val(row_over);
-            elseif strcmp(obj.truncation_type, "smooth")
+            elseif strcmp(obj.trunc_method, "smooth")
                 F_max = gpcdf(max_val(row), xi(row), sigma(row), mu(row));
                 u_trunc = u_raw .* F_max;
                 y_sample(lin_idx) = gpinv(u_trunc, xi(row), sigma(row), mu(row));
@@ -95,13 +95,13 @@ classdef ArrivalDistSampler
             [row_mid, ~] = find(idx_mid);
             idx_top = y_sample >= max_val;
 
-            if strcmp(obj.truncation_type, "sharp")
+            if strcmp(obj.trunc_method, "sharp")
                 if any(idx_mid(:))
                     F_y = gpcdf(y_sample(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
                     rank(idx_mid) = cum_prob_at_th(row_mid) + p_tail(row_mid) .* F_y;
                     rank(idx_top) = 1.0;
                 end
-            elseif strcmp(obj.truncation_type, "smooth")
+            elseif strcmp(obj.trunc_method, "smooth")
                 if any(idx_mid(:))
                     F_y = gpcdf(severity(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
                     F_max = gpcdf(max_val(row_mid), xi(row_mid), sigma(row_mid), mu(row_mid)); 

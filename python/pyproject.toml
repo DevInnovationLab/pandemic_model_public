@@ -26,6 +26,7 @@ tqdm = "^4.67.1"
 numba = "^0.61.2"
 jax = "^0.6.0"
 numdifftools = "^0.9.41"
+click = "^8.2.1"
 
 
 [tool.poetry.group.dev.dependencies]
