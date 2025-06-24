@@ -24,7 +24,7 @@ function run_job(job_config_path)
     create_folders_recursively(figure_path);
 
     % Load inputs from files
-    [metric, arrival_dist] = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
+    arrival_dist = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
     viral_family_data = readtable(job_config.viral_family_data, "TextType", "string");
     ptrs_vf = readtable(job_config.ptrs_vf, "TextType", "string");
@@ -35,7 +35,7 @@ function run_job(job_config_path)
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
     % Generate base simulation to be used across scenarios
-    base_simulation_table = get_base_simulation_table(arrival_dist, metric, duration_dist, viral_family_data, job_config.seed, job_config);
+    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config.seed, job_config);
     base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
     save(base_simulation_table_path, 'base_simulation_table');
 
@@ -71,8 +71,8 @@ function run_job(job_config_path)
 
     saveas(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.jpg"))
 
-    % Plot duration distributions
-    plot_duration_distributions(duration_dist, base_simulation_table, figure_path, false); % No clipped durations
+    % Plot duration distribution
+    plot_duration_distributions(base_simulation_table, figure_path, false); % No clipped durations
 
     dur_severity_scatterhist = figure('Visible', 'off');
     subplot(2, 2, 3);  % Bottom-left position for scatter plot
@@ -128,7 +128,7 @@ function run_job(job_config_path)
                                                                   viral_family_data, ...
                                                                   simulation_params);
 
-        simulate_scenario(scenario_simulation_table, econ_loss_model, simulation_params);
+        event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
     end
 
     % Handle filepath list input for scenario configs
@@ -166,10 +166,16 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
         updated_params.pathogens_per_family * ... 
         num_vfs_researched;
 
+    updated_params.ufv_spend = updated_params.adv_RD_cost_per_pathogen * updated_params.pathogens_per_family;
+
     % Set advance capacity
+    if updated_params.share_target_advanced_capacity == 0
+        updated_params.theta = 0;
+    end
+
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity
-    updated_params.z_m = updated_params.share_target_advanced_capacity * z_m;
-    updated_params.z_o = updated_params.share_target_advanced_capacity * z_o;
+    updated_params.z_m = z_m;
+    updated_params.z_o = z_o;
 
     assert(updated_params.rd_speedup_months <= updated_params.tau_a); % R&D speedup must be less or equal than baseline time.
 end

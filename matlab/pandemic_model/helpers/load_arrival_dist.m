@@ -1,39 +1,29 @@
-function [metric, arrival_dist] = load_arrival_dist(arrival_dist_config_path, false_positive_rate)
+function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
     % Load arrival distribution from YAML config file into MEVD object
     %
     % Parameters:
-    %   arrival_dist_config_path - Path to YAML config file containing arrival distribution parameters
+    %   config_path - Path to YAML config file containing arrival distribution parameters
     %   false_positive_rate - False positive rate
     %
     % Returns:
     %   arrival_dist - MEVD object representing the arrival distribution
     
     arguments
-        arrival_dist_config_path (1,1) string
+        config_path (1,1) string
         false_positive_rate (1,1) double
     end
 
-    % Load arrival distribution config from YAML
-    arrival_dist_config = yaml.loadFile(arrival_dist_config_path);
+    config = yaml.loadFile(config_path);
+    truncation_type = string(config.hyperparams.truncation_type);
+    variable = string(config.hyperparams.variable);
 
-    % Extract parameters from config
-    metric = arrival_dist_config.metric;
-    window_counts = cell2mat(arrival_dist_config.arrival_counts);
-    base_dist_family = arrival_dist_config.base_dist_family;
-    base_dist_params = arrival_dist_config.base_dist_params;
-    truncation = arrival_dist_config.truncation;
-    upper_bound = arrival_dist_config.upper_bound;
+    % Create table with numeric arrays for each parameter
+    xi = cell2mat(config.dist_params.xi);
+    sigma = cell2mat(config.dist_params.sigma);
+    p = cell2mat(config.dist_params.p);
+    mu = cell2mat(config.dist_params.mu);
+    max_value = cell2mat(config.dist_params.max_value);
+    dist_params = table(xi, sigma, p, mu, max_value, 'VariableNames', ["xi", "sigma", "p", "mu", "max_value"]);
 
-    % False positive adjustment, this is hacky
-    false_pos_add = ceil(sum(window_counts) * false_positive_rate) / (1 - false_positive_rate);
-    false_pos_increment = [ones(false_pos_add, 1); zeros(height(window_counts) - false_pos_add, 1)];
-    assert(isequal(size(false_pos_increment), size(window_counts)));
-    window_counts = window_counts + false_pos_increment;
-    
-    % Create MEVD object
-    arrival_dist = MEVD(window_counts, ...
-                        base_dist_family, ...
-                        base_dist_params, ...
-                        truncation, ...
-                        upper_bound);
+    arrival_dist = ArrivalDistSampler(dist_params, truncation_type, false_positive_rate, variable);
 end

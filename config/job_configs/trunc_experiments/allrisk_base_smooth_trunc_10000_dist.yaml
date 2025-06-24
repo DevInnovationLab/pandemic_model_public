@@ -1,0 +1,68 @@
+# Run params
+num_simulations: 50000
+sim_periods: 200
+outdir: "./output/jobs"
+scenario_configs: "./config/scenario_configs/standard"
+seed: 42
+add_datetime_to_outdir: 0
+sim_scens_path: null # Load previously created pandemic simulations (rather than creating new ones with parameters below)
+save_output: 1
+endogenous_rental: 0
+profile: false # Profile main parallel loop
+
+# Social value
+y: 0.016 # Growth rate
+r: 0.04 # Social discount rate
+P0: 7.91e9 # Base year population (2021)
+Y0: 12316.1 # Base year GDP
+value_of_death: 1.3e6
+conservative: 1 # Whether harm avoided is calculated at beginning (conservative) or end of period (not conservative)
+gamma: 0.5 # fraction of remaining harm mitigated by vaccine
+
+# Pandemic params
+response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
+arrival_dist_config: "./output/severity_distributions/mle_dist_param_samples_smooth_10000.yaml"
+duration_dist_config: "./output/duration_distributions/allrisk_base_mu_sigma_samples.csv"
+viral_family_data: "./data/clean/vf_data_arrival_all.csv"
+econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
+false_positive_rate: 0
+
+# Capacity
+theta: 0.25 # Fraction reduction in pandemic-time investments due to advance capacity
+delta: 0.19 # Annual maintenance cost as fraction of capital value
+mRNA_share: 0.5 # Share capacity that is mRNA.
+capacity_kept: 0.5 # Share response capacity kept after a pandemic
+k_m: 1.5 # Per course cost of mRNA capacity ($/course)
+k_o: 3 # Per course cost of traditional capacity ($/course)
+tailoring_fraction: 0.33 # Share capital cost paid at pandemic onset.
+c_m: 34 # marginal cost of producing mRNA vaccines ($ per course) (LB)
+c_o: 17 # marginal cost of producing traditional vaccines ($ per course) (LB)
+epsilon: 1 # decreasing returns to capacity investments during pandemic
+beta: 100e6 # in-pandemic kink in capital cost function
+x_max_target: 15.7e9 # target total capacity in annual courses (x^{\prime\prime} in paper)
+x_avail: 3.78e9 # total capacity in annual courses that can be achieved in pandemic (x^\prime in paper)
+f_m: 0.2 # fraction of at risk capacity successful in mRNA platform
+f_o: 0.2 # fraction of at risk capacity successful in traditional platform
+g_m: 0.4 # fraction of at risk capacity unsuccessful/repurpose-able in mRNA platform
+g_o: 0.4 # fraction of at risk capacity unsuccessful/repurpose-able in traditional platform
+rental_share: 0.4 # Share maintenance cost recuperated from pandemic in absence of rental.
+adv_cap_build_period: 30 # number of years it takes to finish building adv capacity
+
+# Vaccine development
+ptrs_vf: "./output/ptrs/vf_model_preds.csv" # Viral family vaccine probability of success
+ptrs_rd: "./output/ptrs/rd_model_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
+rd_timelines: "./output/rd_timelines/vf_model_preds.csv"
+tau_a: 23 # months to develop / approve / prep for vaccination campaign (in status quo, is it tau_a + 1, as surveillance generates possibility of one month quicker)
+tau_m: 2 # months to repurpose mRNA capacity
+tau_o: 6 # months to repurpose traditional capacity
+pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.
+inp_RD_no_adv_RD: 7.76297560e8 # $
+inp_RD_with_adv_RD: 5.31221781e8 # $
+adv_RD_cost_per_pathogen: 1.4e9 # $ nominal over period specified by adv_RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
+adv_RD_benefit_start: 15 # years until advance R&D benefits apply
+
+# Surveillance
+surveillance_thresholds: [0, 0] # First is for regular signal, second is for enhanced surveillance signal.
+surveil_annual_installation_spend: 5e9 # Initial spending to install enhanced surveillance
+surveil_installation_years: 2 # Time initial costs are incurred
+surveil_maintenance_spend: 1.25e9 # Maintenance spending on enhanced surveillance

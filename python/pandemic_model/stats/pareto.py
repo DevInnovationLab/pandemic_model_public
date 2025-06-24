@@ -1,5 +1,5 @@
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import approx_fprime, minimize
 
 
 # Truncated generalized pareto distribution ---------------------
@@ -273,6 +273,21 @@ class TruncatedGPD:
                 log_pdf = -np.log(sigma) - (data - loc)/sigma - np.log(norm)
                 
             return -np.sum(log_pdf)
+
+        def grad(f, x, eps=1e-6):
+            return approx_fprime(x, f, eps)
+
+        def hess(f, x, eps=1e-4):
+            n = len(x)
+            H = np.empty((n, n))
+            ei = np.zeros(n)
+            for i in range(n):
+                ei[i] = eps
+                g_plus  = grad(f, x + ei, eps)
+                g_minus = grad(f, x - ei, eps)
+                H[i] = (g_plus - g_minus) / (2 * eps)
+                ei[i] = 0.0
+            return H
         
         # Optimize the negative log-likelihood over free parameters
         nelder_mead_opts = {
@@ -291,13 +306,28 @@ class TruncatedGPD:
             error_msg += f"Final function value: {res.fun}\n"
             error_msg += f"Final parameters: {full_params(res.x)}"
             raise RuntimeError(error_msg)
+
         
-        fitted = full_params(res.x)
-        
+        info = hess(nll, res.x) # observed Fisher information (–∇²ℓ̂)
+        cov_free = np.linalg.inv(info) # asymptotic covariance on the *free* scale
+
+        # build Jacobian J that expands free → full parameters
+        J = np.zeros((len(par_names), len(free_names)))
+        row = 0
+        for p in par_names:
+            if p in fixed:
+                row += 1
+                continue
+            col = free_names.index(p)
+            J[row, col] = 1.0
+            row += 1
+        cov_full = J @ cov_free @ J.T # Δ–method
+        se_full  = np.sqrt(np.diag(cov_full))
+
         # Return a new instance with the fitted parameters
-        return TruncatedGPD(
-            xi=fitted['xi'],
-            upper=fitted['upper'],
-            loc=fitted['loc'],
-            scale=fitted['scale']
-        )
+        fitted = full_params(res.x)
+        obj = TruncatedGPD(**fitted)
+        obj.cov = cov_full
+        obj.se = dict(zip(par_names, se_full))
+
+        return obj

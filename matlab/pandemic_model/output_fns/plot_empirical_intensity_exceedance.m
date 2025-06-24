@@ -5,10 +5,8 @@ function fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_m
     %   intensity_matrix: Matrix of pandemic intensities
     %   condition_matrix: Matrix to use to decide which pandemics are above the exceedance threshold.
     %   lower_bound: lower_bound for threshold exceeding events
-    %   metric: String indicating if using 'severity' or 'intensity' metric
     %   params: Parameter struct containing response threshold and output paths
     
-    % Get intensities for plotting based on metric
     intensities_for_plot = sort(intensity_matrix(condition_matrix > lower_bound));
     
     % Calculate exceedance probabilities

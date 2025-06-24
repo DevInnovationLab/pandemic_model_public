@@ -10,7 +10,7 @@ function plot_raw_ts(results_dir)
 
     %% Single outcome plots
     disp("Creating cumulative expenditure time series.")
-    cost_vars = {'adv_cap', 'adv_RD', 'inp_cap', 'inp_marg', 'inp_RD', 'inp_tail', 'surveil'};
+    cost_vars = {'adv_cap', 'adv_RD', 'ufv_RD', 'inp_cap', 'inp_marg', 'inp_RD', 'inp_tail', 'surveil'};
     discounting = ['n', 'p'];
     for i = 1:length(scenarios)
         scenario = scenarios(i);

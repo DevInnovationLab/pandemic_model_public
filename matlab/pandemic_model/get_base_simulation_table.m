@@ -1,21 +1,20 @@
-function simulation_table = get_base_simulation_table(arrival_dist, metric, duration_dist, viral_family_data, seed, params)
-
+function simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, seed, params)
 	% Set seed
 	rng(seed);
 
 	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 	duration_matrix(:, 1) = 0; % Assume no pandemics in first year so capacity logic works.
 
-	if strcmp(metric, 'severity')
+	if strcmp(arrival_dist.variable, 'severity')
 		severity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 		severity_matrix(:, 1) = 0;  % Assume no pandemics in first year so capacity logic works.
 		intensity_matrix = severity_matrix ./ duration_matrix;
-	end
-		
-	if strcmp(metric, 'intensity')
+	elseif strcmp(arrival_dist.variable, 'intensity')
 		intensity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 		intensity_matrix(:, 1) = 0;
 		severity_matrix = intensity_matrix .* duration_matrix;
+	else
+		error("Arrival distribution must be assigned variable 'intensity' or severity' to be used for simulation.")
 	end
 
 	intensity_matrix(duration_matrix == 0) = 0; % No intensity when pandemic has zero duration.
@@ -24,13 +23,15 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 	num_response_scenario = size(response_idx, 1);
 
 	% Plot empirical intensity exceedance
-	if strcmp(metric, 'severity')
+	if strcmp(arrival_dist.variable, 'severity')
 		condition_matrix = severity_matrix;
-	elseif strcmp(metric, 'intensity')
+		lower_bound = min(arrival_dist.dist_params.mu) ./ duration_matrix.max_value;
+	elseif strcmp(arrival_dist.variable, 'intensity')
 		condition_matrix = intensity_matrix;
+		lower_bound = min(arrival_dist.dist_params.mu);
 	end
 
-	empirical_intensity_exceed_fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_matrix, arrival_dist.lower_bound, params);
+	empirical_intensity_exceed_fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_matrix, lower_bound, params);
 	saveas(empirical_intensity_exceed_fig, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"))
 
 	% Create table of pandemic scenarios
@@ -44,6 +45,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 	viral_family = randsample(viral_family_data.viral_family, num_response_scenario, true, viral_family_data.arrival_share);
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
+	ufv_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	yr_end = min(yr_start + natural_dur - 1, params.sim_periods);
 
 	[posterior1, posterior2] = gen_surveil_signals(is_false, params.false_positive_rate);
@@ -51,60 +53,15 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
 	% Create table of pandemic scenarios
 	response_table = table(sim_num, yr_start, severity, ...
 						   is_false, viral_family, ...
-						   mrna_vax_state, trad_vax_state, ...
+						   mrna_vax_state, trad_vax_state, ufv_vax_state, ...
 						   natural_dur, posterior1, posterior2, ...
 						   intensity, yr_end);
 
 	% Address overlapping pandemics
-	% Ensure parallel processing is enabled
-	disp("Pruning overlapping pandemics...");
-	if isempty(gcp('nocreate'))
-		parpool; % Create a parallel pool if not already available
-	end
-
-	response_table = sortrows(response_table, {'sim_num', 'yr_start'});
-
-	% Initialize a cell array to store pruned simulation data
-	sim_nums = unique(response_table.sim_num);
-	pruned_data = cell(length(sim_nums), 1);
-
-	% Loop over each simulation number
-	parfor sim_idx = 1:length(sim_nums)
-		sim_num = sim_nums(sim_idx);  % Get the current simulation number
-		
-		% Extract rows corresponding to the current simulation number
-		sim_data = response_table(response_table.sim_num == sim_num, :);
-		
-		% Start pruning procedure if more than one pandemic
-		if height(sim_data) > 1
-			i = 2;  % Start from the second row
-			while i <= height(sim_data)
-				% Check if the current pandemic overlaps with the previous one
-				if sim_data.yr_start(i) <= sim_data.yr_end(i-1)
-					% If the current pandemic has a smaller intensity than the previous one, remove it
-					if sim_data.intensity(i) < sim_data.intensity(i-1)
-						sim_data(i, :) = [];  % Remove the smaller pandemic
-						continue;  % Skip to the next row (which has shifted)
-					else
-						% If the current pandemic is more intense, snip the previous one
-						sim_data.yr_end(i-1) = sim_data.yr_start(i) - 1;  % Snip the previous pandemic
-					end
-				end
-				% Move to the next row
-				i = i + 1;
-			end
-		end
-
-		% Store the pruned data for this simulation in the cell array
-		pruned_data{sim_idx} = sim_data;
-	end
-
-	% After pruning, update the response table with all pruned simulations
-	pruned_table = vertcat(pruned_data{:});
-	response_table = pruned_table;
-
-	delete(gcp);  % Close the parallel pool once all work is done
-	disp("Done.");
+	[~, ~, sim_groups] = unique(response_table.sim_num);
+	pruned_tables = accumarray(sim_groups, (1:height(response_table))', [], ...
+		@(x) {trim_overlaps(response_table(x,:))}); % cell array
+	response_table = vertcat(pruned_tables{:}); % final result
 
 	% Get effective severity
 	% Effective severity is severity after snipping pandemics
@@ -137,4 +94,39 @@ function simulation_table = get_base_simulation_table(arrival_dist, metric, dura
     % Combine the original response_table with the no_pandemic_table and sort
 	no_response_table.sim_num = no_pandemic_sims(:);
     simulation_table = sortrows([response_table; no_response_table], {'sim_num', 'yr_start'});
+end
+
+
+function tbl = trim_overlaps(tbl)
+% PRE: tbl has columns yr_start, duration OR yr_end, and intensity.
+%      All rows belong to one sim_num and are unsorted.
+%
+% POST: tbl is sorted, overlap–free, and the earlier interval is snipped
+%       if a later, more intense one collides with it.
+    tbl = sortrows(tbl, 'yr_start'); % O(n log n)
+
+	n = height(tbl);
+    keep = true(n,1);    % rows to keep
+    active_idx = 1;      % index of current "active" interval
+
+    for k = 2:n
+        % If current interval starts after active ends, update active interval
+        if tbl.yr_start(k) > tbl.yr_end(active_idx)
+            active_idx = k;
+            continue;
+        end
+
+        % Current interval overlaps with active interval
+        if tbl.intensity(k) > tbl.intensity(active_idx)
+            % Current interval stronger: make active interval end before current starts
+            tbl.yr_end(active_idx) = tbl.yr_start(k) - 1;
+            active_idx = k;  % current becomes new active interval
+        else
+            % Current interval weaker: remove current interval
+            keep(k) = false;
+        end
+    end
+
+    % Final slicing
+    tbl = tbl(keep,:);
 end
