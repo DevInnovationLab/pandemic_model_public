@@ -6,7 +6,7 @@ function get_sensitivity_loss_summary(sensitivity_dir)
     %   sensitivity_dir (str): Path to sensitivity analysis output directory
     %
     % Returns:
-    %   None, but saves summary statistics to files in the sensitivity directory
+    %   None, but saves summary statsistics to files in the sensitivity directory
 
     % Load sensitivity config
     sensitivity_config = yaml.loadFile(fullfile(sensitivity_dir, 'sensitivity_config.yaml'));
@@ -27,11 +27,18 @@ function get_sensitivity_loss_summary(sensitivity_dir)
         get_losses_for_dir(baseline_dir, baseline_r, baseline_periods);
 
     % Initialize summary table with baseline
-    summary_table = table('Size', [1 6], 'VariableTypes', {'string', 'string', 'double', 'double', 'double', 'double'});
+    summary_table = table('Size', [1 6], 'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell'});
     summary_table.Properties.VariableNames = {...
         'Variable', 'Value', 'MortalityLoss', 'EconomicLoss', 'LearningLoss', 'TotalLoss'};
     [formatted_name, formatted_value] = format_names('baseline', 'baseline', baseline_vsl, baseline_r, baseline_y);
-    summary_table(1,:) = {formatted_name, formatted_value, baseline_mortality, baseline_economic, baseline_learning, baseline_total};
+    summary_table(1,:) = {...
+        formatted_name,...
+        formatted_value, ...
+        {get_mean_and_iqr(baseline_mortality)}, ...
+        {get_mean_and_iqr(baseline_economic)}, ...
+        {get_mean_and_iqr(baseline_learning)}, ...
+        {get_mean_and_iqr(baseline_total)}...
+    };
 
     % Process each sensitivity variable
     row_idx = 2;
@@ -49,7 +56,14 @@ function get_sensitivity_loss_summary(sensitivity_dir)
             periods = run_config.sim_periods;
             [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir, r, periods);
             [formatted_name, formatted_value] = format_names(var_name, var_values{j}, baseline_vsl, baseline_r, baseline_y);
-            summary_table(row_idx,:) = {formatted_name, formatted_value, mortality_loss, economic_loss, learning_loss, total_loss};
+            summary_table(row_idx,:) = {...
+                formatted_name, ...
+                formatted_value, ...
+                {get_mean_and_iqr(mortality_loss)}, ...
+                {get_mean_and_iqr(economic_loss)}, ...
+                {get_mean_and_iqr(learning_loss)}, ...
+                {get_mean_and_iqr(total_loss)} ...
+            };
             row_idx = row_idx + 1;
         end
     end
@@ -61,24 +75,35 @@ end
 
 
 % Function to load and process losses for a given directory
-function [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir, r, periods)
+function [mortality_losses, economic_losses, learning_losses, total_losses] = get_losses_for_dir(raw_dir, r, periods)
     % Load and process mortality losses
     annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
 
     mortality_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_mortality_losses.csv'));
-    mortality_loss = mean(sum(mortality_ts, 2)) .* annualization_factor;
+    mortality_losses = sum(mortality_ts, 2) .* annualization_factor;
     
     % Load and process output losses
     output_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_output_losses.csv'));
-    economic_loss = mean(sum(output_ts, 2)) .* annualization_factor;
+    economic_losses = sum(output_ts, 2) .* annualization_factor;
     
     % Load and process learning losses
     learning_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_learning_losses.csv'));
-    learning_loss = mean(sum(learning_ts, 2)) .* annualization_factor;
+    learning_losses = sum(learning_ts, 2) .* annualization_factor;
     
     % Calculate total losses
     total_ts = mortality_ts + output_ts + learning_ts;
-    total_loss = mean(sum(total_ts, 2)) .* annualization_factor;
+    total_losses = sum(total_ts, 2) .* annualization_factor;
+end
+
+
+function stats = get_mean_and_iqr(sample)
+    % Returns a struct with mean, 25th, and 75th percentiles
+
+    assert(isvector(sample)); % Throw error is matrix is passed.
+    stats.mean = mean(sample) / 1e12; % convert to trillions
+    pctiles = prctile(sample, [25 75]) / 1e12;
+    stats.p25 = pctiles(1);
+    stats.p75 = pctiles(2);
 end
 
 
@@ -88,37 +113,27 @@ function write_to_latex(summary_data, outpath)
         outpath (1,1) string
     end
 
-    % Convert losses from dollars to trillions
-    summary_data.MortalityLoss = summary_data.MortalityLoss / 1e12;
-    summary_data.EconomicLoss = summary_data.EconomicLoss / 1e12;
-    summary_data.LearningLoss = summary_data.LearningLoss / 1e12;
-    summary_data.TotalLoss = summary_data.TotalLoss / 1e12;
-
     % Open LaTeX file for writing
     fileID = fopen(outpath, 'w');
 
     % Write LaTeX table header
     fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
-    fprintf(fileID, '\\caption{Expected annual global pandemic losses}\n');
-    fprintf(fileID, '\\begin{tabular}{l r r r r}\n');
+    fprintf(fileID, '\\begin{tabular}{l r r r c}\n');
     fprintf(fileID, '\\toprule\n');
-    fprintf(fileID, 'Scenario & \\multicolumn{4}{c}{Expected annual pandemic losses (trillion dollars)} \\\\\n');
+    fprintf(fileID, 'Scenario & \\multicolumn{4}{c}{Expected annualized pandemic losses (\\$ trillion)} \\\\\n');
     fprintf(fileID, '\\cmidrule{2-5}\n');
     fprintf(fileID, '& Mortality & Economic & Learning & Total \\\\\n');
     fprintf(fileID, '& $AV\\left(\\bar{ML}\\right)$ & $AV\\left(\\bar{OL}\\right)$ & $AV\\left(\\bar{LL}\\right)$ & $AV\\left(\\bar{TL}\\right)$ \\\\\n');
     fprintf(fileID, '\\midrule\n');
-
     % Identify unique scenario categories (Variable column)
-    % Get unique variables and ensure baseline comes first
     uniqueVars = unique(summary_data.Variable);
     baselineIdx = strcmp(uniqueVars, 'Baseline');
     uniqueVars = [uniqueVars(baselineIdx); uniqueVars(~baselineIdx)];
 
     for i = 1:length(uniqueVars)
-        % Get rows for the current scenario
         varRows = strcmp(summary_data.Variable, uniqueVars{i});
         varData = summary_data(varRows, :);
-        
+
         % Print main scenario name (not indented)
         if strcmp(uniqueVars{i}, 'Baseline')
             fprintf(fileID, '%s ', uniqueVars{i});
@@ -127,24 +142,29 @@ function write_to_latex(summary_data, outpath)
         end
 
         for j = 1:height(varData)
-            % Format the value with indentation
             fprintf(fileID, '\\hspace{3mm} %s & ', varData.Value{j});
-            
-            % Print numerical values with one decimal place
-            fprintf(fileID, '%.1f & %.1f & %.1f & %.1f \\\\\n', ...
-                    varData.MortalityLoss(j), varData.EconomicLoss(j), ...
-                    varData.LearningLoss(j), varData.TotalLoss(j));
+
+            % For each loss type, print mean and IQR in smaller text
+            for k = 1:4
+                stat = varData{j, 2+k}{1}; % cell containing struct
+                cellstr = sprintf('\\makecell{%.1f \\\\ \\footnotesize [%.1f, %.1f]}', ...
+                    stat.mean, stat.p25, stat.p75);
+                if k < 4
+                    fprintf(fileID, '%s & ', cellstr);
+                else
+                    fprintf(fileID, '%s \\\\\n', cellstr);
+                end
+            end
         end
     end
 
     % Write LaTeX table footer
     fprintf(fileID, '\\bottomrule\n\\end{tabular}\n');
+    fprintf(fileID, '\\caption{Expected global pandemic losses. For each cell, the top number represents the mean value and the numbers in brackets below show the interquartile range (25th to 75th percentiles).}\n');
     fprintf(fileID, '\\label{tab:pandemic_losses}\n');
     fprintf(fileID, '\\end{table}\n');
 
-    % Close the file
     fclose(fileID);
-
     disp('LaTeX table successfully written to pandemic_losses_table.tex');
 end
 
@@ -155,7 +175,7 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
     % Args:
     %   var_name (string): Name of sensitivity variable
     %   var_value: Value of sensitivity variable (can be string or numeric)
-    %   baseline_vsl (double): Baseline value of statistical life
+    %   baseline_vsl (double): Baseline value of statsistical life
     %   baseline_r (double): Baseline discount rate
     %   baseline_y (double): Baseline GDP growth rate
     %
@@ -170,21 +190,24 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
     % Format variable names
     switch var_name
         case "value_of_death"
-            formatted_name = "Value of statistical life (VSL)";
+            formatted_name = "Value of statsistical life (VSL)";
             if var_value < baseline_vsl
                 formatted_value = sprintf("Reduce to \\$%g million", var_value/1e6);
             elseif var_value > baseline_vsl
                 formatted_value = sprintf("Increase to \\$%g million", var_value/1e6);
             end
         case "arrival_dist_config"
-            formatted_name = "Arrival distribution";
-            if contains(var_value, "half_arrival")
-                formatted_value = "Halve arrival rate";
-            elseif contains(var_value, "double_arrival")
-                formatted_value = "Double arrival rate";
-            elseif contains(var_value, "ext")
-                formatted_value = "Truncate at extinction";
-            end
+            formatted_name = "Intensity upper bound";
+            [~, config_name, ~] = fileparts(var_value);
+            config_metadata = split(config_name, "_");
+            trunc_value = config_metadata(6);
+            formatted_value = sprintf("%s SU", trunc_value);
+        case "duration_dist_config"
+            formatted_name = "Duration upper bound";
+            [~, config_name, ~] = fileparts(var_value);
+            config_metadata = split(config_name, "_");
+            trunc_value = config_metadata(6);
+            formatted_value = sprintf("%s years", trunc_value);
         case "y"
             formatted_name = "GDP growth rate $y$";
             if var_value < baseline_y

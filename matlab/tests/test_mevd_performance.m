@@ -9,7 +9,7 @@ classdef test_mevd_performance < matlab.unittest.TestCase
     methods(TestMethodSetup)
         function setup(testCase)
             % Create a test MEVD instance with realistic parameters
-            dist_config_path = '../../output/severity_distributions/allrisk_base.yaml'; % For now just test with one we have at hand.
+            dist_config_path = '../../output/arrival_distributions/allrisk_base.yaml'; % For now just test with one we have at hand.
             false_positive_rate = 0;
             [~, testCase.mevd] = load_arrival_dist(dist_config_path, false_positive_rate);
             testCase.n_samples = 10000;

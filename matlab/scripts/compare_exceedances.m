@@ -4,7 +4,6 @@ function compare_exceedances(outdir)
     %   outdir: Path to output directory containing simulation results
 
     rawdir = fullfile(outdir, "raw");
-
     sim_results = readtable(fullfile(rawdir, "baseline_pandemic_table.csv"));
     job_config = yaml.loadFile(fullfile(outdir, "job_config.yaml"));
 
@@ -45,7 +44,7 @@ function compare_exceedances(outdir)
 
     % Plot Madhav data
     madhav_color = [0.4940 0.1840 0.5560];
-    plot(madhav_severity_central, madhav_exceedance_central / 100', ...
+    plot(madhav_severity_central, madhav_exceedance_central / 100, ...
         'LineWidth', 2, 'Color', madhav_color, 'DisplayName', 'Madhav et al. (2023)');
 
     % Customize plot appearance

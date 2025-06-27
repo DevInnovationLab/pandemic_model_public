@@ -1,8 +1,8 @@
 
-severity_dist_config = "./output/severity_distributions/all_risk.yaml";
+severity_dist_config = "./output/arrival_distributions/all_risk.yaml";
 severity_dist = load_severity_dist(severity_dist_config);
 severity_dist.pd = truncate(severity_dist.pd, 0.01, 1e4);
-py_results = readtable("./output/severity_distributions/truncpareto_sims.csv");
+py_results = readtable("./output/arrival_distributions/truncpareto_sims.csv");
 
 quantiles = py_results.rank;
 m_severities = severity_dist.pd.icdf(quantiles);

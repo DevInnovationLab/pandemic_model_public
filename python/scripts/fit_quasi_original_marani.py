@@ -32,7 +32,7 @@ if __name__ == "__main__":
     }
   }
 
-  with open('output/severity_distributions/genpareto_quasi_original_marani_sev.yaml', 'w') as f:
+  with open('output/arrival_distributions/genpareto_quasi_original_marani_sev.yaml', 'w') as f:
     yaml.dump(sev_config, f)
 
   # Fit generalized Pareto with floc=int_min
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     }
   }
 
-  with open('output/severity_distributions/genpareto_quasi_original_marani_int.yaml', 'w') as f:
+  with open('output/arrival_distributions/genpareto_quasi_original_marani_int.yaml', 'w') as f:
       yaml.dump(int_config, f)
 
 

@@ -131,13 +131,9 @@ function run_job(job_config_path)
         event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
     end
 
-    % Handle filepath list input for scenario configs
-    % TO DO 
-
     % Save job and scenario params
     config_outpath = fullfile(sim_results_path, "job_config.yaml");
     yaml.dumpFile(config_outpath, out_params);
-
 end
 
 function updated_params = update_params(job_config, scenario_config, viral_family_data)

@@ -1,4 +1,4 @@
-function get_invest_scenario_table(job_dir)
+function get_invest_scenario_table(job_dir, recalculate_bc)
     % Creates a table summarizing costs, NPV differences, lives saved, and benefit-cost ratios
     % for each scenario relative to baseline
     %
@@ -6,7 +6,9 @@ function get_invest_scenario_table(job_dir)
     %   job_dir (string): Directory containing job configuration and results
     
     % Process benefits and costs
-    process_benefit_cost(job_dir);
+    if recalculate_bc
+        process_benefit_cost(job_dir, recalculate_bc);
+    end
 
     % Load baseline data
     rawdata_dir = fullfile(job_dir, "raw");

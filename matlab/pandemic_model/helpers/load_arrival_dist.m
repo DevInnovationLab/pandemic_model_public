@@ -15,15 +15,15 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
 
     config = yaml.loadFile(config_path);
     trunc_method = string(config.hyperparams.trunc_method);
-    variable = string(config.hyperparams.variable);
+    measure = string(config.hyperparams.measure);
 
     % Create table with numeric arrays for each parameter
-    xi = cell2mat(config.dist_params.xi);
-    sigma = cell2mat(config.dist_params.sigma);
-    p = cell2mat(config.dist_params.p);
-    mu = cell2mat(config.dist_params.mu);
-    max_value = cell2mat(config.dist_params.max_value);
-    dist_params = table(xi, sigma, p, mu, max_value, 'VariableNames', ["xi", "sigma", "p", "mu", "max_value"]);
+    xi = cell2mat(config.param_samples.xi);
+    sigma = cell2mat(config.param_samples.sigma);
+    p = cell2mat(config.param_samples.p);
+    mu = cell2mat(config.param_samples.mu);
+    max_value = cell2mat(config.param_samples.max_value);
+    param_samples = table(xi, sigma, p, mu, max_value, 'VariableNames', ["xi", "sigma", "p", "mu", "max_value"]);
 
-    arrival_dist = ArrivalDistSampler(dist_params, trunc_method, false_positive_rate, variable);
+    arrival_dist = ArrivalDistSampler(param_samples, trunc_method, false_positive_rate, measure);
 end

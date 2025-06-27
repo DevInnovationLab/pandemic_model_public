@@ -1,7 +1,7 @@
 % Test script for TPDSeverityDist get_severity functionality
 
 % Load the TPD severity distribution from config
-config_path = './output/severity_distributions/truncpareto_all_risk.yaml';
+config_path = './output/arrival_distributions/truncpareto_all_risk.yaml';
 severity_dist = load_severity_dist(config_path);
 
 % Test 1: Basic functionality with single value

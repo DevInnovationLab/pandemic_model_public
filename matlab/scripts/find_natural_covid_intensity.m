@@ -1,5 +1,5 @@
 % Example usage script
-function find_natural_severity_covid(config_path)
+function find_natural_covid_intensity(config_path)
     
     % Load params and overwrite with COVID-19 specific
     params = clean_job_config(yaml.loadFile(config_path));

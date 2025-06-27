@@ -1,13 +1,13 @@
 classdef ArrivalDistSampler
     properties
-        dist_params
+        param_samples
         false_positive_rate
         trunc_method
-        variable
+        measure
     end
 
     methods
-        function obj = ArrivalDistSampler(dist_params, trunc_method, false_positive_rate, variable)
+        function obj = ArrivalDistSampler(param_samples, trunc_method, false_positive_rate, measure)
             % Create a y_sample sampler that samples from multiple parameter combinations
             %
             % Args:
@@ -15,16 +15,16 @@ classdef ArrivalDistSampler
             %   param_table: Table containing parameter combinations, one row per draw
             %   max_y_sample: Maximum allowed y_sample
             arguments
-                dist_params (:,5) table
+                param_samples (:,5) table
                 trunc_method (1,1) {mustBeMember(trunc_method, {'sharp', 'smooth'})}
                 false_positive_rate (1,1) {mustBeNumeric, mustBeInRange(false_positive_rate, 0, 1)} = 0
-                variable (1,1) string = "undefined"
+                measure (1,1) string = "undefined"
             end
 
-            obj.dist_params = dist_params;
+            obj.param_samples = param_samples;
             obj.false_positive_rate = false_positive_rate;
             obj.trunc_method = trunc_method;
-            obj.variable = variable;
+            obj.measure = measure;
         end
 
         % ---------------------------------------------------------------------
@@ -35,13 +35,13 @@ classdef ArrivalDistSampler
             %
             % The mass (1-p) sits at the threshold, the remaining p is spread
             % over (min_y_sample , max_y_sample].
-            assert(height(unifrnd_draw) == height(obj.dist_params), 'First dimension of draws must match number of parameter samples');
+            assert(height(unifrnd_draw) == height(obj.param_samples), 'First dimension of draws must match number of parameter samples');
 
-            xi = obj.dist_params.xi;
-            sigma = obj.dist_params.sigma;
-            p_tail_raw = obj.dist_params.p;
-            mu = obj.dist_params.mu;
-            max_val = obj.dist_params.max_value;
+            xi = obj.param_samples.xi;
+            sigma = obj.param_samples.sigma;
+            p_tail_raw = obj.param_samples.p;
+            mu = obj.param_samples.mu;
+            max_val = obj.param_samples.max_value;
             y_sample = zeros(size(unifrnd_draw));
 
             % Adjust arrival probability for false positive rate
@@ -72,13 +72,13 @@ classdef ArrivalDistSampler
             %
             % Overall rank = (1-p)  on the atom  +  p · F_trunc(y)
             
-            assert(~any(y_sample > obj.dist_params.max_value, 'all'), "Some values exceed the max values.");
+            assert(~any(y_sample > obj.param_samples.max_value, 'all'), "Some values exceed the max values.");
 
-            xi = obj.dist_params.xi;
-            sigma = obj.dist_params.sigma;
-            p_tail_raw = obj.dist_params.p;
-            mu = obj.dist_params.mu;
-            max_val = obj.dist_params.max_value;
+            xi = obj.param_samples.xi;
+            sigma = obj.param_samples.sigma;
+            p_tail_raw = obj.param_samples.p;
+            mu = obj.param_samples.mu;
+            max_val = obj.param_samples.max_value;
             rank = zeros(size(y_sample));
 
             % Adjust arrival probability for false positive rate
@@ -117,7 +117,7 @@ classdef ArrivalDistSampler
         end
 
         function rank = cdf(obj, y_sample)
-            rank = obj.get_y_sample_rank(y_sample);
+            rank = obj.get_rank(y_sample);
         end
     end
 end

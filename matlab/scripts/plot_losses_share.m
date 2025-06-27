@@ -7,6 +7,11 @@ function plot_losses_share(job_dir)
     pandemic_table = readtable(fullfile(job_dir, "raw", "baseline_pandemic_table.csv"));
     pandemic_table = pandemic_table(~pandemic_table.is_false, :); % Remove false positives
 
+    % Load intensity threshold
+    job_config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
+    response_threshold = response_threshold_dict.response_threshold;
+
     %% Create histogram bins for severity
     intensity = pandemic_table.intensity;
     pandemic_losses = sum(pandemic_table{:, ["m_mortality_losses", "m_output_losses", "m_learning_losses"]}, 2);
@@ -17,11 +22,19 @@ function plot_losses_share(job_dir)
     sgtitle('Pandemic intensity distribution')
 
     % Calculate max y value for consistent axis
-    [counts, edges] = histcounts(intensity, 10, 'Normalization', 'probability');
+    max_intensity = max(intensity);
+    num_bins = 10;
+    bin_width = (max_intensity - response_threshold) / num_bins;
+    edges = response_threshold:bin_width:max_intensity;
+    [counts, edges] = histcounts(intensity, edges, 'Normalization', 'probability');
     centers = (edges(1:end-1) + edges(2:end))/2;
     loss_shares = zeros(size(counts));
     for i = 1:length(counts)
-        mask = intensity >= edges(i) & intensity < edges(i+1);
+        if i < length(counts)
+            mask = intensity >= edges(i) & intensity < edges(i+1);
+        else
+            mask = intensity >= edges(i) & intensity <= edges(i+1); % Include rightmost edge in last bin
+        end
         loss_shares(i) = sum(pandemic_losses(mask)) / total_losses;
     end
     y_max = max(max(counts), max(loss_shares));

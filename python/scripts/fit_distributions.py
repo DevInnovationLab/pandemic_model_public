@@ -84,7 +84,7 @@ if __name__ == "__main__":
     ## Severity distributions ----------------------------------------
 
     ### Create outdir and save distribution params
-    arrival_dist_root = Path("./output/severity_distributions").resolve()
+    arrival_dist_root = Path("./output/arrival_distributions").resolve()
     arrival_dist_root.mkdir(parents=True, exist_ok=True)
 
     # Create figures directory

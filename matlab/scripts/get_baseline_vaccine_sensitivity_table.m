@@ -125,6 +125,7 @@ function formatted_name = format_parameter_name(param_name)
     param_map('tau_m') = 'Repurposing delay mRNA';
     param_map('tau_o') = 'Repurposing delay traditional';
     param_map('rental_share') = 'Advance capacity rental share';
+    param_map('false_positive_rate') = 'False positive rate';
     
     % Return formatted name if available, otherwise return original
     if isKey(param_map, param_name)
@@ -182,7 +183,7 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
             fprintf(fileID, '%s & %s & \\$%.0f--%.0f & %.0f--%.0f \\\\\n', ...
                 param, baseline_val, low_val, high_val, low_benefit, high_benefit);
         else
-            fprintf(fileID, '%s & %s & %.2f--%.2f & %.0f--%.0f \\\\\n', ...
+            fprintf(fileID, '%s & %s & %g--%g & %.0f--%.0f \\\\\n', ...
                 param, baseline_val, low_val, high_val, low_benefit, high_benefit);
         end
     end
@@ -224,7 +225,7 @@ function formatted_value = format_value(value, param_name)
     elseif startsWith(param_name, 'k_') || startsWith(param_name, 'c_')
         formatted_value = sprintf('\\$%.0f', value);
     else
-        formatted_value = sprintf('%.2f', value);
+        formatted_value = sprintf('%g', value);
     end
 end
 

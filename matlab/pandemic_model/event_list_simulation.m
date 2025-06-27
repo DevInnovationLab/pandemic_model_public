@@ -1,7 +1,8 @@
 function event_list_simulation(simulation_table, econ_loss_model, params)
     %% INITIALIZATION: Extract event-level data and set up arrays
     % Extract events from simulation table
-    event_sim_table = simulation_table(~isnan(simulation_table.yr_start), :); % Remove simulations with no events
+    event_sim_idx = ~isnan(simulation_table.yr_start);
+    event_sim_table = simulation_table(event_sim_idx, :); % Remove simulations with no events
 
     % Basic simulation parameters
     sim_num = event_sim_table.sim_num;
@@ -26,8 +27,14 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     ufv_protection = event_sim_table.ufv_protection;
     month_vaccine_ready = event_sim_table.month_vaccine_ready;
 
-    % Array denoting which matrix elements correspond to active pandemics
-    active_idx = (month_dur >= (1:max_month_dur)) .* ~is_false; % E x M
+    % Arrays denoting which matrix elements to accumulate over and which correspond to active pandemics
+    accum_idx = (month_dur >= (1:max_month_dur));
+
+    if (sum(accum_idx, 'all') / numel(accum_idx)) <= 0.3 % See if sparsification improved performance.
+        accum_idx = sparse(accum_idx);
+    end
+
+    active_idx = accum_idx & ~is_false; % E x M
 
     % Discount and growth factors
     pv_factors_annual = (1+params.r).^(-(1:max_years));
@@ -124,7 +131,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     monthly_courses_m = (...
         first_vax_idx .* cap_m + ...
         ~first_vax_idx .* max_booster_rate .* share_cap_m ...
-    ) .* active_idx;
+    ) .* active_idx; % No vaccination with false positive
     monthly_courses_o = (...
         first_vax_idx .* cap_o + ...
         ~first_vax_idx .* max_booster_rate .* (1 - share_cap_m) ...
@@ -183,8 +190,8 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     % Vaccination costs
     marginal_costs_nom = params.c_m .* monthly_courses_m + monthly_courses_o .* params.c_o;
     marginal_costs_pv = marginal_costs_nom .* pv_factors_monthly;
-    sim_marginal_costs_nom = event_list_to_sim_year(marginal_costs_nom, sim_idx, year_idx, num_sims, max_years, active_idx);
-    sim_marginal_costs_pv = event_list_to_sim_year(marginal_costs_pv, sim_idx, year_idx, num_sims, max_years, active_idx);
+    sim_marginal_costs_nom = event_list_to_sim_year(marginal_costs_nom, sim_idx, year_idx, num_sims, max_years, accum_idx);
+    sim_marginal_costs_pv = event_list_to_sim_year(marginal_costs_pv, sim_idx, year_idx, num_sims, max_years, accum_idx);
 
     % Tailoring costs
     tailoring_costs_nom = zeros(num_sims, max_years);
@@ -203,8 +210,8 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % 5. Impact costs
     % Deaths
-    sim_deaths_unmitigated = event_list_to_sim_year(monthly_deaths_unmitigated, sim_idx, year_idx, num_sims, max_years, active_idx);
-    sim_deaths_mitigated = event_list_to_sim_year(monthly_deaths_mitigated, sim_idx, year_idx, num_sims, max_years, active_idx);
+    sim_deaths_unmitigated = event_list_to_sim_year(monthly_deaths_unmitigated, sim_idx, year_idx, num_sims, max_years, accum_idx);
+    sim_deaths_mitigated = event_list_to_sim_year(monthly_deaths_mitigated, sim_idx, year_idx, num_sims, max_years, accum_idx);
 
     mortality_losses_pv = mortality_losses_nom .* pv_factors_monthly;
     output_losses_pv = output_losses_nom .* pv_factors_monthly;
@@ -214,13 +221,13 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     % sim_output_losses_nom = event_list_to_sim_year(output_losses_nom, sim_idx, year_idx, num_sims, max_years);
     % sim_learning_losses_nom = event_list_to_sim_year(learning_losses_nom, sim_idx, year_idx, num_sims, max_years);
 
-    sim_mortality_losses_pv = event_list_to_sim_year(mortality_losses_pv, sim_idx, year_idx, num_sims, max_years, active_idx);
-    sim_output_losses_pv = event_list_to_sim_year(output_losses_pv, sim_idx, year_idx, num_sims, max_years, active_idx);
-    sim_learning_losses_pv = event_list_to_sim_year(learning_losses_pv, sim_idx, year_idx, num_sims, max_years, active_idx);
+    sim_mortality_losses_pv = event_list_to_sim_year(mortality_losses_pv, sim_idx, year_idx, num_sims, max_years, accum_idx);
+    sim_output_losses_pv = event_list_to_sim_year(output_losses_pv, sim_idx, year_idx, num_sims, max_years, accum_idx);
+    sim_learning_losses_pv = event_list_to_sim_year(learning_losses_pv, sim_idx, year_idx, num_sims, max_years, accum_idx);
 
     % Vaccine benefits
-    sim_benefits_vaccine_nom = event_list_to_sim_year(vax_benefits_nom, sim_idx, year_idx, num_sims, max_years, active_idx);
-    sim_benefits_vaccine_pv = event_list_to_sim_year(vax_benefits_pv, sim_idx, year_idx, num_sims, max_years, active_idx);
+    sim_benefits_vaccine_nom = event_list_to_sim_year(vax_benefits_nom, sim_idx, year_idx, num_sims, max_years, accum_idx);
+    sim_benefits_vaccine_pv = event_list_to_sim_year(vax_benefits_pv, sim_idx, year_idx, num_sims, max_years, accum_idx);
     
     %% STORE RESULTS
     % Save results if requested
@@ -248,8 +255,16 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     % Initialize results columns with zeros
     sim_results{:, result_cols} = 0;
 
-    % Get indices of simulations with events
-    event_sim_idx = ~isnan(simulation_table.yr_start);
+    % Convert all matrices that could be sparse to full before saving
+    sim_deaths_unmitigated = full(sim_deaths_unmitigated);
+    sim_deaths_mitigated = full(sim_deaths_mitigated);
+    sim_mortality_losses_pv = full(sim_mortality_losses_pv);
+    sim_output_losses_pv = full(sim_output_losses_pv);
+    sim_learning_losses_pv = full(sim_learning_losses_pv);
+    sim_benefits_vaccine_pv = full(sim_benefits_vaccine_pv);
+    sim_benefits_vaccine_nom = full(sim_benefits_vaccine_nom);
+    sim_marginal_costs_nom = full(sim_marginal_costs_nom);
+    sim_marginal_costs_pv = full(sim_marginal_costs_pv);
 
     % Fill in results only for simulations that had events
     sim_results.cap_avail_m(event_sim_idx) = max(cap_m, [], 2);
@@ -313,7 +328,7 @@ function [sim_idx, year_idx] = get_event_list_to_sim_year_idx(sim_num, month_sta
 end
 
 
-function sim_year_matrix = event_list_to_sim_year(values_matrix, sim_idx, year_idx, num_sims, max_years, active_idx)
+function sim_year_matrix = event_list_to_sim_year(values_matrix, sim_idx, year_idx, num_sims, max_years, accum_idx)
     % Convert event x month matrix to simulation x year matrix
     %
     % Args:
@@ -327,7 +342,7 @@ function sim_year_matrix = event_list_to_sim_year(values_matrix, sim_idx, year_i
     % Returns:
     %   sim_year_matrix: Matrix of values with dimensions (num_sims x max_years)
     values_max_t = values_matrix';
-    values = values_max_t((active_idx == 1)');
+    values = values_max_t((accum_idx == 1)');
 
     sim_year_matrix = accumarray([sim_idx, year_idx], ...
                                  values, ...
