@@ -21,7 +21,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     annual_intensity = event_sim_table.intensity;
     is_false = event_sim_table.is_false;
     rd_state = event_sim_table.rd_state;
-    prototype_RD_benefit = event_sim_table.has_RD_benefit;
+    prototype_available = event_sim_table.has_prototype;
     prep_start_month = event_sim_table.prep_start_month;
     false_pos_detected = isnan(prep_start_month) & is_false;
     ufv_protection = event_sim_table.ufv_protection;
@@ -203,7 +203,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     tailoring_costs_pv = tailoring_costs_nom .* pv_factors_annual;
 
     % In-pandemic R&D costs
-    event_inp_rd_nom = prototype_RD_benefit .* params.inp_RD_has_prototype + ~prototype_RD_benefit .* params.inp_RD_no_prototype;
+    event_inp_rd_nom = prototype_available .* params.inp_RD_has_prototype + ~prototype_available .* params.inp_RD_no_prototype;
     inp_rd_costs_nom = zeros(num_sims, max_years);
     inp_rd_costs_nom(event_start_idx) = event_inp_rd_nom .* ~false_pos_detected .* ~ufv_protection;
     inp_rd_costs_pv = inp_rd_costs_nom .* pv_factors_annual;

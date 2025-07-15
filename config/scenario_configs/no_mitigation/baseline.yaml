@@ -1,5 +1,4 @@
 # Advance R&D params
-rd_speedup_months: 12 # how much tau_a is shortened by with advance R&D (months)
 rd_investments: 
   strategy: none
   num: 0

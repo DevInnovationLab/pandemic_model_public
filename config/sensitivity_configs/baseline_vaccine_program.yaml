@@ -57,10 +57,6 @@ sensitivities:
     - 3      # 3 months
     - 9      # 9 months
 
-  tau_a:  # Time to vaccine without existing prototype
-    - 15
-    - 30
-
   false_positive_rate:
     - 0
     - 0.5

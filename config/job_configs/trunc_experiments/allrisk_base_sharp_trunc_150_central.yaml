@@ -52,7 +52,6 @@ adv_cap_build_period: 30 # number of years it takes to finish building adv capac
 ptrs_vf: "./output/ptrs/vf_model_preds.csv" # Viral family vaccine probability of success
 ptrs_rd: "./output/ptrs/rd_model_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
 rd_timelines: "./output/rd_timelines/vf_model_preds.csv"
-tau_a: 23 # months to develop / approve / prep for vaccination campaign (in status quo, is it tau_a + 1, as surveillance generates possibility of one month quicker)
 tau_m: 2 # months to repurpose mRNA capacity
 tau_o: 6 # months to repurpose traditional capacity
 pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.

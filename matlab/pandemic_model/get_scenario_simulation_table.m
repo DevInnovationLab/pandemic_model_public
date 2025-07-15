@@ -1,6 +1,7 @@
 % Would love to clean this up later.
 function new_simulation_table = get_scenario_simulation_table(base_simulation_table, ptrs_vf, ...
-															  ptrs_rd, vf_data, params)
+															  ptrs_rd, response_rd_timelines, ...
+															  vf_data, params)
 	% add vaccine success state to simulation scenarios table
     new_simulation_table = base_simulation_table;
 
@@ -44,6 +45,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_increment = ptrs_rd.preds(rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~prototype_rd_idx);
 
 	vfs_no_adv = vf_data.viral_family(~vf_data.has_prototype);
+	vfs_adv = vf_data.viral_family(vf_data.has_prototype);
+
 	increment_idx = ismember(viral_family, vfs_no_adv) & has_RD_benefit;
 	trad_probs(increment_idx) = trad_probs(increment_idx) + trad_increment;
 	mrna_probs(increment_idx) = mrna_probs(increment_idx) + mrna_increment;
@@ -65,14 +68,29 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	trad_success(flu_outbreak_idx) = trad_success(flu_outbreak_idx) | ufv_protection(flu_outbreak_idx); % Universal vaccine gives you an extra shot at goal
 	mrna_success(flu_outbreak_idx) = mrna_success(flu_outbreak_idx) & ~ufv_protection(flu_outbreak_idx); % Don't invest in mRNA if universal vaccine works
 
-	month_vaccine_ready = (...
-        params.tau_a ... % Baseline vaccine readiness
-        + ~is_false .* prep_start_month ... % Add time to detection when not false
-        - has_RD_benefit .* params.rd_speedup_months); % Subtract speedup time from advance R&D
+	%% Vaccine development timelines
+	rd_timeline = nan(height(new_simulation_table), 1);
 
+    % Create lookup tables for R&D timelines
+    [~, loc_has_proto] = ismember(viral_family, vf_rd_timeline_has_prototype.viral_family);
+    [~, loc_no_proto] = ismember(viral_family, vf_rd_timeline_no_prototype.viral_family);
+
+    % Determine which viral families should use the "has prototype" timeline
+    use_has_proto = ismember(viral_family, vfs_adv) | (ismember(viral_family, viral_families_researched) & has_RD_benefit);
+  
+    % Assign timelines
+    idx_has_proto = use_has_proto & loc_has_proto > 0;
+	idx_no_proto = ~use_has_proto & loc_no_proto > 0;
+    rd_timeline(idx_has_proto) = vf_rd_timeline_has_prototype.preds(loc_has_proto(idx_has_proto));
+    rd_timeline(idx_no_proto) = vf_rd_timeline_no_prototype.preds(loc_no_proto(idx_no_proto));
+
+	% Ensure all have RD timeline and convert to months
+	assert(all(~isnan(rd_timeline)));
+	rd_timeline = round(rd_timeline * 12); % Convert to months and round to nearest
+	month_vaccine_ready = rd_timeline + prep_start_month;
 	month_vaccine_ready(ufv_protection) = ~is_false(ufv_protection) .* prep_start_month(ufv_protection); % When universal vaccine works it's immediately ready
 
-	% Assign new variables
+	%% Assign new variables
 	new_simulation_table.month_vaccine_ready = month_vaccine_ready;
 	new_simulation_table.prep_start_month = prep_start_month;
 	new_simulation_table.has_RD_benefit = has_RD_benefit;

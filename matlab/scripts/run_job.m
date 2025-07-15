@@ -29,6 +29,7 @@ function run_job(job_config_path)
     viral_family_data = readtable(job_config.viral_family_data, "TextType", "string");
     ptrs_vf = readtable(job_config.ptrs_vf, "TextType", "string");
     ptrs_rd = readtable(job_config.ptrs_rd, "TextType", "string");
+    response_rd_timelines = readtable(job_config.rd_timelines, "TextType", "string");
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
 
     response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
@@ -125,6 +126,7 @@ function run_job(job_config_path)
         scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
                                                                   ptrs_vf, ...
                                                                   ptrs_rd, ...
+                                                                  response_rd_timelines, ...
                                                                   viral_family_data, ...
                                                                   simulation_params);
 
@@ -172,6 +174,4 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity
     updated_params.z_m = z_m;
     updated_params.z_o = z_o;
-
-    assert(updated_params.rd_speedup_months <= updated_params.tau_a); % R&D speedup must be less or equal than baseline time.
 end
