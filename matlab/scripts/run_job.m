@@ -153,16 +153,16 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
     updated_params.viral_families_researched = parse_rd_investments(scenario_config.rd_investments, viral_family_data);
 
     if strcmp(invest_strategy, "top") || strcmp(invest_strategy, "random")
-        updated_params.adv_RD = true;
+        updated_params.prototype_RD = true;
     else
-        updated_params.adv_RD = false;
+        updated_params.prototype_RD = false;
     end
 
-    updated_params.adv_RD_spend = updated_params.adv_RD_cost_per_pathogen * ...
+    updated_params.prototype_RD_spend = updated_params.prototype_RD_cost_per_pathogen * ...
         updated_params.pathogens_per_family * ... 
         num_vfs_researched;
 
-    updated_params.ufv_spend = updated_params.adv_RD_cost_per_pathogen * updated_params.pathogens_per_family;
+    updated_params.ufv_spend = updated_params.prototype_RD_cost_per_pathogen * updated_params.pathogens_per_family;
 
     % Set advance capacity
     if updated_params.share_target_advanced_capacity == 0

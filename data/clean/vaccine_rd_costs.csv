@@ -1,4 +1,4 @@
-disease,has_adv_rd,respondent,cost_range,value_min,value_max,viral_family
+disease,has_prototype,respondent,cost_range,value_min,value_max,viral_family
 cchf,0,4,$10-99m,10.0,99.0,nairoviridae
 cchf,0,5,$100-999m,100.0,999.0,nairoviridae
 cchf,0,11,$100-999m,100.0,999.0,nairoviridae

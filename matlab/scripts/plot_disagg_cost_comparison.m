@@ -22,7 +22,7 @@ function plot_disagg_cost_comparison(job_dir)
     end
     
     % Define cost variables (nominal only)
-    cost_vars = {"adv_cap_n", "adv_RD_n", "ufv_RD_n", "inp_cap_n", "inp_marg_n", "inp_RD_n", "surveil_n"};
+    cost_vars = {"adv_cap_n", "prototype_RD_n", "ufv_RD_n", "inp_cap_n", "inp_marg_n", "inp_RD_n", "surveil_n"};
     
     % Calculate number of rows and columns for subplots
     n_scenarios = length(delta_scenarios);

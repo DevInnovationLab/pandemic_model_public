@@ -8,10 +8,10 @@ vf_data.viral_family = cellfun(@(x) strcat(upper(x(1)), lower(x(2:end))), vf_dat
 x = categorical(vf_data.viral_family);
 x = reordercats(x, vf_data.viral_family); % Keep order as in the sorted table
 y = vf_data.arrival_share;
-colors = vf_data.has_adv_RD;
+colors = vf_data.has_prototype;
 
 % Calculate total share of viral families with adv RD
-total_adv_rd_share = sum(vf_data.arrival_share(vf_data.has_adv_RD == 1));
+total_prototype_share = sum(vf_data.arrival_share(vf_data.has_prototype == 1));
 
 % Create the bar plot
 figure;

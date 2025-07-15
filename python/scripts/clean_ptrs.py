@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
   # Merge adv RD status onto PTRS data ----------------
   vf_arrival_shares = vf_arrival_shares.set_index('viral_family')
-  ptrs['has_adv_RD'] = ptrs['viral_family'].map(vf_arrival_shares['has_adv_RD'])
+  ptrs['has_prototype'] = ptrs['viral_family'].map(vf_arrival_shares['has_prototype'])
 
   # Save df for interval regression
   out_df = ptrs.drop(columns='ptrs_range')

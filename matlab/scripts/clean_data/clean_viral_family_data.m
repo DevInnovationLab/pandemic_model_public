@@ -9,7 +9,7 @@ vf_data.Properties.VariableNames = {...
     'viral_family', ...
     'arrival_share_all', ...
     'arrival_share_select', ... % Based on expert survey answers whose percentages (almost) summed to 100%.
-    'has_adv_RD', ...
+    'has_prototype', ...
     'airborne' ...
     };
 
@@ -21,15 +21,15 @@ vf_data.arrival_share_all = str2double(erase(vf_data.arrival_share_all, "%")) ./
 vf_data.arrival_share_select = str2double(erase(vf_data.arrival_share_select, "%")) ./ 100;
 
 % Destring has advance R&D
-has_adv_RD = NaN(height(vf_data), 1);
-has_adv_RD(strcmpi(vf_data.has_adv_RD, "yes")) = true;
-has_adv_RD(strcmpi(vf_data.has_adv_RD, "no")) = false;
-vf_data.has_adv_RD = has_adv_RD;
-vf_data.has_adv_RD = logical(vf_data.has_adv_RD);
+has_prototype = NaN(height(vf_data), 1);
+has_prototype(strcmpi(vf_data.has_prototype, "yes")) = true;
+has_prototype(strcmpi(vf_data.has_prototype, "no")) = false;
+vf_data.has_prototype = has_prototype;
+vf_data.has_prototype = logical(vf_data.has_prototype);
 
 % Check all had adv RD status
-if ~islogical(vf_data.has_adv_RD) || any(~ismember(vf_data.has_adv_RD, [true, false]))
-    error("has_adv_RD contains non-logical values.");
+if ~islogical(vf_data.has_prototype) || any(~ismember(vf_data.has_prototype, [true, false]))
+    error("has_prototype contains non-logical values.");
 end
 
 % Save arrival share distributions

@@ -4,7 +4,7 @@ scenarios = string(fieldnames(config.scenarios));
 rawdata_dir = fullfile(results_dir, "raw");
 
 % Define cost variables
-cost_vars = {'adv_cap', 'adv_RD', 'inp_cap', 'inp_marg', 'inp_RD', 'inp_tail', 'surveil'};
+cost_vars = {'adv_cap', 'prototype_RD', 'inp_cap', 'inp_marg', 'inp_RD', 'inp_tail', 'surveil'};
 
 % Get baseline costs for each variable and benefits
 baseline_costs = cell(length(cost_vars), 1);

@@ -27,8 +27,8 @@ if __name__ == "__main__":
         lambda x: "Time estimate" if  x.find("Time estimate") > 0 else "Funding estimate"
     )
 
-    speedup_and_cost_df['has_adv_rd'] = ~speedup_and_cost_df['disease'].str.contains("\\(")
-    speedup_and_cost_df['has_adv_rd'] = speedup_and_cost_df['has_adv_rd'].astype(int)
+    speedup_and_cost_df['has_prototype'] = ~speedup_and_cost_df['disease'].str.contains("\\(")
+    speedup_and_cost_df['has_prototype'] = speedup_and_cost_df['has_prototype'].astype(int)
      
     # Rows not denoting furthest candidate are before adv R&D
     speedup_and_cost_df['disease'] = speedup_and_cost_df['disease'] \
@@ -43,7 +43,7 @@ if __name__ == "__main__":
 
     vaccine_speedup = speedup_and_cost_df[speedup_and_cost_df['variable'] == "Time estimate"].copy().drop(columns='variable')
 
-    vaccine_speedup = vaccine_speedup.set_index(['disease', 'has_adv_rd'])
+    vaccine_speedup = vaccine_speedup.set_index(['disease', 'has_prototype'])
     vaccine_speedup.columns.name = 'respondent'
     vaccine_speedup = pd.DataFrame(vaccine_speedup.stack()).rename(columns={0: 'time_range'})
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 		.rename(columns=lambda x: x.replace('value', 'years')) \
 		.drop(columns=['unit', 'time_range'])
 
-    vaccine_speedup = vaccine_speedup.sort_index(level=['disease', 'has_adv_rd', 'respondent'])
+    vaccine_speedup = vaccine_speedup.sort_index(level=['disease', 'has_prototype', 'respondent'])
 
     vaccine_speedup['viral_family'] = vaccine_speedup.index.get_level_values('disease').map(viral_family_map)
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     vaccine_cost = speedup_and_cost_df[speedup_and_cost_df['variable'] == "Funding estimate"].copy().drop(columns='variable')
 
-    vaccine_cost = vaccine_cost.set_index(['disease', 'has_adv_rd'])
+    vaccine_cost = vaccine_cost.set_index(['disease', 'has_prototype'])
     vaccine_cost.columns.name = 'respondent'
     vaccine_cost = pd.DataFrame(vaccine_cost.stack()).rename(columns={0: 'cost_range'})
 
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     vaccine_cost[['value_min', 'value_max']] = vaccine_cost[['value_min', 'value_max']].astype(float)
 
-    vaccine_cost = vaccine_cost.sort_index(level=['disease', 'has_adv_rd', 'respondent'])
+    vaccine_cost = vaccine_cost.sort_index(level=['disease', 'has_prototype', 'respondent'])
  
     vaccine_cost['viral_family'] = vaccine_cost.index.get_level_values('disease').map(viral_family_map)
 

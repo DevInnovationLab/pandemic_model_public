@@ -1,4 +1,4 @@
-disease,has_adv_rd,respondent,years_min,years_max,viral_family
+disease,has_prototype,respondent,years_min,years_max,viral_family
 cchf,0,4,0.0,3.0,nairoviridae
 cchf,0,5,4.0,5.0,nairoviridae
 cchf,0,11,6.0,7.0,nairoviridae

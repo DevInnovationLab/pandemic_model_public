@@ -10,8 +10,8 @@ function postprocess_simulations(results_dir)
     delta_scenarios = scenarios(~strcmp(scenarios, 'baseline'));
 
     comparison_vars = {"m_learning_losses", "m_mortality_losses", "m_output_losses", "u_deaths", "m_deaths", "benefits", ...
-                 "adv_cap_n", "adv_RD_n", "inp_cap_n", "inp_marg_n", "inp_RD_n", "surveil_n", ...
-                 "adv_cap_p", "adv_RD_p", "inp_cap_p", "inp_marg_p", "inp_RD_p", "surveil_p"};
+                 "adv_cap_n", "prototype_RD_n", "inp_cap_n", "inp_marg_n", "inp_RD_n", "surveil_n", ...
+                 "adv_cap_p", "prototype_RD_p", "inp_cap_p", "inp_marg_p", "inp_RD_p", "surveil_p"};
 
     for i = 1:length(comparison_vars)
         var = comparison_vars{i};

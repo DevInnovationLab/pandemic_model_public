@@ -1,4 +1,4 @@
-disease,platform,respondent,value_min,value_max,viral_family,has_adv_RD
+disease,platform,respondent,value_min,value_max,viral_family,has_prototype
 cchf,both,4,0.5,0.59,nairoviridae,0
 cchf,mrna_only,4,0.0,0.09,nairoviridae,0
 cchf,traditional_only,4,0.3,0.39,nairoviridae,0

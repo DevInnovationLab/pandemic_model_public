@@ -17,7 +17,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	is_false = new_simulation_table.is_false;
 
 	% Handle RD benefits
-	rd_eligible = yr_start > params.adv_RD_benefit_start;
+	rd_eligible = yr_start > params.prototype_RD_benefit_start;
 	family_researched = ismember(viral_family, params.viral_families_researched);
 	has_RD_benefit = rd_eligible & family_researched;
 
@@ -28,11 +28,11 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_prob_map = dictionary(ptrs_vf.viral_family(mrna_idx), ptrs_vf.preds(mrna_idx));
 	
 	% Add PTRS for unknown diseases
-	adv_rd_idx = strcmp(ptrs_rd.has_adv_rd, "has_adv_rd");
+	prototype_rd_idx = strcmp(ptrs_rd.has_prototype, "has_prototype");
 	rd_mrna_idx = strcmp(ptrs_rd.platform, "mrna_only");
-	trad_prob_map("unknown") = ptrs_rd.preds(~adv_rd_idx & ~rd_mrna_idx);
+	trad_prob_map("unknown") = ptrs_rd.preds(~prototype_rd_idx & ~rd_mrna_idx);
 	trad_prob_map(missing) = NaN;
-	mrna_prob_map("unknown") = ptrs_rd.preds(~adv_rd_idx & rd_mrna_idx);
+	mrna_prob_map("unknown") = ptrs_rd.preds(~prototype_rd_idx & rd_mrna_idx);
 	mrna_prob_map(missing) = NaN;
 
 	trad_probs = trad_prob_map(viral_family);
@@ -40,10 +40,10 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 
 	% Adjust probabilities for vaccines invested in
 	% Clean this up later when better idea of what you wnat to do.
-	trad_increment = ptrs_rd.preds(~rd_mrna_idx & adv_rd_idx) - ptrs_rd.preds(~rd_mrna_idx & ~adv_rd_idx);
-	mrna_increment = ptrs_rd.preds(rd_mrna_idx & adv_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~adv_rd_idx);
+	trad_increment = ptrs_rd.preds(~rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(~rd_mrna_idx & ~prototype_rd_idx);
+	mrna_increment = ptrs_rd.preds(rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~prototype_rd_idx);
 
-	vfs_no_adv = vf_data.viral_family(~vf_data.has_adv_RD);
+	vfs_no_adv = vf_data.viral_family(~vf_data.has_prototype);
 	increment_idx = ismember(viral_family, vfs_no_adv) & has_RD_benefit;
 	trad_probs(increment_idx) = trad_probs(increment_idx) + trad_increment;
 	mrna_probs(increment_idx) = mrna_probs(increment_idx) + mrna_increment;
@@ -58,7 +58,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	ufv_protection = (...
 		params.ufv_invest & ... % Investment was made
 		flu_outbreak_idx & ... % Dealing with influenza
-		yr_start > params.adv_RD_benefit_start & ... % After R&D benefit starts
+		yr_start > params.prototype_RD_benefit_start & ... % After R&D benefit starts
 		flu_vax_success_prob > new_simulation_table.ufv_vax_state ... % Vaccine successfully provides protection
 	);
 

@@ -3,15 +3,13 @@
 // Import data
 import delimited "./data/clean/vaccine_rd_timelines.csv", clear
 
-drop if viral_family == "covid-19"
-
 // Encode variables
 encode viral_family, gen(viral_family_enc)
-label define has_adv_rd 0 "no_adv_rd" 1 "has_adv_rd"
-label values has_adv_rd has_adv_rd
+label define has_prototype 0 "No prototype" 1 "Has prototype"
+label values has_prototype has_prototype
 
 // Run regressions
-eststo vf_model: intreg years_min years_max i.viral_family_enc i.has_adv_rd, vce(cluster respondent)
+eststo vf_model: intreg years_min years_max i.viral_family_enc i.has_prototype, vce(cluster respondent)
 
 // Create LaTeX table with enhanced formatting
 estout vf_model using "./output/rd_timelines/vf_model.tex", ///
@@ -33,7 +31,7 @@ estout vf_model using "./output/rd_timelines/vf_model.tex", ///
 
 // Export viral family model figure and coefficients.
 preserve
-    duplicates drop viral_family_enc has_adv_rd, force
+    duplicates drop viral_family_enc has_prototype, force
 
     // Create a temporary capitalized label for viral family
     label copy viral_family_enc viral_family_enc_cap
@@ -55,15 +53,15 @@ preserve
     gen pred_ub = preds + 1.96*ses
 
     // Generate x-axis positions to stack points
-    gen has_prototype_xpos = viral_family_enc - 0.15 if has_adv_rd == 1
-    gen no_prototype_xpos = viral_family_enc + 0.15 if has_adv_rd == 0
+    gen has_prototype_xpos = viral_family_enc - 0.15 if has_prototype == 1
+    gen no_prototype_xpos = viral_family_enc + 0.15 if has_prototype == 0
 
-    // Plot predictions with confidence intervals by has)_adv_rd
+    // Plot predictions with confidence intervals by has)__rd
     twoway (scatter preds viral_family_enc, msize(0)m mcolor(white%0)) ///
-        (rcap pred_lb pred_ub has_prototype_xpos if has_adv_rd == 1, color(navy%70)) ///
-        (scatter preds has_prototype_xpos if has_adv_rd == 1, msymbol(O) mcolor(navy) msize(medium)) ///
-        (rcap pred_lb pred_ub no_prototype_xpos if has_adv_rd == 0, color(maroon%70)) ///
-        (scatter preds no_prototype_xpos if has_adv_rd == 0, msymbol(O) mcolor(maroon) msize(medium)), ///
+        (rcap pred_lb pred_ub has_prototype_xpos if has_prototype == 1, color(navy%70)) ///
+        (scatter preds has_prototype_xpos if has_prototype == 1, msymbol(O) mcolor(navy) msize(medium)) ///
+        (rcap pred_lb pred_ub no_prototype_xpos if has_prototype == 0, color(maroon%70)) ///
+        (scatter preds no_prototype_xpos if has_prototype == 0, msymbol(O) mcolor(maroon) msize(medium)), ///
         xlabel(1(1)9, valuelabel angle(45)) ///
         ylabel(, angle(0)) ///
         ytitle("R&D timeline (years)") ///

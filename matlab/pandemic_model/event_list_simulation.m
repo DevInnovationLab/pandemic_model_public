@@ -21,7 +21,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     annual_intensity = event_sim_table.intensity;
     is_false = event_sim_table.is_false;
     rd_state = event_sim_table.rd_state;
-    adv_RD = event_sim_table.has_RD_benefit;
+    prototype_RD_benefit = event_sim_table.has_RD_benefit;
     prep_start_month = event_sim_table.prep_start_month;
     false_pos_detected = isnan(prep_start_month) & is_false;
     ufv_protection = event_sim_table.ufv_protection;
@@ -171,18 +171,18 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % 3. R&D costs
     % Viral family specific R&D costs
-    adv_rd_costs_nom = zeros(1, max_years);
-    if params.adv_RD
-        adv_rd_spend_rate = params.adv_RD_spend / params.adv_RD_benefit_start;
-        adv_rd_costs_nom(1:params.adv_RD_benefit_start) = adv_rd_spend_rate;
+    prototype_rd_costs_nom = zeros(1, max_years);
+    if params.prototype_RD
+        prototype_rd_spend_rate = params.prototype_RD_spend / params.prototype_RD_benefit_start;
+        prototype_rd_costs_nom(1:params.prototype_RD_benefit_start) = prototype_rd_spend_rate;
     end
-    adv_rd_costs_pv = adv_rd_costs_nom .* pv_factors_annual;
+    prototype_rd_costs_pv = prototype_rd_costs_nom .* pv_factors_annual;
 
     % Advance universal flu vaccine R&D costs
     ufv_rd_costs_nom = zeros(1, max_years);
     if params.ufv_invest
-        ufv_rd_spend_rate = params.ufv_spend / params.adv_RD_benefit_start;
-        ufv_rd_costs_nom(1:params.adv_RD_benefit_start) = ufv_rd_spend_rate;
+        ufv_rd_spend_rate = params.ufv_spend / params.prototype_RD_benefit_start;
+        ufv_rd_costs_nom(1:params.prototype_RD_benefit_start) = ufv_rd_spend_rate;
     end
     ufv_rd_costs_pv = ufv_rd_costs_nom .* pv_factors_annual;
 
@@ -203,7 +203,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     tailoring_costs_pv = tailoring_costs_nom .* pv_factors_annual;
 
     % In-pandemic R&D costs
-    event_inp_rd_nom = adv_RD .* params.inp_RD_with_adv_RD + ~adv_RD .* params.inp_RD_no_adv_RD;
+    event_inp_rd_nom = prototype_RD_benefit .* params.inp_RD_has_prototype + ~prototype_RD_benefit .* params.inp_RD_no_prototype;
     inp_rd_costs_nom = zeros(num_sims, max_years);
     inp_rd_costs_nom(event_start_idx) = event_inp_rd_nom .* ~false_pos_detected .* ~ufv_protection;
     inp_rd_costs_pv = inp_rd_costs_nom .* pv_factors_annual;
@@ -285,7 +285,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     if params.save_output
         save_to_file(params.scenario_name, params.rawoutpath, sim_results, ...
             adv_cap_total_costs_nom, adv_cap_total_costs_pv, ...
-            repmat(adv_rd_costs_nom, num_sims, 1), repmat(adv_rd_costs_pv, num_sims, 1), ...
+            repmat(prototype_rd_costs_nom, num_sims, 1), repmat(prototype_rd_costs_pv, num_sims, 1), ...
             repmat(ufv_rd_costs_nom, num_sims, 1), repmat(ufv_rd_costs_pv, num_sims, 1), ...
             repmat(surveil_costs_nom, num_sims, 1), repmat(surveil_costs_pv, num_sims, 1), ...
             surge_cap_total_costs_nom, surge_cap_total_costs_pv, ...
