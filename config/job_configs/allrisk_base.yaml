@@ -66,3 +66,7 @@ surveil_installation_years: 2 # Time initial costs are incurred
 surveil_maintenance_spend: 1.25e9 # Maintenance spending on enhanced surveillance
 months_to_early_detect: 1
 months_to_regular_detect: 3
+base_early_detect_prob_true: 0.66
+base_early_detect_prob_false: 0
+inc_early_detect_prob_true: 0.2
+inc_early_detect_prob_false: 0.1
