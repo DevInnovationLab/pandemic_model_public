@@ -123,26 +123,27 @@ if __name__ == "__main__":
     std_errors = pm_results.bse
     z_scores = pm_results.tvalues
     p_values = pm_results.pvalues
-    
-    # Create and save LaTeX table
+    # Create and save LaTeX table in PTRS style (single row per parameter, SE in parentheses below)
     latex_table = (
         "\\begin{table}[h]\n"
         "\\centering\n"
-        "\\caption{Poisson Regression Results with HC0 Robust Standard Errors}\n"
-        "\\label{tab:poisson_results}\n"
-        "\\begin{tabular}{lcccc}\n"
-        "\\toprule\n"
-        "Parameter & Coefficient & Std. Error & z-value & p-value \\\\\n"
-        "\\midrule\n"
-        f"Intercept & {pm_results.params[0]:.3f} & {std_errors[0]:.3f} & {z_scores[0]:.3f} & {p_values[0]:.3f} \\\\\n"
-        f"log(Intensity) & {pm_results.params[1]:.3f} & {std_errors[1]:.3f} & {z_scores[1]:.3f} & {p_values[1]:.3f} \\\\\n"
-        "\\midrule\n"
-        f"Deviance & \\multicolumn{{4}}{{l}}{{{model_deviance:.3f}}} \\\\\n"
-        "\\bottomrule\n"
+        "\\caption{Economic loss model (Poisson regression)}\n"
+        "\\label{tab:econ_loss_model}\n"
+        "\\begin{tabular}{lc}\n"
+        "\\hline \\hline\n"
+        "Parameter & Coefficient \\\\\n"
+        "\\hline\n"
+        f"Intercept & {pm_results.params[0]:.3f} \\\\\n"
+        f" & ({std_errors[0]:.3f}) \\\\\n"
+        f"log(Severity) & {pm_results.params[1]:.3f} \\\\\n"
+        f" & ({std_errors[1]:.3f}) \\\\\n"
+        "\\hline\n"
+        f"Deviance & {model_deviance:.3f} \\\\\n"
+        "\\hline\n"
+        "\\multicolumn{2}{l}{\\footnotesize HC0 robust standard errors reported in parentheses.} \\\\\n"
         "\\end{tabular}\n"
         "\\end{table}\n"
     )
-    
     # Save LaTeX table
     with open(outdir / "poisson_model_summary.tex", "w") as f:
         f.write(latex_table)
