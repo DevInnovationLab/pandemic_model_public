@@ -47,14 +47,13 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	ufv_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	yr_end = min(yr_start + natural_dur - 1, params.sim_periods);
-
-	[posterior1, posterior2] = gen_surveil_signals(is_false, params.false_positive_rate);
+	early_detection_q = unifrnd(0, 1, num_response_scenario, 1); % Rank for true outbreak probability
 
 	% Create table of pandemic scenarios
 	response_table = table(sim_num, yr_start, severity, ...
 						   is_false, viral_family, ...
 						   mrna_vax_state, trad_vax_state, ufv_vax_state, ...
-						   natural_dur, posterior1, posterior2, ...
+						   natural_dur, early_detection_q, ...
 						   intensity, yr_end);
 
 	% Address overlapping pandemics

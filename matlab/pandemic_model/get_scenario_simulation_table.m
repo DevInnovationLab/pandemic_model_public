@@ -6,21 +6,22 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     new_simulation_table = base_simulation_table;
 
     % Add surveillance outcomes
-    prep_start_month = run_surveillance(new_simulation_table.posterior1, ...
-										new_simulation_table.posterior2, ...
+    prep_start_month = run_surveillance(new_simulation_table.early_detection_q, ...
 										new_simulation_table.is_false, ...
-										params.enhanced_surveillance, ...
+										params.surveillance_speedup, ...
 										params.surveillance_thresholds);
+	
+	vfs_with_baseline_prototype = vf_data.viral_family(vf_data.has_prototype == 1);
+	vfs_no_baseline_prototype = vf_data.viral_family(vf_data.has_prototype == 0);
+
+	viral_family = new_simulation_table.viral_family;
+	existing_prototype = ismember(viral_family, vfs_with_baseline_prototype);
+	gains_prototype = ismember(viral_family, vfs_no_baseline_prototype(ismember(vfs_no_baseline_prototype, params.viral_families_researched)));
+	has_prototype = existing_prototype | gains_prototype;
 
 	% Unpack vectors for code readability
-	viral_family = new_simulation_table.viral_family;
 	yr_start = new_simulation_table.yr_start;
 	is_false = new_simulation_table.is_false;
-
-	% Handle RD benefits
-	rd_eligible = yr_start > params.prototype_RD_benefit_start;
-	family_researched = ismember(viral_family, params.viral_families_researched);
-	has_RD_benefit = rd_eligible & family_researched;
 
 	% Adjust thresholds for RD benefits when research eligible
 	trad_idx = strcmp(ptrs_vf.platform, "traditional_only");
@@ -44,12 +45,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	trad_increment = ptrs_rd.preds(~rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(~rd_mrna_idx & ~prototype_rd_idx);
 	mrna_increment = ptrs_rd.preds(rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~prototype_rd_idx);
 
-	vfs_no_adv = vf_data.viral_family(~vf_data.has_prototype);
-	vfs_adv = vf_data.viral_family(vf_data.has_prototype);
-
-	increment_idx = ismember(viral_family, vfs_no_adv) & has_RD_benefit;
-	trad_probs(increment_idx) = trad_probs(increment_idx) + trad_increment;
-	mrna_probs(increment_idx) = mrna_probs(increment_idx) + mrna_increment;
+	trad_probs(gains_prototype) = trad_probs(gains_prototype) + trad_increment;
+	mrna_probs(gains_prototype) = mrna_probs(gains_prototype) + mrna_increment;
 
 	% Get whether vaccine platforms succeeded
 	trad_success = trad_probs > new_simulation_table.trad_vax_state;
@@ -70,20 +67,23 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 
 	%% Vaccine development timelines
 	rd_timeline = nan(height(new_simulation_table), 1);
+	vf_rd_timelines_with_prototype = response_rd_timelines(response_rd_timelines.has_prototype == 1, :);
+	vf_rd_timelines_no_prototype = vf_rd_timelines_with_prototype;
+	vf_rd_timelines_no_prototype.preds = vf_rd_timelines_no_prototype.preds * 2; % Naively just double timeline, make sure to report 
 
     % Create lookup tables for R&D timelines
-    [~, loc_has_proto] = ismember(viral_family, vf_rd_timeline_has_prototype.viral_family);
-    [~, loc_no_proto] = ismember(viral_family, vf_rd_timeline_no_prototype.viral_family);
-
-    % Determine which viral families should use the "has prototype" timeline
-    use_has_proto = ismember(viral_family, vfs_adv) | (ismember(viral_family, viral_families_researched) & has_RD_benefit);
+    [~, loc_has_proto] = ismember(viral_family, vf_rd_timelines_with_prototype.viral_family);
+    [~, loc_no_proto] = ismember(viral_family, vf_rd_timelines_no_prototype.viral_family);
   
     % Assign timelines
-    idx_has_proto = use_has_proto & loc_has_proto > 0;
-	idx_no_proto = ~use_has_proto & loc_no_proto > 0;
-    rd_timeline(idx_has_proto) = vf_rd_timeline_has_prototype.preds(loc_has_proto(idx_has_proto));
-    rd_timeline(idx_no_proto) = vf_rd_timeline_no_prototype.preds(loc_no_proto(idx_no_proto));
+    idx_has_proto = has_prototype & loc_has_proto;
+	idx_no_proto = ~has_prototype & loc_no_proto;
+    rd_timeline(idx_has_proto) = vf_rd_timelines_with_prototype.preds(loc_has_proto(idx_has_proto));
+    rd_timeline(idx_no_proto) = vf_rd_timelines_no_prototype.preds(loc_no_proto(idx_no_proto));
 
+	max(vf_rd_timelines_no_prototype.preds)
+	rd_timeline(isnan(rd_timeline)) = max(vf_rd_timelines_no_prototype.preds); % Take maximum timeline for unknown viral families
+	
 	% Ensure all have RD timeline and convert to months
 	assert(all(~isnan(rd_timeline)));
 	rd_timeline = round(rd_timeline * 12); % Convert to months and round to nearest
@@ -93,7 +93,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	%% Assign new variables
 	new_simulation_table.month_vaccine_ready = month_vaccine_ready;
 	new_simulation_table.prep_start_month = prep_start_month;
-	new_simulation_table.has_RD_benefit = has_RD_benefit;
+	new_simulation_table.has_prototype = has_prototype;
 	new_simulation_table.ufv_protection = ufv_protection;
 
 	% Encode non universal vaccine R&D states
@@ -112,33 +112,13 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 end
 
 
-function prep_start_month_arr = run_surveillance(posterior1, posterior2, is_false_arr, enhanced_surveillance, threshold_surveil_arr)
-	% only computes, no random number generation
+function prep_start_month_arr = run_surveillance(early_detection_q, is_false_arr, ...
+												 months_to_early_detect, months_to_regular_detect, ...
+												 early_detect_prob_true, early_detect_prob_false)
+	% Compute early detection indidcator
+	early_detection = early_detection_q < (early_detect_prob_true .* ~is_false_arr + early_detect_prob_false .* is_false_arr);
 
-	% Extract thresholds
-	threshold_no_surveil = threshold_surveil_arr(1);
-	threshold_surveil = threshold_surveil_arr(2);
-
-	% Compute true state and prepare decisions
-	prepare_decision1 = posterior1 > (enhanced_surveillance * threshold_surveil + ~enhanced_surveillance * threshold_no_surveil);
-	prepare_decision2 = posterior2 > threshold_surveil;
-
-	% Initialize prep_start_month_arr with default value
-	prep_start_month_arr = 2 * ones(size(is_false_arr));
-
-	if enhanced_surveillance
-		% Enhanced surveillance logic
-		prep_start_month_arr(prepare_decision1) = 0;
-		prep_start_month_arr(~prepare_decision1 & prepare_decision2) = 1;
-	else
-		% No enhanced surveillance logic
-		prep_start_month_arr(prepare_decision1) = 1; % We use prep decision 1 as we don't get better signal.
-	end
-
-	% Handle cases where no pandemic was correctly anticipated
-	no_pandemic_correctly_anticipated = is_false_arr & ((~enhanced_surveillance & ~prepare_decision1) | (enhanced_surveillance & ~prepare_decision1 & ~prepare_decision2));
-	prep_start_month_arr(no_pandemic_correctly_anticipated) = NaN;
-
-	% Ensure prep_start_month_arr is a column vector
-	prep_start_month_arr = prep_start_month_arr(:);
+	prep_start_month_arr = nan(size(is_false_arr));
+	prep_start_month_arr(early_detection) = months_to_early_detect;
+	prep_start_month_arr(~early_detection & ~is_false_arr) = months_to_regular_detect;
 end

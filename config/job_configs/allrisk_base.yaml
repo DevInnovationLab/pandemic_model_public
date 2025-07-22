@@ -51,7 +51,7 @@ adv_cap_build_period: 30 # number of years it takes to finish building adv capac
 # Vaccine development
 ptrs_vf: "./output/ptrs/vf_model_preds.csv" # Viral family vaccine probability of success
 ptrs_rd: "./output/ptrs/rd_model_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
-rd_timelines: "./output/rd_timelines/vf_model_preds.csv"
+rd_timelines: "./output/rd_timelines/timeline_with_prototype_preds.csv"
 tau_m: 2 # months to repurpose mRNA capacity
 tau_o: 6 # months to repurpose traditional capacity
 pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.
@@ -61,7 +61,8 @@ prototype_RD_cost_per_pathogen: 1.4e9 # $ nominal over period specified by proto
 prototype_RD_benefit_start: 15 # years until advance R&D benefits apply
 
 # Surveillance
-surveillance_thresholds: [0, 0] # First is for regular signal, second is for enhanced surveillance signal.
 surveil_annual_installation_spend: 5e9 # Initial spending to install enhanced surveillance
 surveil_installation_years: 2 # Time initial costs are incurred
 surveil_maintenance_spend: 1.25e9 # Maintenance spending on enhanced surveillance
+months_to_early_detect: 1
+months_to_regular_detect: 3

@@ -12,3 +12,5 @@ share_target_advanced_capacity: 0
 
 # Enhanced surveillance
 enhanced_surveillance: false
+early_detect_prob_true: 0.66
+early_detect_prob_false: 0

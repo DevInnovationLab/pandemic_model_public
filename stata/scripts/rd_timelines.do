@@ -1,33 +1,44 @@
-/* Estimte vaccine  development timelines from cleaned expert survey responses */
+/* Estimate vaccine development timelines from cleaned expert survey responses */
 
 // Import data
 import delimited "./data/clean/vaccine_rd_timelines.csv", clear
 
+drop if has_prototype == 0 // Clean this up later as these data are actually very different
+
 // Encode variables
 encode viral_family, gen(viral_family_enc)
-label define has_prototype 0 "No prototype" 1 "Has prototype"
-label values has_prototype has_prototype
 
-// Run regressions
-eststo vf_model: intreg years_min years_max i.viral_family_enc i.has_prototype, vce(cluster respondent)
+// Define nice labels for viral families (capitalize, no underscores)
+label define viral_family_lbl 1 "Arenaviridae" 2 "Coronaviridae" 3 "Filoviridae" 4 "Flaviviridae" 5 "Nairoviridae" 6 "Orthomyxoviridae" 7 "Paramyxoviridae" 8 "Phenuiviridae" 9 "Togaviridae"
+label values viral_family_enc viral_family_lbl
 
-// Create LaTeX table with enhanced formatting
+// Run regression
+eststo vf_model: intreg years_min years_max i.viral_family_enc, vce(cluster respondent)
+
+// Output results: Create LaTeX table with enhanced formatting and nice labels
 estout vf_model using "./output/rd_timelines/vf_model.tex", ///
-    cells(b(star fmt(3)) se(par fmt(3))) ///
+    cells("b(fmt(3) star) se(par fmt(3))") ///
     starlevels(* 0.10 ** 0.05 *** 0.01) ///
-    label varlabels(_cons Constant) ///
-    title("\begin{table}[htbp] \centering \caption{Interval regression results} \label{tab:ptrs_results}") ///
-    prehead("\begin{longtable}{lcccc} \hline \hline") ///
-    posthead("\hline & \multicolumn{4}{c}{Vaccine PTRS} \\ \cline{2-5} & \multicolumn{2}{c}{Without Clustering} & \multicolumn{2}{c}{With Clustering} \\ \cline{2-5} & Base & Interactions & Base & Interactions \\ \hline") ///
+    label varlabels(_cons "Constant" ///
+        1.viral_family_enc "Arenaviridae" ///
+        2.viral_family_enc "Coronaviridae" ///
+        3.viral_family_enc "Filoviridae" ///
+        4.viral_family_enc "Flaviviridae" ///
+        5.viral_family_enc "Nairoviridae" ///
+        6.viral_family_enc "Orthomyxoviridae" ///
+        7.viral_family_enc "Paramyxoviridae" ///
+        8.viral_family_enc "Phenuiviridae" ///
+        9.viral_family_enc "Togaviridae") ///
+    prehead("\begin{table}[htbp] \centering \caption{Interval regression results predicting R\&D timelines} \label{tab:rd_timelines_results} \begin{tabular}{lcc} \hline \hline") ///
+    posthead("\textbf{Variable} & \textbf{Coefficient} & \textbf{Standard error} \\ \hline") ///
     keep(*.viral_family_enc _cons lnsigma) ///
     order(*.viral_family_enc _cons lnsigma) ///
     prefoot("\hline") ///
-    postfoot("\hline \hline \multicolumn{5}{l}{\footnotesize{* \$p<0.10\$, ** \$p<0.05\$, *** \$p<0.01\$}} \\ \end{longtable} \end{table}") ///
+    postfoot("\hline \hline \multicolumn{2}{l}{\footnotesize{* \$p<0.10\$, ** \$p<0.05\$, *** \$p<0.01\$}. Standard errors are clustered at the respondent level.} \\ \end{tabular} \end{table}") ///
     style(tex) ///
-    stats(N r2 r2_p chi2, fmt(%9.0f %9.3f %9.3f %9.2f) ///
-        labels("Observations" "R-squared" "Pseudo R-squared" "Chi-squared")) ///
+    stats(N chi2, fmt(%9.0f %9.2f) ///
+        labels("Observations" "Chi-squared")) ///
     replace
-
 
 // Export viral family model figure and coefficients.
 preserve
@@ -35,7 +46,7 @@ preserve
 
     // Create a temporary capitalized label for viral family
     label copy viral_family_enc viral_family_enc_cap
-    foreach v of numlist 1/9 { // Magic number so bad
+    foreach v of numlist 1/9 {
         local lab : label viral_family_enc `v'
         label define viral_family_enc_cap `v' "`=proper("`lab'")'", modify
     }
@@ -52,30 +63,25 @@ preserve
     gen pred_lb = preds - 1.96*ses
     gen pred_ub = preds + 1.96*ses
 
-    // Generate x-axis positions to stack points
-    gen has_prototype_xpos = viral_family_enc - 0.15 if has_prototype == 1
-    gen no_prototype_xpos = viral_family_enc + 0.15 if has_prototype == 0
-
-    // Plot predictions with confidence intervals by has)__rd
-    twoway (scatter preds viral_family_enc, msize(0)m mcolor(white%0)) ///
-        (rcap pred_lb pred_ub has_prototype_xpos if has_prototype == 1, color(navy%70)) ///
-        (scatter preds has_prototype_xpos if has_prototype == 1, msymbol(O) mcolor(navy) msize(medium)) ///
-        (rcap pred_lb pred_ub no_prototype_xpos if has_prototype == 0, color(maroon%70)) ///
-        (scatter preds no_prototype_xpos if has_prototype == 0, msymbol(O) mcolor(maroon) msize(medium)), ///
+    // Plot predictions with confidence intervals by prototype status
+    graph twoway ///
+        (rcap pred_lb pred_ub viral_family_enc, color(maroon%70)) ///
+        (scatter preds viral_family_enc, msize(medium) msymbol(O) mcolor(maroon)), ///
         xlabel(1(1)9, valuelabel angle(45)) ///
         ylabel(, angle(0)) ///
-        ytitle("R&D timeline (years)") ///
+        ytitle("Development time (years)") ///
         xtitle("Viral family") ///
-        legend(order(3 "With prototype" 5 "Without prototype") rows(1)) ///
+        title("Vaccine development duration (with prototype)") ///
+        legend(off) ///
         scheme(s2color) graphregion(color(white)) bgcolor(white)
 
     // Save figure and estimates
-    graph export "./output/rd_timelines/vf_model_preds.png", replace width(2400)
+    graph export "./output/rd_timelines/timeline_with_prototype_preds.png", replace width(2400)
 
     // Put lower case value labels back
     label values viral_family_enc viral_family_enc
 
     drop years_min years_max respondent *_enc *_lb *_ub ///
-        disease _est* *_xpos
-    export delimited "./output/rd_timelines/vf_model_preds.csv", replace
+        disease _est*
+    export delimited "./output/rd_timelines/timeline_with_prototype_preds.csv", replace
 restore
