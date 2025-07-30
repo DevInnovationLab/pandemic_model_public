@@ -17,7 +17,7 @@ population_clean = population_data(:, {'Year', 'Population - Sex: all - Age: all
 population_clean.Properties.VariableNames = {'year', 'population'};
 
 % Merge the datasets
-merged_data = innerjoin(hiv_clean, population_clean, 'Keys', 'year')
+merged_data = innerjoin(hiv_clean, population_clean, 'Keys', 'year');
 
 % Calculate deaths per 10,000 inhabitants
 merged_data.severity = (merged_data.deaths ./ merged_data.population) * 10000;

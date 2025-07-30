@@ -2,8 +2,7 @@ function run_job(job_config_path)
 
     % Load job config and set seed
     job_config = yaml.loadFile(job_config_path);
-    job_config = clean_job_config(job_config);
-
+    
     % Create output dir
     [~, job_config_name, ~] = fileparts(job_config_path);
 

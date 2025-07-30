@@ -13,6 +13,7 @@ function save_to_file(scenario_name, outdirpath, sim_results, ...
                       sim_out_arr_benefits_vaccine_nom)
  
     % Save model outputs
+    fprintf('Saving results\n');
     out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'adv_cap_n');
     writematrix(sim_out_arr_costs_adv_cap_nom, out_arr_name, 'Delimiter','comma', 'WriteMode', 'overwrite');
     out_arr_name = sprintf('%s/%s_ts_%s.csv', outdirpath, scenario_name, 'adv_cap_p');
