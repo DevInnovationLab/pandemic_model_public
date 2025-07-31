@@ -55,6 +55,14 @@ function plot_disagg_cost_comparison(job_dir)
             var = cost_vars{j};
             baseline_array = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_', var, '.csv')));
             scenario_array = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_', var, '.csv')));
+
+            % Add tailoring costs to response capacity if applicable
+            if strcmp(var, "inp_cap_n")
+                baseline_tail = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_inp_tail_n.csv')));
+                scenario_tail = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_inp_tail_n.csv')));
+                baseline_array = baseline_array + baseline_tail;
+                scenario_array = scenario_array + scenario_tail;
+            end
             
             mean_rel = mean(scenario_array - baseline_array, 1) / 1e9;
             y_min = min(y_min, min(mean_rel));
@@ -75,6 +83,14 @@ function plot_disagg_cost_comparison(job_dir)
             % Load baseline and scenario data
             baseline_array = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_', var, '.csv')));
             scenario_array = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_', var, '.csv')));
+
+            % Add tailoring costs to response capacity if applicable
+            if strcmp(var, "inp_cap_n")
+                baseline_tail = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_inp_tail_n.csv')));
+                scenario_tail = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_inp_tail_n.csv')));
+                baseline_array = baseline_array + baseline_tail;
+                scenario_array = scenario_array + scenario_tail;
+            end
             
             % Calculate means
             mean_rel = mean(scenario_array - baseline_array, 1) / 1e9;

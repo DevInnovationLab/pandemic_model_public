@@ -1,8 +1,9 @@
-function k = capital_costs(q, params, is_mRNA, is_adv)
+function k = capital_costs(q, params, tailoring_fraction, is_mRNA, is_adv)
     % Calculate capital costs for capacity expansion
     % Inputs:
     %   q: capacity expansion amount
     %   params: struct containing model parameters
+    %   tailoring_fraction: fraction of capacity that is tailored
     %   is_mRNA: boolean indicating if mRNA platform
     %   is_adv: boolean indicating if advance capacity
     % Output:
@@ -14,7 +15,7 @@ function k = capital_costs(q, params, is_mRNA, is_adv)
     k_platform = is_mRNA .* params.k_m + ~is_mRNA .* params.k_o;
     
     % Calculate base cost component for non-zero capacities
-    base_cost = k_platform .* q;
+    base_cost = k_platform .* (1 - tailoring_fraction) .* q;
     
     % Initialize output array
     k = zeros(size(q));

@@ -10,7 +10,7 @@ function process_total_costs(results_dir)
     num_periods = config.sim_periods;
 
     % Define cost variables
-    cost_vars = {'adv_cap', 'prototype_RD', 'ufv_RD', 'inp_cap', 'inp_marg', 'inp_RD', 'surveil'};
+    cost_vars = {'adv_cap', 'prototype_RD', 'ufv_RD', 'inp_cap', 'inp_marg', 'inp_RD', 'inp_tail', 'surveil'};
 
     % Process each scenario
     for i = 1:length(scenarios)

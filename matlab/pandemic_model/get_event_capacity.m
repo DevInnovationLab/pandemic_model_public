@@ -62,7 +62,7 @@ function [surge_cap, surge_cap_cost] = ...
     event_surge_cap_diff(event_surge_cap_diff < 0) = 0;
     
     % Calculate capital costs for the incremental capacity
-    event_surge_cap_cost = capital_costs(event_surge_cap_diff, params, is_mRNA, 0);
+    event_surge_cap_cost = capital_costs(event_surge_cap_diff, params, 0, is_mRNA, 0);
 
     % Place costs in the output matrix at event start times
     surge_cap_cost = zeros(num_sims, max_years);
