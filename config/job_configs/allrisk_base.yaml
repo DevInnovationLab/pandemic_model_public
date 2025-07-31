@@ -28,12 +28,12 @@ econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 false_positive_rate: 0
 
 # Capacity
-theta: 0.25 # Fraction reduction in pandemic-time investments due to advance capacity
-delta: 0.19 # Annual maintenance cost as fraction of capital value
+theta: 0.25 # Fraction reduction in pandemic-time investments due to capacity reservation
 mRNA_share: 0.5 # Share capacity that is mRNA.
 capacity_kept: 0.5 # Share response capacity kept after a pandemic
 k_m: 1.5 # Per course cost of mRNA capacity ($/course)
 k_o: 3 # Per course cost of traditional capacity ($/course)
+k_a: 0.91 # Per course cost of capacity reservation
 tailoring_fraction: 0.33 # Share capital cost paid at pandemic onset.
 c_m: 34 # marginal cost of producing mRNA vaccines ($ per course) (LB)
 c_o: 17 # marginal cost of producing traditional vaccines ($ per course) (LB)
@@ -45,8 +45,7 @@ f_m: 0.2 # fraction of at risk capacity successful in mRNA platform
 f_o: 0.2 # fraction of at risk capacity successful in traditional platform
 g_m: 0.4 # fraction of at risk capacity unsuccessful/repurpose-able in mRNA platform
 g_o: 0.4 # fraction of at risk capacity unsuccessful/repurpose-able in traditional platform
-rental_share: 0.4 # Share maintenance cost recuperated from pandemic in absence of rental.
-adv_cap_build_period: 30 # number of years it takes to finish building adv capacity
+adv_cap_build_period: 5 # number of years it takes to establish capacity reservation
 
 # Vaccine development
 ptrs_vf: "./output/ptrs/vf_model_preds.csv" # Viral family vaccine probability of success
