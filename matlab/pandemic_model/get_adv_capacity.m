@@ -1,8 +1,12 @@
-function [z_m, z_o] = get_adv_capacity(params)
+function [adv_cap_mrna, adv_cap_trad] = get_adv_capacity(params)
 
 	% returns total amount of advance capacity, by platform, in millions
-	tot_base_cap = params.base_cap_mrna + params.base_cap_trad;
-	z_tot = (params.x_max_target - (1 - params.theta) .* tot_base_cap) .* params.share_target_advanced_capacity;
-	z_m = params.mRNA_share * z_tot; % advance capacity mRNA
-	z_o = (1-params.mRNA_share) * z_tot; % advance capacity traditional
+	max_cap_mrna = params.mRNA_share .* params.max_capacity; % total target capacity mRNA
+	max_cap_trad = (1-params.mRNA_share) * params.max_capacity; % total target capacity traditional
+
+	assert(max_cap_mrna >= params.base_cap_mrna, "mRNA max capacity is less than base capacity");
+	assert(max_cap_trad >= params.base_cap_trad, "traditional max capacity is less than base capacity");
+
+	adv_cap_mrna = params.share_target_advanced_capacity .* (max_cap_mrna - params.base_cap_mrna);
+	adv_cap_trad = params.share_target_advanced_capacity .* (max_cap_trad - params.base_cap_trad);
 end

@@ -33,10 +33,15 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     build_rate_o = params.z_o / build_years;
 
     % Calculate advance and surge capacity
-    base_cap_m = params.base_cap_mrna .* (1 - params.theta) .* params.mRNA_share;
-    base_cap_o = params.base_cap_trad .* (1 - params.theta) .* (1 - params.mRNA_share);
-    [max_cap_m, max_cap_o] = get_target_capacity(params);
+    base_cap_m = params.base_cap_mrna;
+    base_cap_o = params.base_cap_trad;
+    max_cap_m = params.mRNA_share * params.max_capacity;
+    max_cap_o = (1 - params.mRNA_share) * params.max_capacity;
     frac_retained = params.capacity_kept;
+    
+    % Make surge capacity dependent on amount of advance investment
+    delta_cap_m = params.surge_cap_mrna - min(params.theta * params.surge_cap_mrna, params.z_m);
+    delta_cap_o = params.surge_cap_trad - min(params.theta * params.surge_cap_trad, params.z_o);
     
     % Advance capacity over time
     adv_cap_m = [build_rate_m * (1:build_years), repmat(params.z_m, 1, non_build_years)]; % 1 x Y
@@ -44,9 +49,9 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % Get surge capacity
     [surge_cap_m, surge_cap_m_cost] = ...
-        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, base_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
+        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, delta_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
     [surge_cap_o, surge_cap_o_cost] = ...
-        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, base_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0, num_sims);
+        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, delta_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0, num_sims);
 
     % Total capacity
     all_cap_m = base_cap_m + adv_cap_m + surge_cap_m;
@@ -64,26 +69,13 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     surge_cap_annual_cap_cost = surge_cap_m_cost + surge_cap_o_cost;
     surge_cap_annual_value = surge_cap_m_annual_value + surge_cap_o_annual_value;
 
-    % Calculate rental income
-    rentable_cap = (adv_cap_m + surge_cap_m) + (adv_cap_o + surge_cap_o);
-    rental_income_fractions = get_rental_fractions(rentable_cap, params.theta .* (base_cap_m + base_cap_o));
-
-    % Zero out rental income during outbreaks
-    true_outbreak_mat = zeros(num_sims, max_years);
-    true_outbreak_mat(sub2ind([num_sims, max_years], sim_num(~is_false), year_start(~is_false))) = 1;
-    true_outbreak_mat(sub2ind([num_sims, max_years], sim_num(~is_false), year_start(~is_false) + year_dur(~is_false) - 1)) = -1;
-    true_outbreak_mat = cumsum(true_outbreak_mat, 2) > 0;
-    rental_income_fractions(true_outbreak_mat) = 0;
-
     %% COST CALCULATIONS
     adv_cap_maintenance_costs = get_capacity_maintenance_cost(adv_cap_annual_value, params);
-    adv_cap_maintenance_costs_rent_adjusted = adv_cap_maintenance_costs .* (1 - rental_income_fractions);
-    adv_cap_total_costs_nom = adv_cap_annual_cap_cost + adv_cap_maintenance_costs_rent_adjusted;
+    adv_cap_total_costs_nom = adv_cap_annual_cap_cost + adv_cap_maintenance_costs;
     adv_cap_total_costs_pv = adv_cap_total_costs_nom .* pv_factors_annual;
 
     surge_cap_maintenance_costs = get_capacity_maintenance_cost(surge_cap_annual_value, params);
-    surge_cap_maintenance_costs_rent_adjusted = surge_cap_maintenance_costs .* (1 - rental_income_fractions);
-    surge_cap_total_costs_nom = surge_cap_annual_cap_cost + surge_cap_maintenance_costs_rent_adjusted;
+    surge_cap_total_costs_nom = surge_cap_annual_cap_cost + surge_cap_maintenance_costs;
     surge_cap_total_costs_pv = surge_cap_total_costs_nom .* pv_factors_annual;
 
     % 2. Surveillance costs
