@@ -33,8 +33,8 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     build_rate_o = params.z_o / build_years;
 
     % Calculate advance and surge capacity
-    base_cap_m = params.x_avail .* (1 - params.theta) .* params.mRNA_share;
-    base_cap_o = params.x_avail .* (1 - params.theta) .* (1 - params.mRNA_share);
+    base_cap_m = params.base_cap_mrna .* (1 - params.theta) .* params.mRNA_share;
+    base_cap_o = params.base_cap_trad .* (1 - params.theta) .* (1 - params.mRNA_share);
     [max_cap_m, max_cap_o] = get_target_capacity(params);
     frac_retained = params.capacity_kept;
     

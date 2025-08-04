@@ -40,6 +40,8 @@ c_o: 17 # marginal cost of producing traditional vaccines ($ per course) (LB)
 epsilon: 1 # decreasing returns to capacity investments during pandemic
 beta: 100e6 # in-pandemic kink in capital cost function
 x_max_target: 15.7e9 # target total capacity in annual courses (x^{\prime\prime} in paper)
+base_cap_mrna: 1.77e9 # Annual courses baseline mRNA capacity. From expert survey.
+base_cap_trad: 4.06e9 # Annual courses baseline traditional capacity. Adding capacity egg-based and other platforms in expert survey.
 x_avail: 3.78e9 # total capacity in annual courses that can be achieved in pandemic (x^\prime in paper)
 f_m: 0.2 # fraction of at risk capacity successful in mRNA platform
 f_o: 0.2 # fraction of at risk capacity successful in traditional platform
