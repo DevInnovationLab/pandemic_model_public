@@ -4,33 +4,28 @@ import click
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from pandemic_statistics.transform import DiagonalBijector, PassthroughBijector, SoftplusBijector
+from pandemic_statistics.utils import parse_filtered_ds_fp
 from scipy.optimize import minimize
 from scipy.stats import lognorm
 
-from pandemic_model.stats.utils import softplus, softplus_inv
-
 # Parameter transformations to fit in unconstrained space.
-def to_phi(theta):
-    """θ = (mu, sigma)  →  φ = (mu, eta1)  all in ℝ"""
-    mu, sigma = theta
-    return np.array([mu, softplus_inv(sigma)])
 
-def from_phi(phi):
-    """φ = (mu, eta1) → θ = (mu, sigma)  all valid"""
-    mu, eta1 = phi
-    return np.array([mu, softplus(eta1)])
-
-def nll_phi(phi, data):
+def nll_phi(phi, data, loc=0.5, transform=None):
     """Negative log-likelihood of exceedances y (>0) given φ=(ψ,φ1,φ2)."""
-    mu, sigma = from_phi(phi)
-    ll = lognorm.logpdf(data, s=sigma, scale=np.exp(mu)).sum()
+    theta = transform.backward(phi)
+    ll = lognorm.logpdf(data, s=theta[1], scale=np.exp(theta[0]), loc=loc).sum()
     
     return -ll
 
-def fit_duration(data, start_grid):
+def fit_duration(data, start_grid, floc=0.5, transform=None):
+    """Fit lognormal distribution to data using MLE."""
+    if transform is None:
+        transform = DiagonalBijector([PassthroughBijector(), SoftplusBijector()])
+        
     results = []
     for mu, sigma in start_grid:
-        phi0 = to_phi((mu, sigma))
+        phi0 = transform.forward((mu, sigma))
         
         # Nelder-Mead optimization
         nelder_mead_opts = {
@@ -41,7 +36,7 @@ def fit_duration(data, start_grid):
             'adaptive': True
         }
         
-        opt = minimize(nll_phi, phi0, args=(data),
+        opt = minimize(nll_phi, phi0, args=(data, floc, transform),
                        method='Nelder-Mead', options=nelder_mead_opts)
         
         if not opt.success:
@@ -49,12 +44,12 @@ def fit_duration(data, start_grid):
             error_msg += f"Status: {opt.status}\n"
             error_msg += f"Number of iterations: {opt.nit}\n"
             error_msg += f"Final function value: {opt.fun}\n"
-            error_msg += f"Final parameters: {from_phi(opt.x)}"
+            error_msg += f"Final parameters: {transform.backward(opt.x)}"
             raise RuntimeError(error_msg)
             
         # Calculate full Hessian at optimal point
         (est_mu, est_eta1) = opt.x
-        est_mu, est_sigma = from_phi(opt.x)
+        est_mu, est_sigma = transform.backward(opt.x)
         info = len(data) * np.array([[1, 0], [0, 2]]) * (1 / est_eta1 ** 2)
         cov = np.linalg.inv(info)  # asymptotic covariance
         
@@ -97,9 +92,11 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, seed: int, crea
         (np.log(duration_mean) - 0.5, 0.3),  # Lower mu, small sigma
         (np.log(duration_mean) + 0.5, 0.3)   # Higher mu, small sigma
     ]
+    transform = DiagonalBijector([PassthroughBijector(), SoftplusBijector()]) # Convert sigma to unbounded space
 
     # Fit models with different starting points
-    results_df, best_fit = fit_duration(durations, start_grid)
+    floc = 0.5
+    results_df, best_fit = fit_duration(durations, start_grid, floc=floc, transform=transform)
 
     # Check that all successful fits converge to similar parameter values
     successful_fits = results_df[results_df.success]
@@ -128,14 +125,14 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, seed: int, crea
     best_cov = best_fit.hess_inv
 
     phi_draws = rng.multivariate_normal(best_phi, best_cov, size=n_samples)
-    theta_draws = np.vstack([from_phi(phi) for phi in phi_draws])
+    theta_draws = np.vstack([transform.backward(phi) for phi in phi_draws])
     mu_sample, sigma_sample = np.hsplit(theta_draws, 2)
 
     id_string = "_".join(Path(fp).stem.split("_")[2:])
     outstring = id_string + f"_trunc_{trunc_years}_n_{n_samples}_seed_{seed}"
     outdir = Path("./output/duration_distributions")
 
-    sample_df = pd.DataFrame({'mu': mu_sample.squeeze(), 'sigma': sigma_sample.squeeze(), 'trunc_value': trunc_years})
+    sample_df = pd.DataFrame({'mu': mu_sample.squeeze(), 'sigma': sigma_sample.squeeze(), 'trunc_value': trunc_years, 'loc': floc})
     outpath = outdir / f"{outstring}.csv"
     sample_df.to_csv(outpath, index=0)
 
@@ -145,7 +142,7 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, seed: int, crea
 
         # Calculate survival functions for each sampled mu, sigma pair
         t_mat = np.tile(t, (n_samples, 1))  # Shape: (1000, n_samples)
-        survivals = lognorm.sf(t_mat, s=sigma_sample, scale=np.exp(mu_sample))
+        survivals = lognorm.sf(t_mat, s=sigma_sample, scale=np.exp(mu_sample), loc=floc)
 
         # Calculate percentiles across samples at each time point
         percentiles = np.percentile(survivals, [5, 50, 95], axis=0)
