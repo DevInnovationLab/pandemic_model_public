@@ -86,7 +86,6 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     rd_timeline(idx_has_proto) = vf_rd_timelines_with_prototype.preds(loc_has_proto(idx_has_proto));
     rd_timeline(idx_no_proto) = vf_rd_timelines_no_prototype.preds(loc_no_proto(idx_no_proto));
 
-	max(vf_rd_timelines_no_prototype.preds)
 	rd_timeline(isnan(rd_timeline)) = max(vf_rd_timelines_no_prototype.preds); % Take maximum timeline for unknown viral families
 	
 	% Ensure all have RD timeline and convert to months

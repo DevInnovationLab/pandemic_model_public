@@ -25,7 +25,7 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 	% Plot empirical intensity exceedance
 	if strcmp(arrival_dist.measure, 'severity')
 		condition_matrix = severity_matrix;
-		lower_bound = min(arrival_dist.param_samples.mu) ./ duration_matrix.max_value;
+		lower_bound = min(arrival_dist.param_samples.mu) ./ duration_dist.max_duration;
 	elseif strcmp(arrival_dist.measure, 'intensity')
 		condition_matrix = intensity_matrix;
 		lower_bound = min(arrival_dist.param_samples.mu);

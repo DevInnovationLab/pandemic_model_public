@@ -18,11 +18,19 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
     measure = string(config.hyperparams.measure);
 
     % Create table with numeric arrays for each parameter
+    if isfield(config.param_samples, 'p')
+        p = cell2mat(config.param_samples.p);
+    elseif isfield(config.param_samples, 'lambda')
+        lambda = cell2mat(config.param_samples.lambda);
+        p = 1 - exp(-lambda);
+    else
+        error("Neither 'p' nor 'lambda' found in param_samples.");
+    end
+
     xi = cell2mat(config.param_samples.xi);
     sigma = cell2mat(config.param_samples.sigma);
-    p = cell2mat(config.param_samples.p);
-    mu = cell2mat(config.param_samples.mu);
-    max_value = cell2mat(config.param_samples.max_value);
+    mu = config.hyperparams.y_min .* ones(size(xi));
+    max_value = config.hyperparams.y_max .* ones(size(xi));
     param_samples = table(xi, sigma, p, mu, max_value, 'VariableNames', ["xi", "sigma", "p", "mu", "max_value"]);
 
     arrival_dist = ArrivalDistSampler(param_samples, trunc_method, false_positive_rate, measure);
