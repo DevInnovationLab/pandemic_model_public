@@ -1,7 +1,7 @@
 % clean_hiv_deaths.m
 %
 % This script loads HIV/AIDS deaths data and population data, cleans and merges them,
-% and calculates the annual number of people who died from HIV/AIDS per 10,000 inhabitants.
+% and calculates the annual number of people who died from HIV/AIDS per 10,000 inhabitants per year.
 
 % Load HIV/AIDS deaths data
 hiv_data = readtable('./data/raw/hiv-aids-deaths.csv');
@@ -19,18 +19,18 @@ population_clean.Properties.VariableNames = {'year', 'population'};
 % Merge the datasets
 merged_data = innerjoin(hiv_clean, population_clean, 'Keys', 'year');
 
-% Calculate deaths per 10,000 inhabitants
-merged_data.severity = (merged_data.deaths ./ merged_data.population) * 10000;
+% Calculate deaths per 10,000 inhabitants in each year
+merged_data.intensity = (merged_data.deaths ./ merged_data.population) * 10000;
 
 % Sort by year
 merged_data = sortrows(merged_data, 'year');
 
 % Plot deaths per 10,000 inhabitants over time
 figure;
-plot(merged_data.year, merged_data.severity, 'b-', 'LineWidth', 2);
+plot(merged_data.year, merged_data.intensity, 'b-', 'LineWidth', 2);
 hold on;
 yline(0.01, 'r--', 'Threshold: 0.01 deaths per 10,000', 'LineWidth', 1.5);
-title('HIV/AIDS Deaths per 10,000');
+title('HIV/AIDS Deaths per 10,000 per year');
 xlabel('Year');
 ylabel('Deaths per 10,000');
 grid on;

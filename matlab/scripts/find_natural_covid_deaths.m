@@ -41,10 +41,11 @@ function find_natural_covid_deaths(config_path)
     fprintf('Function values at solution: [%.2e, %.2e]\n', fval(1), fval(2));
     
     % Consider writing output to file
+    results = struct();
     results.ex_ante_severity = ex_ante_severity;
     results.gamma = gamma;
     
-    yaml.dumpFile("./data/clean/inverted_covid_severity.yaml", results);
+    yaml.dumpFile("./data/clean/inverted_covid_severity.yaml", results, "block");
 end
 
 

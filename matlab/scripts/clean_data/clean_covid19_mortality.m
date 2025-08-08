@@ -47,7 +47,7 @@ deaths_per_year = [cumulative_deaths_annual(1);
 % Create a table with the results
 yearly_deaths = table(unique_years, deaths_per_year, 'VariableNames', {'Year', 'Deaths'});
 
-writetable(yearly_deaths, './data/clean/covid19_annual_excess_mortality_central.csv');
+writetable(yearly_deaths, './data/clean/covid19_annual_excess_mortality_central_economist.csv');
 
 %% Get COVID-19 intensity
 
@@ -74,7 +74,7 @@ ylabel('Deaths per 10,000');
 grid on;
 
 % Save the figure to output
-saveas(gcf, './output/covid19_deaths_per_10k_plot.png');
+saveas(gcf, './output/covid19_deaths_per_10k_economist_plot.png');
 
 % Save the cleaned and merged data
-writetable(merged_data, './data/clean/covid19_deaths_per_10k.csv');
+writetable(merged_data, './data/clean/covid19_deaths_per_10k_economist.csv');
