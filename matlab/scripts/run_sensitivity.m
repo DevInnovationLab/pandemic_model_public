@@ -113,7 +113,6 @@ end
 
 function base_config = get_base_config(sensitivity_config)
     base_config = yaml.loadFile(sensitivity_config.base_job_config);
-    base_config = clean_job_config(base_config);
 end
 
 

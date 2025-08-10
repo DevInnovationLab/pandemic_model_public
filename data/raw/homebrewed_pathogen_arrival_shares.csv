@@ -1,0 +1,16 @@
+pathogen,arrival_share
+Covid-19,0.03
+Crimean-Congo haemorrhagic fever,0.01
+MERS,0.04
+Lassa,0.02
+Nipah,0.05
+Rift Valley Fever,0.03
+Chikungunya,0.05
+Ebola,0.03
+Zika,0.06
+Flu,0.28
+Other coronavirus (not MERS),0.12
+Totally unknown virus,0.13
+Drug-resistant bacterial infection,0.08
+"Nonviral, nonbacterial (e.g., parasite, or fungus, please specify)",0.07
+Other known virus (please specify),0

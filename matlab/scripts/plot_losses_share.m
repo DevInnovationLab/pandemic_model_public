@@ -13,7 +13,7 @@ function plot_losses_share(job_dir)
     response_threshold = response_threshold_dict.response_threshold;
 
     %% Create histogram bins for severity
-    intensity = pandemic_table.intensity;
+    severity = pandemic_table.eff_severity;
     pandemic_losses = sum(pandemic_table{:, ["m_mortality_losses", "m_output_losses", "m_learning_losses"]}, 2);
     total_losses = sum(pandemic_losses);
 
@@ -22,18 +22,18 @@ function plot_losses_share(job_dir)
     sgtitle('Pandemic intensity distribution')
 
     % Calculate max y value for consistent axis
-    max_intensity = max(intensity);
+    max_severity = max(severity);
     num_bins = 10;
-    bin_width = (max_intensity - response_threshold) / num_bins;
-    edges = response_threshold:bin_width:max_intensity;
-    [counts, edges] = histcounts(intensity, edges, 'Normalization', 'probability');
+    bin_width = (max_severity - response_threshold) / num_bins;
+    edges = response_threshold:bin_width:max_severity;
+    [counts, edges] = histcounts(severity, edges, 'Normalization', 'probability');
     centers = (edges(1:end-1) + edges(2:end))/2;
     loss_shares = zeros(size(counts));
     for i = 1:length(counts)
         if i < length(counts)
-            mask = intensity >= edges(i) & intensity < edges(i+1);
+            mask = severity >= edges(i) & severity < edges(i+1);
         else
-            mask = intensity >= edges(i) & intensity <= edges(i+1); % Include rightmost edge in last bin
+            mask = severity >= edges(i) & severity <= edges(i+1); % Include rightmost edge in last bin
         end
         loss_shares(i) = sum(pandemic_losses(mask)) / total_losses;
     end
@@ -41,10 +41,10 @@ function plot_losses_share(job_dir)
 
     % Plot share of events
     subplot(1,2,1)
-    histogram(intensity, edges, 'Normalization', 'probability')
+    histogram(severity, edges, 'Normalization', 'probability')
     title('Events')
     ylabel('Share')
-    xlabel('Intensity (deaths / 10,000 / year)')
+    xlabel('Severity (deaths / 10,000)')
     ylim([0 y_max])
     box off
     grid on
@@ -56,7 +56,7 @@ function plot_losses_share(job_dir)
     bar(centers, loss_shares)
     title('Losses')
     ylabel('Share')
-    xlabel('Intensity (deaths / 10,000 / year)')
+    xlabel('Severity (deaths / 10,000)')
     ylim([0 y_max])
     box off
     grid on
@@ -77,12 +77,6 @@ function plot_losses_share(job_dir)
     sorted_losses = sort(pandemic_losses);
     cum_event_share = (1:length(sorted_losses))' / length(sorted_losses);
     cum_loss_share = cumsum(sorted_losses) / sum(sorted_losses);
-    
-    % Calculate Gini coefficient
-    % Gini = A/(A+B) where A is area between Lorenz curve and equality line
-    % and A+B is total area under equality line (0.5)
-    area_under_lorenz = trapz([0; cum_event_share], [0; cum_loss_share]);
-    gini = 1 - 2*area_under_lorenz;
     
     % Add perfect equality line
     plot([0 1], [0 1], '--k', 'LineWidth', 1)

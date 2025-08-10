@@ -14,6 +14,7 @@ function get_sensitivity_loss_summary(sensitivity_dir)
 
     % Load baseline config to get reference values
     baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'job_config.yaml'));
+    baseline_arrival_dist = baseline_config.arrival_dist_config;
     baseline_vsl = baseline_config.value_of_death;
     baseline_r = baseline_config.r;
     baseline_y = baseline_config.y;
@@ -30,7 +31,8 @@ function get_sensitivity_loss_summary(sensitivity_dir)
     summary_table = table('Size', [1 6], 'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell'});
     summary_table.Properties.VariableNames = {...
         'Variable', 'Value', 'MortalityLoss', 'EconomicLoss', 'LearningLoss', 'TotalLoss'};
-    [formatted_name, formatted_value] = format_names('baseline', 'baseline', baseline_vsl, baseline_r, baseline_y);
+    [formatted_name, formatted_value] = format_names('baseline', 'baseline', baseline_arrival_dist, ...
+                                                     baseline_vsl, baseline_r, baseline_y);
     summary_table(1,:) = {...
         formatted_name,...
         formatted_value, ...
@@ -55,7 +57,7 @@ function get_sensitivity_loss_summary(sensitivity_dir)
             r = run_config.r;
             periods = run_config.sim_periods;
             [mortality_loss, economic_loss, learning_loss, total_loss] = get_losses_for_dir(raw_dir, r, periods);
-            [formatted_name, formatted_value] = format_names(var_name, var_values{j}, baseline_vsl, baseline_r, baseline_y);
+            [formatted_name, formatted_value] = format_names(var_name, var_values{j}, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
             summary_table(row_idx,:) = {...
                 formatted_name, ...
                 formatted_value, ...
@@ -73,26 +75,41 @@ function get_sensitivity_loss_summary(sensitivity_dir)
     write_to_latex(summary_table, fullfile(sensitivity_dir, "sensitivity_loss_summary.tex"))
 end
 
-
-% Function to load and process losses for a given directory
 function [mortality_losses, economic_losses, learning_losses, total_losses] = get_losses_for_dir(raw_dir, r, periods)
-    % Load and process mortality losses
+    % Load and process losses from a MAT file saved by save_to_file_fast.
+    %
+    % Args:
+    %   raw_dir (string): Directory containing the results MAT file.
+    %   r (double): Discount rate.
+    %   periods (integer): Number of simulation periods.
+    %
+    % Returns:
+    %   mortality_losses (vector): Annualized mortality losses.
+    %   economic_losses (vector): Annualized economic losses.
+    %   learning_losses (vector): Annualized learning losses.
+    %   total_losses (vector): Annualized total losses.
+
+    % Compute annualization factor
     annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
 
-    mortality_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_mortality_losses.csv'));
+    % Find the MAT file (assume only one *_results.mat in the directory)
+    mat_file = fullfile(raw_dir, 'baseline_results.mat');
+
+    % Load only the needed arrays
+    S = load(mat_file, 'sim_out_arr_m_mortality_losses', ...
+                      'sim_out_arr_m_output_losses', ...
+                      'sim_out_arr_learning_losses');
+
+    % Each variable is [N x T] (N = runs, T = time steps)
+    mortality_ts = S.sim_out_arr_m_mortality_losses;
+    output_ts = S.sim_out_arr_m_output_losses;
+    learning_ts = S.sim_out_arr_learning_losses;
+
+    % Sum over time for each run, then annualize
     mortality_losses = sum(mortality_ts, 2) .* annualization_factor;
-    
-    % Load and process output losses
-    output_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_output_losses.csv'));
     economic_losses = sum(output_ts, 2) .* annualization_factor;
-    
-    % Load and process learning losses
-    learning_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_m_learning_losses.csv'));
     learning_losses = sum(learning_ts, 2) .* annualization_factor;
-    
-    % Calculate total losses
-    total_ts = mortality_ts + output_ts + learning_ts;
-    total_losses = sum(total_ts, 2) .* annualization_factor;
+    total_losses = mortality_losses + economic_losses + learning_losses;
 end
 
 
@@ -125,6 +142,7 @@ function write_to_latex(summary_data, outpath)
     fprintf(fileID, '& Mortality & Economic & Learning & Total \\\\\n');
     fprintf(fileID, '& $AV\\left(\\bar{ML}\\right)$ & $AV\\left(\\bar{OL}\\right)$ & $AV\\left(\\bar{LL}\\right)$ & $AV\\left(\\bar{TL}\\right)$ \\\\\n');
     fprintf(fileID, '\\midrule\n');
+
     % Identify unique scenario categories (Variable column)
     uniqueVars = unique(summary_data.Variable);
     baselineIdx = strcmp(uniqueVars, 'Baseline');
@@ -169,7 +187,8 @@ function write_to_latex(summary_data, outpath)
 end
 
 
-function [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_vsl, baseline_r, baseline_y)
+function [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_arrival_dist, ...
+                                                          baseline_vsl, baseline_r, baseline_y)
     % Maps sensitivity variable names and values to nicely formatted strings for tables
     %
     % Args:
@@ -186,28 +205,40 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
     % Initialize formatted strings
     formatted_name = var_name;
     formatted_value = string(var_value);
+    b_meta = parse_arrival_dist_fp(baseline_arrival_dist);
 
     % Format variable names
     switch var_name
         case "value_of_death"
-            formatted_name = "Value of statsistical life (VSL)";
+            formatted_name = "Value of statistical life (VSL)";
             if var_value < baseline_vsl
                 formatted_value = sprintf("Reduce to \\$%g million", var_value/1e6);
             elseif var_value > baseline_vsl
                 formatted_value = sprintf("Increase to \\$%g million", var_value/1e6);
             end
         case "arrival_dist_config"
-            formatted_name = "Intensity upper bound";
-            [~, config_name, ~] = fileparts(var_value);
-            config_metadata = split(config_name, "_");
-            trunc_value = config_metadata(6);
-            formatted_value = sprintf("%s SU", trunc_value);
+            % Compare baseline and sensitivity meta for intensity upper bound and lower threshold
+            s_meta = parse_arrival_dist_fp(var_value);
+            trunc_diff = s_meta.trunc_value ~= b_meta.trunc_value;
+            threshold_diff = s_meta.lower_threshold ~= b_meta.lower_threshold;
+            airborne = strcmp(s_meta.scope, "airborne"); 
+
+            if trunc_diff
+                formatted_name = "Severity upper bound";
+                formatted_value = sprintf("%g SU", s_meta.trunc_value);
+            elseif threshold_diff
+                formatted_name = "Lower threshold";
+                formatted_value = sprintf("%g SU", s_meta.lower_threshold);
+            elseif airborne
+                formatted_name = "Pathogen types";
+                formatted_value = "Airborne pathogens only";
+            end
         case "duration_dist_config"
             formatted_name = "Duration upper bound";
             [~, config_name, ~] = fileparts(var_value);
             config_metadata = split(config_name, "_");
             trunc_value = config_metadata(6);
-            formatted_value = sprintf("%s years", trunc_value);
+            formatted_value = sprintf("%g years", trunc_value);
         case "y"
             formatted_name = "GDP growth rate $y$";
             if var_value < baseline_y

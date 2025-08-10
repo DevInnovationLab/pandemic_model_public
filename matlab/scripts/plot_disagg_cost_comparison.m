@@ -47,51 +47,67 @@ function plot_disagg_cost_comparison(job_dir)
     % Track axis limits to make them equal later
     y_min = Inf;
     y_max = -Inf;
-    
+
+    % Map cost_vars to field names in .mat files
+    mat_field_map = struct( ...
+        'adv_cap_n', 'sim_out_arr_costs_adv_cap_nom', ...
+        'prototype_RD_n', 'sim_out_arr_costs_prototype_RD_nom', ...
+        'ufv_RD_n', 'sim_out_arr_costs_ufv_RD_nom', ...
+        'inp_cap_n', 'sim_out_arr_costs_inp_cap_nom', ...
+        'inp_marg_n', 'sim_out_arr_costs_inp_marg_nom', ...
+        'inp_RD_n', 'sim_out_arr_costs_inp_RD_nom', ...
+        'surveil_n', 'sim_out_arr_costs_surveil_nom', ...
+        'inp_tail_n', 'sim_out_arr_costs_inp_tailoring_nom' ...
+    );
+
     % First pass to get axis limits
     for i = 1:n_scenarios
         scenario = delta_scenarios(i);
+        scenario_mat = load(fullfile(rawdata_dir, sprintf('%s_results.mat', scenario)));
+        baseline_mat = load(fullfile(rawdata_dir, 'baseline_results.mat'));
         for j = 1:length(cost_vars)
             var = cost_vars{j};
-            baseline_array = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_', var, '.csv')));
-            scenario_array = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_', var, '.csv')));
+            baseline_array = baseline_mat.(mat_field_map.(var));
+            scenario_array = scenario_mat.(mat_field_map.(var));
 
             % Add tailoring costs to response capacity if applicable
             if strcmp(var, "inp_cap_n")
-                baseline_tail = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_inp_tail_n.csv')));
-                scenario_tail = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_inp_tail_n.csv')));
+                baseline_tail = baseline_mat.(mat_field_map.('inp_tail_n'));
+                scenario_tail = scenario_mat.(mat_field_map.('inp_tail_n'));
                 baseline_array = baseline_array + baseline_tail;
                 scenario_array = scenario_array + scenario_tail;
             end
-            
+
             mean_rel = mean(scenario_array - baseline_array, 1) / 1e9;
             y_min = min(y_min, min(mean_rel));
             y_max = max(y_max, max(mean_rel));
         end
     end
-    
+
     % Plot each scenario
     for i = 1:n_scenarios
         scenario = delta_scenarios(i);
+        scenario_mat = load(fullfile(rawdata_dir, sprintf('%s_results.mat', scenario)));
+        baseline_mat = load(fullfile(rawdata_dir, 'baseline_results.mat'));
         nexttile
         hold on;
-        
+
         % Plot each cost variable
         for j = 1:length(cost_vars)
             var = cost_vars{j};
-            
-            % Load baseline and scenario data
-            baseline_array = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_', var, '.csv')));
-            scenario_array = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_', var, '.csv')));
+
+            % Load baseline and scenario data from .mat
+            baseline_array = baseline_mat.(mat_field_map.(var));
+            scenario_array = scenario_mat.(mat_field_map.(var));
 
             % Add tailoring costs to response capacity if applicable
             if strcmp(var, "inp_cap_n")
-                baseline_tail = readmatrix(fullfile(rawdata_dir, strcat('baseline_ts_inp_tail_n.csv')));
-                scenario_tail = readmatrix(fullfile(rawdata_dir, strcat(scenario, '_ts_inp_tail_n.csv')));
+                baseline_tail = baseline_mat.(mat_field_map.('inp_tail_n'));
+                scenario_tail = scenario_mat.(mat_field_map.('inp_tail_n'));
                 baseline_array = baseline_array + baseline_tail;
                 scenario_array = scenario_array + scenario_tail;
             end
-            
+
             % Calculate means
             mean_rel = mean(scenario_array - baseline_array, 1) / 1e9;
             

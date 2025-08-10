@@ -1,5 +1,4 @@
 function event_list_simulation(simulation_table, econ_loss_model, params)
-    %% INITIALIZATION: Extract event-level data and set up arrays
     % Extract events from simulation table
     event_sim_idx = ~isnan(simulation_table.yr_start);
     event_sim_table = simulation_table(event_sim_idx, :); % Remove simulations with no events
@@ -70,11 +69,11 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     surge_cap_annual_value = surge_cap_m_annual_value + surge_cap_o_annual_value;
 
     %% COST CALCULATIONS
-    adv_cap_maintenance_costs = get_capacity_maintenance_cost(adv_cap_annual_value, params);
+    adv_cap_maintenance_costs = params.delta .* adv_cap_annual_value;
     adv_cap_total_costs_nom = adv_cap_annual_cap_cost + adv_cap_maintenance_costs;
     adv_cap_total_costs_pv = adv_cap_total_costs_nom .* pv_factors_annual;
 
-    surge_cap_maintenance_costs = get_capacity_maintenance_cost(surge_cap_annual_value, params);
+    surge_cap_maintenance_costs = params.delta .* surge_cap_annual_value;
     surge_cap_total_costs_nom = surge_cap_annual_cap_cost + surge_cap_maintenance_costs;
     surge_cap_total_costs_pv = surge_cap_total_costs_nom .* pv_factors_annual;
 
@@ -237,7 +236,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % Save results if requested
     if params.save_output
-        save_to_file(params.scenario_name, params.rawoutpath, sim_results, ...
+        save_to_file_fast(params.scenario_name, params.rawoutpath, sim_results, ...
             adv_cap_total_costs_nom, adv_cap_total_costs_pv, ...
             repmat(prototype_rd_costs_nom, num_sims, 1), repmat(prototype_rd_costs_pv, num_sims, 1), ...
             repmat(ufv_rd_costs_nom, num_sims, 1), repmat(ufv_rd_costs_pv, num_sims, 1), ...

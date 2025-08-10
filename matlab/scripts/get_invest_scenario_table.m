@@ -15,7 +15,8 @@ function get_invest_scenario_table(job_dir, recalculate_bc)
     processed_dir = fullfile(job_dir, "processed");
     baseline_npv = readmatrix(fullfile(processed_dir, "baseline_absolute_npv.csv"));
     baseline_costs = readmatrix(fullfile(processed_dir, "baseline_pv_costs.csv"));
-    baseline_mortality = readmatrix(fullfile(rawdata_dir, "baseline_ts_m_deaths.csv"));
+    baseline_mortality = load(fullfile(rawdata_dir, "baseline_results.mat"), "sim_out_arr_m_deaths");
+    baseline_mortality = baseline_mortality.sim_out_arr_m_deaths;
     
     % Calculate total baseline values
     total_baseline_npv = mean(sum(baseline_npv, 2));
@@ -50,7 +51,8 @@ function get_invest_scenario_table(job_dir, recalculate_bc)
         scen_npv = readmatrix(fullfile(processed_dir, strcat(scen_name, "_absolute_npv.csv")));
         scen_costs = readmatrix(fullfile(processed_dir, strcat(scen_name, "_pv_costs.csv")));
         scen_benefits = scen_npv + scen_costs; % Benefits = NPV + Costs
-        scen_mortality = readmatrix(fullfile(rawdata_dir, strcat(scen_name, "_ts_m_deaths.csv")));
+        scen_mat = load(fullfile(rawdata_dir, sprintf('%s_results.mat', scen_name)), 'sim_out_arr_m_deaths');
+        scen_mortality = scen_mat.sim_out_arr_m_deaths;
         
         % Calculate differences from baseline for different time horizons
         total_scen_npv = mean(sum(scen_npv, 2));
@@ -113,7 +115,7 @@ end
 function write_advance_investment_table_latex(summary_data, outpath)
     % Convert to appropriate units
     summary_data.NPVDiff = summary_data.NPVDiff / 1e12; % Convert to trillions
-    summary_data.BenefitDiff = summary_data.BenefitDiff / 1e12; % Convert to trillions
+    summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9; % Convert to trillions
     summary_data.CostDiff = summary_data.CostDiff / 1e9; % Convert to billions
     summary_data.CostPerLife10yr = summary_data.CostPerLife10yr / 1e3; % Convert to thousands
     summary_data.CostPerLife30yr = summary_data.CostPerLife30yr / 1e3; % Convert to thousands
@@ -156,7 +158,7 @@ function write_advance_investment_table_latex(summary_data, outpath)
     
     % Write data rows for first table
     for i = 1:height(summary_data)
-        fprintf(fileID, '%s & %.0f & %.1f & %.1f & %s & %s \\\\\n', ...
+        fprintf(fileID, '%s & %g & %g & %g & %s & %s \\\\\n', ...
             summary_data.Scenario{i}, ...
             summary_data.CostDiff(i), ...
             summary_data.BenefitDiff(i), ...
