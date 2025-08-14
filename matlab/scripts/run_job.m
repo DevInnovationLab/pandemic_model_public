@@ -53,7 +53,7 @@ function run_job(job_config_path)
     % Ex post severity exceedance function
     ex_post_severity_fig = figure('Visible', 'off');
     total_draws = job_config.num_simulations * job_config.sim_periods;
-    [unique_severities, ~, ic] = unique(sort(base_simulation_table.eff_severity));
+    [unique_severities, ~, ic] = unique(sort(base_simulation_table.severity));
 	severity_counts = histcounts(ic, 1:max(ic)+1); % Count occurrences of each unique intensity
 	emp_min_severity_prob = 1 - sum(severity_counts) / total_draws;
 	cdf = (cumsum(severity_counts) / sum(severity_counts)) * (sum(severity_counts) / total_draws) + emp_min_severity_prob;

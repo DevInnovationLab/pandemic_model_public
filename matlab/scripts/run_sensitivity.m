@@ -1,5 +1,12 @@
-function run_sensitivity(config_path)
-    %% Load config and determine type
+function run_sensitivity(config_path, run_type)
+    % Load the sensitivity configuration and determine which run type to use.
+    % 
+    % Run type options:
+    %   - 'unmitigated': Calls estimate_unmitigated_losses.m, which runs the model without any response interventions.
+    %   - 'response': Calls run_job.m, which includes the full response model with interventions.
+    %
+    % The run_type argument should be set to either 'unmitigated' or 'response' to specify which model to execute for each scenario.
+
     fprintf('Loading configuration files...\n');
     sensitivity_config = yaml.loadFile(config_path);
     [~, run_name, ~] = fileparts(config_path);
@@ -15,18 +22,18 @@ function run_sensitivity(config_path)
     if isstruct(first_sensitivity) && ~isempty(fieldnames(first_sensitivity))
         % Multi-parameter case: first sensitivity is a struct with fields
         % specifying multiple parameters to change
-        run_multiparameter_sensitivity(sensitivity_config);
+        run_multiparameter_sensitivity(sensitivity_config, run_type);
     elseif iscell(first_sensitivity) || isnumeric(first_sensitivity)
         % Single-parameter case: first sensitivity is an array of values
         % to try for a single parameter
-        run_oneparameter_sensitivity(sensitivity_config);
+        run_oneparameter_sensitivity(sensitivity_config, run_type);
     else
         error('Invalid sensitivity configuration structure. Each sensitivity must either be a struct of parameters or an array of values.');
     end
 end
 
 
-function run_multiparameter_sensitivity(sensitivity_config)
+function run_multiparameter_sensitivity(sensitivity_config, run_type)
     % Runs sensitivity analysis where each variation changes multiple parameters
     % E.g. compare_old.yaml style configs
     
@@ -64,12 +71,12 @@ function run_multiparameter_sensitivity(sensitivity_config)
         
         run_config.outdir = scenario_dir;
         create_folders_recursively(run_config.outdir);
-        run_single_scenario(run_config);
+        run_single_scenario(run_config, run_type);
     end
 end
 
 
-function run_oneparameter_sensitivity(sensitivity_config)
+function run_oneparameter_sensitivity(sensitivity_config, run_type)
     % Runs sensitivity analysis where each variation changes one parameter
     % E.g. no_mitigation.yaml style configs
     
@@ -84,7 +91,7 @@ function run_oneparameter_sensitivity(sensitivity_config)
     end
     
     base_dir = setup_sensitivity_dirs(sensitivity_config);
-    run_baseline(base_config, base_dir);
+    run_baseline(base_config, base_dir, run_type);
     
     % Run variations
     sensitivities = sensitivity_config.sensitivities;
@@ -105,7 +112,7 @@ function run_oneparameter_sensitivity(sensitivity_config)
             
             run_config.outdir = fullfile(var_dir, sprintf('value_%d', j));
             create_folders_recursively(run_config.outdir);
-            run_single_scenario(run_config);
+            run_single_scenario(run_config, run_type);
         end
     end
 end
@@ -125,16 +132,16 @@ function base_dir = setup_sensitivity_dirs(sensitivity_config)
 end
 
 
-function run_baseline(base_config, base_dir)
+function run_baseline(base_config, base_dir, run_type)
     fprintf('Running baseline configuration...\n');
     run_config = base_config;
     run_config.outdir = fullfile(base_dir, 'baseline');
     create_folders_recursively(run_config.outdir);
-    run_single_scenario(run_config);
+    run_single_scenario(run_config, run_type);
 end
 
 
-function run_single_scenario(run_config)
+function run_single_scenario(run_config, run_type)
     % Run a single scenario and handle output organization
     %
     % Args:
@@ -142,9 +149,17 @@ function run_single_scenario(run_config)
     
     temp_config_path = tempname;
     yaml.dumpFile(temp_config_path, run_config);
-    run_job(temp_config_path);
 
-    % Move results from temp folder
+    % Handle run_type argument: either 'response' or 'unmitigated'
+    if strcmp(run_type, "response")
+        run_job(temp_config_path);
+    elseif strcmp(run_type, "unmitigated")
+        estimate_unmitigated_losses(temp_config_path);
+    else
+        error('Unknown run_type: %s. Must be "response" or "unmitigated".', run_type);
+    end
+
+    % For run_job, results are saved in a subfolder named after the temp config file
     [~, temp_name, ~] = fileparts(temp_config_path);
     temp_results = fullfile(run_config.outdir, temp_name);
     if exist(temp_results, 'dir')
