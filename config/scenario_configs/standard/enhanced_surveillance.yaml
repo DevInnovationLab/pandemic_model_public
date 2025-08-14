@@ -5,7 +5,7 @@ rd_investments:
 
 # Universal flu vaccine R&D params
 ufv_invest: false
-initial_share_ufv: 0.5
+initial_share_ufv: 0.1 # 850 million projected flu vaccine demand (WHO) / World Bank global pop 2024
 
 # Advance capacity params
 share_target_advanced_capacity: 0

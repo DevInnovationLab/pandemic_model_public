@@ -3,7 +3,7 @@
 
 # Run params
 num_simulations: 20000
-sim_periods: 200
+sim_periods: 50
 outdir: "./output"
 scenario_configs: null
 seed: 42
@@ -16,8 +16,8 @@ profile: false # Profile main parallel loop
 # Social value
 y: 0.016 # Growth rate
 r: 0.04 # Social discount rate
-P0: 7.91e9 # Base year population (2021)
-Y0: 12316.1 # Base year GDP
+P0: 8.14e9 # Base year population (2024, World Bank)
+Y0: 13673 # Base year GDP, 2024 World Bank
 value_of_death: 1.3e6
 conservative: 1 # Whether harm avoided is calculated at beginning (conservative) or end of period (not conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
