@@ -50,8 +50,10 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	trad_increment = ptrs_rd.preds(~rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(~rd_mrna_idx & ~prototype_rd_idx);
 	mrna_increment = ptrs_rd.preds(rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~prototype_rd_idx);
 
-	trad_probs(gains_prototype) = trad_probs(gains_prototype) + trad_increment;
-	mrna_probs(gains_prototype) = mrna_probs(gains_prototype) + mrna_increment;
+	% Only apply R&D benefits after prototype_RD_benefit_start years
+	benefits_active = yr_start > params.prototype_RD_benefit_start;
+	trad_probs(gains_prototype & benefits_active) = trad_probs(gains_prototype & benefits_active) + trad_increment;
+	mrna_probs(gains_prototype & benefits_active) = mrna_probs(gains_prototype & benefits_active) + mrna_increment;
 
 	% Get whether vaccine platforms succeeded
 	trad_success = trad_probs > new_simulation_table.trad_vax_state;
@@ -63,7 +65,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	ufv_protection = (...
 		params.ufv_invest & ... % Investment was made
 		flu_outbreak_idx & ... % Dealing with influenza
-		yr_start > params.prototype_RD_benefit_start & ... % After R&D benefit starts
+		benefits_active & ... % After R&D benefit starts
 		flu_vax_success_prob > new_simulation_table.ufv_vax_state ... % Vaccine successfully provides protection
 	);
 

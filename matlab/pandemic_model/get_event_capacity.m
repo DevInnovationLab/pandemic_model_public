@@ -27,7 +27,7 @@ function [surge_cap, surge_cap_cost] = ...
         is_mRNA
         num_sims (1, 1)
     end
-    year_end = year_start + duration; % Month where capacity should be reduced
+    year_end = year_start + duration; % Year where capacity should be reduced
     event_start_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected), year_start(~false_pos_detected));
     
     % Only reduce capacity if the end year is within simulation period
