@@ -48,11 +48,11 @@ function estimate_unmitigated_losses(job_config_path)
            "Please use an arrival distribution estimated on pandemic severities.")
     duration_dist = load_duration_dist(job_config.duration_dist_config);
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
-    viral_family_data = readtable(job_config.viral_family_data, "TextType", "string");
+    pathogen_data = readtable(job_config.pathogen_data, "TextType", "string");
 
     job_config.response_threshold = 0; % Only works because we've been carefuly in arrival dist sampler
 
-    simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config.seed, job_config);
+    simulation_table = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, job_config.seed, job_config);
     simulation_table = simulation_table(~isnan(simulation_table.yr_start), :); % Remove simulations with no outbreaks
     sim_idx = simulation_table.sim_num;
     yr_start = simulation_table.yr_start;

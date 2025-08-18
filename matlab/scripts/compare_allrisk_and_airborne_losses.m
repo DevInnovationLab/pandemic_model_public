@@ -15,7 +15,7 @@ function compare_allrisk_and_airborne_losses()
     % Load pandemic tables and viral family data
     allrisk_table = readtable(fullfile(allrisk_dir, "raw", "baseline_pandemic_table.csv"));
     airborne_table = readtable(fullfile(airborne_dir, "raw", "baseline_pandemic_table.csv"));
-    vf_data = readtable("data/clean/vf_data_arrival_all.csv");
+    pathogen_data = readtable("data/clean/pathogen_data_arrival_all.csv");
     
     % Calculate total losses for each pandemic
     allrisk_totals = (allrisk_table.m_mortality_losses + ...
@@ -23,8 +23,8 @@ function compare_allrisk_and_airborne_losses()
                       allrisk_table.m_learning_losses) / 1e12;
                   
     % Get respiratory pandemics from all-risk scenario
-    airborne_families = vf_data.viral_family(strcmp(vf_data.airborne, 'Yes'));
-    airborne_idx = ismember(allrisk_table.viral_family, airborne_families);
+    airborne_families = pathogen_data.pathogen(strcmp(pathogen_data.airborne, 'Yes'));
+    airborne_idx = ismember(allrisk_table.pathogen, airborne_families);
     
     % Calculate total losses for airborne scenario
     airborne_totals = (airborne_table.m_mortality_losses + ...

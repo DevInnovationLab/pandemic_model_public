@@ -4,7 +4,7 @@ import re
 
 import pandas as pd
 
-from pandemic_model.utils import viral_family_map
+from pandemic_model.utils import pathogen_group_map
 
 # Helper functions -------------------
 def question_num_to_platform(q: str) -> str:
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     header=None,
   )
 
-  vf_arrival_shares = pd.read_csv("./data/clean/vf_data_arrival_all.csv")
+  pathogen_arrival_shares = pd.read_csv("./data/clean/pathogen_data_arrival_all.csv")
 
   # Clean PTRS data -------------------------------------
   ptrs = ptrs_raw \
@@ -87,11 +87,11 @@ if __name__ == "__main__":
   ptrs['value_max'] = ptrs['value_max'].astype(float) / 100
 
   ptrs = ptrs.sort_index(level=['disease', 'respondent', 'platform'])
-  ptrs['viral_family'] = ptrs.index.get_level_values('disease').map(viral_family_map)
+  ptrs['pathogen'] = ptrs.index.get_level_values('disease').map(pathogen_group_map)
 
   # Merge adv RD status onto PTRS data ----------------
-  vf_arrival_shares = vf_arrival_shares.set_index('viral_family')
-  ptrs['has_prototype'] = ptrs['viral_family'].map(vf_arrival_shares['has_prototype'])
+  vf_arrival_shares = pathogen_arrival_shares.set_index('pathogen')
+  ptrs['has_prototype'] = ptrs['pathogen'].map(vf_arrival_shares['has_prototype'])
 
   # Save df for interval regression
   out_df = ptrs.drop(columns='ptrs_range')

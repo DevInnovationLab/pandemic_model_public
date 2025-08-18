@@ -1,7 +1,7 @@
 
 import pandas as pd
 
-from pandemic_model.utils import viral_family_map
+from pandemic_model.utils import pathogen_group_map
 
 if __name__ == "__main__":
 
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
     vaccine_speedup = vaccine_speedup.sort_index(level=['disease', 'has_prototype', 'respondent'])
 
-    vaccine_speedup['viral_family'] = vaccine_speedup.index.get_level_values('disease').map(viral_family_map)
+    vaccine_speedup['pathogen'] = vaccine_speedup.index.get_level_values('disease').map(pathogen_group_map)
 
     vaccine_speedup.to_csv("./data/clean/vaccine_rd_timelines.csv")
     
@@ -86,6 +86,6 @@ if __name__ == "__main__":
 
     vaccine_cost = vaccine_cost.sort_index(level=['disease', 'has_prototype', 'respondent'])
  
-    vaccine_cost['viral_family'] = vaccine_cost.index.get_level_values('disease').map(viral_family_map)
+    vaccine_cost['pathogen'] = vaccine_cost.index.get_level_values('disease').map(pathogen_group_map)
 
     vaccine_cost.to_csv("./data/clean/vaccine_rd_costs.csv")

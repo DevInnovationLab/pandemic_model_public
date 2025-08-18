@@ -25,7 +25,7 @@ function run_job(job_config_path)
     % Load inputs from files
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
-    viral_family_data = readtable(job_config.viral_family_data, "TextType", "string");
+    pathogen_data = readtable(job_config.pathogen_data, "TextType", "string");
     ptrs_vf = readtable(job_config.ptrs_vf, "TextType", "string");
     ptrs_rd = readtable(job_config.ptrs_rd, "TextType", "string");
     response_rd_timelines = readtable(job_config.rd_timelines, "TextType", "string");
@@ -35,7 +35,7 @@ function run_job(job_config_path)
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
     % Generate base simulation to be used across scenarios
-    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, viral_family_data, job_config.seed, job_config);
+    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, job_config.seed, job_config);
     base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
     save(base_simulation_table_path, 'base_simulation_table');
 
@@ -118,7 +118,7 @@ function run_job(job_config_path)
         out_params.scenarios.(scenario_name) = scenario_config;
 
         % Add scenario specific parameter configucations
-        simulation_params = update_params(job_config, scenario_config, viral_family_data);
+        simulation_params = update_params(job_config, scenario_config, pathogen_data);
         simulation_params.scenario_name = scenario_name;
 
         % Run scenario
@@ -126,7 +126,7 @@ function run_job(job_config_path)
                                                                   ptrs_vf, ...
                                                                   ptrs_rd, ...
                                                                   response_rd_timelines, ...
-                                                                  viral_family_data, ...
+                                                                  pathogen_data, ...
                                                                   simulation_params);
 
         event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
@@ -137,7 +137,7 @@ function run_job(job_config_path)
     yaml.dumpFile(config_outpath, out_params);
 end
 
-function updated_params = update_params(job_config, scenario_config, viral_family_data)
+function updated_params = update_params(job_config, scenario_config, pathogen_data)
 
     % New parameters override base parameters
     updated_params = job_config;
@@ -151,7 +151,7 @@ function updated_params = update_params(job_config, scenario_config, viral_famil
     % Set pathogen family params.
     invest_strategy =scenario_config.rd_investments.strategy;
     num_vfs_researched = scenario_config.rd_investments.num;
-    updated_params.viral_families_researched = parse_rd_investments(scenario_config.rd_investments, viral_family_data);
+    updated_params.pathogens_with_prototype = parse_rd_investments(scenario_config.rd_investments, pathogen_data);
 
     if strcmp(invest_strategy, "top") || strcmp(invest_strategy, "random")
         updated_params.prototype_RD = true;

@@ -1,12 +1,12 @@
-Viral family,Arrival rate,Arrival rate (answers ~sum to 100%),Prototype vaccine?,Airborne?
-Arenaviridae,1.93%,1.70%,No,No
-Nairoviridae,1.41%,0.00%,No,No
-Phenuiviridae,3.27%,3.40%,No,No
-Coronaviridae,22.39%,17.29%,Yes,Yes
-Filoviridae,3.73%,2.78%,Yes,No
-Flaviviridae,7.11%,5.20%,Yes,No
-Paramyxoviridae,6.05%,6.81%,Yes,No
-Orthomyxoviridae,32.94%,40.05%,Yes,Yes
-Togaviridae,6.43%,7.53%,Yes,No
-Unknown,14.73%,15.25%,No,Unknown
-Other,0.00%,0.00%,No,Unknown
+Pathogen group,Viral family,Arrival rate,Arrival rate (answers ~sum to 100%),Prototype vaccine?,Airborne?
+Coronavirus,Coronaviridae,22.39%,17.29%,Yes,Yes
+Crimean-Congo Hemorrhagic Fever,Nairoviridae,1.41%,0.00%,No,No
+Lassa,Arenaviridae,1.93%,1.70%,No,No
+Nipah,Paramyxoviridae,6.05%,6.81%,Yes,No
+Rift Valley Fever,Phenuiviridae,3.27%,3.40%,No,No
+Chikungunya,Togaviridae,6.43%,7.53%,Yes,No
+Ebola,Filoviridae,3.73%,2.78%,Yes,No
+Zika,Flaviviridae,7.11%,5.20%,Yes,No
+Flu,Orthomyxoviridae,32.94%,40.05%,Yes,Yes
+Unknown virus,Unknown,14.73%,15.25%,No,Unknown
+Other known virus,Unknown,0.00%,0.00%,No,Unknown

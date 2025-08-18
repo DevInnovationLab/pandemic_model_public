@@ -20,6 +20,20 @@ viral_family_map = {
     'covid-19': 'coronaviridae'
 }
 
+pathogen_group_map = {
+    'cchf': 'crimean-congo hemorrhagic fever',
+    'crimean_congo_haemorrhagic_fever': 'crimean-congo hemorrhagic fever',
+    'rift_valley_fever': 'rift_valley_fever',
+    'flu': 'flu',
+    'mers': 'coronavirus',
+    'ebola': 'ebola',
+    'zika': 'zika',
+    'nipah': 'nipah',
+    'chikungunya': 'chikungunya',
+    'lassa': 'lassa',
+    'covid-19': 'coronavirus'
+}
+
 def set_standard_plot_theme():
     # Set seaborn style for publication-quality figures. Not sure this should be the standard, but worry about it later.
     sns.set_theme(style="whitegrid", context="paper")

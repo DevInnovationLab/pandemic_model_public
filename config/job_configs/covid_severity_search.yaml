@@ -26,7 +26,7 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 response_threshold_path: "./output/response_threshold.yaml"
 severity_dist_config: "./output/arrival_distributions/all_risk.yaml"
 duration_dist_config: "./output/duration_distributions/all_risk.yaml"
-viral_family_data: "./data/clean/vf_data_arrival_all.csv"
+pathogen_data: "./data/clean/pathogen_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 ptrs_vf: "./output/ptrs/vf_model_preds.csv"
 ptrs_rd: "./output/ptrs/rd_model_preds.csv"

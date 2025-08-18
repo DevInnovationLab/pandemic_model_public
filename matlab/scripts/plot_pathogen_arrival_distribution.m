@@ -1,17 +1,17 @@
 
-vf_data = readtable("./data/clean/vf_data_arrival_all.csv");
+pathogen_data = readtable("./data/clean/pathogen_data_arrival_all.csv");
 
-vf_data = sortrows(vf_data, 'arrival_share', 'descend');
-vf_data.viral_family = cellfun(@(x) strcat(upper(x(1)), lower(x(2:end))), vf_data.viral_family, 'UniformOutput', false); % Capitalize the first letter of each viral_family
+pathogen_data = sortrows(pathogen_data, 'arrival_share', 'descend');
+pathogen_data.pathogen = cellfun(@(x) strcat(upper(x(1)), lower(x(2:end))), pathogen_data.pathogen, 'UniformOutput', false); % Capitalize the first letter of each pathogen
 
 % Prepare data for the bar plot
-x = categorical(vf_data.viral_family);
-x = reordercats(x, vf_data.viral_family); % Keep order as in the sorted table
-y = vf_data.arrival_share;
-colors = vf_data.has_prototype;
+x = categorical(pathogen_data.pathogen);
+x = reordercats(x, pathogen_data.pathogen); % Keep order as in the sorted table
+y = pathogen_data.arrival_share;
+colors = pathogen_data.has_prototype;
 
 % Calculate total share of viral families with adv RD
-total_prototype_share = sum(vf_data.arrival_share(vf_data.has_prototype == 1));
+total_prototype_share = sum(pathogen_data.arrival_share(pathogen_data.has_prototype == 1));
 
 % Create the bar plot
 figure;
@@ -20,7 +20,7 @@ b = bar(x, y, 'FaceColor', 'flat');
 % Assign colors
 cmap = [1.0 0.4 0.4; 0.2 0.6 1.0; 0.5 0.5 0.5]; % Blue for 1, Red for 0, Grey for "unknown"
 for i = 1:length(colors)
-    if strcmp(vf_data.viral_family{i}, 'Unknown') % Grey for "unknown"
+    if strcmp(pathogen_data.pathogen{i}, 'Unknown') % Grey for "unknown"
         b.CData(i, :) = cmap(3, :);
     else
         b.CData(i, :) = cmap(colors(i) + 1, :);
@@ -46,4 +46,4 @@ legend([dummy1, dummy2, dummy3], {'Has prototype', 'No prototype', 'Unknown'}, .
     'Location', 'northeast', 'FontSize', 10);
 hold off;
 
-print(gcf, fullfile("output/pandemic_viral_family_share_all.jpg"), '-djpeg', '-r400');
+print(gcf, fullfile("output/pandemic_pathogen_share_all.jpg"), '-djpeg', '-r400');

@@ -10,7 +10,7 @@ matlab -batch "run('./matlab/load_project.m');
                clean_covid19_mortality;
                clean_covid19_vaccination;
                clean_hiv_deaths;
-               clean_viral_family_data;
+               clean_pathogen_data;
                clean_madhav_severity_exceedance;
                find_natural_covid_deaths('./config/job_configs/covid_severity_search.yaml');"
 
