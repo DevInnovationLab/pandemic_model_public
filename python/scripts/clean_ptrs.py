@@ -90,8 +90,8 @@ if __name__ == "__main__":
   ptrs['pathogen'] = ptrs.index.get_level_values('disease').map(pathogen_group_map)
 
   # Merge adv RD status onto PTRS data ----------------
-  vf_arrival_shares = pathogen_arrival_shares.set_index('pathogen')
-  ptrs['has_prototype'] = ptrs['pathogen'].map(vf_arrival_shares['has_prototype'])
+  pathogen_arrival_shares = pathogen_arrival_shares.set_index('pathogen')
+  ptrs['has_prototype'] = ptrs['pathogen'].map(pathogen_arrival_shares['has_prototype'])
 
   # Save df for interval regression
   out_df = ptrs.drop(columns='ptrs_range')

@@ -28,7 +28,7 @@ severity_dist_config: "./output/arrival_distributions/all_risk.yaml"
 duration_dist_config: "./output/duration_distributions/all_risk.yaml"
 pathogen_data: "./data/clean/pathogen_data_arrival_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
-ptrs_vf: "./output/ptrs/vf_model_preds.csv"
+ptrs_pathogen: "./output/ptrs/pathogen_model_preds.csv"
 ptrs_rd: "./output/ptrs/rd_model_preds.csv"
 false_positive_rate: 0
 

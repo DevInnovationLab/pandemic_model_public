@@ -26,7 +26,7 @@ function run_job(job_config_path)
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
     pathogen_data = readtable(job_config.pathogen_data, "TextType", "string");
-    ptrs_vf = readtable(job_config.ptrs_vf, "TextType", "string");
+    ptrs_pathogen = readtable(job_config.ptrs_pathogen, "TextType", "string");
     ptrs_rd = readtable(job_config.ptrs_rd, "TextType", "string");
     response_rd_timelines = readtable(job_config.rd_timelines, "TextType", "string");
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
@@ -35,9 +35,13 @@ function run_job(job_config_path)
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
     % Generate base simulation to be used across scenarios
-    base_simulation_table = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, job_config.seed, job_config);
+    [base_simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, job_config.seed, job_config);
     base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
     save(base_simulation_table_path, 'base_simulation_table');
+
+    % Save trim and remove amounts
+    job_config.total_removed = total_removed;
+    job_config.total_trimmed = total_trimmed;
 
     % Pandemics per simulation histogram
     h = histogram(base_simulation_table.eff_severity, 'Visible', 'off');
@@ -123,7 +127,7 @@ function run_job(job_config_path)
 
         % Run scenario
         scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
-                                                                  ptrs_vf, ...
+                                                                  ptrs_pathogen, ...
                                                                   ptrs_rd, ...
                                                                   response_rd_timelines, ...
                                                                   pathogen_data, ...
@@ -150,7 +154,7 @@ function updated_params = update_params(job_config, scenario_config, pathogen_da
 
     % Set pathogen family params.
     invest_strategy =scenario_config.rd_investments.strategy;
-    num_vfs_researched = scenario_config.rd_investments.num;
+    num_pathogens_researched = scenario_config.rd_investments.num;
     updated_params.pathogens_with_prototype = parse_rd_investments(scenario_config.rd_investments, pathogen_data);
 
     if strcmp(invest_strategy, "top") || strcmp(invest_strategy, "random")
@@ -161,7 +165,7 @@ function updated_params = update_params(job_config, scenario_config, pathogen_da
 
     updated_params.prototype_RD_spend = updated_params.prototype_RD_cost_per_pathogen * ...
         updated_params.pathogens_per_family * ... 
-        num_vfs_researched;
+        num_pathogens_researched;
 
     updated_params.ufv_spend = updated_params.prototype_RD_cost_per_pathogen * updated_params.pathogens_per_family;
 

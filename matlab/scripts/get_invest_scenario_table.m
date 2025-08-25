@@ -114,8 +114,8 @@ end
 
 function write_advance_investment_table_latex(summary_data, outpath)
     % Convert to appropriate units
-    summary_data.NPVDiff = summary_data.NPVDiff / 1e12; % Convert to trillions
-    summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9; % Convert to trillions
+    summary_data.NPVDiff = summary_data.NPVDiff / 1e9; % Convert to billions
+    summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9; % Convert to billions
     summary_data.CostDiff = summary_data.CostDiff / 1e9; % Convert to billions
     summary_data.CostPerLife10yr = summary_data.CostPerLife10yr / 1e3; % Convert to thousands
     summary_data.CostPerLife30yr = summary_data.CostPerLife30yr / 1e3; % Convert to thousands
@@ -129,36 +129,37 @@ function write_advance_investment_table_latex(summary_data, outpath)
     % - Round to 1 decimal if < 10
     % - Convert to string vectors
     
-    % Create function handle for conditional formatting
-    format_bc = @(x) string(round((x >= 10) .* x) + round((x < 10) .* x, 1));
-    
-    % Apply formatting to all BC ratios at once
-    summary_data.BCRatio10yr = format_bc(summary_data.BCRatio10yr);
-    summary_data.BCRatio30yr = format_bc(summary_data.BCRatio30yr);
-    summary_data.BCRatioAll = format_bc(summary_data.BCRatioAll);
-    
+    % Format numbers nicely
+    round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
+    summary_data.NPVDiff = round_nicely(summary_data.NPVDiff);
+    summary_data.BenefitDiff = round_nicely(summary_data.BenefitDiff);
+    summary_data.CostDiff = round_nicely(summary_data.CostDiff);
+    summary_data.BCRatio10yr = round_nicely(summary_data.BCRatio10yr);
+    summary_data.BCRatio30yr = round_nicely(summary_data.BCRatio30yr);
+    summary_data.BCRatioAll = round_nicely(summary_data.BCRatioAll);
+
     % Convert scenario names
+    summary_data.Scenario
     summary_data.Scenario = convert_varnames(summary_data.Scenario);
-    summary_data.Scenario(strcmp(summary_data.Scenario, "Advance R&D")) = "Advance R\&D";
+    summary_data.Scenario = replace(summary_data.Scenario, "&", "\&"); % Escape ampersands in scenario names for LaTeX
     
     % Open LaTeX file for writing
     fileID = fopen(outpath, 'w');
     
     % Write first table with costs and benefits
     fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
-    fprintf(fileID, '\\caption{Net present value, costs, and lives saved from advance investments}\n');
-    fprintf(fileID, '\\begin{tabular}{l r r r r r}\n');
-    fprintf(fileID, '\\toprule\n');
+    fprintf(fileID, '\\begin{tabular}{l c c c c c}\n');
+    fprintf(fileID, '\\hline\n');
     fprintf(fileID, 'Scenario & \\multicolumn{5}{c}{Difference from baseline vaccine program} \\\\\n');
-    fprintf(fileID, '\\cmidrule{2-6}\n');
+    fprintf(fileID, '\\cline{2-6}\n');
     fprintf(fileID, '& Costs & Benefits & Net present value & \\multicolumn{2}{c}{Expected lives saved} \\\\\n');
-    fprintf(fileID, '\\cmidrule{5-6}\n');
-    fprintf(fileID, '& \\$ billions & \\$ trillions & \\$ trillions & 10 years & 30 years \\\\\n');
-    fprintf(fileID, '\\midrule\n');
+    fprintf(fileID, '\\cline{5-6}\n');
+    fprintf(fileID, '& \\$ billions & \\$ billions & \\$ billions & After 10 years & After 30 years \\\\\n');
+    fprintf(fileID, '\\hline\n');
     
     % Write data rows for first table
     for i = 1:height(summary_data)
-        fprintf(fileID, '%s & %g & %g & %g & %s & %s \\\\\n', ...
+        fprintf(fileID, '%s & %s & %s & %s & %s & %s \\\\\n', ...
             summary_data.Scenario{i}, ...
             summary_data.CostDiff(i), ...
             summary_data.BenefitDiff(i), ...
@@ -168,21 +169,26 @@ function write_advance_investment_table_latex(summary_data, outpath)
     end
     
     % Write first table footer
-    fprintf(fileID, '\\bottomrule\n\\end{tabular}\n');
+    fprintf(fileID, '\\hline\n\\end{tabular}\n');
+    caption_str = [
+        '\\caption{\\textbf{Estimated expected benefits, costs, net present value and lives saved from advance investment programs.} ', ...
+        'Benefits, costs, and net present value estimates are presented in discounted terms. ', ...
+        'Values greater than ten are rounded to the nearest whole number. Those lower than ten are rounded to the nearest first decimal place.}\n'
+    ];
+    fprintf(fileID, caption_str);
     fprintf(fileID, '\\label{tab:adv_invest_summary}\n');
     fprintf(fileID, '\\end{table}\n\n');
     
     % Write second table with cost-effectiveness metrics
     fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
-    fprintf(fileID, '\\caption{Cost-effectiveness metrics for advance investments}\n');
-    fprintf(fileID, '\\begin{tabular}{l r r r r r}\n');
-    fprintf(fileID, '\\toprule\n');
+    fprintf(fileID, '\\begin{tabular}{l c c c c c}\n');
+    fprintf(fileID, '\\hline\n');
     fprintf(fileID, 'Scenario & \\multicolumn{5}{c}{Cost-effectiveness metrics} \\\\\n');
-    fprintf(fileID, '\\cmidrule{2-6}\n');
+    fprintf(fileID, '\\cline{2-6}\n');
     fprintf(fileID, '& \\multicolumn{3}{c}{Benefit-cost ratio} & \\multicolumn{2}{c}{\\$ thousands per expected life saved} \\\\\n');
-    fprintf(fileID, '\\cmidrule{2-4}\\cmidrule{5-6}\n');
-    fprintf(fileID, '& 10 years & 30 years & 200 years & 10 years & 30 years \\\\\n');
-    fprintf(fileID, '\\midrule\n');
+    fprintf(fileID, '\\cline{2-4}\\cline{5-6}\n');
+    fprintf(fileID, '& 10 years & 30 years & 50 years & 10 years & 30 years \\\\\n');
+    fprintf(fileID, '\\hline\n');
     
     % Write data rows for second table
     for i = 1:height(summary_data)
@@ -196,7 +202,13 @@ function write_advance_investment_table_latex(summary_data, outpath)
     end
     
     % Write second table footer
-    fprintf(fileID, '\\bottomrule\n\\end{tabular}\n');
+    fprintf(fileID, '\\hline\n\\end{tabular}\n');
+    caption_str = [
+        '\\caption{\\textbf{Estimated cost-effectiveness for advance investment programs.} ', ...
+        'Cost-effectiveness is calculated as estimated discounted benefits divided by estimated discounted costs. ', ...
+        'Values greater than ten are rounded to the nearest whole number. Those lower than ten are rounded to the nearest first decimal place.}\n'
+    ];
+    fprintf(fileID, caption_str);
     fprintf(fileID, '\\label{tab:adv_invest_cost_effectiveness}\n');
     fprintf(fileID, '\\end{table}\n');
     

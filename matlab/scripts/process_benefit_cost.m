@@ -43,7 +43,6 @@ function process_benefit_cost(job_dir, recalculate_costs)
     % Calculate NPV for each scenario (both present value and nominal)
     for i = 1:n_scenarios
         scenario = scenarios(i);
-        disp(scenario)
         
         % Load from .mat file (produced by save_to_file_fast)
         mat_filename = fullfile(rawdata_dir, sprintf('%s_results.mat', scenario));

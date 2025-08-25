@@ -1,7 +1,5 @@
 output/*
 
-ignore_folder/*
-
 *.log
 *.out
 *.pyc

@@ -1,12 +1,12 @@
 arrival_share,pathogen,viral_family,has_prototype,airborne
 0.1729,coronavirus,Coronaviridae,1,Yes
-0,crimean-congo hemorrhagic fever,Nairoviridae,0,No
+0,crimean-congo_hemorrhagic_fever,Nairoviridae,0,No
 0.017,lassa,Arenaviridae,0,No
 0.0681,nipah,Paramyxoviridae,1,No
-0.034,rift valley fever,Phenuiviridae,0,No
+0.034,rift_valley_fever,Phenuiviridae,0,No
 0.0753,chikungunya,Togaviridae,1,No
 0.0278,ebola,Filoviridae,1,No
 0.052,zika,Flaviviridae,1,No
 0.4005,flu,Orthomyxoviridae,1,Yes
-0.1525,unknown virus,Unknown,0,Unknown
-0,other known virus,Unknown,0,Unknown
+0.1525,unknown_virus,Unknown,0,Unknown
+0,other_known_virus,Unknown,0,Unknown

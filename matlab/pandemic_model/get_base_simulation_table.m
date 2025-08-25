@@ -1,4 +1,4 @@
-function simulation_table = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, seed, params)
+function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, seed, params)
 	% Set seed
 	rng(seed);
 
@@ -58,10 +58,28 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 
 	% Address overlapping pandemics
 	[~, ~, sim_groups] = unique(response_table.sim_num);
-	pruned_tables = accumarray(sim_groups, (1:height(response_table))', [], ...
-		@(x) {trim_overlaps(response_table(x,:))}); % cell array
+	
+	% Get unique simulation groups
+	unique_groups = unique(sim_groups);
+	total_removed = 0;
+	total_trimmed = 0;
+	pruned_tables = cell(length(unique_groups), 1);
+	
+	% Process each simulation group separately
+	for i = 1:length(unique_groups)
+		group_idx = sim_groups == unique_groups(i);
+		group_data = response_table(group_idx, :);
+		
+		[tbl, num_removed, num_trimmed] = trim_overlaps(group_data);
+		
+		pruned_tables{i} = tbl;
+		total_removed = total_removed + num_removed;
+		total_trimmed = total_trimmed + num_trimmed;
+	end
+	
+	% Combine all pruned tables
 	response_table = vertcat(pruned_tables{:}); % final result
-
+	
 	% Get effective severity
 	% Effective severity is severity after snipping pandemics
 	response_table.actual_dur = response_table.yr_end - response_table.yr_start + 1;
@@ -96,16 +114,28 @@ function simulation_table = get_base_simulation_table(arrival_dist, duration_dis
 end
 
 
-function tbl = trim_overlaps(tbl)
-% PRE: tbl has columns yr_start, duration OR yr_end, and intensity.
-%      All rows belong to one sim_num and are unsorted.
+function [tbl, num_removed, num_trimmed] = trim_overlaps(tbl)
+% Trim overlapping intervals in a table of pandemic scenarios.
 %
-% POST: tbl is sorted, overlap–free, and the earlier interval is snipped
-%       if a later, more intense one collides with it.
-    tbl = sortrows(tbl, 'yr_start'); % O(n log n)
+% This function sorts the table by yr_start and removes or trims overlapping
+% intervals such that, for any overlap, the more intense interval is kept or
+% snips the earlier interval. It also returns the number of intervals removed
+% (snipped) and the number of intervals trimmed (removed).
+%
+% Args:
+%   tbl: Table with columns 'yr_start', 'yr_end', and 'intensity'.
+%
+% Returns:
+%   tbl: The trimmed, sorted, overlap-free table.
+%   num_removed: Number of intervals that were snipped (had their yr_end reduced).
+%   num_trimmed: Number of intervals that were removed entirely.
 
-	n = height(tbl);
+    tbl = sortrows(tbl, 'yr_start');
+
+    n = height(tbl);
     keep = true(n,1);    % rows to keep
+    removed = false(n,1);    % rows that were snipped (yr_end changed)
+    trimmed = false(n,1);% rows that were removed
     active_idx = 1;      % index of current "active" interval
 
     for k = 2:n
@@ -118,14 +148,18 @@ function tbl = trim_overlaps(tbl)
         % Current interval overlaps with active interval
         if tbl.intensity(k) > tbl.intensity(active_idx)
             % Current interval stronger: make active interval end before current starts
+            trimmed(active_idx) = true;
             tbl.yr_end(active_idx) = tbl.yr_start(k) - 1;
             active_idx = k;  % current becomes new active interval
         else
             % Current interval weaker: remove current interval
             keep(k) = false;
+            removed(k) = true;
         end
     end
 
     % Final slicing
     tbl = tbl(keep,:);
+    num_removed = sum(removed);        % Number of intervals snipped (among kept)
+    num_trimmed = sum(trimmed);      % Number of intervals removed entirely
 end

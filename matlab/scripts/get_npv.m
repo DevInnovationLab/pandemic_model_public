@@ -345,8 +345,8 @@ function plot_baseline_npv_ts(job_dir)
     baseline_nom = readmatrix(fullfile(processed_dir, "baseline_absolute_npv_nom.csv"));
     
     % Calculate means
-    mean_npv = mean(baseline_npv, 1) / 1e12; % Convert to trillions
-    mean_nom = mean(baseline_nom, 1) / 1e12;
+    mean_npv = mean(baseline_npv, 1) / 1e9; % Convert to trillions
+    mean_nom = mean(baseline_nom, 1) / 1e9;
     
     % Create figure
     fig = figure('Position', [100 100 1200 800], 'Visible', 'off');
@@ -359,13 +359,13 @@ function plot_baseline_npv_ts(job_dir)
          'DisplayName', 'Nominal');
 
     % Label lines
-    text(140, mean_npv(140), 'Present value', 'VerticalAlignment', 'bottom', 'FontSize', 14, 'Color', [0, 0.4470, 0.7410]);
-    text(156, mean_nom(156), 'Nominal', 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Color', [0.8500, 0.3250, 0.0980]);
+    text(30, mean_npv(30), 'Present value', 'VerticalAlignment', 'bottom', 'FontSize', 14, 'Color', [0, 0.4470, 0.7410]);
+    text(40, mean_nom(40), 'Nominal', 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Color', [0.8500, 0.3250, 0.0980]);
     
     % Add labels and styling
     title('Baseline net value over time', 'FontSize', 20)
     xlabel('Year', 'FontSize', 16)
-    ylabel('Net value ($ trillions)', 'FontSize', 16)
+    ylabel('Net value ($ billion)', 'FontSize', 16)
     grid on
     set(gca, 'FontSize', 14)
     set(gca, 'XGrid', 'on', 'YGrid', 'on')
@@ -379,4 +379,28 @@ function plot_baseline_npv_ts(job_dir)
     figpath = fullfile(figure_dir, "baseline_npv_ts.png");
     saveas(fig, figpath);
     close(fig);
+
+    % Load config to get discount rate and periods for annualization
+    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    r = config.r;
+    periods = config.sim_periods;
+
+    % Compute annualization factor (same as in get_sensitivity_loss_summary.m)
+    annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
+
+    % Cumulative NPV (sum up to each year)
+    cum_disc_npv = cumsum(mean_npv);
+    cum_nom_npv = cumsum(mean_nom);
+
+    % Annualized NPV (divide cumulative by annualization factor)
+    ann_disc_npv = cum_disc_npv * annualization_factor;
+    ann_nom_npv = cum_nom_npv * annualization_factor;
+
+    % Create table
+    T = table((1:periods)', cum_disc_npv', cum_nom_npv', ann_disc_npv', ann_nom_npv', ...
+        'VariableNames', {'Year', 'Cumulative_Discounted_NPV_Billions', 'Cumulative_Nominal_NPV_Billions', ...
+                          'Annualized_Discounted_NPV_Billions', 'Annualized_Nominal_NPV_Billions'});
+
+    % Save the table as a CSV file in the figures directory
+    writetable(T, fullfile(processed_dir, "baseline_npv_timeseries.csv"));
 end

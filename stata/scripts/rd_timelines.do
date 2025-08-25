@@ -60,7 +60,14 @@ preserve
     foreach v of numlist 1/9 {
         local lab : label pathogen_enc `v'
         local lab = subinstr("`lab'", "_", " ", .)
-        label define pathogen_enc_cap `v' "`=proper("`lab'")'", modify
+        // Rename "Crimean Congo Hemorrhagic Fever" to "CCHF" before proper() is applied
+        if lower("`lab'") == "crimean-congo hemorrhagic fever" {
+            local lab = "CCHF"
+            label define pathogen_enc_cap `v' "`lab'", modify
+        }
+        else {
+            label define pathogen_enc_cap `v' "`=proper("`lab'")'", modify
+        }
     }
 
     // Apply capitalized labels temporarily for plotting
@@ -76,14 +83,19 @@ preserve
     gen pred_ub = preds + 1.96*ses
 
     // Plot predictions with confidence intervals by prototype status
+    // Set lower y-axis limit to zero, keep same ticks, and extend one tick above the previous max
+    quietly summarize pred_ub
+    local ymax = r(max)
+    local ytop = ceil(`ymax')
+
     graph twoway ///
         (rcap pred_lb pred_ub pathogen_enc, color(maroon%70)) ///
         (scatter preds pathogen_enc, msize(medium) msymbol(O) mcolor(maroon)), ///
         xlabel(1(1)9, valuelabel angle(45)) ///
-        ylabel(, angle(0)) ///
-        ytitle("Development time (years)") ///
+        ylabel(0(1)`ytop', angle(0) grid gmin gmax) ///
+        ytitle("R&D duration (years)") ///
         xtitle("Pathogen") ///
-        title("Vaccine development duration (with prototype)") ///
+        title("Vaccine R&D duration (with prototype)") ///
         legend(off) ///
         scheme(s2color) graphregion(color(white)) bgcolor(white)
 
@@ -114,7 +126,14 @@ preserve
     foreach v of numlist 1/9 {
         local lab : label pathogen_enc `v'
         local lab = subinstr("`lab'", "_", " ", .)
-        label define pathogen_enc_cap `v' "`=proper("`lab'")'", modify
+        // Rename "Crimean Congo Hemorrhagic Fever" to "CCHF" before proper() is applied
+        if lower("`lab'") == "crimean-congo hemorrhagic fever" {
+            local lab = "CCHF"
+            label define pathogen_enc_cap `v' "`lab'", modify
+        }
+        else {
+            label define pathogen_enc_cap `v' "`=proper("`lab'")'", modify
+        }
     }
     // Apply capitalized labels temporarily for plotting
     label values pathogen_enc pathogen_enc_cap
@@ -131,16 +150,24 @@ preserve
     gen proto_xpos = pathogen_id - 0.15
     gen no_proto_xpos = pathogen_id + 0.15
 
+    // Set lower y-axis limit to zero, keep same ticks, and extend one tick unit above top
+    quietly summarize preds_no_proto
+    local ymax2 = r(max)
+    quietly summarize preds
+    if r(max) > `ymax2' local ymax2 = r(max)
+    local ytop2 = ceil(`ymax2')
+
     // Plot: show all pathogens, with/without prototype predictions, with nice capitalized x labels
     graph twoway ///
-        (scatter preds pathogen_enc, msize(0)) ///
+        (scatter preds pathogen_enc, msize(0) mcolor(white)) ///
         (scatter preds proto_xpos, msize(medium) msymbol(O) mcolor(navy)) ///
         (scatter preds_no_proto no_proto_xpos if has_prototype == 0, msize(medium) msymbol(D) mcolor(maroon)), ///
         xlabel(1(1)9, valuelabel angle(45) labsize(small)) ///
-        ytitle("Development time (years)") ///
+        ylabel(0(1)`ytop2', angle(0) grid gmin gmax) ///
+        ytitle("R&D durations (years)") ///
         xtitle("Pathogen") ///
-        title("Vaccine development duration with and without prototype") ///
-        legend(order(2 "With prototype" 3 "Without prototype") position(6) rows(1)) ///
+        title("Vaccine R&D duration") ///
+        legend(order(2 "With prototype vaccine" 3 "Without prototype vaccine") position(6) rows(1)) ///
         scheme(s2color) graphregion(color(white)) bgcolor(white)
 
     // Save figure

@@ -79,7 +79,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % 2. Surveillance costs
     surveil_costs_nom = zeros(1, max_years);
-    if params.enhanced_surveillance
+    if params.improved_early_warning
         surveil_spend_bn_init = repmat(params.surveil_annual_installation_spend, params.surveil_installation_years, 1);
         surveil_spend_bn_maintenance = repmat(params.surveil_maintenance_spend, max_years - params.surveil_installation_years, 1);
         surveil_costs_nom = [surveil_spend_bn_init; surveil_spend_bn_maintenance]';

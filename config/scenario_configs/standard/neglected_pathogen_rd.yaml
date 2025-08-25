@@ -1,7 +1,7 @@
-# Neglected viral family advance R&D params
+# Neglected pathogen advance R&D params
 rd_investments: 
-  strategy: none
-  num: 0
+  strategy: top
+  num: 3
 
 # Universal flu vaccine R&D params
 ufv_invest: false
@@ -11,4 +11,4 @@ initial_share_ufv: 0.1 # 850 million projected flu vaccine demand (WHO) / World 
 share_target_advanced_capacity: 0
 
 # Enhanced surveillance
-enhanced_surveillance: true
+improved_early_warning: false

@@ -12,7 +12,7 @@ function compare_allrisk_and_airborne_losses()
     allrisk_dir = fullfile("output", "jobs", "no_mitigation_allrisk");
     airborne_dir = fullfile("output", "jobs", "no_mitigation_airborne");
 
-    % Load pandemic tables and viral family data
+    % Load pandemic tables and pathogen data
     allrisk_table = readtable(fullfile(allrisk_dir, "raw", "baseline_pandemic_table.csv"));
     airborne_table = readtable(fullfile(airborne_dir, "raw", "baseline_pandemic_table.csv"));
     pathogen_data = readtable("data/clean/pathogen_data_arrival_all.csv");

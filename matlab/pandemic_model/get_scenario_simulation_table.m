@@ -5,10 +5,14 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	% add vaccine success state to simulation scenarios table
     new_simulation_table = base_simulation_table;
 
+	% Unpack variables for readability
+	yr_start = new_simulation_table.yr_start;
+	is_false = new_simulation_table.is_false;
+	
     % Add surveillance outcomes
     prep_start_month = run_surveillance(new_simulation_table.early_detection_q, ...
 										new_simulation_table.is_false, ...
-										params.enhanced_surveillance, ...
+										params.improved_early_warning, ...
 										params.months_to_early_detect, ...
 										params.months_to_regular_detect, ...
 										params.base_early_detect_prob_true, ...
@@ -21,12 +25,9 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 
 	pathogen = new_simulation_table.pathogen;
 	existing_prototype = ismember(pathogen, pathogens_with_baseline_prototype);
-	gains_prototype = ismember(pathogen, pathogens_no_baseline_prototype(ismember(pathogens_no_baseline_prototype, params.pathogens_researched)));
-	has_prototype = existing_prototype | gains_prototype;
-
-	% Unpack vectors for code readability
-	yr_start = new_simulation_table.yr_start;
-	is_false = new_simulation_table.is_false;
+	gains_prototype = ismember(pathogen, pathogens_no_baseline_prototype(ismember(pathogens_no_baseline_prototype, params.pathogens_with_prototype)));
+	prototype_RD_done = yr_start > params.prototype_RD_benefit_start;
+	has_prototype = existing_prototype | (gains_prototype & prototype_RD_done);
 
 	% Adjust thresholds for RD benefits when research eligible
 	trad_idx = strcmp(ptrs_pathogen.platform, "traditional_only");
@@ -34,12 +35,12 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	trad_prob_map = dictionary(ptrs_pathogen.pathogen(trad_idx), ptrs_pathogen.preds(trad_idx));
 	mrna_prob_map = dictionary(ptrs_pathogen.pathogen(mrna_idx), ptrs_pathogen.preds(mrna_idx));
 	
-	% Add PTRS for unknown diseases
+	% Add PTRS for unknown virus
 	prototype_rd_idx = strcmp(ptrs_rd.has_prototype, "has_prototype");
 	rd_mrna_idx = strcmp(ptrs_rd.platform, "mrna_only");
-	trad_prob_map("unknown") = ptrs_rd.preds(~prototype_rd_idx & ~rd_mrna_idx);
+	trad_prob_map("unknown_virus") = ptrs_rd.preds(~prototype_rd_idx & ~rd_mrna_idx);
 	trad_prob_map(missing) = NaN;
-	mrna_prob_map("unknown") = ptrs_rd.preds(~prototype_rd_idx & rd_mrna_idx);
+	mrna_prob_map("unknown_virus") = ptrs_rd.preds(~prototype_rd_idx & rd_mrna_idx);
 	mrna_prob_map(missing) = NaN;
 
 	trad_probs = trad_prob_map(pathogen);
@@ -51,9 +52,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_increment = ptrs_rd.preds(rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~prototype_rd_idx);
 
 	% Only apply R&D benefits after prototype_RD_benefit_start years
-	benefits_active = yr_start > params.prototype_RD_benefit_start;
-	trad_probs(gains_prototype & benefits_active) = trad_probs(gains_prototype & benefits_active) + trad_increment;
-	mrna_probs(gains_prototype & benefits_active) = mrna_probs(gains_prototype & benefits_active) + mrna_increment;
+	trad_probs(gains_prototype & prototype_RD_done) = trad_probs(gains_prototype & prototype_RD_done) + trad_increment;
+	mrna_probs(gains_prototype & prototype_RD_done) = mrna_probs(gains_prototype & prototype_RD_done) + mrna_increment;
 
 	% Get whether vaccine platforms succeeded
 	trad_success = trad_probs > new_simulation_table.trad_vax_state;
@@ -65,7 +65,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	ufv_protection = (...
 		params.ufv_invest & ... % Investment was made
 		flu_outbreak_idx & ... % Dealing with influenza
-		benefits_active & ... % After R&D benefit starts
+		prototype_RD_done & ... % After R&D benefit starts
 		flu_vax_success_prob > new_simulation_table.ufv_vax_state ... % Vaccine successfully provides protection
 	);
 
@@ -88,7 +88,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     rd_timeline(idx_has_proto) = pathogen_rd_timelines_with_prototype.preds(loc_has_proto(idx_has_proto));
     rd_timeline(idx_no_proto) = pathogen_rd_timelines_no_prototype.preds(loc_no_proto(idx_no_proto));
 
-	rd_timeline(isnan(rd_timeline)) = max(pathogen_rd_timelines_no_prototype.preds); % Take maximum timeline for unknown viral families
+	rd_timeline(isnan(rd_timeline)) = max(pathogen_rd_timelines_no_prototype.preds); % Take maximum timeline for unknown pathogens
 	
 	% Ensure all have RD timeline and convert to months
 	assert(all(~isnan(rd_timeline)));
@@ -119,13 +119,13 @@ end
 
 
 function prep_start_month_arr = run_surveillance(early_detection_q, is_false_arr, ...
-												 enhanced_surveillance, ...
+												 improved_early_warning, ...
 												 months_to_early_detect, months_to_regular_detect, ...
 												 base_early_detect_prob_true, base_early_detect_prob_false, ...
 												 inc_early_detect_prob_true, inc_early_detect_prob_false)
 	% Compute early detection indidcator
-	early_detect_prob_true = base_early_detect_prob_true + enhanced_surveillance .* inc_early_detect_prob_true;
-	early_detect_prob_false = base_early_detect_prob_false + enhanced_surveillance .* inc_early_detect_prob_false;
+	early_detect_prob_true = base_early_detect_prob_true + improved_early_warning .* inc_early_detect_prob_true;
+	early_detect_prob_false = base_early_detect_prob_false + improved_early_warning .* inc_early_detect_prob_false;
 	early_detection = early_detection_q < (early_detect_prob_true .* ~is_false_arr + early_detect_prob_false .* is_false_arr);
 
 	prep_start_month_arr = nan(size(is_false_arr));

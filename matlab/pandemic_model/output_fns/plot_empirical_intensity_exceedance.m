@@ -21,9 +21,10 @@ function fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_m
     fig = figure('Visible', 'off');
     plot(unique_intensities, exceedance, 'b-', 'LineWidth', 1.5);
     grid on;
+    box off;
     xlabel('Deaths per 10,000 per year');
     ylabel('Exceedance probability'); 
-    title('Empirical pandemic intensity exceedance function');
+    title('Simulated pandemic intensity exceedance function');
 
     set(gca, 'XScale', 'log');
     set(gca, 'FontSize', 11);
@@ -37,7 +38,7 @@ function fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_m
     hold on;
     plot(threshold_x, threshold_y, 'rs', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
     plot([threshold_x threshold_x], [0 threshold_y], 'r--');
-    plot([min(unique_intensities) threshold_x], [threshold_y threshold_y], 'r--');
+    plot([lower_bound, threshold_x], [threshold_y threshold_y], 'r--');
 
     text(threshold_x * 0.95, threshold_y * 0.95, sprintf('Pandemic response\nthreshold: %.2f', threshold_x), ...
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 8);

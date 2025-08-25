@@ -27,14 +27,14 @@ function get_sensitivity_loss_summary(sensitivity_dir)
     [baseline_deaths, baseline_mortality, baseline_economic, baseline_learning, baseline_total] = ...
         get_unmitigated_losses_for_dir(baseline_dir, baseline_r, baseline_periods);
 
-    % Initialize summary table with baseline
-    summary_table = table('Size', [1 7], ...
+    % Initialize annualized summary table with baseline
+    annualized_summary_table = table('Size', [1 7], ...
         'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell', 'cell'});
-    summary_table.Properties.VariableNames = {...
+    annualized_summary_table.Properties.VariableNames = {...
         'Variable', 'Value', 'AnnualDeaths', 'MortalityLoss', 'EconomicLoss', 'LearningLoss', 'TotalLoss'};
     [formatted_name, formatted_value] = format_names('baseline', 'baseline', baseline_arrival_dist, ...
                                                      baseline_vsl, baseline_r, baseline_y);
-    summary_table(1,:) = {...
+    annualized_summary_table(1,:) = {...
         formatted_name,...
         formatted_value, ...
         {get_mean_and_iqr(baseline_deaths)} ...
@@ -42,6 +42,23 @@ function get_sensitivity_loss_summary(sensitivity_dir)
         {get_mean_and_iqr(baseline_economic)}, ...
         {get_mean_and_iqr(baseline_learning)}, ...
         {get_mean_and_iqr(baseline_total)}, ...
+    };
+
+    % Initialize total loss summary table with baseline
+    total_summary_table = table('Size', [1 7], ...
+        'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell', 'cell'});
+    total_summary_table.Properties.VariableNames = {...
+        'Variable', 'Value', 'TotalDeaths', 'TotalMortalityLoss', 'TotalEconomicLoss', 'TotalLearningLoss', 'TotalLoss'};
+    % Compute total (not annualized) values for baseline
+    baseline_annualization_factor = (baseline_r * (1 + baseline_r)^baseline_periods) / ((1 + baseline_r)^baseline_periods - 1);
+    total_summary_table(1,:) = {...
+        formatted_name,...
+        formatted_value, ...
+        {get_mean_and_iqr(baseline_deaths * baseline_periods)} ...
+        {get_mean_and_iqr(baseline_mortality / baseline_annualization_factor)} ...
+        {get_mean_and_iqr(baseline_economic / baseline_annualization_factor)} ...
+        {get_mean_and_iqr(baseline_learning / baseline_annualization_factor)} ...
+        {get_mean_and_iqr(baseline_total / baseline_annualization_factor)} ...
     };
 
     % Process each sensitivity variable
@@ -60,7 +77,9 @@ function get_sensitivity_loss_summary(sensitivity_dir)
             [annual_deaths, mortality_loss, economic_loss, learning_loss, total_loss] = ...
                 get_unmitigated_losses_for_dir(value_dir, r, periods);
             [formatted_name, formatted_value] = format_names(var_name, var_values{j}, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
-            summary_table(row_idx,:) = {...
+
+            % Annualized summary
+            annualized_summary_table(row_idx,:) = {...
                 formatted_name, ...
                 formatted_value, ...
                 {get_mean_and_iqr(annual_deaths)} ...
@@ -69,13 +88,56 @@ function get_sensitivity_loss_summary(sensitivity_dir)
                 {get_mean_and_iqr(learning_loss)}, ...
                 {get_mean_and_iqr(total_loss)}, ...
             };
+
+            % Total loss summary (convert annualized losses back to total by dividing by annualization factor)
+            annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
+            total_summary_table(row_idx,:) = {...
+                formatted_name, ...
+                formatted_value, ...
+                {get_mean_and_iqr(annual_deaths * periods)} ...
+                {get_mean_and_iqr(mortality_loss / annualization_factor)} ...
+                {get_mean_and_iqr(economic_loss / annualization_factor)} ...
+                {get_mean_and_iqr(learning_loss / annualization_factor)} ...
+                {get_mean_and_iqr(total_loss / annualization_factor)} ...
+            };
+
             row_idx = row_idx + 1;
         end
     end
 
-    % Save summary table
-    writetable(summary_table, fullfile(sensitivity_dir, 'sensitivity_loss_summary.csv'));
-    write_to_latex(summary_table, fullfile(sensitivity_dir, "sensitivity_loss_summary.tex"))
+    % Save latex tables
+    write_to_latex(annualized_summary_table, fullfile(sensitivity_dir, "sensitivity_annualized_loss_summary.tex"))
+    write_to_latex(total_summary_table, fullfile(sensitivity_dir, "sensitivity_total_loss_summary.tex"))
+
+    %% Prepare and save CSVs (means only, snake_case column names)
+
+    % Helper to extract mean from a cell containing a struct
+    function m = get_mean(cellval)
+        m = cellval{1}.mean;
+    end
+
+    % Convert summary table to new CSV table (means only)
+    function csv_table = summary_table_to_csv(summary_table)
+        csv_data = cell(size(summary_table));
+        for row = 1:height(csv_data)
+            csv_data{row,1} = summary_table{row,1}; % variable
+            csv_data{row,2} = summary_table{row,2}; % value
+            csv_data{row,3} = get_mean(summary_table{row,3});
+            csv_data{row,4} = get_mean(summary_table{row,4});
+            csv_data{row,5} = get_mean(summary_table{row,5});
+            csv_data{row,6} = get_mean(summary_table{row,6});
+            csv_data{row,7} = get_mean(summary_table{row,7});
+        end
+        csv_table = cell2table(csv_data, 'VariableNames', summary_table.Properties.VariableNames);
+    end
+
+    % Convert and write annualized summary
+    annualized_csv = summary_table_to_csv(annualized_summary_table);
+    writetable(annualized_csv, fullfile(sensitivity_dir, 'sensitivity_annualized_loss_summary.csv'));
+
+    % Convert and write total summary
+    total_csv = summary_table_to_csv(total_summary_table);
+    writetable(total_csv, fullfile(sensitivity_dir, 'sensitivity_total_loss_summary.csv'));
 end
 
 function [annual_deaths, mortality_losses, economic_losses, learning_losses, total_losses] = get_unmitigated_losses_for_dir(value_dir, r, periods)
@@ -143,12 +205,16 @@ function write_to_latex(summary_data, outpath)
 
     % Write LaTeX table header
     fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
+    fprintf(fileID, '\\caption{\\textbf{Expected global pandemic deaths and losses in the absence of mitigations.} Monetized losses are discounted. Each cell presents the mean estimates in the center with the interquartile range in square brackets below.}\n');
+    fprintf(fileID, '\\vskip 3pt');
+    fprintf(fileID, '\\small\n\\renewcommand{\\arraystretch}{0.9}\n');
     fprintf(fileID, '\\begin{tabular}{l c c c c c}\n');
     fprintf(fileID, '\\hline\\hline\n');
-    fprintf(fileID, 'Scenario & Expected annual deaths (millions) & \\multicolumn{4}{c}{Expected annualized pandemic losses (\\$ trillion)}\\\\\n');
+    fprintf(fileID, '\\noalign{\\vskip 3pt}\n');
+    fprintf(fileID, 'Scenario & \\shortstack[c]{Expected annual deaths\\\\(millions)} & \\multicolumn{4}{c}{\\shortstack[c]{Expected annualized pandemic losses \\\\ (\\$ trillion)}}\\\\\n');
     fprintf(fileID, '\\hline\n');
     fprintf(fileID, ' & & Mortality & Economic & Learning & Total \\\\\n');
-    fprintf(fileID, ' & $\\bar{D}$ & $AV\\!\\left(\\bar{ML}\\right)$ & $AV\\!\\left(\\bar{OL}\\right)$ & $AV\\!\\left(\\bar{LL}\\right)$ & $AV\\!\\left(\\bar{TL}\\right)$\\\\\n');
+    fprintf(fileID, ' & $\\overline{D}$ & $AV\\!\\left(\\overline{ML}\\right)$ & $AV\\!\\left(\\overline{OL}\\right)$ & $AV\\!\\left(\\overline{LL}\\right)$ & $AV\\!\\left(\\overline{TL}\\right)$\\\\\n');
     fprintf(fileID, '\\hline\n');
     
     % Identify unique scenario categories (Variable column)
@@ -189,7 +255,7 @@ function write_to_latex(summary_data, outpath)
                 end
     
                 % Multiline cell without makecell: nested tabular
-                cellstr = sprintf('\\begin{tabular}[c]{@{}c@{}}%.1f \\\\ \\footnotesize [%.1f, %.1f]\\end{tabular}', top, lo, hi);
+                cellstr = sprintf('\\begin{tabular}[c]{@{}c@{}}%.1f \\\\[-0.7em] \\footnotesize [%.1f, %.1f]\\end{tabular}', top, lo, hi);
     
                 if k < 5
                     fprintf(fileID, '%s & ', cellstr);
@@ -202,12 +268,11 @@ function write_to_latex(summary_data, outpath)
     
     % Write LaTeX table footer
     fprintf(fileID, '\\hline\\hline\n\\end{tabular}\n');
-    fprintf(fileID, '\\caption{Expected global pandemic deaths and losses. For each cell, the top number is the mean; brackets show the interquartile range (25th, 75th percentiles).}\n');
     fprintf(fileID, '\\label{tab:pandemic_losses}\n');
     fprintf(fileID, '\\end{table}\n');
     
     fclose(fileID);
-    disp('LaTeX table successfully written to pandemic_losses_table.tex');
+    fprintf('LaTeX table successfully written to %s\n', outpath);
 end
 
 function [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_arrival_dist, ...
@@ -247,23 +312,23 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             airborne = strcmp(s_meta.scope, "airborne"); 
 
             if trunc_diff
-                formatted_name = "Severity upper bound";
+                formatted_name = "Severity upper bound ($\\overline{s}$)";
                 formatted_value = sprintf("%g SU", s_meta.trunc_value);
             elseif threshold_diff
-                formatted_name = "Lower threshold";
+                formatted_name = "Lower severity threshold ($\\underline{s}$)";
                 formatted_value = sprintf("%g SU", s_meta.lower_threshold);
             elseif airborne
                 formatted_name = "Pathogen types";
                 formatted_value = "Airborne pathogens only";
             end
         case "duration_dist_config"
-            formatted_name = "Duration upper bound";
+            formatted_name = "Duration upper bound ($\\overline{d}$)";
             [~, config_name, ~] = fileparts(var_value);
             config_metadata = split(config_name, "_");
-            trunc_value = config_metadata(6);
+            trunc_value = config_metadata(8);
             formatted_value = sprintf("%g years", trunc_value);
         case "y"
-            formatted_name = "GDP growth rate $y$";
+            formatted_name = "Per capita GDP growth rate ($y$)";
             if var_value < baseline_y
                 formatted_value = sprintf("Reduce to %.1f\\%%", var_value * 100);
             elseif var_value > baseline_y

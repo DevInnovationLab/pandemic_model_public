@@ -24,6 +24,9 @@ numba = "^0.61.2"
 numdifftools = "^0.9.41"
 click = "^8.2.1"
 pandemic-statistics = {git = "https://github.com/ganqili/pandemic-statistics.git", rev = "prep-for-integration"}
+jax = "^0.7.1"
+optax = "^0.2.5"
+jaxlib = "^0.7.1"
 
 
 [tool.poetry.group.dev.dependencies]

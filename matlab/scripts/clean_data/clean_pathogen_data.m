@@ -1,4 +1,4 @@
-% Clean viral family data -- arrival rates and whether they already have vaccine R&D
+% Clean pathogen data -- arrival rates and whether they already have vaccine R&D
 % Arrival rates obtained from expert surves, vaccine status primarily obtained from CDC website.
 % Run from command line with `matlab -batch "cleaned_pathogen_data"`
 
@@ -15,7 +15,7 @@ pathogen_data.Properties.VariableNames = {...
     };
 
 % Make viral families lower case
-pathogen_data.pathogen = lower(pathogen_data.pathogen);
+pathogen_data.pathogen = lower(strrep(pathogen_data.pathogen, ' ', '_'));
 
 % Convert arrival rate shares to percentages
 pathogen_data.arrival_share_all = str2double(erase(pathogen_data.arrival_share_all, "%")) ./ 100;
