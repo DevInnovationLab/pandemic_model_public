@@ -334,5 +334,5 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
 ggsave("output/ptrs/marginal_ptrs_by_pathogen.png", ptrs_plot, width = 8, height = 5, dpi = 300)
 
 # Save the marginal PTRS dataset as CSV
-readr::write_csv(rd_marginal, "output/ptrs/pathogen_model_preds.csv")
+readr::write_csv(ptrs_vf_marginal, "output/ptrs/pathogen_model_preds.csv")
 

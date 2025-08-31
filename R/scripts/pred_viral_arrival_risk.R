@@ -6,68 +6,82 @@ library(janitor)
 library(snakecase)
 library(tidyverse)
 
-# Load virus arrival rates
+#' Calculate mean, standard error, and 95% CI for pathogen arrival risk.
+#'
+#' This function takes a long-format data frame of arrival risks and a pathogen metadata table,
+#' and returns a summary table with mean, SE, and 95% CI for each pathogen, including those with all-zero risk.
+#'
+#' @param arrival_long Long-format data frame with columns 'pathogen' and 'risk'.
+#' @param pathogen_data Data frame with pathogen metadata (must include 'pathogen').
+#' @return A data frame with columns: pathogen, estimate, se, ci_lower, ci_upper, has_prototype, and other metadata.
+summarize_arrival_risk <- function(arrival_long, pathogen_data) {
+  arrival_long %>%
+    group_by(pathogen) %>%
+    summarize(
+      estimate = mean(risk, na.rm = TRUE),
+      se = ifelse(all(risk == 0, na.rm = TRUE), 0, sd(risk, na.rm = TRUE) / sqrt(sum(!is.na(risk)))),
+      .groups = "drop"
+    ) %>%
+    left_join(pathogen_data, by = "pathogen") %>%
+    mutate(
+      estimate = ifelse(is.na(estimate), 0, estimate),
+      se = ifelse(is.na(se), 0, se),
+      ci_lower = estimate - 1.96 * se,
+      ci_upper = estimate + 1.96 * se,
+      has_prototype = ifelse(is.na(has_prototype), FALSE, has_prototype),
+      has_prototype = ifelse(has_prototype, "Has prototype", "No prototype"),
+      pathogen = to_sentence_case(gsub("_", " ", pathogen)),
+      pathogen = ifelse(pathogen == "Totally unknown virus", "Unknown virus", pathogen),
+      pathogen = ifelse(grepl("crimean", pathogen, ignore.case = TRUE), "CCHF", pathogen)
+    )
+}
+
+# Load virus arrival rates and pathogen metadata
 arrival_rates_virus <- read.csv("./data/clean/arrival_rates_virus_clean.csv")
 pathogen_data <- read.csv("./data/clean/pathogen_data_arrival_all.csv")
 
-# Calculate mean and standard error for each pathogen's arrival risk
-# Assume arrival_rates_virus is in wide format: columns are pathogen names
-
-# Convert to long format: pathogen, risk
-arrival_long <- arrival_rates_virus %>%
+# --- All viruses: absolute and relative arrival rates ---
+# Relative risk: for each respondent, normalize risks to sum to 1 (relative to only viruses)
+arrival_rates_virus_rel <- arrival_rates_virus %>%
+  mutate(across(everything(), ~ .x / rowSums(across(everything()), na.rm = TRUE))) %>%
   pivot_longer(cols = everything(), names_to = "pathogen", values_to = "risk")
 
-# Summarize mean, SE, and 95% CI (mean ± 1.96*SE), including pathogens with all-zero risk
-# This ensures pathogens with all-zero risk are included with SE = 0 and CI = 0
-arrival_risk_summary <- arrival_long %>%
-  group_by(pathogen) %>%
-  summarize(
-    estimate = mean(risk, na.rm = TRUE),
-    se = ifelse(all(risk == 0, na.rm = TRUE), 0, sd(risk, na.rm = TRUE) / sqrt(sum(!is.na(risk)))),
-    .groups = "drop"
-  ) %>%
-  # Add in any pathogens from pathogen_data that are missing (i.e., have all-zero risk)
-  left_join(pathogen_data, by = "pathogen") %>%
-  mutate(
-    estimate = ifelse(is.na(estimate), 0, estimate),
-    se = ifelse(is.na(se), 0, se),
-    ci_lower = estimate - 1.96 * se,
-    ci_upper = estimate + 1.96 * se,
-    has_prototype = ifelse(is.na(has_prototype), FALSE, has_prototype),
-    pathogen = to_sentence_case(gsub("_", " ", pathogen)),
-    pathogen = ifelse(pathogen == "Totally unknown virus", "Unknown virus", pathogen),
-    pathogen = ifelse(grepl("crimean", pathogen, ignore.case = TRUE), "CCHF", pathogen)
-  )
+arrival_risk_summary_all <- summarize_arrival_risk(arrival_rates_virus_rel, pathogen_data)
 
-# Add a factor for legend labeling
-arrival_risk_summary <- arrival_risk_summary %>%
-  mutate(
-    prototype_status = factor(
-      ifelse(has_prototype == 1 | has_prototype == TRUE, "Has prototype", "No prototype"),
-      levels = c("Has prototype", "No prototype")
-    )
-  )
+# --- Airborne viruses only: absolute and relative arrival rates ---
 
-# Define more professional colors for prototype status
-prototype_colors <- c("Has prototype" = "#005185", "No prototype" = "#A50021") # slightly darker solid blue and red
+# Identify airborne or unknown pathogens
+airborne_pathogens <- pathogen_data %>%
+  filter(tolower(airborne) %in% c("yes")) %>%
+  pull(pathogen)
 
-p <- ggplot(arrival_risk_summary, aes(
+arrival_rates_airborne_rel <- arrival_rates_virus %>%
+  select(all_of(airborne_pathogens)) %>%
+  mutate(across(everything(), ~ .x / rowSums(across(everything()), na.rm = TRUE))) %>%
+  pivot_longer(cols = everything(), names_to = "pathogen", values_to = "risk")
+
+arrival_risk_summary_airborne <- summarize_arrival_risk(arrival_rates_airborne_rel, pathogen_data_airborne)
+
+# --- Plot for all viruses (absolute risk) ---
+
+prototype_colors <- c("Has prototype" = "#005185", "No prototype" = "#A50021") # blue and red
+
+p <- ggplot(arrival_risk_summary_all, aes(
   x = estimate,
   y = reorder(pathogen, estimate),
-  color = prototype_status
+  color = has_prototype
 )) +
   geom_point(size = 4) +
-  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = prototype_status),
+  geom_errorbarh(aes(xmin = ci_lower, xmax = ci_upper, color = has_prototype),
                  height = 0.2,
                  linewidth = 0.6,
                  alpha = 0.8) +
-  # Color y-axis text by has_prototype
   scale_color_manual(
     name = "Prototype vaccine",
     values = prototype_colors
   ) +
   scale_x_continuous(
-    limits = c(-.01, max(arrival_risk_summary$ci_upper) * 1.15),
+    limits = c(0, 0.5),
     labels = scales::percent_format(accuracy = 1),
     breaks = seq(0, 0.5, by = 0.05)
   ) +
@@ -84,13 +98,13 @@ p <- ggplot(arrival_risk_summary, aes(
     axis.text.y = ggtext::element_markdown(
       size = 14,
       face = "plain",
-      color = arrival_risk_summary %>%
+      color = arrival_risk_summary_all %>%
         arrange(estimate) %>%
-        mutate(color = ifelse(has_prototype == 1 | has_prototype == TRUE, prototype_colors["Has prototype"], prototype_colors["No prototype"])) %>%
+        mutate(color = ifelse(has_prototype == "Has prototype", prototype_colors["Has prototype"], prototype_colors["No prototype"])) %>%
         pull(color)
     ),
     axis.text.x = element_text(size = 12, color = "black"),
-    axis.title.x = element_text(size = 18, face = "bold", margin = margin(t = 10)),
+    axis.title.x = element_text(size = 16,  margin = margin(t = 10)),
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
     panel.grid.major.x = element_line(color = "gray85", linewidth = 0.5),
@@ -107,5 +121,8 @@ p <- ggplot(arrival_risk_summary, aes(
     plot.margin = margin(10, 0, 10, 10)
   )
 
-# Make the figure a little wider (e.g., width = 9 inches instead of default 7)
 ggsave("./output/pathogen_pandemic_share_all.png", plot = p, width = 9, height = 7, dpi = 300)
+
+# --- Save all summary tables ---
+write.csv(arrival_risk_summary_all, "./data/clean/pathogen_data_all.csv", row.names = FALSE)
+write.csv(arrival_risk_summary_airborne, "./data/clean/pathogen_data_airborne.csv", row.names = FALSE)

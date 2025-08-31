@@ -1,0 +1,3 @@
+"pathogen","estimate","se","arrival_share","viral_family","has_prototype","airborne","ci_lower","ci_upper"
+"Coronavirus",0.429532967032967,0.0655678241877351,0.319583214387668,"Coronaviridae","Has prototype","Yes",0.301020031625006,0.558045902440928
+"Flu",0.570467032967033,0.0655678241877351,0.470168427062518,"Orthomyxoviridae","Has prototype","Yes",0.441954097559072,0.698979968374994
