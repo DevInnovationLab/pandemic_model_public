@@ -124,7 +124,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     results = cell(numel(group_ids), 1);
 
     % Parallelize pandemic simulations
-    parfor g = 1:numel(group_ids)
+    for g = 1:numel(group_ids)
         group_idx = (sim_groups == g);
         group_data = event_sim_table(group_idx, :);
 
@@ -419,7 +419,7 @@ function [sim_idx, year_idx] = get_event_list_to_sim_year_idx(sim_num, month_sta
     %   values_flat: Flattened values from the input matrix
     
     % Get simulation indices by repeating each sim number by its duration
-    sim_idx = repelem(sim_num, month_dur);
+    sim_idx = repelem(sim_num, month_dur, 1);
     
     % Get month indices by expanding each event's start month
     month_idx = cell2mat(arrayfun(@(s,d) (s:(s+d-1))', ...
@@ -445,8 +445,8 @@ function sim_year_matrix = event_list_to_sim_year(values_matrix, sim_idx, year_i
     %
     % Returns:
     %   sim_year_matrix: Matrix of values with dimensions (num_sims x max_years)
-    values_max_t = values_matrix';
-    values = values_max_t((accum_idx == 1)');
+    values_mat_t = values_matrix';
+    values = values_mat_t((accum_idx == 1)');
 
     sim_year_matrix = accumarray([sim_idx, year_idx], ...
                                  values, ...

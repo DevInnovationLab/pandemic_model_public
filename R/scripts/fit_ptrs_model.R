@@ -1,12 +1,15 @@
+library(forcats)
+library(ggplot2)
 library(gamlss)
 library(gamlss.dist)
 library(gamlss.cens)
-library(here)
-library(tidyverse)
+library(snakecase)
 library(survival)
-library(tibble)
+library(tidyverse)
+library(statmod)
 
-ptrs_raw <- read.csv("../data/clean/vaccine_ptrs.csv")
+## --- Load and prep relevant data
+ptrs_raw <- read.csv("./data/clean/vaccine_ptrs.csv")
 
 ptrs_raw <- ptrs_raw %>%
   filter(!(is.na(value_min) | is.na(value_max))) %>%
@@ -15,205 +18,321 @@ ptrs_raw <- ptrs_raw %>%
     across(c(value_min, value_max), ~ pmax(pmin(.x, 0.99), 0.01))
   ) %>%
   mutate(
-    disease = as.factor(disease),
-    platform = as.factor(platform),
-    respondent = as.factor(respondent),
-    pathogen = as.factor(pathogen),
-    has_prototype = as.factor(has_prototype),
+    disease        = as.factor(disease),
+    platform       = as.factor(platform),
+    respondent     = as.factor(respondent),
+    pathogen       = as.factor(pathogen),
+    has_prototype  = as.factor(has_prototype),
     y = Surv(value_min, value_max, type = "interval2")
   )
 
-rd_timelines <- read.csv("../data/clean/vaccine_rd_timelines.csv")
+rd_timelines <- read.csv("./data/clean/vaccine_rd_timelines.csv")
 
 rd_timelines <- rd_timelines |>
   rename(value_min = years_min, value_max = years_max) |>
-  mutate(across(c(value_min, value_max), ~ pmax(.x, 0.01))) %>%
+  mutate(across(c(value_min, value_max), ~ pmax(.x, 0.5))) %>%
   mutate(
-    disease = as.factor(disease),
-    has_prototype = as.factor(has_prototype),
-    respondent = as.factor(respondent),
-    pathogen = as.factor(pathogen),
+    disease        = as.factor(disease),
+    has_prototype  = as.factor(has_prototype),
+    respondent     = as.factor(respondent),
+    pathogen       = as.factor(pathogen),
     y = Surv(value_min, value_max, type = "interval2")
   )
 
-# We will use a lognormal for RD timelines, and Beta for PTRS
+## -- Families with interval censoring (creates BEic, LOGNOic, etc.)
+gen.cens(BE,    type = "interval")
+gen.cens(LOGNO, type = "interval")
+gen.cens(GA, type = "interval")
 
-
-
-##
-## prepare_grid_and_mm
-##
-## Build the prediction grid over fixed effects, attach a placeholder level for
-## the random effect, and construct the fixed-effects model matrix for the μ submodel.
-##
-## Parameters
-## - data: A data.frame with factors already set for fixed and random variables.
-## - fixed_vars: Character vector of fixed-effect variable names to cross.
-## - random_var: Character scalar name of the random-effect factor (for placeholder).
-##
-## Returns
-## - A list with elements: grid (data.frame), X_mu (matrix), n_cells (integer).
-prepare_grid_and_mm <- function(data, fixed_vars, random_var) {
-  stopifnot(is.data.frame(data))
-  stopifnot(length(fixed_vars) >= 1)
-  stopifnot(length(random_var) == 1)
-
-  # Build grid of fixed effects using training levels
-  grid <- do.call(
+## -- Helper: build prediction grid and fixed-effects model matrix
+build_predict_grid_and_X <- function(data, fixed_vars, random_var) {
+  predict_grid <- do.call(
     expand.grid,
     c(lapply(fixed_vars, function(v) levels(data[[v]])), stringsAsFactors = FALSE)
   )
-  names(grid) <- fixed_vars
-
-  # Add placeholder respondent level so predict() can evaluate sigma later
-  grid[[random_var]] <- levels(data[[random_var]])[1]
-
-  # Fixed-effects model matrix for μ using formula from fixed_vars
-  form_fix <- as.formula(paste("~", paste(fixed_vars, collapse = " + ")))
-  X_mu <- model.matrix(form_fix, data = grid)
-  n_cells <- nrow(grid)
-
-  list(grid = grid, X_mu = X_mu, n_cells = n_cells)
+  names(predict_grid) <- fixed_vars
+  predict_grid[[random_var]] <- levels(data[[random_var]])[1]
+  X <- model.matrix(as.formula(paste("~", paste(fixed_vars, collapse = " + "))), data = predict_grid)
+  list(predict_grid = predict_grid, X = X, n_cells = nrow(predict_grid))
 }
 
-##
-## fit_gamlss_mixed
-##
-## Fit a GAMLSS with specified fixed effects and a random intercept.
-##
-## Parameters
-## - data: A data.frame containing the response and covariates.
-## - response: Name of the response column (can be Surv for censored families).
-## - fixed_vars: Character vector of fixed-effect variable names.
-## - random_var: Character scalar for the random intercept factor.
-## - family: A GAMLSS family object (e.g., BEic).
-## - trace: Logical; show fit trace.
-##
-## Returns
-## - A fitted gamlss object.
-fit_gamlss_mixed <- function(data, response, fixed_vars, random_var, family, trace = FALSE) {
-  stopifnot(all(c(response, fixed_vars, random_var) %in% names(data)))
-
-  form <- as.formula(
-    paste(response, "~", paste(fixed_vars, collapse = " + "), "+", paste0("random(", random_var, ")"))
-  )
-
-  gamlss(formula = form, family = family, data = data, trace = trace)
+## -- Helper: relevel bootstrap sample to training levels
+relevel_like <- function(dat_b, dat_train, vars) {
+  for (v in vars) if (is.factor(dat_train[[v]]))
+    dat_b[[v]] <- factor(dat_b[[v]], levels = levels(dat_train[[v]]))
+  dat_b
 }
 
-##
-## bootstrap_predictive
-##
-## Run a cluster bootstrap over the random-effect units, refit the model, and
-## produce both marginal mean summaries (integrating out the random effect) and
-## predictive draws that combine parameter and aleatoric uncertainty.
-##
-## Parameters
-## - data: Training data.frame with factors set and a response column.
-## - response: Name of the response column.
-## - fixed_vars: Character vector of fixed-effect variable names.
-## - random_var: Character scalar for the random intercept factor.
-## - family: A GAMLSS family object (e.g., BEic).
-## - B_boot: Number of bootstrap replicates.
-## - K_pred: Number of predictive draws per bootstrap per cell.
-## - seed: RNG seed for reproducibility.
-##
-## Returns
-## - A list with elements: boot_summ (tibble), pred_summ (tibble), mu_boot (matrix), Y_arr (array).
-bootstrap_predictive <- function(data, response, fixed_vars, random_var, family,
-                                 B_boot = 200, K_pred = 200, seed = 123) {
-  stopifnot(is.data.frame(data))
-  stopifnot(all(c(response, fixed_vars, random_var) %in% names(data)))
-  stopifnot(is.factor(data[[random_var]]))
-
-  set.seed(seed)
-
-  # Prepare grid and model matrix
-  prep <- prepare_grid_and_mm(data, fixed_vars, random_var)
-  grid <- prep$grid
-  X_mu <- prep$X_mu
-  n_cells <- prep$n_cells
-
-  # Cluster bootstrap setup
-  re_levels <- levels(data[[random_var]])
-  by_re <- split(data, data[[random_var]])
-
-  # Storage
-  mu_boot <- matrix(NA_real_, n_cells, B_boot)
-  Y_arr   <- array(NA_real_, dim = c(n_cells, K_pred, B_boot))
-
-  for (b in 1:B_boot) {
-    # Resample clusters
-    samp_ids <- sample(re_levels, length(re_levels), replace = TRUE)
-    dat_b <- dplyr::bind_rows(by_re[samp_ids])
-
-    # Refit model
-    fit_b <- fit_gamlss_mixed(dat_b, response, fixed_vars, random_var, family, trace = FALSE)
-
-    # Fixed part on link scale via model matrix
-    beta_mu <- coef(fit_b, what = "mu")
-    beta_mu <- beta_mu[colnames(X_mu)]
-    eta_fix_b <- as.numeric(X_mu %*% beta_mu)
-
-    # Random-intercept SD from μ submodel
-    sm_mu_b <- getSmo(fit_b, what = "mu")
-    sigma_b <- sm_mu_b$sigb
-
-    # Marginal mean integrating out random intercept
-    b_int <- rnorm(2000, 0, sigma_b)
-    mu_boot[, b] <- rowMeans(plogis(outer(eta_fix_b, b_int, `+`)))
-
-    # Predictive draws: need sigma(x) on response scale per cell
-    sigma_x <- as.numeric(predict(fit_b, newdata = grid, what = "sigma", type = "response"))
-
-    # New-respondent intercept draws
-    b_new <- rnorm(K_pred, 0, sigma_b)
-    mu_cond <- plogis(matrix(eta_fix_b, n_cells, K_pred) + rep(b_new, each = n_cells))
-
-    # Vectorized Beta draws and reshape
-    Y_arr[ , , b] <- matrix(
-      rBE(n_cells * K_pred, mu = as.vector(mu_cond), sigma = rep(sigma_x, K_pred)),
-      nrow = n_cells, ncol = K_pred
-    )
-  }
-
-  # Summaries (90% intervals by default)
-  boot_summ <- tibble(
-    !!!setNames(lapply(fixed_vars, function(v) grid[[v]]), fixed_vars),
-    mu_hat = rowMeans(mu_boot),
-    se_mu  = apply(mu_boot, 1, sd),
-    lo90   = apply(mu_boot, 1, quantile, 0.05),
-    hi90   = apply(mu_boot, 1, quantile, 0.95)
-  )
-
-  pred_mean <- apply(Y_arr, 1, mean)
-  pred_lo90 <- apply(Y_arr, 1, function(v) quantile(v, 0.05))
-  pred_hi90 <- apply(Y_arr, 1, function(v) quantile(v, 0.95))
-  pred_summ <- tibble(
-    !!!setNames(lapply(fixed_vars, function(v) grid[[v]]), fixed_vars),
-    pred_mean = pred_mean,
-    pred_lo90 = pred_lo90,
-    pred_hi90 = pred_hi90
-  )
-
-  list(boot_summ = boot_summ, pred_summ = pred_summ, mu_boot = mu_boot, Y_arr = Y_arr)
+## -- helper to avoid treating resampled observations under bootstrap as same respodent
+boot_by_cluster <- function(data, cluster) {
+  sp <- split(data, data[[cluster]])
+  ids <- names(sp)
+  samp_ids <- sample(ids, length(ids), replace = TRUE)
+  out <- dplyr::bind_rows(sp[samp_ids])
+  # give duplicates independent REs
+  out$boot_copy <- rep(seq_along(samp_ids), vapply(sp[samp_ids], nrow, integer(1)))
+  out[[cluster]] <- as.factor(
+    interaction(out[[cluster]], out$boot_copy, drop = TRUE))
+  out$boot_copy <- NULL
+  out
 }
 
-gen.cens(BEINF, type = "interval")
-gen.cens(BE, type = "interval")
+## -- Gauss–Hermite nodes/weights once
+Q <- 32
+gh <- gauss.quad.prob(Q, dist = "normal")
+z  <- gh$nodes
+w  <- gh$weights
 
-## Example usage on ptrs_raw
-fixed_vars <- c("pathogen", "platform")
-random_var <- "respondent"
+## -------------------------
+## Model A (Option 3): PTRS (Beta), fixed = pathogen + platform
+## -------------------------
+fixed_A   <- c("pathogen", "platform")
+random_id <- "respondent"
 
-# Fit once if needed elsewhere
-fit <- fit_gamlss_mixed(ptrs_raw, response = "y", fixed_vars = fixed_vars,
-                        random_var = random_var, family = BEic, trace = FALSE)
+fit_A <- gamlss(y ~ pathogen + platform + random(respondent),
+                family = BEic, data = ptrs_raw, trace = FALSE)
 
-# Run bootstrap predictive simulation
-boot_out <- bootstrap_predictive(ptrs_raw, response = "y", fixed_vars = fixed_vars,
-                                 random_var = random_var, family = BEic,
-                                 B_boot = 200, K_pred = 1000, seed = 123)
+prep_A <- build_predict_grid_and_X(ptrs_raw, fixed_A, random_id)
+predict_grid_A <- prep_A$predict_grid
+X_A            <- prep_A$X
+nA             <- prep_A$n_cells
 
-boot_summ <- boot_out$boot_summ
-pred_summ <- boot_out$pred_summ
+## Bootstrap settings
+set.seed(123)
+B_boot <- 400
+K_pred <- 500
+
+## Cluster bootstrap containers
+mu_boot_A <- matrix(NA_real_, nA, B_boot)                 # marginal means
+Y_arr_A   <- array(NA_real_, dim = c(nA, K_pred, B_boot)) # predictive draws
+
+by_resp_A <- split(ptrs_raw, ptrs_raw[[random_id]])
+resp_lvls <- levels(ptrs_raw[[random_id]])
+
+for (b in 1:B_boot) {
+  dat_b <- boot_by_cluster(ptrs_raw, random_id)
+  dat_b <- relevel_like(dat_b, ptrs_raw, fixed_A)
+
+  fit_b <- gamlss(y ~ pathogen + platform + random(respondent),
+                  family = BEic, data = dat_b, trace = FALSE)
+
+  beta_mu <- coef(fit_b, what = "mu")
+  beta_mu <- beta_mu[colnames(X_A)]
+  eta_fix <- as.numeric(X_A %*% beta_mu)
+
+  sm_b <- getSmo(fit_b, what = "mu")
+  sigma_b <- sm_b$sigb
+
+  ## Marginal mean via GH over b ~ N(0, sigma_b^2)
+  mu_nodes <- plogis(matrix(eta_fix, nA, Q) + rep(sigma_b * z, each = nA))
+  mu_boot_A[, b] <- as.numeric(mu_nodes %*% w)
+
+  ## Predictive draws (optional)
+  sigma_x <- as.numeric(predict(fit_b, newdata = predict_grid_A, what = "sigma", type = "response"))
+  node_id <- sample.int(Q, size = K_pred, replace = TRUE, prob = w)
+  mu_cond <- plogis(matrix(eta_fix, nA, K_pred) + rep(sigma_b * z[node_id], each = nA))
+
+  Y_arr_A[, , b] <- matrix(
+    rBE(nA * K_pred, mu = as.vector(mu_cond), sigma = rep(sigma_x, K_pred)),
+    nrow = nA, ncol = K_pred
+  )
+}
+
+## Marginal summaries for pathogen × platform
+ptrs_vf_marginal <- tibble(
+  pathogen = predict_grid_A$pathogen,
+  platform = predict_grid_A$platform,
+  mu_hat   = rowMeans(mu_boot_A),
+  se_mu    = apply(mu_boot_A, 1, sd),
+  lo95     = apply(mu_boot_A, 1, quantile, 0.025),
+  hi95     = apply(mu_boot_A, 1, quantile, 0.975)
+)
+
+ptrs_vf_predictive <- tibble(
+  pathogen = predict_grid_A$pathogen,
+  platform = predict_grid_A$platform,
+  pred_mean = apply(Y_arr_A, 1, mean),
+  pred_lo95 = apply(Y_arr_A, 1, function(v) quantile(v, 0.025)),
+  pred_hi95 = apply(Y_arr_A, 1, function(v) quantile(v, 0.975))
+)
+
+## -------------------------
+## Prototype contrast (post-estimation, from Model A)
+## Δ_k = average_v∈proto1 m_{v,k} − average_v∈proto0 m_{v,k}
+## -------------------------
+# pathogen -> has_prototype map (assumes constant within pathogen)
+proto_map <- ptrs_raw %>% distinct(pathogen, has_prototype)
+
+grid_with_proto <- predict_grid_A %>%
+  left_join(proto_map, by = "pathogen")
+
+plat_lvls <- levels(ptrs_raw$platform)
+hp_lvls   <- levels(ptrs_raw$has_prototype)
+stopifnot(length(hp_lvls) >= 2)
+
+rows_by_pk <- lapply(plat_lvls, function(k) {
+  rows_k <- which(grid_with_proto$platform == k)
+  i0 <- rows_k[grid_with_proto$has_prototype[rows_k] == hp_lvls[1]]
+  i1 <- rows_k[grid_with_proto$has_prototype[rows_k] == hp_lvls[2]]
+  list(platform = k, i0 = i0, i1 = i1)
+})
+
+delta_list <- lapply(rows_by_pk, function(s) {
+  if (length(s$i0) == 0 || length(s$i1) == 0) return(rep(NA_real_, B_boot))
+  m0 <- colMeans(mu_boot_A[s$i0, , drop = FALSE])  # avg over proto=0 families
+  m1 <- colMeans(mu_boot_A[s$i1, , drop = FALSE])  # avg over proto=1 families
+  m1 - m0
+})
+
+proto_effect_from_A <- tibble(
+  platform    = sapply(rows_by_pk, `[[`, "platform"),
+  effect_mean = sapply(delta_list, function(d) mean(d, na.rm = TRUE)),
+  effect_lo95 = sapply(delta_list, function(d) quantile(d, 0.025, na.rm = TRUE)),
+  effect_hi95 = sapply(delta_list, function(d) quantile(d, 0.975, na.rm = TRUE)),
+  baseline    = sapply(rows_by_pk, function(s) if (length(s$i0)) mean(rowMeans(mu_boot_A[s$i0, , drop = FALSE])) else NA_real_),
+  treated     = sapply(rows_by_pk, function(s) if (length(s$i1)) mean(rowMeans(mu_boot_A[s$i1, , drop = FALSE])) else NA_real_),
+  rel_change  = (treated - baseline) / baseline
+)
+
+## -------------------------
+## Model C: R&D timelines (Lognormal), fixed = available among {pathogen, platform, has_prototype}
+## -------------------------
+fixed_C <- "pathogen"  # keep as in your current script; extend if you like
+
+fit_C <- gamlss(y ~ pathogen + random(respondent),
+                family = GAic,        # <- Gamma, interval-censored
+                data = rd_timelines,
+                trace = FALSE)
+
+prep_C <- build_predict_grid_and_X(rd_timelines, fixed_C, random_id)
+predict_grid_C <- prep_C$predict_grid
+X_C            <- prep_C$X
+nC             <- prep_C$n_cells
+
+mu_boot_C <- matrix(NA_real_, nC, B_boot)
+Y_arr_C   <- array(NA_real_, dim = c(nC, K_pred, B_boot))
+
+for (b in 1:B_boot) {
+  # cluster bootstrap with relabeled duplicates (your helper does this)
+  dat_b <- boot_by_cluster(rd_timelines, random_id)
+  dat_b <- relevel_like(dat_b, rd_timelines, fixed_C)
+
+  fit_b <- gamlss(y ~ pathogen + random(respondent),
+                  family = GAic,
+                  data = dat_b,
+                  trace = FALSE)
+
+  # fixed log-mean for each prediction cell
+  beta_mu <- coef(fit_b, what = "mu")
+  beta_mu <- beta_mu[colnames(X_C)]
+  eta_fix <- as.numeric(X_C %*% beta_mu)   # log(mu) without random effect
+
+  # respondent RE SD on the mu submodel (log scale)
+  sm_b    <- getSmo(fit_b, what = "mu")
+  sigma_b <- sm_b$sigb
+
+  # Gamma dispersion (CV) on response scale per cell (can vary with covars if modeled)
+  sigma_x <- as.numeric(predict(fit_b, newdata = predict_grid_C, what = "sigma", type = "response"))
+
+  ## ---- Marginal mean (closed form for Gamma with log-RE):
+  ## E[T | v] = exp(eta_fix + 0.5 * sigma_b^2)
+  mu_boot_C[, b] <- exp(eta_fix + 0.5 * sigma_b^2)
+
+  ## ---- Predictive draws: mixture of Gammas over b ~ N(0, sigma_b^2)
+  node_id <- sample.int(Q, size = K_pred, replace = TRUE, prob = w)  # (or just rnorm K_pred if you prefer MC)
+  b_new   <- z[node_id] * sigma_b
+  mu_cond <- exp(matrix(eta_fix, nC, K_pred) + rep(b_new, each = nC))
+
+  Y_arr_C[, , b] <- matrix(
+    rGA(nC * K_pred, mu = as.vector(mu_cond), sigma = rep(sigma_x, K_pred)),
+    nrow = nC, ncol = K_pred
+  )
+}
+
+rd_marginal <- tibble(
+  pathogen = predict_grid_C$pathogen,
+  mean_hat = rowMeans(mu_boot_C),
+  se_mean  = apply(mu_boot_C, 1, sd),
+  lo95     = apply(mu_boot_C, 1, quantile, 0.025),
+  hi95     = apply(mu_boot_C, 1, quantile, 0.975)
+)
+
+rd_predictive <- tibble(
+  pathogen = predict_grid_C$pathogen,
+  pred_mean = apply(Y_arr_C, 1, mean),
+  pred_lo95 = apply(Y_arr_C, 1, function(v) quantile(v, 0.025)),
+  pred_hi95 = apply(Y_arr_C, 1, function(v) quantile(v, 0.975))
+)
+
+# Save outputs that we want to use in our model
+
+## Baseline vaccine PTRS
+ptrs_pred_plot <- ptrs_vf_marginal %>%
+  mutate(
+    pathogen = to_sentence_case(gsub("_", " ", pathogen)),
+    pathogen = ifelse(pathogen == "Crimean congo hemorrhagic fever", "CCHF", pathogen),
+    platform = recode_factor(platform,
+                             mrna_only = "mRNA",
+                             traditional_only = "Traditional")
+  )
+
+# Set color palette for platforms
+platform_colors <- c("mRNA" = "#0072B2", "Traditional" = "#D55E00")
+
+ptrs_plot <- ggplot(ptrs_pred_plot, aes(
+    x = mu_hat,
+    y = reorder(pathogen, mu_hat),
+    color = platform,
+    shape = platform
+  )) +
+  geom_point(size = 4, position = position_dodge(width = 0.6)) +
+  geom_errorbarh(
+    aes(xmin = lo95, xmax = hi95),
+    height = 0.2,
+    linewidth = 0.6,
+    position = position_dodge(width = 0.6),
+    alpha = 0.8
+  ) +
+  scale_color_manual(
+    values = platform_colors,
+    name = "Platform"
+  ) +
+  scale_shape_manual(
+    values = c("mRNA" = 16, "Traditional" = 17),
+    name = "Platform"
+  ) +
+  scale_x_continuous(
+    limits = c(0, 1),
+    labels = scales::percent_format(accuracy = 1, suffix = ""),
+    breaks = seq(0, 1, by = 0.1)
+  ) +
+  labs(
+    x = "Vaccine probability of technical and regulatory success (%)",
+    y = NULL
+  ) +
+  theme_classic(base_size = 8) +
+  theme(
+    plot.title = element_text(size = 22, face = "bold", hjust = 0),
+    axis.text.y = element_text(size = 14, color = "black"),
+    axis.text.x = element_text(size = 12, color = "black"),
+    axis.title.x = element_text(size = 16, margin = margin(t = 10)),
+    axis.line = element_line(color = "black", linewidth = 0.5),
+    axis.ticks = element_line(color = "black", linewidth = 0.5),
+    panel.grid.major.x = element_line(color = "gray85", linewidth = 0.5),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.background = element_rect(fill = "white"),
+    plot.background = element_rect(fill = "white"),
+    plot.margin = margin(10, 0, 10, 10),
+    legend.position = "right",
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12)
+  )
+
+# Save the plot
+ggsave("output/ptrs/marginal_ptrs_by_pathogen.png", ptrs_plot, width = 8, height = 5, dpi = 300)
+
+# Save the marginal PTRS dataset as CSV
+readr::write_csv(rd_marginal, "output/ptrs/pathogen_model_preds.csv")
+

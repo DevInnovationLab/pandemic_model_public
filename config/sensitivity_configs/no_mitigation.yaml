@@ -9,9 +9,6 @@ sensitivities:
     - "output/arrival_distributions/modified/gpd_all_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_10000_n_50000_seed_42.yaml"
     - "output/arrival_distributions/modified/gpd_all_filt_intensity_fit_severity_1d0_1900_poisson_sharp_upper_200_n_50000_seed_42.yaml"
     - "output/arrival_distributions/modified/gpd_airborne_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_50000_seed_42.yaml"
-  duration_dist_config:
-    - "output/duration_distributions/clean_filt_all_int_0d01_1900_trunc_20_n_50000_seed_42.csv"
-    - "output/duration_distributions/clean_filt_all_int_0d01_1900_trunc_50_n_50000_seed_42.csv"
   value_of_death:
     - 1e6
     - 1.6e6

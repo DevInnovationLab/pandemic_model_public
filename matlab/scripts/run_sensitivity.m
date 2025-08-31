@@ -1,4 +1,4 @@
-function run_sensitivity(config_path, run_type)
+function run_sensitivity(config_path, run_type, overwrite)
     % Load the sensitivity configuration and determine which run type to use.
     % 
     % Run type options:
@@ -22,18 +22,18 @@ function run_sensitivity(config_path, run_type)
     if isstruct(first_sensitivity) && ~isempty(fieldnames(first_sensitivity))
         % Multi-parameter case: first sensitivity is a struct with fields
         % specifying multiple parameters to change
-        run_multiparameter_sensitivity(sensitivity_config, run_type);
+        run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite);
     elseif iscell(first_sensitivity) || isnumeric(first_sensitivity)
         % Single-parameter case: first sensitivity is an array of values
         % to try for a single parameter
-        run_oneparameter_sensitivity(sensitivity_config, run_type);
+        run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite);
     else
         error('Invalid sensitivity configuration structure. Each sensitivity must either be a struct of parameters or an array of values.');
     end
 end
 
 
-function run_multiparameter_sensitivity(sensitivity_config, run_type)
+function run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite)
     % Runs sensitivity analysis where each variation changes multiple parameters
     % E.g. compare_old.yaml style configs
     
@@ -46,37 +46,45 @@ function run_multiparameter_sensitivity(sensitivity_config, run_type)
             base_config.(param_names{k}) = fix_params.(param_names{k});
         end
     end
-    
+
     base_dir = setup_sensitivity_dirs(sensitivity_config);
     run_baseline(base_config, base_dir);
-    
+
     % Run variations
     sensitivities = sensitivity_config.sensitivities;
     sensitivity_scenarios = fieldnames(sensitivities);
-    
+
     for i = 1:length(sensitivity_scenarios)
         scenario = sensitivity_scenarios{i};
         vary_params = sensitivities.(scenario);
-        
+
         fprintf('Processing scenario: %s\n', scenario);
         scenario_dir = fullfile(base_dir, scenario);
         create_folders_recursively(scenario_dir);
         run_config = base_config;
-            
+
         % Update all parameters in this combination
         param_names = fieldnames(vary_params);
         for k = 1:length(param_names)
             run_config.(param_names{k}) = vary_params.(param_names{k});
         end
-        
+
         run_config.outdir = scenario_dir;
         create_folders_recursively(run_config.outdir);
+
+        % Only run if overwrite is false or job_config.yaml does not exist, indicating this job was not done
+        job_config_path = fullfile(run_config.outdir, 'job_config.yaml');
+        if ~overwrite && exist(job_config_path, 'file')
+            fprintf('Skipping scenario "%s" (job_config.yaml exists).\n', scenario);
+            continue;
+        end
+
         run_single_scenario(run_config, run_type);
     end
 end
 
 
-function run_oneparameter_sensitivity(sensitivity_config, run_type)
+function run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite)
     % Runs sensitivity analysis where each variation changes one parameter
     % E.g. no_mitigation.yaml style configs
     
@@ -89,18 +97,18 @@ function run_oneparameter_sensitivity(sensitivity_config, run_type)
             base_config.(param_names{k}) = fix_params.(param_names{k});
         end
     end
-    
+
     base_dir = setup_sensitivity_dirs(sensitivity_config);
-    run_baseline(base_config, base_dir, run_type);
-    
+    run_baseline(base_config, base_dir, run_type, overwrite);
+
     % Run variations
     sensitivities = sensitivity_config.sensitivities;
     sensitivity_vars = fieldnames(sensitivities);
-    
+
     for i = 1:length(sensitivity_vars)
         var_name = sensitivity_vars{i};
         var_values = sensitivities.(var_name);
-        
+
         fprintf('Processing parameter: %s\n', var_name);
         var_dir = fullfile(base_dir, var_name);
         create_folders_recursively(var_dir);
@@ -109,9 +117,17 @@ function run_oneparameter_sensitivity(sensitivity_config, run_type)
             fprintf('  Running value %d of %d...\n', j, length(var_values));
             run_config = base_config;
             run_config.(var_name) = var_values{j};
-            
+
             run_config.outdir = fullfile(var_dir, sprintf('value_%d', j));
             create_folders_recursively(run_config.outdir);
+
+            % Only run if job_config.yaml does not exist in outdir, indicating job was not yet run
+            job_config_path = fullfile(run_config.outdir, 'job_config.yaml');
+            if ~overwrite && exist(job_config_path, 'file')
+                fprintf('Skipping value %d as overwrite set to false.\n', j);
+                continue;
+            end
+
             run_single_scenario(run_config, run_type);
         end
     end
@@ -132,11 +148,19 @@ function base_dir = setup_sensitivity_dirs(sensitivity_config)
 end
 
 
-function run_baseline(base_config, base_dir, run_type)
+function run_baseline(base_config, base_dir, run_type, overwrite)
     fprintf('Running baseline configuration...\n');
     run_config = base_config;
     run_config.outdir = fullfile(base_dir, 'baseline');
     create_folders_recursively(run_config.outdir);
+
+    % Only run if job_config.yaml does not exist in outdir, indicating job was not yet run
+    job_config_path = fullfile(run_config.outdir, 'job_config.yaml');
+    if ~overwrite && exist(job_config_path, 'file')
+        fprintf('Skipping baseline as overwrite set to false.\n');
+        return;
+    end
+
     run_single_scenario(run_config, run_type);
 end
 

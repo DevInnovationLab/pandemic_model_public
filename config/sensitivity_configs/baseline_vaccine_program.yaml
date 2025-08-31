@@ -60,3 +60,7 @@ sensitivities:
   false_positive_rate:
     - 0
     - 0.5
+
+  duration_dist_config:
+    - "output/duration_distributions/clean_filt_all_int_0d01_1900_trunc_20_n_50000_seed_42.csv"
+    - "output/duration_distributions/clean_filt_all_int_0d01_1900_trunc_50_n_50000_seed_42.csv"

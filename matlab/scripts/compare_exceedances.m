@@ -74,7 +74,6 @@ function compare_exceedances(outdir)
     % Add labels and title
     xlabel('Severity (deaths per 10,000)', 'FontSize', 12);
     ylabel('Exceedance probability', 'FontSize', 12);
-    title('Pandemic risk accounting for vaccine response', 'FontSize', 16, 'FontWeight', 'normal');
 
     % Add direct labels to lines
     text(madhav_severity_central_plot(2), madhav_exceedance_central_plot(2)/100, 'Madhav et al. (2023)', ...

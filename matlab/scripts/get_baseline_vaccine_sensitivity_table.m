@@ -78,20 +78,15 @@ end
 
 function benefits = calculate_vaccine_benefits(scenario_dir)
     %% Calculate the total discounted benefits from vaccines for a scenario
-    %
     % Args:
     %   scenario_dir (string): Path to scenario output directory
     %
     % Returns:
-    %   benefits (double): Total discounted benefits from vaccines
-    
-    % Load configuration to get discount rate
-    config = yaml.loadFile(fullfile(scenario_dir, 'job_config.yaml'));
-   
-    % Calculate total benefits
-    raw_dir = fullfile(scenario_dir, 'raw');
-    benefits_ts = readmatrix(fullfile(raw_dir, 'baseline_ts_benefits.csv'));
-    benefits = mean(sum(benefits_ts, 2));
+    %   benefits (double): Mean total discounted benefits from vaccines
+
+    mat_file = fullfile(scenario_dir, 'raw', 'baseline_results.mat');
+    S = load(mat_file, 'sim_out_arr_benefits_vaccine');
+    benefits = mean(sum(S.sim_out_arr_benefits_vaccine, 2));
 end
 
 
@@ -126,6 +121,7 @@ function formatted_name = format_parameter_name(param_name)
     param_map('tau_o') = 'Repurposing delay traditional';
     param_map('rental_share') = 'Advance capacity rental share';
     param_map('false_positive_rate') = 'False positive rate';
+    param_map('duration_dist_config') = 'Max pandemic duration (years)';
     
     % Return formatted name if available, otherwise return original
     if isKey(param_map, param_name)
@@ -149,12 +145,12 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
     % Write LaTeX table header
     fprintf(fileID, '\\begin{table}[htbp]\n');
     fprintf(fileID, '\\centering\n');
-    fprintf(fileID, '\\caption{Benefits from baseline vaccine program}\n');
+    fprintf(fileID, '\\caption{Benefits from baseline vaccine response.}\n');
     fprintf(fileID, '\\begin{tabular}{p{5.5cm}ccc}\n');
-    fprintf(fileID, '\\toprule\n');
+    fprintf(fileID, '\\hline\\hline\n');
     fprintf(fileID, 'Parameter & Default & Sensitivity & Net present value \\\\\n');
-    fprintf(fileID, ' & & & (trillion \\$) \\\\\n');
-    fprintf(fileID, '\\midrule\n');
+    fprintf(fileID, ' & & & (\\$ trillion) \\\\\n');
+    fprintf(fileID, '\\hline\n');
     
     % Write baseline row
     fprintf(fileID, '\\textbf{Default parameters} & & & \\textbf{%.0f} \\\\\n', baseline_benefits/1e12);
@@ -189,7 +185,7 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
     end
     
     % Write table footer
-    fprintf(fileID, '\\bottomrule\n');
+    fprintf(fileID, '\\hline\\hline\n');
     fprintf(fileID, '\\end{tabular}\n');
     fprintf(fileID, '\\label{tab:sensitivity_analysis}\n');
     fprintf(fileID, '\\end{table}\n');
@@ -224,6 +220,9 @@ function formatted_value = format_value(value, param_name)
         formatted_value = sprintf('%.0f months', value);
     elseif startsWith(param_name, 'k_') || startsWith(param_name, 'c_')
         formatted_value = sprintf('\\$%.0f', value);
+    elseif strcmp(param_name, "duration_dist_config")
+        parts = split(value, "_");
+        formatted_value = str2double(parts(8)); % Duration is 8th part of string
     else
         formatted_value = sprintf('%g', value);
     end

@@ -53,8 +53,8 @@ function [surge_cap, surge_cap_cost] = ...
     
     % Get the existing surge capacity right before each event
     pre_event_surge_cap = zeros(size(event_surge_cap));
-    valid_idx = year_start > 1 & ~false_pos_detected;
-    pre_event_idx = sub2ind([num_sims, max_years], sim_num(valid_idx), year_start(valid_idx) - 1); 
+    valid_idx = year_start(~false_pos_detected) > 1;
+    pre_event_idx = sub2ind([num_sims, max_years], sim_num(valid_idx), year_start(valid_idx) - 1);
     pre_event_surge_cap(valid_idx) = surge_cap(pre_event_idx);
     
     % Calculate the incremental surge capacity needed

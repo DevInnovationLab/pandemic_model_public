@@ -51,7 +51,7 @@ arrival_risk_summary <- arrival_risk_summary %>%
 # Define more professional colors for prototype status
 prototype_colors <- c("Has prototype" = "#005185", "No prototype" = "#A50021") # slightly darker solid blue and red
 
-ggplot(arrival_risk_summary, aes(
+p <- ggplot(arrival_risk_summary, aes(
   x = estimate,
   y = reorder(pathogen, estimate),
   color = prototype_status
@@ -63,7 +63,7 @@ ggplot(arrival_risk_summary, aes(
                  alpha = 0.8) +
   # Color y-axis text by has_prototype
   scale_color_manual(
-    name = "Prototype status",
+    name = "Prototype vaccine",
     values = prototype_colors
   ) +
   scale_x_continuous(
@@ -74,7 +74,7 @@ ggplot(arrival_risk_summary, aes(
   labs(
     x = "Share of expected pandemic outbreaks",
     y = NULL,
-    color = "Prototype status"
+    color = "Prototype vaccine"
   ) +
   theme_classic(base_size = 8) +
   theme(
@@ -100,7 +100,12 @@ ggplot(arrival_risk_summary, aes(
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
     legend.position = "right",
-    plot.margin = margin(10, 10, 10, 10)
+    legend.title = element_text(size = 16, face = "bold"),
+    legend.text = element_text(size = 14),
+    legend.key.size = unit(1.5, "lines"),
+    legend.box.margin = margin(0, 10, 0, 0),
+    plot.margin = margin(10, 0, 10, 10)
   )
 
-ggsave("./output/pathogen_pandemic_share_all.png")
+# Make the figure a little wider (e.g., width = 9 inches instead of default 7)
+ggsave("./output/pathogen_pandemic_share_all.png", plot = p, width = 9, height = 7, dpi = 300)
