@@ -17,7 +17,8 @@ arrival_rates_clean <- arrival_rates_raw %>%
   select(-any_of("Comments (regarding previous question)")) %>%
   rename_with(~gsub("\\s*\\([^\\)]+\\)", "", .x), everything()) %>% # Remove things in brackets
   clean_names() %>%
-  rename(`crimean-congo_hemorrhagic_fever` = crimean_congo_haemorrhagic_fever)
+  rename(crimean_congo_hemorrhagic_fever = crimean_congo_haemorrhagic_fever,
+         unknown_virus = totally_unknown_virus)
 
 # Identify which columns should be numeric (disease columns)
 id_cols <- c("expert", "employer", "title")
@@ -84,5 +85,5 @@ arrival_rates_virus <- arrival_rates_collapsed |>
   mutate(across(everything(), ~ .x / rowSums(across(everything()), na.rm = TRUE)))
 
 # Save output
-write.csv(arrival_rates_all, "./data/clean/arrival_rates_all_clean.csv", row.names = FALSE)
-write.csv(arrival_rates_virus, "./data/clean/arrival_rates_virus_clean.csv", row.names = FALSE)
+write.csv(arrival_rates_all, "./data/clean/arrival_rate_responses_all_clean.csv", row.names = FALSE)
+write.csv(arrival_rates_virus, "./data/clean/arrival_rate_responses_virus_clean.csv", row.names = FALSE)

@@ -1,5 +1,5 @@
 # Run params
-num_simulations: 50000
+num_simulations: 1000000
 sim_periods: 50
 outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/standard"
@@ -52,7 +52,7 @@ adv_cap_build_period: 30 # number of years it takes to establish capacity reserv
 pathogen_info: "./data/raw/pathogen_info.csv"
 ptrs_pathogen: "./output/ptrs/ptrs_table.csv" # Pathogen vaccine probability of success
 prototype_effect_ptrs: "./output/ptrs/prototype_effect_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
-rd_timelines: "./output/rd_timelines/timelines_from_predictions.csv"
+rd_timelines: "./output/rd_timelines/optimistic_rd_timelines.csv"
 tau_m: 2 # months to repurpose mRNA capacity
 tau_o: 6 # months to repurpose traditional capacity
 pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.

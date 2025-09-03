@@ -1,4 +1,4 @@
-function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, seed, params)
+function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, seed, params)
 	% Set seed
 	rng(seed);
 
@@ -42,7 +42,7 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	intensity = intensity_matrix(response_idx);
 	is_false = rand(num_response_scenario, 1) < params.false_positive_rate;
 
-	pathogen = randsample(pathogen_data.pathogen, num_response_scenario, true, pathogen_data.arrival_share);
+	pathogen = randsample(arrival_rates.pathogen, num_response_scenario, true, arrival_rates.estimate);
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	ufv_vax_state = unifrnd(0, 1, num_response_scenario, 1);

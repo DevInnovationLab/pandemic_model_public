@@ -212,16 +212,37 @@ nC             <- prep_C$n_cells
 mu_boot_C <- matrix(NA_real_, nC, B_boot)
 Y_arr_C   <- array(NA_real_, dim = c(nC, K_pred, B_boot))
 
+warning_iterations <- integer(0)  # to store iterations with warnings
+
 for (b in 1:B_boot) {
+  warn_flag <- FALSE
+  warn_handler <- function(w) {
+    warn_flag <<- TRUE
+    invokeRestart("muffleWarning")
+  }
+  
   # cluster bootstrap with relabeled duplicates (your helper does this)
   dat_b <- boot_by_cluster(rd_timelines, random_id)
   dat_b <- relevel_like(dat_b, rd_timelines, fixed_C)
+  
+  fit_b <- withCallingHandlers(
+    gamlss(y ~ pathogen + random(respondent),
+           family = GAic,
+           data = dat_b,
+           trace = FALSE),
+    warning = warn_handler
+  )
 
-  fit_b <- gamlss(y ~ pathogen + random(respondent),
-                  family = GAic,
-                  data = dat_b,
-                  trace = FALSE)
-
+  # Save only the bootstrap datasets with warnings, adding an identifier for easy loading/inspection
+  if (warn_flag) {
+    dat_b$bootstrap_id <- b
+    if (!exists("warning_bootstrap_datasets_C")) {
+      warning_bootstrap_datasets_C <- dat_b
+    } else {
+      warning_bootstrap_datasets_C <- dplyr::bind_rows(warning_bootstrap_datasets_C, dat_b)
+    }
+  }
+  
   # fixed log-mean for each prediction cell
   beta_mu <- coef(fit_b, what = "mu")
   beta_mu <- beta_mu[colnames(X_C)]
@@ -249,6 +270,12 @@ for (b in 1:B_boot) {
   )
 }
 
+if (length(warning_iterations) > 0) {
+  message("Warnings occurred in the following bootstrap iterations: ", paste(warning_iterations, collapse = ", "))
+} else {
+  message("No warnings occurred during bootstrap iterations.")
+}
+
 rd_marginal <- tibble(
   pathogen = predict_grid_C$pathogen,
   mean_hat = rowMeans(mu_boot_C),
@@ -264,75 +291,7 @@ rd_predictive <- tibble(
   pred_hi95 = apply(Y_arr_C, 1, function(v) quantile(v, 0.975))
 )
 
-# Save outputs that we want to use in our model
-
-## Baseline vaccine PTRS
-ptrs_pred_plot <- ptrs_vf_marginal %>%
-  mutate(
-    pathogen = to_sentence_case(gsub("_", " ", pathogen)),
-    pathogen = ifelse(pathogen == "Crimean congo hemorrhagic fever", "CCHF", pathogen),
-    platform = recode_factor(platform,
-                             mrna_only = "mRNA",
-                             traditional_only = "Traditional")
-  )
-
-# Set color palette for platforms
-platform_colors <- c("mRNA" = "#0072B2", "Traditional" = "#D55E00")
-
-ptrs_plot <- ggplot(ptrs_pred_plot, aes(
-    x = mu_hat,
-    y = reorder(pathogen, mu_hat),
-    color = platform,
-    shape = platform
-  )) +
-  geom_point(size = 4, position = position_dodge(width = 0.6)) +
-  geom_errorbarh(
-    aes(xmin = lo95, xmax = hi95),
-    height = 0.2,
-    linewidth = 0.6,
-    position = position_dodge(width = 0.6),
-    alpha = 0.8
-  ) +
-  scale_color_manual(
-    values = platform_colors,
-    name = "Platform"
-  ) +
-  scale_shape_manual(
-    values = c("mRNA" = 16, "Traditional" = 17),
-    name = "Platform"
-  ) +
-  scale_x_continuous(
-    limits = c(0, 1),
-    labels = scales::percent_format(accuracy = 1, suffix = ""),
-    breaks = seq(0, 1, by = 0.1)
-  ) +
-  labs(
-    x = "Vaccine probability of technical and regulatory success (%)",
-    y = NULL
-  ) +
-  theme_classic(base_size = 8) +
-  theme(
-    plot.title = element_text(size = 22, face = "bold", hjust = 0),
-    axis.text.y = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black"),
-    axis.title.x = element_text(size = 16, margin = margin(t = 10)),
-    axis.line = element_line(color = "black", linewidth = 0.5),
-    axis.ticks = element_line(color = "black", linewidth = 0.5),
-    panel.grid.major.x = element_line(color = "gray85", linewidth = 0.5),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.background = element_rect(fill = "white"),
-    plot.background = element_rect(fill = "white"),
-    plot.margin = margin(10, 0, 10, 10),
-    legend.position = "right",
-    legend.title = element_text(size = 14),
-    legend.text = element_text(size = 12)
-  )
-
-# Save the plot
-ggsave("output/ptrs/marginal_ptrs_by_pathogen.png", ptrs_plot, width = 8, height = 5, dpi = 300)
-
 # Save the marginal PTRS dataset as CSV
-readr::write_csv(ptrs_vf_marginal, "output/ptrs/pathogen_model_preds.csv")
-
+readr::write_csv(ptrs_vf_marginal, "output/ptrs/marginal_ptrs_preds.csv")
+readr::write_csv(rd_marginal, "output/rd_timelines/marginal_timeline_preds.csv")
+readr::write_csv(proto_effect_from_A, "output/ptrs/prototype_effect_preds.csv")

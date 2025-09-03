@@ -21,8 +21,8 @@ viral_family_map = {
 }
 
 pathogen_group_map = {
-    'cchf': 'crimean-congo_hemorrhagic_fever',
-    'crimean_congo_haemorrhagic_fever': 'crimean-congo_hemorrhagic_fever',
+    'cchf': 'crimean_congo_hemorrhagic_fever',
+    'crimean_congo_haemorrhagic_fever': 'crimean_congo_hemorrhagic_fever',
     'rift_valley_fever': 'rift_valley_fever',
     'flu': 'flu',
     'mers': 'coronavirus',

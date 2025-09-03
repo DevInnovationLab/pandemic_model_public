@@ -1,12 +1,12 @@
-function pathogens_with_prototype = parse_rd_investments(rd_investment_config, pathogen_data)
+function pathogens_with_prototype = parse_rd_investments(rd_investment_config, pathogen_arrival_rates)
     % Can pick specific diseases, random portfolio, and most profitable
     % Consider handling success probabilities in here
 
-    baseline_RD_families = pathogen_data.pathogen(pathogen_data.has_prototype == true);
-    eligible_idx = ~pathogen_data.has_prototype & ...
-                   ~strcmpi(pathogen_data.pathogen, "unknown_virus") & ...
-                   ~strcmpi(pathogen_data.pathogen, "other_known_virus");
-    pathogens_no_prototype = pathogen_data(eligible_idx, :); % Get viral families that don't already have advanced R&D
+    baseline_RD_families = pathogen_arrival_rates.pathogen(pathogen_arrival_rates.has_prototype == true);
+    eligible_idx = ~pathogen_arrival_rates.has_prototype & ...
+                   ~strcmpi(pathogen_arrival_rates.pathogen, "unknown_virus") & ...
+                   ~strcmpi(pathogen_arrival_rates.pathogen, "other_known_virus");
+    pathogens_no_prototype = pathogen_arrival_rates(eligible_idx, :); % Get viral families that don't already have advanced R&D
     rd_strategy = rd_investment_config.strategy;
 
     if strcmpi(rd_strategy, "none")
@@ -14,7 +14,7 @@ function pathogens_with_prototype = parse_rd_investments(rd_investment_config, p
     elseif strcmpi(rd_strategy, "top")
         invest_num = rd_investment_config.num;
         assert(invest_num > 0, "Must invest in more than one pathogen if rd_strategy is not none")
-        sorted_pathogens = sortrows(pathogens_no_prototype, 'arrival_share', "descend");
+        sorted_pathogens = sortrows(pathogens_no_prototype, 'estimate', "descend");
         invest_num = min(invest_num, height(sorted_pathogens)); % Don't invest in more than available
         new_invested_families = sorted_pathogens.pathogen(1:invest_num);
         pathogens_with_prototype = [baseline_RD_families; new_invested_families];

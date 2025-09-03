@@ -1,12 +1,12 @@
 disease,has_prototype,respondent,years_min,years_max,pathogen
-cchf,0,4,0.0,3.0,crimean-congo hemorrhagic fever
-cchf,0,5,4.0,5.0,crimean-congo hemorrhagic fever
-cchf,0,11,6.0,7.0,crimean-congo hemorrhagic fever
-cchf,0,18,6.0,7.0,crimean-congo hemorrhagic fever
-cchf,1,4,1.0,2.0,crimean-congo hemorrhagic fever
-cchf,1,5,1.0,2.0,crimean-congo hemorrhagic fever
-cchf,1,11,6.0,7.0,crimean-congo hemorrhagic fever
-cchf,1,18,1.0,2.0,crimean-congo hemorrhagic fever
+cchf,0,4,0.0,3.0,crimean_congo_hemorrhagic_fever
+cchf,0,5,4.0,5.0,crimean_congo_hemorrhagic_fever
+cchf,0,11,6.0,7.0,crimean_congo_hemorrhagic_fever
+cchf,0,18,6.0,7.0,crimean_congo_hemorrhagic_fever
+cchf,1,4,1.0,2.0,crimean_congo_hemorrhagic_fever
+cchf,1,5,1.0,2.0,crimean_congo_hemorrhagic_fever
+cchf,1,11,6.0,7.0,crimean_congo_hemorrhagic_fever
+cchf,1,18,1.0,2.0,crimean_congo_hemorrhagic_fever
 chikungunya,1,4,1.0,2.0,chikungunya
 chikungunya,1,5,0.5,0.9166666666666666,chikungunya
 chikungunya,1,11,3.0,5.0,chikungunya

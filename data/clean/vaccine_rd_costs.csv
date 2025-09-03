@@ -1,12 +1,12 @@
 disease,has_prototype,respondent,cost_range,value_min,value_max,pathogen
-cchf,0,4,$10-99m,10.0,99.0,crimean-congo hemorrhagic fever
-cchf,0,5,$100-999m,100.0,999.0,crimean-congo hemorrhagic fever
-cchf,0,11,$100-999m,100.0,999.0,crimean-congo hemorrhagic fever
-cchf,0,18,$100-999m,100.0,999.0,crimean-congo hemorrhagic fever
-cchf,1,4,$10-99m,10.0,99.0,crimean-congo hemorrhagic fever
-cchf,1,5,$100-999m,100.0,999.0,crimean-congo hemorrhagic fever
-cchf,1,11,$100-999m,100.0,999.0,crimean-congo hemorrhagic fever
-cchf,1,18,$100-999m,100.0,999.0,crimean-congo hemorrhagic fever
+cchf,0,4,$10-99m,10.0,99.0,crimean_congo_hemorrhagic_fever
+cchf,0,5,$100-999m,100.0,999.0,crimean_congo_hemorrhagic_fever
+cchf,0,11,$100-999m,100.0,999.0,crimean_congo_hemorrhagic_fever
+cchf,0,18,$100-999m,100.0,999.0,crimean_congo_hemorrhagic_fever
+cchf,1,4,$10-99m,10.0,99.0,crimean_congo_hemorrhagic_fever
+cchf,1,5,$100-999m,100.0,999.0,crimean_congo_hemorrhagic_fever
+cchf,1,11,$100-999m,100.0,999.0,crimean_congo_hemorrhagic_fever
+cchf,1,18,$100-999m,100.0,999.0,crimean_congo_hemorrhagic_fever
 chikungunya,1,4,$100-999m,100.0,999.0,chikungunya
 chikungunya,1,5,$10-99m,10.0,99.0,chikungunya
 chikungunya,1,11,$10-99m,10.0,99.0,chikungunya

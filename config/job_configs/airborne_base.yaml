@@ -19,9 +19,9 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-arrival_dist_config: "output/arrival_distributions/modified/gpd_airborne_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_50000_seed_42.yaml"
+arrival_dist_config: "output/arrival_distributions/modified/gpd_airborne_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_1000000_seed_42.yaml"
 duration_dist_config: "./output/duration_distributions/clean_filt_airborne_int_0d01_1900_trunc_10_n_50000_seed_42.csv"
-pathogen_data: "./data/clean/pathogen_data_arrival_all_airborne.csv"
+pathogen_arrival_rates: "./data/clean/arrival_rates_airborne.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 false_positive_rate: 0
 
@@ -49,8 +49,9 @@ g_o: 0.4 # fraction of at risk capacity unsuccessful/repurpose-able in tradition
 adv_cap_build_period: 30 # number of years it takes to establish capacity reservation
 
 # Vaccine development
-ptrs_pathogen: "./output/ptrs/pathogen_model_preds.csv" # Pathogen vaccine probability of success
-ptrs_rd: "./output/ptrs/rd_model_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
+pathogen_info: "./data/raw/pathogen_info.csv"
+ptrs_pathogen: "./output/ptrs/ptrs_table.csv" # Pathogen vaccine probability of success
+prototype_effect_ptrs: "./output/ptrs/prototype_effect_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
 rd_timelines: "./output/rd_timelines/timeline_with_prototype_preds.csv"
 tau_m: 2 # months to repurpose mRNA capacity
 tau_o: 6 # months to repurpose traditional capacity

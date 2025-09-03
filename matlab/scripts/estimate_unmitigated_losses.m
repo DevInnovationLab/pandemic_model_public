@@ -1,33 +1,27 @@
 function estimate_unmitigated_losses(job_config_path)
-    arguments
-        job_config_path (1,:) char
-    end
     % Estimate unmitigated pandemic losses.
     %
-    %   result = estimate_unmitigated_losses(job_config_path, num_simulations)
+    %   estimate_unmitigated_losses(job_config_path)
     %
     %   Parameters
     %   ----------
     %   job_config_path : char
     %       Path to the job configuration YAML file.
-    %   num_simulations : double
-    %       Number of simulations to run.
     %
-    %   Returns
-    %   -------
-    %   result : struct
-    %       Struct containing results of the unmitigated loss estimation.
-
-    % Make sure to adjust for the false positive rate
+    %   This function simulates unmitigated pandemic losses using the
+    %   configuration provided in the YAML file at job_config_path.
+    arguments
+        job_config_path (1,:) char
+    end
 
     % Load job config and set seed
     job_config = yaml.loadFile(job_config_path);
-        
+
     % Create output dir
     [~, job_config_name, ~] = fileparts(job_config_path);
 
     foldername = job_config_name;
-    if job_config.add_datetime_to_outdir
+    if isfield(job_config, 'add_datetime_to_outdir') && job_config.add_datetime_to_outdir
         currentDateTime = datetime('now', 'Format', 'yyyyMMdd_HHmmss');
         foldername = foldername + "_" + char(currentDateTime);
     end
@@ -42,18 +36,23 @@ function estimate_unmitigated_losses(job_config_path)
     create_folders_recursively(raw_results_path);
     create_folders_recursively(figure_path);
 
-    % Load inputs from files
+    % Load inputs from files (same as run_job.m)
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
     assert(strcmp(arrival_dist.measure, "severity"), ...
            "Please use an arrival distribution estimated on pandemic severities.")
     duration_dist = load_duration_dist(job_config.duration_dist_config);
+
+    % Load arrival rates, pathogen info, etc. as in run_job.m
+    arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
-    pathogen_data = readtable(job_config.pathogen_data, "TextType", "string");
 
-    job_config.response_threshold = 0; % Only works because we've been carefuly in arrival dist sampler
+    % For unmitigated, set response threshold to 0 (no response)
+    job_config.response_threshold = 0;
 
-    simulation_table = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, job_config.seed, job_config);
+    % Generate base simulation table (same as run_job.m, but no scenario config)
+    [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, job_config.seed, job_config);
     simulation_table = simulation_table(~isnan(simulation_table.yr_start), :); % Remove simulations with no outbreaks
+
     sim_idx = simulation_table.sim_num;
     yr_start = simulation_table.yr_start;
     yr_end = simulation_table.yr_end;
@@ -61,7 +60,7 @@ function estimate_unmitigated_losses(job_config_path)
 
     % Compute the number of years for each pandemic
     intensity_mat = zeros([job_config.num_simulations, job_config.sim_periods]);
- 
+
     % Vectorized expansion using repelem and arrayfun
     pandemic_lengths = yr_end - yr_start + 1;
     row_idx = repelem(sim_idx, pandemic_lengths);
@@ -84,7 +83,7 @@ function estimate_unmitigated_losses(job_config_path)
     learning_losses = output_losses .* (10 / 13.8);
     total_losses = mortality_losses + output_losses + learning_losses;
 
-    % Save all relevant results to a single MAT file (as in save_to_file_fast.m)
+    % Save all relevant results to a single MAT file
     yaml.dumpFile(fullfile(job_config.outdir, "job_config.yaml"), job_config) % Save job config
     mat_filename = fullfile(job_config.outdir, 'unmitigated_losses.mat');
     save(mat_filename, ...

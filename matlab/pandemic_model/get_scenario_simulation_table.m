@@ -1,7 +1,6 @@
 % Would love to clean this up later.
-function new_simulation_table = get_scenario_simulation_table(base_simulation_table, ptrs_pathogen, ...
-															  ptrs_rd, response_rd_timelines, ...
-															  pathogen_data, params)
+function new_simulation_table = get_scenario_simulation_table(base_simulation_table, pathogen_info, ptrs_pathogen, ...
+															  prototype_effect_ptrs, response_rd_timelines, params)
 	% add vaccine success state to simulation scenarios table
     new_simulation_table = base_simulation_table;
 
@@ -20,8 +19,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 										params.inc_early_detect_prob_true, ...
 										params.inc_early_detect_prob_false);
 	
-	pathogens_with_baseline_prototype = pathogen_data.pathogen(pathogen_data.has_prototype == 1);
-	pathogens_no_baseline_prototype = pathogen_data.pathogen(pathogen_data.has_prototype == 0);
+	pathogens_with_baseline_prototype = pathogen_info.pathogen(pathogen_info.has_prototype == 1);
+	pathogens_no_baseline_prototype = pathogen_info.pathogen(pathogen_info.has_prototype == 0);
 
 	pathogen = new_simulation_table.pathogen;
 	existing_prototype = ismember(pathogen, pathogens_with_baseline_prototype);
@@ -32,24 +31,21 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	% Adjust thresholds for RD benefits when research eligible
 	trad_idx = strcmp(ptrs_pathogen.platform, "traditional_only");
 	mrna_idx = strcmp(ptrs_pathogen.platform, "mrna_only");
-	trad_prob_map = dictionary(ptrs_pathogen.pathogen(trad_idx), ptrs_pathogen.preds(trad_idx));
-	mrna_prob_map = dictionary(ptrs_pathogen.pathogen(mrna_idx), ptrs_pathogen.preds(mrna_idx));
+	trad_prob_map = dictionary(ptrs_pathogen.pathogen(trad_idx), ptrs_pathogen.ptrs(trad_idx));
+	mrna_prob_map = dictionary(ptrs_pathogen.pathogen(mrna_idx), ptrs_pathogen.ptrs(mrna_idx));
 	
 	% Add PTRS for unknown virus
-	prototype_rd_idx = strcmp(ptrs_rd.has_prototype, "has_prototype");
-	rd_mrna_idx = strcmp(ptrs_rd.platform, "mrna_only");
-	trad_prob_map("unknown_virus") = ptrs_rd.preds(~prototype_rd_idx & ~rd_mrna_idx);
+	trad_prob_map("unknown_virus") = min(values(trad_prob_map));
 	trad_prob_map(missing) = NaN;
-	mrna_prob_map("unknown_virus") = ptrs_rd.preds(~prototype_rd_idx & rd_mrna_idx);
+	mrna_prob_map("unknown_virus") = min(values(mrna_prob_map));
 	mrna_prob_map(missing) = NaN;
 
 	trad_probs = trad_prob_map(pathogen);
 	mrna_probs = mrna_prob_map(pathogen);
 
 	% Adjust probabilities for vaccines invested in
-	% Clean this up later when better idea of what you wnat to do.
-	trad_increment = ptrs_rd.preds(~rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(~rd_mrna_idx & ~prototype_rd_idx);
-	mrna_increment = ptrs_rd.preds(rd_mrna_idx & prototype_rd_idx) - ptrs_rd.preds(rd_mrna_idx & ~prototype_rd_idx);
+	trad_increment = prototype_effect_ptrs.effect_mean(prototype_effect_ptrs.platform == "traditional_only");
+	mrna_increment = prototype_effect_ptrs.effect_mean(prototype_effect_ptrs.platform == "mrna_only");
 
 	% Only apply R&D benefits after prototype_RD_benefit_start years
 	trad_probs(gains_prototype & prototype_RD_done) = trad_probs(gains_prototype & prototype_RD_done) + trad_increment;
@@ -73,22 +69,17 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_success(flu_outbreak_idx) = mrna_success(flu_outbreak_idx) & ~ufv_protection(flu_outbreak_idx); % Don't invest in mRNA if universal vaccine works
 
 	%% Vaccine development timelines
+	has_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 1), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 1));
+	no_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 0), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 0));
+	has_prototype_timeline_map("unknown_virus") = max(values(has_prototype_timeline_map));
+	no_prototype_timeline_map("unknown_virus") = max(values(no_prototype_timeline_map));
+	has_prototype_timeline_map(missing) = NaN;
+	no_prototype_timeline_map(missing) = NaN;
+
 	rd_timeline = nan(height(new_simulation_table), 1);
-	pathogen_rd_timelines_with_prototype = response_rd_timelines(response_rd_timelines.has_prototype == 1, :);
-	pathogen_rd_timelines_no_prototype = pathogen_rd_timelines_with_prototype;
-	pathogen_rd_timelines_no_prototype.preds = pathogen_rd_timelines_no_prototype.preds * 2; % Naively just double timeline, make sure to report 
-
-    % Create lookup tables for R&D timelines
-    [~, loc_has_proto] = ismember(pathogen, pathogen_rd_timelines_with_prototype.pathogen);
-    [~, loc_no_proto] = ismember(pathogen, pathogen_rd_timelines_no_prototype.pathogen);
-  
-    % Assign timelines
-    idx_has_proto = has_prototype & loc_has_proto;
-	idx_no_proto = ~has_prototype & loc_no_proto;
-    rd_timeline(idx_has_proto) = pathogen_rd_timelines_with_prototype.preds(loc_has_proto(idx_has_proto));
-    rd_timeline(idx_no_proto) = pathogen_rd_timelines_no_prototype.preds(loc_no_proto(idx_no_proto));
-
-	rd_timeline(isnan(rd_timeline)) = max(pathogen_rd_timelines_no_prototype.preds); % Take maximum timeline for unknown pathogens
+	rd_timeline = no_prototype_timeline_map(pathogen);
+	rd_timeline(has_prototype) = has_prototype_timeline_map(pathogen(has_prototype));
+	rd_timeline(isnan(rd_timeline)) = max(values(no_prototype_timeline_map)); % Take maximum timeline for unknown pathogens
 	
 	% Ensure all have RD timeline and convert to months
 	assert(all(~isnan(rd_timeline)));

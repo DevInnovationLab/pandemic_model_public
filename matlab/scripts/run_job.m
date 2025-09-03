@@ -25,17 +25,22 @@ function run_job(job_config_path)
     % Load inputs from files
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
     duration_dist = load_duration_dist(job_config.duration_dist_config);
-    pathogen_data = readtable(job_config.pathogen_data, "TextType", "string");
+    arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
+    pathogen_info = readtable(job_config.pathogen_info, "TextType", "string");
     ptrs_pathogen = readtable(job_config.ptrs_pathogen, "TextType", "string");
-    ptrs_rd = readtable(job_config.ptrs_rd, "TextType", "string");
+    prototype_effect_ptrs = readtable(job_config.prototype_effect_ptrs, "TextType", "string");
     response_rd_timelines = readtable(job_config.rd_timelines, "TextType", "string");
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
+
+    % Convert logical columns in both arrival_rates and pathogen_info tables
+    pathogen_info = convert_logical_columns(pathogen_info);
+    arrival_rates = convert_logical_columns(arrival_rates);
 
     response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
     % Generate base simulation to be used across scenarios
-    [base_simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, pathogen_data, job_config.seed, job_config);
+    [base_simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, job_config.seed, job_config);
     base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
     save(base_simulation_table_path, 'base_simulation_table');
 
@@ -122,15 +127,15 @@ function run_job(job_config_path)
         out_params.scenarios.(scenario_name) = scenario_config;
 
         % Add scenario specific parameter configucations
-        simulation_params = update_params(job_config, scenario_config, pathogen_data);
+        simulation_params = update_params(job_config, scenario_config, arrival_rates);
         simulation_params.scenario_name = scenario_name;
 
         % Run scenario
         scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
+                                                                  pathogen_info, ...
                                                                   ptrs_pathogen, ...
-                                                                  ptrs_rd, ...
+                                                                  prototype_effect_ptrs, ...
                                                                   response_rd_timelines, ...
-                                                                  pathogen_data, ...
                                                                   simulation_params);
 
         event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
@@ -141,7 +146,7 @@ function run_job(job_config_path)
     yaml.dumpFile(config_outpath, out_params);
 end
 
-function updated_params = update_params(job_config, scenario_config, pathogen_data)
+function updated_params = update_params(job_config, scenario_config, arrival_rates)
 
     % New parameters override base parameters
     updated_params = job_config;
@@ -155,7 +160,7 @@ function updated_params = update_params(job_config, scenario_config, pathogen_da
     % Set pathogen family params.
     invest_strategy =scenario_config.rd_investments.strategy;
     num_pathogens_researched = scenario_config.rd_investments.num;
-    updated_params.pathogens_with_prototype = parse_rd_investments(scenario_config.rd_investments, pathogen_data);
+    updated_params.pathogens_with_prototype = parse_rd_investments(scenario_config.rd_investments, arrival_rates);
 
     if strcmp(invest_strategy, "top") || strcmp(invest_strategy, "random")
         updated_params.prototype_RD = true;
@@ -177,4 +182,40 @@ function updated_params = update_params(job_config, scenario_config, pathogen_da
     [z_m, z_o] = get_adv_capacity(updated_params); % get target advance capacity
     updated_params.z_m = z_m;
     updated_params.z_o = z_o;
+end
+
+% Helper function to convert 'TRUE'/'FALSE'/NA columns to numeric 1/0/NaN
+function tbl = convert_logical_columns(tbl)
+    %CONVERT_LOGICAL_COLUMNS Converts 'TRUE'/'FALSE'/NA columns to numeric 1/0/NaN.
+    %
+    %   tbl = CONVERT_LOGICAL_COLUMNS(tbl) converts any columns in the table tbl
+    %   that contain 'TRUE'/'FALSE'/NA values (as strings or logicals) to numeric
+    %   columns with 1 for TRUE, 0 for FALSE, and NaN for NA/missing.
+    %
+    %   This is useful for harmonizing imported CSV data where logical columns
+    %   may be read as strings.
+    %
+    %   Parameters
+    %   ----------
+    %   tbl : table
+    %       Input table with possible logical columns as strings.
+    %
+    %   Returns
+    %   -------
+    %   tbl : table
+    %       Table with logical columns converted to numeric.
+    
+    logical_colnames = {'has_prototype', 'airborne'};
+    for i = 1:length(logical_colnames)
+        col = logical_colnames{i};
+        if ismember(col, tbl.Properties.VariableNames)
+            col_data = tbl.(col);
+            col_str = string(col_data);
+            col_numeric = nan(height(tbl), 1);
+            col_numeric(strcmpi(col_str, "TRUE")) = 1;
+            col_numeric(strcmpi(col_str, "FALSE")) = 0;
+            col_numeric(strcmpi(col_str, "NA")) = 0;
+            tbl.(col) = col_numeric;
+        end
+    end
 end

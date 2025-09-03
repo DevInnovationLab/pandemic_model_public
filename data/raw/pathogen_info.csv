@@ -1,0 +1,12 @@
+pathogen,viral_family,has_prototype,airborne
+coronavirus,coronaviridae,TRUE,TRUE
+crimean_congo_hemorrhagic_fever,nairoviridae,FALSE,FALSE
+lassa,arenaviridae,FALSE,FALSE
+nipah,paramyxoviridae,TRUE,FALSE
+rift_valley_fever,phenuiviridae,FALSE,FALSE
+chikungunya,togaviridae,TRUE,FALSE
+ebola,filoviridae,TRUE,FALSE
+zika,flaviviridae,TRUE,FALSE
+flu,orthomyxoviridae,TRUE,TRUE
+unknown_virus,unknown,FALSE,NA
+other_known_viruses,unknown,FALSE,NA

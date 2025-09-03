@@ -72,8 +72,8 @@ function compare_exceedances(outdir)
     box off;
 
     % Add labels and title
-    xlabel('Severity (deaths per 10,000)', 'FontSize', 12);
-    ylabel('Exceedance probability', 'FontSize', 12);
+    xlabel('Severity (deaths per 10,000)', 'FontSize', 14);
+    ylabel('Exceedance probability', 'FontSize', 14);
 
     % Add direct labels to lines
     text(madhav_severity_central_plot(2), madhav_exceedance_central_plot(2)/100, 'Madhav et al. (2023)', ...
@@ -87,9 +87,13 @@ function compare_exceedances(outdir)
     legend('off');
 
     % Set x-axis limits to cover the range of all plotted severity data
-    min_x = min([ex_post_severity_plot(:); madhav_severity_central_plot(:)]);
-    max_x = max([ex_post_severity_plot(:); madhav_severity_central_plot(:)]);
+    min_x = max([min(ex_post_severity_plot(:)); min(madhav_severity_central_plot(:))]);
+    max_x = max([max(ex_post_severity_plot(:)); max(madhav_severity_central_plot(:))]);
     xlim([min_x, max_x]);
+
+    % Display existing x-ticks as whole numbers at their current locations
+    xticks = get(gca, 'XTick');
+    set(gca, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xticks, 'UniformOutput', false));
 
     % Get directory name for figure filename
     [~, dirname] = fileparts(outdir);
