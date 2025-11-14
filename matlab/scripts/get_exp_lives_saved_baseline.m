@@ -10,9 +10,9 @@ function get_exp_lives_saved_baseline(job_dir)
 
     % Load death data from MAT file saved by save_to_file_fast
     mat_filename = fullfile(rawdata_dir, "baseline_results.mat");
-    data = load(mat_filename, 'sim_out_arr_u_deaths', 'sim_out_arr_m_deaths');
-    unmitigated_deaths = data.sim_out_arr_u_deaths;
-    mitigated_deaths = data.sim_out_arr_m_deaths;
+    data = load(mat_filename, 'u_deaths', 'm_deaths');
+    unmitigated_deaths = data.u_deaths;
+    mitigated_deaths = data.m_deaths;
 
     % Calculate differences in deaths
     lives_saved = unmitigated_deaths - mitigated_deaths;

@@ -35,7 +35,8 @@ classdef DurationSampler < DurationDist
                 'Number of draws must match number of parameter combinations');
             
             % Note that the below might run slowly. You should profile it.
-            duration = round(logninv(unifrnd_draw, obj.param_table.mu, obj.param_table.sigma));
+            y = logninv(unifrnd_draw, obj.param_table.mu, obj.param_table.sigma);
+            duration = round(y + obj.param_table.loc);
 
             duration(duration > obj.max_duration) = obj.max_duration;
         end

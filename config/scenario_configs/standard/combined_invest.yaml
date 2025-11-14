@@ -8,7 +8,7 @@ ufv_invest: true
 initial_share_ufv: 0.1 # 850 million projected flu vaccine demand (WHO) / World Bank global pop 2024
 
 # Advance capacity params
-share_target_advanced_capacity: 0.5
+share_target_advanced_capacity: 1
 
 # Enhanced surveillance
 improved_early_warning: true

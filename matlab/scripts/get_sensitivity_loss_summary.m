@@ -204,7 +204,7 @@ function write_to_latex(summary_data, outpath)
     fileID = fopen(outpath, 'w');
 
     % Write LaTeX table header
-    fprintf(fileID, '\\begin{table}[h]\n\\centering\n');
+    fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
     fprintf(fileID, '\\caption{\\textbf{Expected global pandemic deaths and losses in the absence of mitigations.} Monetized losses are discounted. Each cell presents the mean estimates in the center with the interquartile range in square brackets below.}\n');
     fprintf(fileID, '\\vskip 3pt');
     fprintf(fileID, '\\small\n\\renewcommand{\\arraystretch}{0.9}\n');
@@ -312,17 +312,17 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             airborne = strcmp(s_meta.scope, "airborne"); 
 
             if trunc_diff
-                formatted_name = "Severity upper bound ($\\overline{s}$)";
+                formatted_name = "Severity upper bound ($\overline{s}$)";
                 formatted_value = sprintf("%g SU", s_meta.trunc_value);
             elseif threshold_diff
-                formatted_name = "Lower severity threshold ($\\underline{s}$)";
+                formatted_name = "Lower severity threshold ($\underline{s}$)";
                 formatted_value = sprintf("%g SU", s_meta.lower_threshold);
             elseif airborne
                 formatted_name = "Pathogen types";
                 formatted_value = "Airborne pathogens only";
             end
         case "duration_dist_config"
-            formatted_name = "Duration upper bound ($\\overline{d}$)";
+            formatted_name = "Duration upper bound ($\overline{d}$)";
             [~, config_name, ~] = fileparts(var_value);
             config_metadata = split(config_name, "_");
             trunc_value = config_metadata(8);

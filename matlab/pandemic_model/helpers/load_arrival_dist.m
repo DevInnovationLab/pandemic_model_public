@@ -13,25 +13,21 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
         false_positive_rate (1,1) double
     end
 
-    config = yaml.loadFile(config_path);
-    trunc_method = string(config.hyperparams.trunc_method);
-    measure = string(config.hyperparams.measure);
+    hyperparams = yaml.loadFile(fullfile(config_path, "hyperparams.yaml"));
+    trunc_method = hyperparams.trunc_method;
+    measure = hyperparams.measure;
 
     % Create table with numeric arrays for each parameter
-    if isfield(config.param_samples, 'p')
-        p = cell2mat(config.param_samples.p);
-    elseif isfield(config.param_samples, 'lambda')
-        lambda = cell2mat(config.param_samples.lambda);
-        p = 1 - exp(-lambda);
-    else
-        error("Neither 'p' nor 'lambda' found in param_samples.");
+    param_samples = readtable(fullfile(config_path, "param_samples.csv"));
+
+    if ismember('lambda', param_samples.Properties.VariableNames)
+        param_samples.p = 1 - exp(-param_samples.lambda);
+    elseif ~ismember('p', param_samples.Properties.VariableNames)
+        error("Neither 'p' nor 'lambda' found in param_samples.csv.");
     end
 
-    xi = cell2mat(config.param_samples.xi);
-    sigma = cell2mat(config.param_samples.sigma);
-    mu = config.hyperparams.y_min .* ones(size(xi));
-    max_value = config.hyperparams.y_max .* ones(size(xi));
-    param_samples = table(xi, sigma, p, mu, max_value, 'VariableNames', ["xi", "sigma", "p", "mu", "max_value"]);
+    param_samples.max_value = hyperparams.y_max .* ones(size(param_samples, 1), 1);
+    param_samples.mu = hyperparams.y_min .* ones(size(param_samples, 1), 1);
 
     arrival_dist = ArrivalDistSampler(param_samples, trunc_method, false_positive_rate, measure);
 end

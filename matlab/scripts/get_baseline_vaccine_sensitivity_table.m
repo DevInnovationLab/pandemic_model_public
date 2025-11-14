@@ -23,27 +23,34 @@ function get_baseline_vaccine_sensitivity_table()
     % Initialize summary table
     parameters = fieldnames(sensitivity_config.sensitivities);
     num_rows = length(parameters) + 1; % +1 for baseline
-    
-    summary_table = table('Size', [num_rows, 6], ...
-                         'VariableTypes', {'string', 'double', 'double', 'double', 'double', 'double'}, ...
-                         'VariableNames', {'Parameter', 'BaselineValue', 'LowValue', 'HighValue', 'LowBenefit', 'HighBenefit'});
-    
-    % Add baseline row
-    summary_table(1,:) = {'Baseline', NaN, NaN, NaN, baseline_benefits, baseline_benefits};
+
+    % Add columns for percent differences and max absolute percent difference
+    summary_table = table('Size', [num_rows, 9], ...
+                         'VariableTypes', {'string', 'double', 'double', 'double', 'double', 'double', 'double', 'double', 'double'}, ...
+                         'VariableNames', {'Parameter', 'BaselineValue', 'LowValue', 'HighValue', 'LowBenefit', 'HighBenefit', ...
+                                           'LowBenefitPctDiff', 'HighBenefitPctDiff', 'MaxAbsPctDiff'});
+
+    % Add baseline row (percent differences are zero for baseline)
+    summary_table(1,:) = {'Baseline', NaN, NaN, NaN, baseline_benefits, baseline_benefits, 0, 0, 0};
 
     % Process each parameter
     for i = 1:length(parameters)
         param_name = parameters{i};
         param_values = sensitivity_config.sensitivities.(param_name);
         param_dir = fullfile(sensitivity_dir, param_name);
-        
+
         % Get baseline value for this parameter
         baseline_value = baseline_config.(param_name);
-        
+
+        if strcmp(param_name, 'duration_dist_config')
+            parts = split(baseline_value, "_");
+            baseline_value = parts(10);
+        end
+
         % Calculate benefits for low and high values
         benefits_value_1 = calculate_vaccine_benefits(fullfile(param_dir, 'value_1'));
         benefits_value_2 = calculate_vaccine_benefits(fullfile(param_dir, 'value_2'));
-        
+
         % Determine which benefit is low/high
         if benefits_value_1 < benefits_value_2
             low_benefits = benefits_value_1;
@@ -52,23 +59,38 @@ function get_baseline_vaccine_sensitivity_table()
             low_benefits = benefits_value_2;
             high_benefits = benefits_value_1;
         end
-        
+
         % Determine which parameter value is low/high
         if param_values{1} < param_values{2}
             low_value = param_values{1};
-            high_value = param_values{2}; 
+            high_value = param_values{2};
         else
             low_value = param_values{2};
             high_value = param_values{1};
         end
-        
+
+        if strcmp(param_name, 'duration_dist_config')
+            parts = split(low_value, "_");
+            low_value = parts(10);
+            parts = split(high_value, "_");
+            high_value = parts(10);
+        end
+
+        % Calculate percent differences from baseline
+        low_benefit_pct_diff = 100 * (low_benefits - baseline_benefits) / baseline_benefits;
+        high_benefit_pct_diff = 100 * (high_benefits - baseline_benefits) / baseline_benefits;
+        max_abs_pct_diff = max(abs([low_benefit_pct_diff, high_benefit_pct_diff]));
+
         % Add to summary table
-        summary_table(i+1,:) = {param_name, baseline_value, low_value, high_value, low_benefits, high_benefits};
+        summary_table(i+1,:) = {param_name, baseline_value, low_value, high_value, ...
+                                low_benefits, high_benefits, ...
+                                low_benefit_pct_diff, high_benefit_pct_diff, max_abs_pct_diff};
     end
-    
+    disp(summary_table)
+
     % Save summary table as CSV
     writetable(summary_table, fullfile(sensitivity_dir, 'sensitivity_summary.csv'));
-    
+
     % Generate LaTeX table
     generate_latex_table(summary_table, fullfile(sensitivity_dir, 'sensitivity_summary.tex'), baseline_benefits);
     
@@ -85,8 +107,8 @@ function benefits = calculate_vaccine_benefits(scenario_dir)
     %   benefits (double): Mean total discounted benefits from vaccines
 
     mat_file = fullfile(scenario_dir, 'raw', 'baseline_results.mat');
-    S = load(mat_file, 'sim_out_arr_benefits_vaccine');
-    benefits = mean(sum(S.sim_out_arr_benefits_vaccine, 2));
+    S = load(mat_file, 'benefits_vaccine');
+    benefits = mean(sum(S.benefits_vaccine, 2));
 end
 
 
@@ -210,6 +232,7 @@ function formatted_value = format_value(value, param_name)
     
     % Parameters that should be displayed in millions
     million_params = {'value_of_death'};
+    disp(value)
     
     % Format based on parameter type
     if any(strcmp(param_name, percentage_params))
@@ -221,8 +244,7 @@ function formatted_value = format_value(value, param_name)
     elseif startsWith(param_name, 'k_') || startsWith(param_name, 'c_')
         formatted_value = sprintf('\\$%.0f', value);
     elseif strcmp(param_name, "duration_dist_config")
-        parts = split(value, "_");
-        formatted_value = str2double(parts(8)); % Duration is 8th part of string
+        formatted_value = sprintf('%g years', value);
     else
         formatted_value = sprintf('%g', value);
     end

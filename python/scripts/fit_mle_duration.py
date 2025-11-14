@@ -72,13 +72,19 @@ def fit_duration(data, start_grid, floc=0.5, transform=None):
 @click.argument("fp", type=click.Path(exists=True, file_okay=True, dir_okay=False))
 @click.option("--trunc-years", type=int, default=10, help='Max pandemic duration to allow.')
 @click.option("--n-samples", type=int, default=50_000, help='Number of samples to draw.')
+@click.option("--floc", type=float, default=0.5, help='Location parameter for lognormal distribution.')
+@click.option("--outloc", type=float, default=None, help='To help debug how floc affects vaccine benefits.')
 @click.option("--seed", type=int, default=42, help="Seed for random sample generation.")
 @click.option("--create-fig/--no-fig", default=False)
-def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, seed: int, create_fig: bool):
+def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, outloc: float, seed: int, create_fig: bool):
 
     ds = pd.read_csv(fp)
     durations = ds['duration']
     rng = np.random.default_rng(seed)
+
+    # If not floc override in output
+    if outloc is None:
+        outloc = floc
 
     # Create grid of starting points for mu and sigma
     duration_mean = durations.mean()
@@ -95,7 +101,6 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, seed: int, crea
     transform = DiagonalBijector([PassthroughBijector(), SoftplusBijector()]) # Convert sigma to unbounded space
 
     # Fit models with different starting points
-    floc = 0.5
     results_df, best_fit = fit_duration(durations, start_grid, floc=floc, transform=transform)
 
     # Check that all successful fits converge to similar parameter values
@@ -132,7 +137,7 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, seed: int, crea
     outstring = id_string + f"_trunc_{trunc_years}_n_{n_samples}_seed_{seed}"
     outdir = Path("./output/duration_distributions")
 
-    sample_df = pd.DataFrame({'mu': mu_sample.squeeze(), 'sigma': sigma_sample.squeeze(), 'trunc_value': trunc_years, 'loc': floc})
+    sample_df = pd.DataFrame({'mu': mu_sample.squeeze(), 'sigma': sigma_sample.squeeze(), 'trunc_value': trunc_years, 'loc': outloc})
     outpath = outdir / f"{outstring}.csv"
     sample_df.to_csv(outpath, index=0)
 

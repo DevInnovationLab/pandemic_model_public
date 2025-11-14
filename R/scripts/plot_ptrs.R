@@ -3,7 +3,7 @@ library(ggplot2)
 library(snakecase)
 library(tidyverse)
 
-ptrs_preds <- readr::read_csv("output/ptrs/pathogen_model_preds.csv")
+ptrs_preds <- readr::read_csv("output/ptrs/marginal_ptrs_preds.csv")
 
 ## Baseline vaccine PTRS
 ptrs_pred_plot <- ptrs_preds %>%

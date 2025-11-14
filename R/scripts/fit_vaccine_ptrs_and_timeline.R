@@ -1,5 +1,4 @@
 library(forcats)
-library(ggplot2)
 library(gamlss)
 library(gamlss.dist)
 library(gamlss.cens)
@@ -67,7 +66,10 @@ relevel_like <- function(dat_b, dat_train, vars) {
 boot_by_cluster <- function(data, cluster) {
   sp <- split(data, data[[cluster]])
   ids <- names(sp)
-  samp_ids <- sample(ids, length(ids), replace = TRUE)
+  repeat {
+    samp_ids <- sample(ids, length(ids), replace = TRUE)
+    if (length(unique(samp_ids)) > 1L) break
+  }
   out <- dplyr::bind_rows(sp[samp_ids])
   # give duplicates independent REs
   out$boot_copy <- rep(seq_along(samp_ids), vapply(sp[samp_ids], nrow, integer(1)))
@@ -99,7 +101,7 @@ nA             <- prep_A$n_cells
 
 ## Bootstrap settings
 set.seed(123)
-B_boot <- 400
+B_boot <- 1000
 K_pred <- 500
 
 ## Cluster bootstrap containers
@@ -213,6 +215,7 @@ mu_boot_C <- matrix(NA_real_, nC, B_boot)
 Y_arr_C   <- array(NA_real_, dim = c(nC, K_pred, B_boot))
 
 warning_iterations <- integer(0)  # to store iterations with warnings
+warning_bootstrap_datasets_C <- NULL
 
 for (b in 1:B_boot) {
   warn_flag <- FALSE
@@ -236,7 +239,7 @@ for (b in 1:B_boot) {
   # Save only the bootstrap datasets with warnings, adding an identifier for easy loading/inspection
   if (warn_flag) {
     dat_b$bootstrap_id <- b
-    if (!exists("warning_bootstrap_datasets_C")) {
+    if (is.null(warning_bootstrap_datasets_C)) {
       warning_bootstrap_datasets_C <- dat_b
     } else {
       warning_bootstrap_datasets_C <- dplyr::bind_rows(warning_bootstrap_datasets_C, dat_b)

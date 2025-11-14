@@ -83,6 +83,8 @@ if __name__ == "__main__":
         .str.extract("(\\d+)-(\\d+)", expand=True)
 
     vaccine_cost[['value_min', 'value_max']] = vaccine_cost[['value_min', 'value_max']].astype(float)
+    billion_idx = vaccine_cost['cost_range'].str.contains("b$", regex=True)
+    vaccine_cost.loc[billion_idx, ['value_min', 'value_max']] = vaccine_cost.loc[billion_idx, ['value_min', 'value_max']] * 1e3
 
     vaccine_cost = vaccine_cost.sort_index(level=['disease', 'has_prototype', 'respondent'])
  

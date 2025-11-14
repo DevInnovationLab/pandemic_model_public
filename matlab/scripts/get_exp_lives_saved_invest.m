@@ -14,7 +14,9 @@ function get_exp_lives_saved_invest(job_dir)
     processed_dir = fullfile(job_dir, "processed");
     
     % Load baseline data
-    baseline_mortality = readmatrix(fullfile(rawdata_dir, "baseline_ts_m_deaths.csv"));
+    mat_filename = fullfile(rawdata_dir, "baseline_results.mat");
+    S = load(mat_filename, "m_deaths");
+    baseline_mortality = S.m_deaths;
     
     % Initialize table
     summary_table = table('Size', [length(scenarios)-1 3], ...
@@ -31,11 +33,13 @@ function get_exp_lives_saved_invest(job_dir)
         end
         
         % Load scenario data
-        scen_mortality = readmatrix(fullfile(rawdata_dir, strcat(scenario, "_ts_m_deaths.csv")));
+        mat_filename = fullfile(rawdata_dir, "baseline_results.mat");
+        S = load(mat_filename, "m_deaths");
+        scen_mortality = S.m_deaths;
         
         % Calculate differences from baseline
         lives_diff = baseline_mortality - scen_mortality;
-        lives_diff(lives_diff < 0)
+        lives_diff(lives_diff < 0);
         
         % Calculate mean differences over first 10 and 30 years
         lives_10yr = mean(sum(lives_diff(:,1:10), 2));

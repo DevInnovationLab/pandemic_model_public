@@ -42,8 +42,8 @@ function fig = plot_timeseries(data_array, varname, options)
 
     % Get number of simulations to display
     % Calculate sum of each simulation
-    if options.plot_samples > 0
-        assert(options.plot_samples < size(data_array, 1))
+    if options.plot_samples > 0 && ~isvector(data_array)
+        assert(options.plot_samples < size(data_array, 1)) % Okay if vector as this represents all simulations.
 
         if options.cumulative
             sim_sums = data_array(:,end);
@@ -61,6 +61,7 @@ function fig = plot_timeseries(data_array, varname, options)
     end
 
     % Create figure
+    disp(varname)
     label_varname = convert_varnames(varname);
     if ~isempty(options.fig)
         fig = figure(options.fig);
@@ -70,7 +71,7 @@ function fig = plot_timeseries(data_array, varname, options)
     
     % Plot individual trajectories with low opacity
     hold on
-    if options.plot_samples > 0
+    if options.plot_samples > 0 && ~isvector(data_array)
         line(repmat(years, [n_plot_sims, 1])', plot_sims', ...
             'Color', [0.8 0.8 0.8 0.1], ...
             'LineWidth', 0.5, ...

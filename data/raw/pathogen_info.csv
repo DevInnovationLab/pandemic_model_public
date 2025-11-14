@@ -9,4 +9,4 @@ ebola,filoviridae,TRUE,FALSE
 zika,flaviviridae,TRUE,FALSE
 flu,orthomyxoviridae,TRUE,TRUE
 unknown_virus,unknown,FALSE,NA
-other_known_viruses,unknown,FALSE,NA
+other_known_virus,unknown,FALSE,NA

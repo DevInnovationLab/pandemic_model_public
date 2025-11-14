@@ -1,5 +1,5 @@
 % Would love to clean this up later.
-function new_simulation_table = get_scenario_simulation_table(base_simulation_table, pathogen_info, ptrs_pathogen, ...
+function new_simulation_table = get_scenario_simulation_table(base_simulation_table, ptrs_pathogen, ...
 															  prototype_effect_ptrs, response_rd_timelines, params)
 	% add vaccine success state to simulation scenarios table
     new_simulation_table = base_simulation_table;
@@ -7,7 +7,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	% Unpack variables for readability
 	yr_start = new_simulation_table.yr_start;
 	is_false = new_simulation_table.is_false;
-	
+	pathogen = new_simulation_table.pathogen;
+
     % Add surveillance outcomes
     prep_start_month = run_surveillance(new_simulation_table.early_detection_q, ...
 										new_simulation_table.is_false, ...
@@ -18,15 +19,22 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 										params.base_early_detect_prob_false, ...
 										params.inc_early_detect_prob_true, ...
 										params.inc_early_detect_prob_false);
-	
-	pathogens_with_baseline_prototype = pathogen_info.pathogen(pathogen_info.has_prototype == 1);
-	pathogens_no_baseline_prototype = pathogen_info.pathogen(pathogen_info.has_prototype == 0);
 
-	pathogen = new_simulation_table.pathogen;
-	existing_prototype = ismember(pathogen, pathogens_with_baseline_prototype);
-	gains_prototype = ismember(pathogen, pathogens_no_baseline_prototype(ismember(pathogens_no_baseline_prototype, params.pathogens_with_prototype)));
-	prototype_RD_done = yr_start > params.prototype_RD_benefit_start;
-	has_prototype = existing_prototype | (gains_prototype & prototype_RD_done);
+	has_baseline_prototype = ismember(pathogen, params.pathogens_with_baseline_prototype);
+	advance_rd_done = yr_start >= params.advance_RD_benefit_start;
+	response_initiated = ~new_simulation_table.is_false | (new_simulation_table.is_false & isnan(prep_start_month));
+
+	% Incorporate advance R&D success states computed in base table into scenario simulation depending on whether it has the invested pathogen.
+	has_adv_prototype = false(height(new_simulation_table), 1);
+	if ~isempty(params.new_invested_pathogens)
+		for i = 1:numel(params.new_invested_pathogens)
+			invest_path = params.new_invested_pathogens(i);
+			colname = strcat(invest_path, "_prototype_state");
+			if ismember(colname, new_simulation_table.Properties.VariableNames)
+				has_adv_prototype = has_adv_prototype | (strcmp(pathogen, invest_path) & new_simulation_table.(colname) & advance_rd_done);
+			end
+		end
+	end
 
 	% Adjust thresholds for RD benefits when research eligible
 	trad_idx = strcmp(ptrs_pathogen.platform, "traditional_only");
@@ -35,62 +43,115 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	mrna_prob_map = dictionary(ptrs_pathogen.pathogen(mrna_idx), ptrs_pathogen.ptrs(mrna_idx));
 	
 	% Add PTRS for unknown virus
-	trad_prob_map("unknown_virus") = min(values(trad_prob_map));
+	trad_prob_map(["unknown_virus", "other_known_virus"]) = min(values(trad_prob_map));
+	mrna_prob_map(["unknown_virus", "other_known_virus"]) = min(values(mrna_prob_map));
 	trad_prob_map(missing) = NaN;
-	mrna_prob_map("unknown_virus") = min(values(mrna_prob_map));
 	mrna_prob_map(missing) = NaN;
 
-	trad_probs = trad_prob_map(pathogen);
-	mrna_probs = mrna_prob_map(pathogen);
-
-	% Adjust probabilities for vaccines invested in
+	% Only apply R&D benefits after advance_RD_benefit_start years
 	trad_increment = prototype_effect_ptrs.effect_mean(prototype_effect_ptrs.platform == "traditional_only");
 	mrna_increment = prototype_effect_ptrs.effect_mean(prototype_effect_ptrs.platform == "mrna_only");
 
-	% Only apply R&D benefits after prototype_RD_benefit_start years
-	trad_probs(gains_prototype & prototype_RD_done) = trad_probs(gains_prototype & prototype_RD_done) + trad_increment;
-	mrna_probs(gains_prototype & prototype_RD_done) = mrna_probs(gains_prototype & prototype_RD_done) + mrna_increment;
+	% Sort by (sim_num, pathogen, yr_start) for chronological processing
+	[~, sort_idx] = sortrows([new_simulation_table.sim_num, findgroups(pathogen), yr_start]);
+	sorted_sim_num = new_simulation_table.sim_num(sort_idx);
+	sorted_pathogen = pathogen(sort_idx);
+	sorted_has_adv_prototype = has_adv_prototype(sort_idx);
+	sorted_has_baseline_prototype = has_baseline_prototype(sort_idx);
+	sorted_trad_vax_state = new_simulation_table.trad_vax_state(sort_idx);
+	sorted_mrna_vax_state = new_simulation_table.mrna_vax_state(sort_idx);
+	sorted_response_initiated = response_initiated(sort_idx);
 
-	% Get whether vaccine platforms succeeded
-	trad_success = trad_probs > new_simulation_table.trad_vax_state;
-	mrna_success = mrna_probs > new_simulation_table.mrna_vax_state;
+	% Initial probabilities (baseline + advance prototypes only)
+	sorted_trad_probs = trad_prob_map(sorted_pathogen);
+	sorted_mrna_probs = mrna_prob_map(sorted_pathogen);
+	sorted_trad_probs(sorted_has_adv_prototype) = sorted_trad_probs(sorted_has_adv_prototype) + trad_increment;
+	sorted_mrna_probs(sorted_has_adv_prototype) = sorted_mrna_probs(sorted_has_adv_prototype) + mrna_increment;
+
+	% Initial success calculation
+	trad_success = (sorted_trad_probs > sorted_trad_vax_state) & response_initiated(sort_idx);
+	mrna_success = (sorted_mrna_probs > sorted_mrna_vax_state) & response_initiated(sort_idx);
+
+	% Track prototype acquisition: successful development for non-baseline pathogens
+	response_rd_success = trad_success | mrna_success;
+	non_id_virus = ismember(sorted_pathogen, ["unknown_virus", "other_known_virus"]);
+
+	[grp, ~] = findgroups(sorted_sim_num, sorted_pathogen);
+
+	% Get whether prototype acquired from response
+	cond = response_rd_success & ...
+		   ~sorted_has_baseline_prototype & ...
+		   ~sorted_has_adv_prototype & ...
+		   ~non_id_virus;
+
+	% Put into a table and do within-group cummax in-place
+	T = table(cond, grp);
+	T = grouptransform(T, "grp", @cummax, "cond");
+	T = grouptransform(T, "grp", @(x) [false; x(1:end-1)], "cond"); % Shift forward so applies to next outbreak
+	prototype_acquired_from_response = T.cond;
+	prototype_acquired_from_response(isnan(prototype_acquired_from_response)) = false; % Recode nans when there is no outbreak to false
+
+	% prototype_acquired_from_response = splitapply(@(rrs, hbp, hap, niv) cummax(rrs & ~hbp & ~hap & ~niv), ...
+	% 											  response_rd_success, ...
+	% 											  sorted_has_baseline_prototype, ...
+	% 											  sorted_has_adv_prototype, ...
+	% 											  non_id_virus, ...
+	% 											  grp);
+
+	% Adjust probabilities for rows that acquire prototype during simulation
+	sorted_trad_probs(prototype_acquired_from_response) = sorted_trad_probs(prototype_acquired_from_response) + trad_increment;
+	sorted_mrna_probs(prototype_acquired_from_response) = sorted_mrna_probs(prototype_acquired_from_response) + mrna_increment;
+
+	% Recalculate success with updated probabilities
+	trad_success(prototype_acquired_from_response) = (...
+		(sorted_trad_probs(prototype_acquired_from_response) > sorted_trad_vax_state(prototype_acquired_from_response)) & sorted_response_initiated(prototype_acquired_from_response));
+	mrna_success(prototype_acquired_from_response) = (...
+		(sorted_mrna_probs(prototype_acquired_from_response) > sorted_mrna_vax_state(prototype_acquired_from_response)) & sorted_response_initiated(prototype_acquired_from_response));
+
+	% Map back to original order
+	inv_sort_idx = zeros(size(sort_idx));
+	inv_sort_idx(sort_idx) = 1:length(sort_idx);
+	trad_success = trad_success(inv_sort_idx);
+	mrna_success = mrna_success(inv_sort_idx);
+	has_prototype = (has_baseline_prototype | has_adv_prototype | prototype_acquired_from_response(inv_sort_idx));
 
 	% Handle universal flu vaccine investment
 	flu_vax_success_prob = trad_prob_map("flu"); % Assume made using traditional platform
 	flu_outbreak_idx = strcmp(pathogen, "flu");
 	ufv_protection = (...
-		params.ufv_invest & ... % Investment was made
+		params.ufv_invest & ... % Investment is made
 		flu_outbreak_idx & ... % Dealing with influenza
-		prototype_RD_done & ... % After R&D benefit starts
+		new_simulation_table.universal_flu_vaccine_state & ... % Investment is successful
+		advance_rd_done & ... % Investment is completed
 		flu_vax_success_prob > new_simulation_table.ufv_vax_state ... % Vaccine successfully provides protection
 	);
 
-	trad_success(flu_outbreak_idx) = trad_success(flu_outbreak_idx) | ufv_protection(flu_outbreak_idx); % Universal vaccine gives you an extra shot at goal
-	mrna_success(flu_outbreak_idx) = mrna_success(flu_outbreak_idx) & ~ufv_protection(flu_outbreak_idx); % Don't invest in mRNA if universal vaccine works
+	trad_success(flu_outbreak_idx) = trad_success(flu_outbreak_idx) | ufv_protection(flu_outbreak_idx); % Universal vaccine gives you an extra shot at goal with traditional platform
 
 	%% Vaccine development timelines
-	has_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 1), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 1));
-	no_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 0), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 0));
-	has_prototype_timeline_map("unknown_virus") = max(values(has_prototype_timeline_map));
-	no_prototype_timeline_map("unknown_virus") = max(values(no_prototype_timeline_map));
-	has_prototype_timeline_map(missing) = NaN;
-	no_prototype_timeline_map(missing) = NaN;
+	% has_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 1), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 1));
+	% no_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 0), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 0));
+	% has_prototype_timeline_map("unknown_virus") = max(values(has_prototype_timeline_map));
+	% no_prototype_timeline_map("unknown_virus") = max(values(no_prototype_timeline_map));
+	% has_prototype_timeline_map(missing) = NaN;
+	% no_prototype_timeline_map(missing) = NaN;
 
 	rd_timeline = nan(height(new_simulation_table), 1);
-	rd_timeline = no_prototype_timeline_map(pathogen);
-	rd_timeline(has_prototype) = has_prototype_timeline_map(pathogen(has_prototype));
-	rd_timeline(isnan(rd_timeline)) = max(values(no_prototype_timeline_map)); % Take maximum timeline for unknown pathogens
+	rd_timeline(~has_prototype) = params.rd_months_no_prototype;
+	rd_timeline(has_prototype) = params.rd_months_with_prototype;
+	% rd_timeline(isnan(rd_timeline)) = max(values(no_prototype_timeline_map)); % Take maximum timeline for unknown pathogens
 	
 	% Ensure all have RD timeline and convert to months
 	assert(all(~isnan(rd_timeline)));
-	rd_timeline = round(rd_timeline * 12); % Convert to months and round to nearest
-	month_vaccine_ready = rd_timeline + prep_start_month;
-	month_vaccine_ready(ufv_protection) = ~is_false(ufv_protection) .* prep_start_month(ufv_protection); % When universal vaccine works it's immediately ready
+	month_response_vaccine_ready = rd_timeline + prep_start_month; % Different timeline for universal flu vaccine and response vaccine
 
 	%% Assign new variables
-	new_simulation_table.month_vaccine_ready = month_vaccine_ready;
+	new_simulation_table.month_response_vaccine_ready = month_response_vaccine_ready;
 	new_simulation_table.prep_start_month = prep_start_month;
+	new_simulation_table.response_initiated = response_initiated;
 	new_simulation_table.has_prototype = has_prototype;
+	new_simulation_table.has_adv_prototype = has_adv_prototype;
+	new_simulation_table.prototype_acquired_from_response = prototype_acquired_from_response;
 	new_simulation_table.ufv_protection = ufv_protection;
 
 	% Encode non universal vaccine R&D states
@@ -114,7 +175,7 @@ function prep_start_month_arr = run_surveillance(early_detection_q, is_false_arr
 												 months_to_early_detect, months_to_regular_detect, ...
 												 base_early_detect_prob_true, base_early_detect_prob_false, ...
 												 inc_early_detect_prob_true, inc_early_detect_prob_false)
-	% Compute early detection indidcator
+	% Compute early detection indicator
 	early_detect_prob_true = base_early_detect_prob_true + improved_early_warning .* inc_early_detect_prob_true;
 	early_detect_prob_false = base_early_detect_prob_false + improved_early_warning .* inc_early_detect_prob_false;
 	early_detection = early_detection_q < (early_detect_prob_true .* ~is_false_arr + early_detect_prob_false .* is_false_arr);

@@ -15,7 +15,7 @@ classdef ArrivalDistSampler
             %   param_table: Table containing parameter combinations, one row per draw
             %   max_y_sample: Maximum allowed y_sample
             arguments
-                param_samples (:,5) table
+                param_samples (:,6) table
                 trunc_method (1,1) {mustBeMember(trunc_method, {'sharp', 'smooth'})}
                 false_positive_rate (1,1) {mustBeNumeric, mustBeInRange(false_positive_rate, 0, 1)} = 0
                 measure (1,1) string = "undefined"

@@ -1,4 +1,4 @@
-function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, seed, params)
+function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, seed, params)
 	% Set seed
 	rng(seed);
 
@@ -32,7 +32,7 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	end
 
 	empirical_intensity_exceed_fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_matrix, lower_bound, params);
-	saveas(empirical_intensity_exceed_fig, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"))
+	saveas(empirical_intensity_exceed_fig, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"));
 
 	% Create table of pandemic scenarios
 	sim_num = mod(response_idx - 1, size(duration_matrix, 1)) + 1;
@@ -56,30 +56,41 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 						   natural_dur, early_detection_q, ...
 						   intensity, yr_end);
 
-	% Address overlapping pandemics
-	[~, ~, sim_groups] = unique(response_table.sim_num);
+	% Sort by sim_num and year_start for efficient comparison
+	response_table = sortrows(response_table, {'sim_num', 'yr_start'});
+
+	% Shifted vectors for comparison
+	prev_sim = [NaN; response_table.sim_num(1:end-1)];
+	prev_end = [NaN; response_table.yr_end(1:end-1)];
+
+	% Overlap if same sim_num and previous end >= current start
+	is_overlap = (response_table.sim_num == prev_sim) & (prev_end >= response_table.yr_start);
 	
-	% Get unique simulation groups
-	unique_groups = unique(sim_groups);
-	total_removed = 0;
-	total_trimmed = 0;
-	pruned_tables = cell(length(unique_groups), 1);
-	
-	% Process each simulation group separately
-	for i = 1:length(unique_groups)
-		group_idx = sim_groups == unique_groups(i);
-		group_data = response_table(group_idx, :);
+	[sim_groups, ~] = findgroups(response_table.sim_num);
+	groups_with_overlap = unique(sim_groups(is_overlap));
+	rows_with_overlap = ismember(sim_groups, groups_with_overlap);
+
+	% Fast path: rows in non-overlapping groups are kept as-is
+	tbl_passthrough = response_table(~rows_with_overlap, :);
+
+	% Indices we need to process
+	idx = find(rows_with_overlap);
+
+	% Group IDs for those indices
+	[gID, ~] = findgroups(sim_groups(idx));
+
+	% Use splitapply: give it the indices, grouped by gID.
+	payloads = splitapply(@(I) local_trim(I, response_table), idx, gID);
+
+	% Stitch results
+	tbl_processed = vertcat(payloads.tbl);
+	total_removed = sum([payloads.num_removed]);
+	total_trimmed = sum([payloads.num_trimmed]);
+
+	% Final table = passthrough + processed (optionally resort if you want)
+	tbl_out = [tbl_passthrough; tbl_processed];
+	response_table = sortrows(tbl_out, {'sim_num','yr_start'});  % or whatever you need
 		
-		[tbl, num_removed, num_trimmed] = trim_overlaps(group_data);
-		
-		pruned_tables{i} = tbl;
-		total_removed = total_removed + num_removed;
-		total_trimmed = total_trimmed + num_trimmed;
-	end
-	
-	% Combine all pruned tables
-	response_table = vertcat(pruned_tables{:}); % final result
-	
 	% Get effective severity
 	% Effective severity is severity after snipping pandemics
 	response_table.actual_dur = response_table.yr_end - response_table.yr_start + 1;
@@ -111,6 +122,34 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
     % Combine the original response_table with the no_pandemic_table and sort
 	no_response_table.sim_num = no_pandemic_sims(:);
     simulation_table = sortrows([response_table; no_response_table], {'sim_num', 'yr_start'});
+
+	% Create advance R&D success states during baseline scenario setting it's constant across scenarios
+	pathogens_no_baseline_prototype = string(pathogen_info.pathogen(pathogen_info.has_prototype == 0));
+	known_pathogens_no_baseline_prototype = pathogens_no_baseline_prototype(~ismember(pathogens_no_baseline_prototype, ["unknown_virus", "other_known_virus"]));
+	
+	advance_rd_success_table = table('Size', [height(simulation_table), size(known_pathogens_no_baseline_prototype, 1) + 1], ...
+									 'VariableTypes', repmat({'logical'}, 1, size(known_pathogens_no_baseline_prototype, 1) + 1), ...
+									 'VariableNames', ['universal_flu_vaccine_state', strcat(known_pathogens_no_baseline_prototype, '_prototype_state')']);
+
+	advance_rd_success_table.universal_flu_vaccine_state = (...
+		unifrnd(0, 1, height(advance_rd_success_table), 1) < params.ufv_success_prob);
+
+	for i = 1:size(known_pathogens_no_baseline_prototype, 1)
+		advance_rd_success_table.(strcat(known_pathogens_no_baseline_prototype(i), '_prototype_state')) = (...
+			unifrnd(0, 1, height(advance_rd_success_table), 1) < params.prototype_success_prob);
+	end
+
+	% Combine simulation table and advance R&D success table
+	simulation_table = [simulation_table, advance_rd_success_table];
+end
+
+
+function S = local_trim(I, response_table)
+    % I: global row indices for one group
+    [tbl_i, num_removed, num_trimmed] = trim_overlaps(response_table(I,:));
+    S = struct('tbl', tbl_i, ...
+               'num_removed', num_removed, ...
+               'num_trimmed', num_trimmed);
 end
 
 
@@ -160,6 +199,6 @@ function [tbl, num_removed, num_trimmed] = trim_overlaps(tbl)
 
     % Final slicing
     tbl = tbl(keep,:);
-    num_removed = sum(removed);        % Number of intervals snipped (among kept)
-    num_trimmed = sum(trimmed);      % Number of intervals removed entirely
+    num_removed = sum(removed);      % Number of intervals removed (among kept)
+    num_trimmed = sum(trimmed);      % Number of intervals snipped
 end

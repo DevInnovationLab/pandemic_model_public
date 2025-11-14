@@ -40,7 +40,7 @@ function run_job(job_config_path)
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
     % Generate base simulation to be used across scenarios
-    [base_simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, job_config.seed, job_config);
+    [base_simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, job_config.seed, job_config);
     base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
     save(base_simulation_table_path, 'base_simulation_table');
 
@@ -132,7 +132,6 @@ function run_job(job_config_path)
 
         % Run scenario
         scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
-                                                                  pathogen_info, ...
                                                                   ptrs_pathogen, ...
                                                                   prototype_effect_ptrs, ...
                                                                   response_rd_timelines, ...
@@ -158,9 +157,11 @@ function updated_params = update_params(job_config, scenario_config, arrival_rat
     end
 
     % Set pathogen family params.
-    invest_strategy =scenario_config.rd_investments.strategy;
-    num_pathogens_researched = scenario_config.rd_investments.num;
-    updated_params.pathogens_with_prototype = parse_rd_investments(scenario_config.rd_investments, arrival_rates);
+    invest_strategy = scenario_config.rd_investments.strategy;
+    updated_params.num_pathogens_researched = scenario_config.rd_investments.num;
+    [pathogens_with_baseline_prototype, new_invested_pathogens] = parse_rd_investments(scenario_config.rd_investments, arrival_rates);
+    updated_params.pathogens_with_baseline_prototype = pathogens_with_baseline_prototype;
+    updated_params.new_invested_pathogens = new_invested_pathogens;
 
     if strcmp(invest_strategy, "top") || strcmp(invest_strategy, "random")
         updated_params.prototype_RD = true;
@@ -168,11 +169,8 @@ function updated_params = update_params(job_config, scenario_config, arrival_rat
         updated_params.prototype_RD = false;
     end
 
-    updated_params.prototype_RD_spend = updated_params.prototype_RD_cost_per_pathogen * ...
-        updated_params.pathogens_per_family * ... 
-        num_pathogens_researched;
-
-    updated_params.ufv_spend = updated_params.prototype_RD_cost_per_pathogen * updated_params.pathogens_per_family;
+    updated_params.prototype_RD_spend = updated_params.advance_RD_cost_per_pathogen * updated_params.num_pathogens_researched;
+    updated_params.ufv_spend = updated_params.advance_RD_cost_per_pathogen .* updated_params.univ_flu_cost_multiplier;
 
     % Set advance capacity
     if updated_params.share_target_advanced_capacity == 0

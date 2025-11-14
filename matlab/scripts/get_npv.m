@@ -7,6 +7,7 @@ function get_npv(job_dir, recalculate_bc)
     plot_npv_timeseries(job_dir, false);
     plot_npv_boxplots(job_dir, "baseline");
     plot_baseline_npv_ts(job_dir);
+    write_benefits_costs_npv_table(job_dir, "baseline");
 end
 
 
@@ -332,6 +333,52 @@ function plot_npv_boxplots(job_dir, baseline)
     close(fig_rel);
 end
 
+function write_benefits_costs_npv_table(job_dir, scenario)
+    % Mean cumulative sums of benefits, costs, and net present value.
+
+    % Define job directory and processed directory
+    raw_dir = fullfile(job_dir, "raw");
+    processed_dir = fullfile(job_dir, "processed");
+
+    % Load data for the specified scenario
+    benefits_file = fullfile(raw_dir, sprintf("%s_results.mat", scenario));
+    processed_costs_file = fullfile(processed_dir, sprintf("%s_pv_costs.csv", scenario));
+    processed_npv_file = fullfile(processed_dir, sprintf("%s_absolute_npv.csv", scenario));
+
+    % Load benefits
+    raw_out = load(benefits_file, "benefits_vaccine"); % [sim x year]
+    benefits = raw_out.benefits_vaccine;
+
+    % Load costs and NPV
+    costs = readmatrix(processed_costs_file); % [sim x year]
+    npv = readmatrix(processed_npv_file); % [sim x year]
+
+    % Compute cumulative sums for each simulation
+    cumsum_benefits = cumsum(benefits, 2);
+    cumsum_costs = cumsum(costs, 2);
+    cumsum_npv = cumsum(npv, 2);
+
+    % Compute mean cumulative sums across simulations for each year
+    mean_cumsum_benefits = mean(cumsum_benefits, 1);
+    mean_cumsum_costs = mean(cumsum_costs, 1);
+    mean_cumsum_npv = mean(cumsum_npv, 1);
+
+    % Convert to billions for reporting
+    cumsum_benefits_billions = mean_cumsum_benefits / 1e9;
+    cumsum_costs_billions = mean_cumsum_costs / 1e9;
+    cumsum_npv_billions = mean_cumsum_npv / 1e9;
+
+    % Prepare table for writing
+    years = (1:length(cumsum_benefits_billions))';
+    scenario_col = repmat(string(scenario), length(years), 1);
+    T = table(years, scenario_col, cumsum_benefits_billions', cumsum_costs_billions', cumsum_npv_billions', ...
+        'VariableNames', {'Year', 'Scenario', 'CumulativeBenefits_Billions', 'CumulativeCosts_Billions', 'CumulativeNPV_Billions'});
+
+    % Save the table as a CSV file in the processed directory
+    outpath = fullfile(processed_dir, sprintf("%s_cumulative_benefits_costs_npv.csv", scenario));
+    writetable(T, outpath);
+end
+
 
 function plot_baseline_npv_ts(job_dir)
     % Plots baseline NPV time series showing both nominal and discounted benefits
@@ -353,9 +400,9 @@ function plot_baseline_npv_ts(job_dir)
     hold on;
     
     % Plot both lines
-    plot(1:length(mean_npv), mean_npv, 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410], ...
+    plot(1:length(mean_npv), mean_npv, 'LineWidth', 4, 'Color', [0, 0.4470, 0.7410], ...
          'DisplayName', 'Discounted');
-    plot(1:length(mean_nom), mean_nom, 'LineWidth', 2, 'Color', [0.8500, 0.3250, 0.0980], ...
+    plot(1:length(mean_nom), mean_nom, 'LineWidth', 4, 'Color', [0.8500, 0.3250, 0.0980], ...
          'DisplayName', 'Nominal');
 
     % Label lines
@@ -363,11 +410,10 @@ function plot_baseline_npv_ts(job_dir)
     text(40, mean_nom(40), 'Nominal', 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'FontSize', 14, 'Color', [0.8500, 0.3250, 0.0980]);
     
     % Add labels and styling
-    title('Baseline net value over time', 'FontSize', 20)
+    title('Baseline net value over time', 'FontSize', 18, 'FontWeight', 'normal')
     xlabel('Year', 'FontSize', 16)
     ylabel('Net value ($ billion)', 'FontSize', 16)
     grid on
-    set(gca, 'FontSize', 14)
     set(gca, 'XGrid', 'on', 'YGrid', 'on')
     
     % Add legend
@@ -387,20 +433,4 @@ function plot_baseline_npv_ts(job_dir)
 
     % Compute annualization factor (same as in get_sensitivity_loss_summary.m)
     annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
-
-    % Cumulative NPV (sum up to each year)
-    cum_disc_npv = cumsum(mean_npv);
-    cum_nom_npv = cumsum(mean_nom);
-
-    % Annualized NPV (divide cumulative by annualization factor)
-    ann_disc_npv = cum_disc_npv * annualization_factor;
-    ann_nom_npv = cum_nom_npv * annualization_factor;
-
-    % Create table
-    T = table((1:periods)', cum_disc_npv', cum_nom_npv', ann_disc_npv', ann_nom_npv', ...
-        'VariableNames', {'Year', 'Cumulative_Discounted_NPV_Billions', 'Cumulative_Nominal_NPV_Billions', ...
-                          'Annualized_Discounted_NPV_Billions', 'Annualized_Nominal_NPV_Billions'});
-
-    % Save the table as a CSV file in the figures directory
-    writetable(T, fullfile(processed_dir, "baseline_npv_timeseries.csv"));
 end

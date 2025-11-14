@@ -61,8 +61,8 @@ tau_o: 6 # months to repurpose traditional candidate
 pathogens_per_family: 3 # Number of families to research to obtain R&D benefits for one family.
 inp_RD_no_prototype: 7.76297560e8 # $
 inp_RD_has_prototype: 5.31221781e8 # $
-prototype_RD_cost_per_pathogen: 1.4e9 # nominal over period specified by prototype_RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
-prototype_RD_benefit_start: 15 # years until advance R&D benefits apply
+advance_RD_cost_per_pathogen: 1.4e9 # nominal over period specified by advance_RD_benefit_start (Dimitrios said to use 3x 1.4 bn, times number of families)
+advance_RD_benefit_start: 15 # years until advance R&D benefits apply
 
 # Surveillance
 surveillance_thresholds: [0, 0] # First is for regular signal, second is for enhanced surveillance signal.

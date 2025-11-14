@@ -4,7 +4,8 @@ function plot_losses_share(job_dir)
     %   job_dir: Directory containing job configuration and results
 
     % Load pandemic table
-    pandemic_table = readtable(fullfile(job_dir, "raw", "baseline_pandemic_table.csv"));
+    S = load(fullfile(job_dir, "raw", "baseline_pandemic_table.mat"));
+    pandemic_table = S.pandemic_table;
     pandemic_table = pandemic_table(~pandemic_table.is_false, :); % Remove false positives
 
     % Load intensity threshold
@@ -84,8 +85,8 @@ function plot_losses_share(job_dir)
     % Plot Lorenz curve
     plot([0; cum_event_share], [0; cum_loss_share], 'b-', 'LineWidth', 2)
     title('Lorenz curve for pandemic losses', 'FontSize', 16, 'FontWeight', 'normal')
-    xlabel('Cumulative share of events', 'FontSize', 12)
-    ylabel('Cumulative share of losses', 'FontSize', 12)
+    xlabel('Cumulative share of events', 'FontSize', 14)
+    ylabel('Cumulative share of losses', 'FontSize', 14)
     ylim([0 1])
     box off
     grid on

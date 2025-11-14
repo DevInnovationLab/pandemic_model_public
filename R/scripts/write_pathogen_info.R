@@ -20,7 +20,7 @@ pathogen_info <- tibble::tribble(
   "zika",                             "flaviviridae",       TRUE,             FALSE,
   "flu",                              "orthomyxoviridae",   TRUE,             TRUE,
   "unknown_virus",                    "unknown",            FALSE,            NA,
-  "other_known_viruses",              "unknown",            FALSE,            NA
+  "other_known_virus",                "unknown",            FALSE,            NA
 )
 
 readr::write_csv(pathogen_info, "data/raw/pathogen_info.csv")

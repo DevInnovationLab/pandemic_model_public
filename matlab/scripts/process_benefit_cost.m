@@ -46,25 +46,15 @@ function process_benefit_cost(job_dir, recalculate_costs)
         
         % Load from .mat file (produced by save_to_file_fast)
         mat_filename = fullfile(rawdata_dir, sprintf('%s_results.mat', scenario));
-
-        % Only load the required benefit arrays from the .mat file
-        S = load(mat_filename, 'sim_out_arr_benefits_vaccine', 'sim_out_arr_benefits_vaccine_nom');
+        S = load(mat_filename, "benefits_vaccine", "benefits_vaccine_nom");
 
         % Costs: processed_dir (csv), Benefits: from .mat file
         pv_costs = readmatrix(fullfile(processed_dir, strcat(scenario, "_pv_costs.csv")));
         nom_costs = readmatrix(fullfile(processed_dir, strcat(scenario, "_nominal_costs.csv")));
 
-        % Benefits: from loaded struct
-        if isfield(S, 'sim_out_arr_benefits_vaccine')
-            pv_benefits = S.sim_out_arr_benefits_vaccine;
-        else
-            error('PV benefits not found in %s', mat_filename);
-        end
-        if isfield(S, 'sim_out_arr_benefits_vaccine_nom')
-            nom_benefits = S.sim_out_arr_benefits_vaccine_nom;
-        else
-            error('Nominal benefits not found in %s', mat_filename);
-        end
+        % Benefits: from loaded struct (updated to match save_to_file_fast)
+        pv_benefits = S.benefits_vaccine;
+        nom_benefits = S.benefits_vaccine_nom;
         
         % Calculate absolute NPV (benefits - costs) for both PV and nominal
         absolute_npv(:,:,i) = pv_benefits - pv_costs;

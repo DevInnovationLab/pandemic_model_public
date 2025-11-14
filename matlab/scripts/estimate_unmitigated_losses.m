@@ -36,6 +36,13 @@ function estimate_unmitigated_losses(job_config_path)
     create_folders_recursively(raw_results_path);
     create_folders_recursively(figure_path);
 
+    if isfield(job_config, 'response_threshold') && isfield(job_config, 'response_threshold_path')
+        warning('Both ''response_threshold'' and ''response_threshold_path'' are set in the job config. Defaulting to ''response_threshold''.');
+    elseif ~isfield(job_config, 'response_threshold') && isfield(job_config, 'response_threshold_path')
+        response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
+        job_config.response_threshold = response_threshold_dict.response_threshold;
+    end
+
     % Load inputs from files (same as run_job.m)
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
     assert(strcmp(arrival_dist.measure, "severity"), ...
@@ -45,9 +52,6 @@ function estimate_unmitigated_losses(job_config_path)
     % Load arrival rates, pathogen info, etc. as in run_job.m
     arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
-
-    % For unmitigated, set response threshold to 0 (no response)
-    job_config.response_threshold = 0;
 
     % Generate base simulation table (same as run_job.m, but no scenario config)
     [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, job_config.seed, job_config);
