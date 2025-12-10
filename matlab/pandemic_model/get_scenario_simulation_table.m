@@ -1,8 +1,23 @@
 % Would love to clean this up later.
 function new_simulation_table = get_scenario_simulation_table(base_simulation_table, ptrs_pathogen, ...
-															  prototype_effect_ptrs, response_rd_timelines, params)
-	% add vaccine success state to simulation scenarios table
-    new_simulation_table = base_simulation_table;
+															  prototype_effect_ptrs, ...
+															  response_rd_timelines, ... %Deprecated but keeping logic in case we want to return
+															  params)
+	% First thing to do is to deal with the false positive outbreaks
+	scenario_false_positive_rate = params.improved_early_warning.active .* (1 -  params.improved_early_warning.precision); % Need this to be a zero
+	false_keep_rate = (...
+		(scenario_false_positive_rate .* (1 - params.highest_false_positive_rate)) ./ ...
+		(params.highest_false_positive_rate .* (1 - scenario_false_positive_rate)) ...
+	);
+	false_idx = find(base_simulation_table.is_false);
+	outbreaks_keep = ~base_simulation_table.is_false;
+	n_keep = round(false_keep_rate * numel(false_idx));
+	if n_keep > 0
+		rng(params.seed);
+		keep_idx = false_idx(randperm(numel(false_idx), n_keep));
+		outbreaks_keep(keep_idx) = true;
+	end
+	new_simulation_table = base_simulation_table(outbreaks_keep, :);
 
 	% Unpack variables for readability
 	yr_start = new_simulation_table.yr_start;
@@ -14,15 +29,12 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 										new_simulation_table.is_false, ...
 										params.improved_early_warning, ...
 										params.months_to_early_detect, ...
-										params.months_to_regular_detect, ...
-										params.base_early_detect_prob_true, ...
-										params.base_early_detect_prob_false, ...
-										params.inc_early_detect_prob_true, ...
-										params.inc_early_detect_prob_false);
+										params.months_to_regular_detect);
 
+	% Add R&D success states
 	has_baseline_prototype = ismember(pathogen, params.pathogens_with_baseline_prototype);
-	advance_rd_done = yr_start >= params.advance_RD_benefit_start;
-	response_initiated = ~new_simulation_table.is_false | (new_simulation_table.is_false & isnan(prep_start_month));
+	advance_rd_done = yr_start > params.advance_RD_benefit_start;
+	response_initiated = ~is_false | (is_false & ~isnan(prep_start_month));
 
 	% Incorporate advance R&D success states computed in base table into scenario simulation depending on whether it has the invested pathogen.
 	has_adv_prototype = false(height(new_simulation_table), 1);
@@ -119,7 +131,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	flu_vax_success_prob = trad_prob_map("flu"); % Assume made using traditional platform
 	flu_outbreak_idx = strcmp(pathogen, "flu");
 	ufv_protection = (...
-		params.ufv_invest & ... % Investment is made
+		params.universal_flu_rd.active & ... % Investment is made
 		flu_outbreak_idx & ... % Dealing with influenza
 		new_simulation_table.universal_flu_vaccine_state & ... % Investment is successful
 		advance_rd_done & ... % Investment is completed
@@ -128,6 +140,12 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 
 	trad_success(flu_outbreak_idx) = trad_success(flu_outbreak_idx) | ufv_protection(flu_outbreak_idx); % Universal vaccine gives you an extra shot at goal with traditional platform
 
+	% When strategy is only to invest in single platform, remove mRNA success when universal flu vaccine is successful
+	univ_flu_platform_invest = params.universal_flu_rd.platform_response_invest;
+	if params.universal_flu_rd.active && univ_flu_platform_invest == "single"
+		mrna_success(flu_outbreak_idx & ufv_protection) = false;
+	end
+		
 	%% Vaccine development timelines
 	% has_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 1), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 1));
 	% no_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 0), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 0));
@@ -172,12 +190,10 @@ end
 
 function prep_start_month_arr = run_surveillance(early_detection_q, is_false_arr, ...
 												 improved_early_warning, ...
-												 months_to_early_detect, months_to_regular_detect, ...
-												 base_early_detect_prob_true, base_early_detect_prob_false, ...
-												 inc_early_detect_prob_true, inc_early_detect_prob_false)
+												 months_to_early_detect, months_to_regular_detect)
 	% Compute early detection indicator
-	early_detect_prob_true = base_early_detect_prob_true + improved_early_warning .* inc_early_detect_prob_true;
-	early_detect_prob_false = base_early_detect_prob_false + improved_early_warning .* inc_early_detect_prob_false;
+	early_detect_prob_true = improved_early_warning.recall;
+	early_detect_prob_false = improved_early_warning.precision;
 	early_detection = early_detection_q < (early_detect_prob_true .* ~is_false_arr + early_detect_prob_false .* is_false_arr);
 
 	prep_start_month_arr = nan(size(is_false_arr));

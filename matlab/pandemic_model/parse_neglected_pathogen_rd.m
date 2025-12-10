@@ -1,4 +1,4 @@
-function [pathogens_with_baseline_prototype, new_invested_pathogens] = parse_rd_investments(rd_investment_config, pathogen_arrival_rates)
+function [pathogens_with_baseline_prototype, new_invested_pathogens] = parse_neglected_pathogen_rd(rd_investment_config, pathogen_arrival_rates)
     % Can pick specific diseases, random portfolio, and most profitable
     % Consider handling success probabilities in here
 

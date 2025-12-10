@@ -3,19 +3,18 @@ neglected_pathogen_rd:
   strategy: none
   num: 0
 
-# Universal flu vaccine R&D params
+# Universal flu vaccine (UFV) R&D params
 universal_flu_rd:
-  active: false
-  platform_response_invest: null
-  initial_share_ufv: null
+  active: true
+  platform_response_invest: both
+  initial_share_ufv: 0.1 # 850 million projected flu vaccine demand (WHO) / World Bank global pop 2024
 
 # Advance capacity params
 advance_capacity:
- share_target_advance_capacity: 0
+  share_target_advance_capacity: 0
 
 # Enhanced surveillance
 improved_early_warning:
   active: false
   precision: null
   recall: null
-

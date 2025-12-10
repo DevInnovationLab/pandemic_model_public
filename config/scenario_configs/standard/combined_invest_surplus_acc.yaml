@@ -1,0 +1,20 @@
+# Neglected pathogen family advance R&D params
+neglected_pathogen_rd: 
+  strategy: top
+  num: 3
+
+# Universal flu vaccine R&D params
+universal_flu_rd:
+  active: true
+  platform_response_invest: both
+  initial_share_ufv: 0.1 # 850 million projected flu vaccine demand (WHO) / World Bank global pop 2024
+
+# Advance capacity params
+advance_capacity:
+  share_target_advance_capacity: 1
+
+# Enhanced surveillance
+improved_early_warning:
+  active: true
+  precision: 0.3
+  recall: 0.5

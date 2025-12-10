@@ -1,5 +1,5 @@
 function [surge_cap, surge_cap_cost] = ...
-    get_event_capacity(sim_num, year_start, false_pos_detected, duration, max_years, delta_cap_by_year, ...
+    get_event_capacity(sim_num, year_start, false_pos_ignored, duration, max_years, delta_cap_by_year, ...
         surge_retained, base_cap, adv_cap, max_cap, params, is_mRNA, num_sims)
     % Inputs:
     %   sim_num     : [E×1] simulation index (1-based)
@@ -15,7 +15,7 @@ function [surge_cap, surge_cap_cost] = ...
     arguments
         sim_num (:, 1)
         year_start (:, 1)
-        false_pos_detected (:, 1)
+        false_pos_ignored (:, 1)
         duration (:, 1)
         max_years (1, 1)
         delta_cap_by_year (:, 1)
@@ -28,17 +28,17 @@ function [surge_cap, surge_cap_cost] = ...
         num_sims (1, 1)
     end
     year_end = year_start + duration; % Year where capacity should be reduced
-    event_start_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected), year_start(~false_pos_detected));
+    event_start_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_ignored), year_start(~false_pos_ignored));
     
     % Only reduce capacity if the end year is within simulation period
     valid_end = year_end < max_years;
-    event_end_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_detected & valid_end), year_end(~false_pos_detected & valid_end));
+    event_end_idx = sub2ind([num_sims, max_years], sim_num(~false_pos_ignored & valid_end), year_end(~false_pos_ignored & valid_end));
 
     % Create capacity change matrix
     % This could be more memory efficient if you just had event list with groups
     surge_cap = zeros(num_sims, max_years);
-    surge_cap(event_start_idx) = delta_cap_by_year(year_start(~false_pos_detected));
-    surge_cap(event_end_idx) = surge_cap(event_end_idx) - (1 - surge_retained) * delta_cap_by_year(year_start(~false_pos_detected & valid_end)); % In case pandemic end and start in same year.
+    surge_cap(event_start_idx) = delta_cap_by_year(year_start(~false_pos_ignored));
+    surge_cap(event_end_idx) = surge_cap(event_end_idx) - (1 - surge_retained) * delta_cap_by_year(year_start(~false_pos_ignored & valid_end)); % In case pandemic end and start in same year.
     
     % Accumulate changes over time
     surge_cap = cumsum(surge_cap, 2);
@@ -52,7 +52,7 @@ function [surge_cap, surge_cap_cost] = ...
     
     % Get the existing surge capacity right before each event
     pre_event_surge_cap = zeros(size(event_surge_cap));
-    valid_idx = year_start(~false_pos_detected) > 1;
+    valid_idx = year_start(~false_pos_ignored) > 1;
     pre_event_idx = sub2ind([num_sims, max_years], sim_num(valid_idx), year_start(valid_idx) - 1);
     pre_event_surge_cap(valid_idx) = surge_cap(pre_event_idx);
     

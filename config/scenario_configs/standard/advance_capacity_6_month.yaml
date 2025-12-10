@@ -1,4 +1,4 @@
-# Neglected pathogen advance R&D params
+# Neglected pathogen family advance R&D params
 neglected_pathogen_rd: 
   strategy: none
   num: 0
@@ -7,15 +7,14 @@ neglected_pathogen_rd:
 universal_flu_rd:
   active: false
   platform_response_invest: null
-  initial_share_ufv: null
+  initial_share_ufv: null 
 
 # Advance capacity params
 advance_capacity:
- share_target_advance_capacity: 0
+  share_target_advance_capacity: 1
 
 # Enhanced surveillance
 improved_early_warning:
   active: false
   precision: null
   recall: null
-

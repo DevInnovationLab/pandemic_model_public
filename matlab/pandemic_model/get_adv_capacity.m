@@ -7,6 +7,6 @@ function [adv_cap_mrna, adv_cap_trad] = get_adv_capacity(params)
 	assert(max_cap_mrna >= params.base_cap_mrna, "mRNA max capacity is less than base capacity");
 	assert(max_cap_trad >= params.base_cap_trad, "traditional max capacity is less than base capacity");
 
-	adv_cap_mrna = params.share_target_advanced_capacity .* (max_cap_mrna - params.base_cap_mrna);
-	adv_cap_trad = params.share_target_advanced_capacity .* (max_cap_trad - params.base_cap_trad);
+	adv_cap_mrna = params.advance_capacity.share_target_advance_capacity .* (max_cap_mrna - params.base_cap_mrna);
+	adv_cap_trad = params.advance_capacity.share_target_advance_capacity .* (max_cap_trad - params.base_cap_trad);
 end

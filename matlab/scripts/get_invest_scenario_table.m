@@ -166,9 +166,16 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
 
     % Helper to replace negative BCRs with "Cost-saving"
-    function s = bcr_to_string(x)
+    function s = bcr_to_string(x, less_than_zero_to_inf)
+        
+        inf_idx = isinf(x);
+
+        if less_than_zero_to_inf
+            inf_idx = inf_idx | (x < 0);
+        end
+        
         s = round_nicely(x);
-        s(x < 0) = "$\infty$"; % Uber hack. please fix
+        s(inf_idx) = "$\infty$";
     end
 
     summary_data.NPVDiff = round_nicely(summary_data.NPVDiff);
@@ -176,12 +183,12 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     summary_data.CostDiff = round_nicely(summary_data.CostDiff);
 
     if include_ten_thirty
-        summary_data.BCRatio10yr = bcr_to_string(summary_data.BCRatio10yr);
-        summary_data.BCRatio30yr = bcr_to_string(summary_data.BCRatio30yr);
+        summary_data.BCRatio10yr = bcr_to_string(summary_data.BCRatio10yr, true);
+        summary_data.BCRatio30yr = bcr_to_string(summary_data.BCRatio30yr, true);
         summary_data.CostPerLife10yr = bcr_to_string(summary_data.CostPerLife10yr);
         summary_data.CostPerLife30yr = bcr_to_string(summary_data.CostPerLife30yr);
     end
-    summary_data.BCRatioAll = bcr_to_string(summary_data.BCRatioAll);
+    summary_data.BCRatioAll = bcr_to_string(summary_data.BCRatioAll, true);
     summary_data.CostPerLifeAll = bcr_to_string(summary_data.CostPerLifeAll);
 
     % Convert scenario names

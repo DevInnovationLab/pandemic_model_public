@@ -21,26 +21,19 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	
 	response_idx = find(intensity_matrix > params.response_threshold); % indicator array for when severity triggers pandemic response
 	num_response_scenario = size(response_idx, 1);
-
-	% Plot empirical intensity exceedance
-	if strcmp(arrival_dist.measure, 'severity')
-		condition_matrix = severity_matrix;
-		lower_bound = min(arrival_dist.param_samples.mu) ./ duration_dist.max_duration;
-	elseif strcmp(arrival_dist.measure, 'intensity')
-		condition_matrix = intensity_matrix;
-		lower_bound = min(arrival_dist.param_samples.mu);
-	end
-
-	empirical_intensity_exceed_fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_matrix, lower_bound, params);
-	saveas(empirical_intensity_exceed_fig, fullfile(params.outdirpath, "figures", "empirical_intensity_exceedance_prob.png"));
-
+	
 	% Create table of pandemic scenarios
 	sim_num = mod(response_idx - 1, size(duration_matrix, 1)) + 1;
 	yr_start = ceil(response_idx / size(duration_matrix, 1));
 	severity = severity_matrix(response_idx);
 	natural_dur = duration_matrix(response_idx);
 	intensity = intensity_matrix(response_idx);
-	is_false = rand(num_response_scenario, 1) < params.false_positive_rate;
+	is_false = rand(num_response_scenario, 1) < arrival_dist.false_positive_rate;
+
+	% Set intensities, severities, etc, for false positives. Some will get chucked by trim_overlaps.
+	severity(is_false) = 0;
+	intensity(is_false) = 0;
+	natural_dur(is_false) = 1;
 
 	pathogen = randsample(arrival_rates.pathogen, num_response_scenario, true, arrival_rates.estimate);
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
@@ -131,12 +124,16 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 									 'VariableTypes', repmat({'logical'}, 1, size(known_pathogens_no_baseline_prototype, 1) + 1), ...
 									 'VariableNames', ['universal_flu_vaccine_state', strcat(known_pathogens_no_baseline_prototype, '_prototype_state')']);
 
-	advance_rd_success_table.universal_flu_vaccine_state = (...
-		unifrnd(0, 1, height(advance_rd_success_table), 1) < params.ufv_success_prob);
+
+	% Assign advance R&D success states per simulation, then expand to rows
+	sim_num_list = 1:max(simulation_table.sim_num);
+	universal_flu_vaccine_sim_states = unifrnd(0, 1, numel(sim_num_list), 1) < params.ufv_success_prob;
+	advance_rd_success_table.universal_flu_vaccine_state = universal_flu_vaccine_sim_states(simulation_table.sim_num);
 
 	for i = 1:size(known_pathogens_no_baseline_prototype, 1)
-		advance_rd_success_table.(strcat(known_pathogens_no_baseline_prototype(i), '_prototype_state')) = (...
-			unifrnd(0, 1, height(advance_rd_success_table), 1) < params.prototype_success_prob);
+		pathogen_col = strcat(known_pathogens_no_baseline_prototype(i), '_prototype_state');
+		proto_sim_states = unifrnd(0, 1, numel(sim_num_list), 1) < params.prototype_success_prob;
+		advance_rd_success_table.(pathogen_col) = proto_sim_states(simulation_table.sim_num);
 	end
 
 	% Combine simulation table and advance R&D success table

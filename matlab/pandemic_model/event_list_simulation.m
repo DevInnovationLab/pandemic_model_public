@@ -10,7 +10,8 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     year_dur = event_sim_table.actual_dur;
     is_false = event_sim_table.is_false;
     prep_start_month = event_sim_table.prep_start_month;
-    false_pos_detected = isnan(prep_start_month) & is_false;
+    false_pos_ignored = isnan(prep_start_month) & is_false;
+    ufv_protection = event_sim_table.ufv_protection;
 
     num_sims = params.num_simulations;
     max_years = params.sim_periods;
@@ -45,9 +46,9 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % Get surge capacity
     [surge_cap_m, surge_cap_m_cost] = ...
-        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, delta_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
+        get_event_capacity(sim_num, year_start, false_pos_ignored, year_dur, max_years, delta_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
     [surge_cap_o, surge_cap_o_cost] = ...
-        get_event_capacity(sim_num, year_start, false_pos_detected, year_dur, max_years, delta_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0, num_sims);
+        get_event_capacity(sim_num, year_start, false_pos_ignored, year_dur, max_years, delta_cap_o, frac_retained, base_cap_o, adv_cap_o, max_cap_o, params, 0, num_sims);
 
     % Total capacity
     all_cap_m = base_cap_m + adv_cap_m + surge_cap_m;
@@ -76,7 +77,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % 2. Surveillance costs
     surveil_costs_nom = zeros(1, max_years);
-    if params.improved_early_warning
+    if params.improved_early_warning.active
         surveil_spend_bn_init = repmat(params.surveil_annual_installation_spend, params.surveil_installation_years, 1);
         surveil_spend_bn_maintenance = repmat(params.surveil_maintenance_spend, max_years - params.surveil_installation_years, 1);
         surveil_costs_nom = [surveil_spend_bn_init; surveil_spend_bn_maintenance]';
@@ -94,7 +95,7 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
 
     % Advance universal flu vaccine R&D costs
     ufv_rd_costs_nom = zeros(1, max_years);
-    if params.ufv_invest
+    if params.universal_flu_rd.active
         ufv_rd_spend_rate = params.ufv_spend / params.advance_RD_benefit_start;
         ufv_rd_costs_nom(1:params.advance_RD_benefit_start) = ufv_rd_spend_rate;
     end
@@ -104,15 +105,23 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     tailoring_costs_nom = zeros(num_sims, max_years);
     tailoring_costs_nom(event_start_idx) = (...
         tailoring_fraction .* ...
-        ~false_pos_detected .* ...
+        ~false_pos_ignored .* ...
         (adv_cap_m(year_start) .* params.k_m + adv_cap_o(year_start) .* params.k_o)' ...
     );
     tailoring_costs_pv = tailoring_costs_nom .* pv_factors_annual;
 
     % In-pandemic R&D costs
-    event_inp_rd_nom = params.inp_RD_spend;
+    base_inp_rd_nom = repmat(params.inp_RD_spend, height(event_sim_table), 1);
+
+    if params.universal_flu_rd.active && params.universal_flu_rd.platform_response_invest == "single" % When strategy is only to invest in single platform, halve the in-pandemic R&D costs
+        base_inp_rd_nom(ufv_protection) = base_inp_rd_nom(ufv_protection) .* 0.5;
+    end
+
     inp_rd_costs_nom = zeros(num_sims, max_years);
-    inp_rd_costs_nom(event_start_idx) = event_inp_rd_nom .* ~false_pos_detected; % Still pay response when universal vaccine.
+    inp_rd_costs_nom(event_start_idx) = (...
+        base_inp_rd_nom .* ~is_false + ... % Incur whole cost when true pandemic
+        params.inp_RD_sink_false .* is_false .* ~false_pos_ignored ... % Sink some cost when false positive acted upon
+    );
     inp_rd_costs_pv = inp_rd_costs_nom .* pv_factors_annual;
 
     %% Pandemic simlations
@@ -166,16 +175,16 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
         group_idx = (sim_groups == g);
         group_sim_nums = unique(group_results.true_sim_nums);
 
-        % Store simulation-level results (indexed by simulation and year)
-        sim_deaths_unmitigated(group_sim_nums, :) = group_results.sim_deaths_unmitigated;
-        sim_deaths_mitigated(group_sim_nums, :) = group_results.sim_deaths_mitigated;
-        sim_mortality_losses_pv(group_sim_nums, :) = group_results.sim_mortality_losses_pv;
-        sim_output_losses_pv(group_sim_nums, :) = group_results.sim_output_losses_pv;
-        sim_learning_losses_pv(group_sim_nums, :) = group_results.sim_learning_losses_pv;
-        sim_benefits_vaccine_pv(group_sim_nums, :) = group_results.sim_benefits_vaccine_pv;
-        sim_benefits_vaccine_nom(group_sim_nums, :) = group_results.sim_benefits_vaccine_nom;
-        sim_marginal_costs_nom(group_sim_nums, :) = group_results.sim_marginal_costs_nom;
-        sim_marginal_costs_pv(group_sim_nums, :) = group_results.sim_marginal_costs_pv;
+        % Add simulation-level results (indexed by simulation and year) to the existing stock
+        sim_deaths_unmitigated(group_sim_nums, :) = sim_deaths_unmitigated(group_sim_nums, :) + group_results.sim_deaths_unmitigated;
+        sim_deaths_mitigated(group_sim_nums, :) = sim_deaths_mitigated(group_sim_nums, :) + group_results.sim_deaths_mitigated;
+        sim_mortality_losses_pv(group_sim_nums, :) = sim_mortality_losses_pv(group_sim_nums, :) + group_results.sim_mortality_losses_pv;
+        sim_output_losses_pv(group_sim_nums, :) = sim_output_losses_pv(group_sim_nums, :) + group_results.sim_output_losses_pv;
+        sim_learning_losses_pv(group_sim_nums, :) = sim_learning_losses_pv(group_sim_nums, :) + group_results.sim_learning_losses_pv;
+        sim_benefits_vaccine_pv(group_sim_nums, :) = sim_benefits_vaccine_pv(group_sim_nums, :) + group_results.sim_benefits_vaccine_pv;
+        sim_benefits_vaccine_nom(group_sim_nums, :) = sim_benefits_vaccine_nom(group_sim_nums, :) + group_results.sim_benefits_vaccine_nom;
+        sim_marginal_costs_nom(group_sim_nums, :) = sim_marginal_costs_nom(group_sim_nums, :) + group_results.sim_marginal_costs_nom;
+        sim_marginal_costs_pv(group_sim_nums, :) = sim_marginal_costs_pv(group_sim_nums, :) + group_results.sim_marginal_costs_pv;
 
         % Store event-level results (indexed by event)
         vax_fraction_end(group_idx) = group_results.vax_fraction_end;
@@ -281,6 +290,10 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     month_any_vaccine_ready(ufv_protection) = group_data.prep_start_month(ufv_protection); % When universal vaccine works it's immediately ready
     month_any_vaccine_ready(~ufv_protection) = month_response_vaccine_ready(~ufv_protection);
 
+    % Hacky but we say that the traditional vaccine is ready when the first vaccine is ready, and mRNA only ready when response
+    month_trad_vaccine_ready = month_any_vaccine_ready;
+    month_mrna_vaccine_ready = month_response_vaccine_ready;
+
     max_years = params.sim_periods;
     num_events = height(group_data);
     num_sims = numel(unique(true_sim_num));
@@ -305,23 +318,23 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     [ind_m, ind_o] = get_capacity_indicators(rd_state); % E x 1
     cap_avail_m = group_all_cap_m(event_start_idx) / 12;
     cap_avail_o = group_all_cap_o(event_start_idx) / 12;
-    [cap_m, cap_o] = get_pandemic_capacity(months_matrix, month_any_vaccine_ready, params, ind_m, ind_o, cap_avail_m, cap_avail_o); % E x M
+    [cap_m, cap_o] = get_pandemic_capacity(months_matrix, month_trad_vaccine_ready, month_mrna_vaccine_ready, params, ind_m, ind_o, cap_avail_m, cap_avail_o); % E x M
     cap_tot = cap_m + cap_o;
 
     % Calculate protection from vaccination
     vax_fraction_cum = cumsum(cap_tot / params.P0, 2);
 
     if params.conservative == 1 % Use beginning of period vaccinations (rather than end of period)
-        vax_fraction_cum = [zeros(num_events, 1), vax_fraction_cum(:, 1:end-1)];
+        vax_fraction_cum = [zeros(num_events, 1), vax_fraction_cum(:, 1:end-1)] .* ~is_false;
     end
 
     % Add protection from universal flu vaccine when relevant
-    vax_fraction_cum = vax_fraction_cum + params.initial_share_ufv .* ufv_protection;
+    vax_fraction_cum = vax_fraction_cum + params.universal_flu_rd.initial_share_ufv .* ufv_protection;
 
     first_vax_idx = vax_fraction_cum <= 0.7; % This is hardcoded, which is bad. Downstream of the piecewise linear function h being hardcoded.
     vax_fraction_cum(vax_fraction_cum > 0.7) = 0.7;
-    using_univ_flu_vax = ufv_protection & (month_response_vaccine_ready <= months_matrix);
-    h_arr = params.gamma .* (1 - params.univ_flu_vax_eff_multiplier .* using_univ_flu_vax) .* h(vax_fraction_cum); % Protection factor
+    using_univ_flu_vax = ufv_protection & (month_response_vaccine_ready >= months_matrix);
+    h_arr = params.gamma .* (1 - (1 - params.univ_flu_vax_eff_multiplier) .* using_univ_flu_vax) .* h(vax_fraction_cum); % Protection factor
     % We assume that when the universal flu vaccine works you also get a fully effective vaccine later.
 
     % Vaccinate at rate of capacity until all vaccinated, then annual

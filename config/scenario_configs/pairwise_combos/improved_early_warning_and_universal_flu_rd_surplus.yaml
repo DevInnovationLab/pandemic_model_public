@@ -1,0 +1,13 @@
+neglected_pathogen_rd:
+  strategy: none
+  num: 0
+universal_flu_rd:
+  active: true
+  platform_response_invest: single
+  initial_share_ufv: 0.1
+advance_capacity:
+  share_target_advance_capacity: 0
+improved_early_warning:
+  active: true
+  precision: 0.3
+  recall: 0.5
