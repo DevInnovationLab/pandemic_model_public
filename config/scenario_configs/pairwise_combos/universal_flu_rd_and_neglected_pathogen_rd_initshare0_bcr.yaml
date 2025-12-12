@@ -1,12 +1,12 @@
 neglected_pathogen_rd:
   strategy: top
-  num: 3
+  num: 1
 universal_flu_rd:
-  active: false
-  platform_response_invest: null
-  initial_share_ufv: null
+  active: true
+  platform_response_invest: both
+  initial_share_ufv: 0
 advance_capacity:
-  share_target_advance_capacity: 1
+  share_target_advance_capacity: 0
 improved_early_warning:
   active: false
   precision: null
