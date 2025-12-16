@@ -100,6 +100,7 @@ def create_pairwise_configs(config_dir, base_config_path):
 
     # Add configs for improved early warning with precision=1 for both bcr and surplus
     for scenario_type in scenario_types:
+        # single: improved_early_warning, precision=1
         new_config = deepcopy(baseline_config)
         new_config['improved_early_warning'] = deepcopy(scenario_config_updates["improved_early_warning"][scenario_type])
         new_config['improved_early_warning']['precision'] = 1
@@ -107,6 +108,21 @@ def create_pairwise_configs(config_dir, base_config_path):
         output_path = outdir / f"improved_early_warning_precision1_{scenario_type}.yaml"
         with open(output_path, 'w') as f:
             yaml.dump(new_config, f, sort_keys=False)
+
+        # pairwise: improved_early_warning (precision=1) with each other scenario
+        for other in [k for k in scenario_keys if k != "improved_early_warning"]:
+            combo_name = f"improved_early_warning_precision1_and_{other}"
+            new_config = deepcopy(baseline_config)
+            # improved_early_warning with precision=1
+            new_config['improved_early_warning'] = deepcopy(scenario_config_updates["improved_early_warning"][scenario_type])
+            new_config['improved_early_warning']['precision'] = 1
+            # add the other scenario
+            param_update = scenario_config_updates[other][scenario_type]
+            new_config[other] = param_update
+
+            output_path = outdir / f"{combo_name}_{scenario_type}.yaml"
+            with open(output_path, 'w') as f:
+                yaml.dump(new_config, f, sort_keys=False)
 
     # Also include pairwise and single scenarios where universal flu vaccine initial protection is zero,
     # so universal_flu_rd is combined with each other intervention *with* initial_share_ufv = 0

@@ -167,15 +167,8 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
 
     % Helper to replace negative BCRs with "Cost-saving"
     function s = bcr_to_string(x, less_than_zero_to_inf)
-        
-        inf_idx = isinf(x);
-
-        if less_than_zero_to_inf
-            inf_idx = inf_idx | (x < 0);
-        end
-        
-        s = round_nicely(x);
-        s(inf_idx) = "$\infty$";
+        inf_idx = isinf(x); if less_than_zero_to_inf, inf_idx = inf_idx | (x < 0); end
+        s = round_nicely(x); s(inf_idx) = "$\infty$";
     end
 
     summary_data.NPVDiff = round_nicely(summary_data.NPVDiff);
@@ -185,13 +178,14 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     if include_ten_thirty
         summary_data.BCRatio10yr = bcr_to_string(summary_data.BCRatio10yr, true);
         summary_data.BCRatio30yr = bcr_to_string(summary_data.BCRatio30yr, true);
-        summary_data.CostPerLife10yr = bcr_to_string(summary_data.CostPerLife10yr);
-        summary_data.CostPerLife30yr = bcr_to_string(summary_data.CostPerLife30yr);
+        summary_data.CostPerLife10yr = bcr_to_string(summary_data.CostPerLife10yr, false);
+        summary_data.CostPerLife30yr = bcr_to_string(summary_data.CostPerLife30yr, false);
     end
     summary_data.BCRatioAll = bcr_to_string(summary_data.BCRatioAll, true);
-    summary_data.CostPerLifeAll = bcr_to_string(summary_data.CostPerLifeAll);
+    summary_data.CostPerLifeAll = bcr_to_string(summary_data.CostPerLifeAll, false);
 
     % Convert scenario names
+    disp(unique(summary_data.Scenario))
     summary_data.Scenario = convert_varnames(summary_data.Scenario);
     summary_data.Scenario = replace(summary_data.Scenario, "&", "\&"); % Escape ampersands in scenario names for LaTeX
 

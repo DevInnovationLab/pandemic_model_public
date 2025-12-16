@@ -18,7 +18,7 @@ function create_early_warning_comparison_table(job_dir, recalculate_bc)
     % Get scenarios from config. Only want to look at early warning scenarios.
     config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
-    scenarios = scenarios(strcmp(scenarios, 'baseline') | (contains(scenarios, "early_warning") & ~contains(scenarions, "_and_")));
+    scenarios = scenarios(strcmp(scenarios, 'baseline') | (contains(scenarios, "early_warning") & ~contains(scenarios, "_and_")));
 
     % Initialize table with baseline row, now with LivesAll and CostPerLifeAll
     summary_table = table('Size', [length(scenarios) 13], ...
@@ -95,7 +95,8 @@ function create_early_warning_comparison_table(job_dir, recalculate_bc)
         % summary_table.CostPerLifeAll(isinf(summary_table.CostPerLifeAll)) = NaN;
     end
 
-    accents = regexp(scenario_name, '(bcr|surplus)$', 'match', 'once');
+    accents = regexp(scenarios, '(bcr|surplus)$', 'match', 'once');
+    disp(accents)
     
     precisions = zeros(size(accents));
     recalls = zeros(size(accents));
@@ -111,19 +112,18 @@ function create_early_warning_comparison_table(job_dir, recalculate_bc)
     summary_table.recall = recalls;
 
     disp(summary_table)
-    disp(scenarios)
 
     % Save table to CSV
     writetable(summary_table, fullfile(processed_dir, 'early_warning_variant_summary.csv'));
 
     % Write latex table
     outpath = fullfile(processed_dir, "early_warning_variant_summary.tex");
-    create_table(summary_table, investments, outpath);
+    create_table(summary_table, outpath);
 
 end
 
 
-function create_table(summary_data)
+function create_table(summary_data, outpath)
     
     % Convert to appropriate units
     summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9;
@@ -142,6 +142,8 @@ function create_table(summary_data)
         s = round_nicely(x); s(inf_idx) = "$\infty$";
     end
 
+    summary_data.precision = round_nicely(summary_data.precision);
+    summary_data.recall = round_nicely(summary_data.recall);
     summary_data.BenefitDiff = round_nicely(summary_data.BenefitDiff);
     summary_data.CostDiff = round_nicely(summary_data.CostDiff);
     summary_data.BCRatioAll = bcr_to_string(summary_data.BCRatioAll, true);
@@ -160,14 +162,17 @@ function create_table(summary_data)
         '\\caption{\\textbf{Estimated expected benefits, costs, and lives saved across early warning program variants.} Monetary estimates are discounted.}\n'
     ];
     fprintf(fileID, caption_str);
-    fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c c}\n');
+    fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c}\n');
     fprintf(fileID, '\\hline\n');
     fprintf(fileID, ...
-        'Description & Sensivitity & Precision & Costs (\\$~bn) & Benefits (\\$~bn) & Lives saved \\\\\n');
+        'Recall/Sensivitity & Precision & Costs (\\$~bn) & Benefits (\\$~bn) & Lives saved \\\\\n');
 
     for i = 1:height(summary_data)
-        printf(fileID, '%s & %s & %s & %s & %s & %s \\\\\n', ...
-                summary_data.description{i}, ...
+        if strcmp(summary_data.Scenario(i), "baseline")
+            continue
+        end
+        
+        fprintf(fileID, '%s & %s & %s & %s & %s \\\\\n', ...
                 summary_data.recall(i), ...
                 summary_data.precision(i), ...
                 summary_data.CostDiff(i), ...
@@ -178,9 +183,4 @@ function create_table(summary_data)
     fprintf(fileID, '\\hline\n\\end{tabular*}\n');
     fprintf(fileID, '\\label{tab:adv_invest_summary}\n');
     fprintf(fileID, '\\end{table}\n\n');
-end
-
-function description = get_description(scenario_name)
-
-    dictmap = dictionary()
 end

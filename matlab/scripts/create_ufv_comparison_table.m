@@ -18,7 +18,11 @@ function create_ufv_comparison_table(job_dir, recalculate_bc)
     % Get scenarios from config. Only want to look at early warning scenarios.
     config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
-    scenarios = scenarios(strcmp(scenarios, 'baseline') | (contains(scenarios, "universal_flu")));
+    scenarios = scenarios(strcmp(scenarios, 'baseline') | ...
+                         contains(scenarios, "universal_flu") | ...
+                         (~contains(scenarios, "_and_") & ~contains(scenarios, "precision")));
+
+    disp(scenarios)
 
     % Initialize table with baseline row, now with LivesAll and CostPerLifeAll
     summary_table = table('Size', [length(scenarios) 13], ...
@@ -119,7 +123,7 @@ function create_ufv_comparison_table(job_dir, recalculate_bc)
     surplus_summary_table = summary_table(strcmp(summary_table.accent, "surplus"), :);
 
     outpath = fullfile(processed_dir, "ufv_investigation_summary.tex");
-    create_table(surplus_summary_table, investments, outpath);
+    create_table(surplus_summary_table, outpath);
 
 end
 
@@ -140,119 +144,150 @@ function [accent, investment_indicators] = parse_scenario_name(scenario_name)
 end
 
 
-function create_table(summary_data, investments, outpath)
-
-    % Convert to appropriate units
-    summary_data.NPVDiff = summary_data.NPVDiff / 1e9; % to billions
+function create_table(summary_data, outpath)
+    % Convert to billions, format rounding
+    summary_data.NPVDiff     = summary_data.NPVDiff / 1e9;
+    summary_data.CostDiff    = summary_data.CostDiff / 1e9;
     summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9;
-    summary_data.CostDiff = summary_data.CostDiff / 1e9;
-    summary_data.CostPerLifeAll = summary_data.CostPerLifeAll / 1e3;
 
-    % Round lives saved
-    round_lives = @(x) arrayfun(@(y) round(y, -2) * (y < 1e4) + round(y, -3) * (y >= 1e4), x);
-    summary_data.LivesAll = comma_format(round_lives(summary_data.LivesAll));
-    
-    % Nice rounding for BCR, costs, etc.
-    round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
-
-    function s = bcr_to_string(x, less_than_zero_to_inf)
-        inf_idx = isinf(x); if less_than_zero_to_inf, inf_idx = inf_idx | (x < 0); end
-        s = round_nicely(x); s(inf_idx) = "$\infty$";
-    end
-
-    summary_data.NPVDiff = round_nicely(summary_data.NPVDiff);
+    round_nicely = @(x) string((abs(x) >= 10).*round(x) + (abs(x) < 10).*round(x,1));
+    summary_data.CostDiff    = round_nicely(summary_data.CostDiff);
     summary_data.BenefitDiff = round_nicely(summary_data.BenefitDiff);
-    summary_data.CostDiff = round_nicely(summary_data.CostDiff);
-    summary_data.BCRatioAll = bcr_to_string(summary_data.BCRatioAll, true);
-    summary_data.CostPerLifeAll = bcr_to_string(summary_data.CostPerLifeAll, false);
+
+    % Extract initial shares in sorted order
+    shares = unique(summary_data.initial_share_ufv);
+    shares = sort(shares);
+
+    % Open file
+    fid = fopen(outpath,'w');
+
+    fprintf(fid, '\\begin{table}[htbp]\n\\centering\n');
+    fprintf(fid, ['\\caption{\\textbf{Costs and benefits of universal flu vaccine (UFV) R\\&D and complementary ' ...
+                  'investments, under two initial vaccination shares.} Monetary estimates are discounted.}\n']);
     
-    % Escape LaTeX special chars & in names
-    summary_data.Scenario = replace(string(summary_data.Scenario), "&", "\&");
-
-    % Open LaTeX file for writing
-    fileID = fopen(outpath, 'w');
-
-    
-    % Table 1: Effects summary (costs, benefits, net, lives)
-    fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
-    caption_str = [
-        '\\caption{\\textbf{Estimated expected benefits, costs, net value, and lives saved from advance investment programs.} Monetary estimates are discounted.}\n'
-    ];
-    fprintf(fileID, caption_str);
-    fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c}\n');
-    fprintf(fileID, '\\hline\n');
-    fprintf(fileID, ...
-        'Investment & Costs (\\$~bn) & Benefits (\\$~bn) & Lives saved \\\\\n');
-
-    % Instead of looping through investments, output all universal flu vaccine scenarios.
-    % First, sort table by initial_share_ufv, then within each, print Alone first, then "With" scenarios alphabetically.
-
-    % Sort by initial share (initial_share_ufv)
-    [~, order_idx] = sort(summary_data.initial_share_ufv);
-    summary_data = summary_data(order_idx, :);
-
-    % Get unique initial_share_ufv (initial_share_ufv) values in sorted order
-    unique_shares = unique(summary_data.initial_share_ufv);
-
-    for s = 1:length(unique_shares)
-        share = unique_shares(s);
-
-        % Get all scenarios with this share
-        share_rows = summary_data(summary_data.initial_share_ufv == share, :)
-
-        % Print header for initial share
-        fprintf(fileID, '\\multicolumn{5}{l}{\\textbf{Initial share UFV: %.2g}} \\\\\n', share);
-
-        % Find "Alone" scenario: only universal_flu is true among investments
-        only_ufv = share_rows.universal_flu & ...
-                   ~share_rows.advance_capacity & ~share_rows.early_warning & ~share_rows.neglected_pathogen;
-        alone_idx = find(only_ufv);
-
-        % Print Alone scenario first if it exists
-        if ~isempty(alone_idx)
-            name = "Alone";
-            fprintf(fileID, '\\hspace{3mm} %s & ', name);
-            fprintf(fileID, '%s & %s & %s \\\\\n', ...
-                share_rows.CostDiff(alone_idx), ...
-                share_rows.BenefitDiff(alone_idx), ...
-                share_rows.LivesAll(alone_idx));
+    % Column structure: | Investment | Cost (share1) | Benefit (share1) | Cost (share2) | Benefit (share2) |
+    if length(shares) == 2
+        fprintf(fid, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}}l c c c c}\n');
+        fprintf(fid, '\\hline\n');
+        share_perc = @(x) sprintf('%g\\%%', x*100);
+        fprintf(fid, 'Pre-emptive UFV uptake & \\multicolumn{2}{c}{%s} & \\multicolumn{2}{c}{%s} \\\\\n', share_perc(shares(1)), share_perc(shares(2)));
+        fprintf(fid, 'Investment & Cost (\\$~bn) & Benefit (\\$~bn) & Cost (\\$~bn) & Benefit (\\$~bn) \\\\\n');
+    else
+        % Fallback for arbitrary share count
+        n = length(shares);
+        fprintf(fid, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}}l');
+        for k=1:n, fprintf(fid,' cc'); end
+        fprintf(fid,'}\n\\hline\n');
+        fprintf(fid,'Investment');
+        for k=1:n
+            share_perc = sprintf('%g\\%%', shares(k)*100);
+            fprintf(fid,' & Cost (%s) & Benefit (%s)', share_perc, share_perc);
         end
+        fprintf(fid,' \\\\\n');
+    end
 
-        % Now find "With" scenarios: universal_flu plus *one* other investment
-        with_mask = share_rows.universal_flu & ...
-            (share_rows.advance_capacity + share_rows.early_warning + share_rows.neglected_pathogen == 1);
+    fprintf(fid, '\\hline\n');
 
-        with_idxs = find(with_mask);
-
-        % For each "With" row, assign the name of the other investment
-        with_names = {};
-        for i = 1:length(with_idxs)
-            idx = with_idxs(i);
-            row = share_rows(idx, :);
-            % Find which non-ufv investment is true
-            other = '';
-            if row.advance_capacity, other = 'Advance capacity'; end
-            if row.early_warning,   other = 'Early warning';   end
-            if row.neglected_pathogen, other = 'Neglected pathogen'; end
-            with_names{i} = other;
-        end
-
-        % Sort "With" scenarios alphabetically by name
-        [sorted_with_names, sort_idx] = sort(with_names);
-        sorted_with_idxs = with_idxs(sort_idx);
-
-        for k = 1:length(sorted_with_idxs)
-            idx = sorted_with_idxs(k);
-            name = "With " + sorted_with_names{k};
-            fprintf(fileID, '\\hspace{3mm} %s & ', name);
-            fprintf(fileID, '%s & %s & %s \\\\\n', ...
-                share_rows.CostDiff(idx), ...
-                share_rows.BenefitDiff(idx), ...
-                share_rows.LivesAll(idx));
+    % Helper: Get cost and benefit for all shares for a given logical index or return '--'
+    function colset = get_cols_for_shares(cond)
+        colset = cell(1, 2*length(shares));
+        for s = 1:length(shares)
+            idx = find(cond & summary_data.initial_share_ufv == shares(s));
+            if isempty(idx)
+                colset{2*s-1} = "--";
+                colset{2*s}   = "--";
+            else
+                colset{2*s-1} = summary_data.CostDiff(idx);
+                colset{2*s}   = summary_data.BenefitDiff(idx);
+            end
         end
     end
 
-    fprintf(fileID, '\\hline\n\\end{tabular*}\n');
-    fprintf(fileID, '\\label{tab:adv_invest_summary}\n');
-    fprintf(fileID, '\\end{table}\n\n');
+    % 1. Universal flu vaccine R&D alone
+    cond_ufv = summary_data.universal_flu & ...
+               ~summary_data.advance_capacity & ...
+               ~summary_data.early_warning & ...
+               ~summary_data.neglected_pathogen;
+    row = get_cols_for_shares(cond_ufv);
+    fprintf(fid, 'Universal flu vaccine R\\&D alone');
+    for v = 1:length(row), fprintf(fid, ' & %s', row{v}); end
+    fprintf(fid, ' \\\\\n');
+
+    % 2. Complementary investments
+    complements = {
+        'Advance capacity',       'advance_capacity';
+        'Early warning',          'early_warning';
+        'Neglected pathogen R\\&D','neglected_pathogen'
+    };
+
+    for c = 1:size(complements,1)
+        label = complements{c,1};
+        field = complements{c,2};
+
+        fprintf(fid, '\\multicolumn{%d}{l}{\\textit{%s}} \\\\\n', 1 + 2*length(shares), label);
+
+        % Alone: Only this complement is true (excluding universal_flu).
+        cond_alone = summary_data.(field) & ...
+                     ~summary_data.universal_flu & ...
+                     (summary_data.advance_capacity == strcmp(field,'advance_capacity')) & ...
+                     (summary_data.early_warning == strcmp(field,'early_warning')) & ...
+                     (summary_data.neglected_pathogen == strcmp(field,'neglected_pathogen'));
+        row = get_cols_for_shares(cond_alone);
+        fprintf(fid, '\\hspace{3mm} Alone');
+        for v = 1:length(row), fprintf(fid, ' & %s', row{v}); end
+        fprintf(fid, ' \\\\\n');
+
+        % Sum of programs: UFV alone + complement alone
+        % For each share, sum cost and sum benefit where both exist, else '--'
+        sum_row = cell(1, 2*length(shares));
+        for s = 1:length(shares)
+            % UFV alone for this share
+            cond_ufv_s = (cond_ufv & summary_data.initial_share_ufv == shares(s));
+            idx_ufv = find(cond_ufv_s);
+            uv_cost = [];
+            uv_ben = [];
+            if ~isempty(idx_ufv)
+                uv_cost = summary_data.CostDiff(idx_ufv);
+                uv_ben = summary_data.BenefitDiff(idx_ufv);
+            end
+            % Complement alone
+            cond_alone_s = (cond_alone);
+            assert(sum(cond_alone) == 1)
+            idx_comp = find(cond_alone_s);
+            cp_cost = [];
+            cp_ben = [];
+            if ~isempty(idx_comp)
+                cp_cost = summary_data.CostDiff(idx_comp);
+                cp_ben = summary_data.BenefitDiff(idx_comp);
+            end
+            % Sum or '--'
+            if isempty(uv_cost) || isempty(cp_cost)
+                sum_row{2*s-1} = '--';
+            else
+                sum_row{2*s-1} = round_nicely(str2double(uv_cost) + str2double(cp_cost));
+            end
+            if isempty(uv_ben) || isempty(cp_ben)
+                sum_row{2*s} = '--';
+            else
+                sum_row{2*s} = round_nicely(str2double(uv_ben) + str2double(cp_ben));
+            end
+        end
+        fprintf(fid, '\\hspace{3mm} Sum of programs');
+        for v = 1:length(sum_row), fprintf(fid, ' & %s', sum_row{v}); end
+        fprintf(fid, ' \\\\\n');
+
+        % Combined: Only UFV and this complement are true (2 programs exactly)
+        cond_comb = summary_data.universal_flu & summary_data.(field) & ...
+            ((summary_data.advance_capacity + summary_data.early_warning + summary_data.neglected_pathogen + summary_data.universal_flu) == 2);
+        row = get_cols_for_shares(cond_comb);
+        fprintf(fid, '\\hspace{3mm} Combined');
+        for v = 1:length(row), fprintf(fid, ' & %s', row{v}); end
+        fprintf(fid, ' \\\\\n');
+    end
+
+    fprintf(fid, '\\hline\n\\end{tabular*}\n');
+    fprintf(fid, '\\label{tab:ufv_complement_table}\n');
+    fprintf(fid, '\\end{table}\n');
+
+    fclose(fid);
 end
