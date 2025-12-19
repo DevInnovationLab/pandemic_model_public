@@ -1,4 +1,4 @@
-function plot_vaccine_readiness_cdf(job_dir)
+function plot_vaccine_readiness_cmf(job_dir)
     % Plot the cumulative share of months with vaccine available during pandemics for each scenario.
     % Args:
     %   job_dir: Directory containing job configuration and results

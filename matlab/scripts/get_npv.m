@@ -4,9 +4,9 @@ function get_npv(job_dir, recalculate_bc)
         process_benefit_cost(job_dir, recalculate_bc);
     end
 
-    % plot_npv_timeseries(job_dir, false);
-    % plot_npv_boxplots(job_dir, "baseline");
-    % plot_baseline_npv_ts(job_dir);
+    plot_npv_timeseries(job_dir, false);
+    plot_npv_boxplots(job_dir, "baseline");
+    plot_baseline_npv_ts(job_dir);
     write_benefits_costs_npv_table(job_dir, "baseline");
 end
 

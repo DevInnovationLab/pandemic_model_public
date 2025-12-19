@@ -1,11 +1,12 @@
 function run_sensitivity(config_path, run_type, overwrite)
-    % Load the sensitivity configuration and determine which run type to use.
+    % Run a sensivitity config, which takes a job_config and details parameter variations to run.
+    % The script has capacity for sens
     % 
     % Run type options:
     %   - 'unmitigated': Calls estimate_unmitigated_losses.m, which runs the model without any response interventions.
     %   - 'response': Calls run_job.m, which includes the full response model with interventions.
-    %
-    % The run_type argument should be set to either 'unmitigated' or 'response' to specify which model to execute for each scenario.
+    % Overwrite:
+    %   - true or false; helpful for restarting run that was interrupted without running the same scenarios.
 
     fprintf('Loading configuration files...\n');
     sensitivity_config = yaml.loadFile(config_path);

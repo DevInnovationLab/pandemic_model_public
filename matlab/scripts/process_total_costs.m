@@ -5,6 +5,7 @@ function process_total_costs(results_dir)
     %   across all cost components.
 
     config = yaml.loadFile(fullfile(results_dir, "job_config.yaml"));
+    disp(fieldnames(config.scenarios))
     scenarios = string(fieldnames(config.scenarios));
     rawdata_dir = fullfile(results_dir, "raw");
     processed_dir = fullfile(results_dir, "processed");
@@ -43,6 +44,7 @@ function process_total_costs(results_dir)
     % Process each scenario
     for i = 1:n_scenarios
         scenario = scenarios(i);
+        disp(scenarios)
 
         % Load the .mat file for this scenario
         mat_filename = fullfile(rawdata_dir, sprintf('%s_results.mat', scenario));

@@ -105,13 +105,13 @@ def create_pairwise_configs(config_dir, base_config_path):
         new_config['improved_early_warning'] = deepcopy(scenario_config_updates["improved_early_warning"][scenario_type])
         new_config['improved_early_warning']['precision'] = 1
 
-        output_path = outdir / f"improved_early_warning_precision1_{scenario_type}.yaml"
+        output_path = outdir / f"improved_early_warning_prec1_{scenario_type}.yaml"
         with open(output_path, 'w') as f:
             yaml.dump(new_config, f, sort_keys=False)
 
         # pairwise: improved_early_warning (precision=1) with each other scenario
         for other in [k for k in scenario_keys if k != "improved_early_warning"]:
-            combo_name = f"improved_early_warning_precision1_and_{other}"
+            combo_name = f"improved_early_warning_prec1_and_{other}"
             new_config = deepcopy(baseline_config)
             # improved_early_warning with precision=1
             new_config['improved_early_warning'] = deepcopy(scenario_config_updates["improved_early_warning"][scenario_type])
@@ -133,13 +133,13 @@ def create_pairwise_configs(config_dir, base_config_path):
         new_config = deepcopy(baseline_config)
         new_config['universal_flu_rd'] = deepcopy(scenario_config_updates["universal_flu_rd"][scenario_type])
         new_config['universal_flu_rd']['initial_share_ufv'] = 0
-        outpath = outdir / f"universal_flu_rd_initshare0_{scenario_type}.yaml"
+        outpath = outdir / f"universal_flu_rd_prevac0_{scenario_type}.yaml"
         with open(outpath, 'w') as f:
             yaml.dump(new_config, f, sort_keys=False)
 
         # pairwise: universal_flu_rd with each other (non ufv) scenario, with initial_share_ufv=0
         for other in non_ufv_keys:
-            combo_name = f"universal_flu_rd_and_{other}_initshare0"
+            combo_name = f"universal_flu_rd_and_{other}_prevac0"
             new_config = deepcopy(baseline_config)
             # update universal_flu_rd with initshare0
             new_config['universal_flu_rd'] = deepcopy(scenario_config_updates["universal_flu_rd"][scenario_type])

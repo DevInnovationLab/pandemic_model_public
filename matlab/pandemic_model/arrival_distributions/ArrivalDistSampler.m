@@ -55,7 +55,7 @@ classdef ArrivalDistSampler
             u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
 
             if strcmp(obj.trunc_method, "sharp")
-                y_sample(lin_idx) = gpinv(u_raw, xi(row), sigma(row), mu(row)); % Check that this gives right answer.
+                y_sample(lin_idx) = gpinv(u_raw, xi(row), sigma(row), mu(row));
                 [row_over, col_over] = find(y_sample > max_val);
                 y_sample(sub2ind([height(y_sample), width(y_sample)], row_over, col_over)) = max_val(row_over);
             elseif strcmp(obj.trunc_method, "smooth")
@@ -86,7 +86,7 @@ classdef ArrivalDistSampler
             assert(~any(p_tail >= 1), "Annual arrival probability cannot be greater than one. Ensure false positive rate not set too high.")
             cum_prob_at_th = 1 - p_tail;
 
-            % Case 1: at or below the threshold (atom)
+            % Case 1: at or below the threshold
             idx_th = y_sample <= mu;
             rank(idx_th) = cum_prob_at_th;
 

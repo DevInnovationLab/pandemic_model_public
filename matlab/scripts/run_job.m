@@ -1,4 +1,6 @@
 function run_job(job_config_path)
+    % Run a job config with parameters for a simulation run
+    % Job configs are found in ./config/job_configs
 
     % Load job config and set seed
     job_config = yaml.loadFile(job_config_path);

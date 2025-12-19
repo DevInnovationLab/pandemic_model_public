@@ -19,10 +19,8 @@ function create_ufv_comparison_table(job_dir, recalculate_bc)
     config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
     scenarios = scenarios(strcmp(scenarios, 'baseline') | ...
-                         contains(scenarios, "universal_flu") | ...
-                         (~contains(scenarios, "_and_") & ~contains(scenarios, "precision")));
-
-    disp(scenarios)
+                          (~contains(scenarios, "__and__") & ~contains(scenarios, "warning_prec")) | ...
+                          (contains(scenarios, "universal_flu") & ~contains(scenarios, "warning_prec")));
 
     % Initialize table with baseline row, now with LivesAll and CostPerLifeAll
     summary_table = table('Size', [length(scenarios) 13], ...
@@ -115,16 +113,17 @@ function create_ufv_comparison_table(job_dir, recalculate_bc)
     for i = 1:length(investments)
         summary_table.(investments{i}) = investment_indicators.(investments{i});
     end
-    
+
     % Save table to CSV
     writetable(summary_table, fullfile(processed_dir, 'ufv_investigation_summary.csv'));
 
     % Now let's create the table
     surplus_summary_table = summary_table(strcmp(summary_table.accent, "surplus"), :);
 
+    disp(surplus_summary_table)
+
     outpath = fullfile(processed_dir, "ufv_investigation_summary.tex");
     create_table(surplus_summary_table, outpath);
-
 end
 
 
