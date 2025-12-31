@@ -43,6 +43,19 @@ function run_job(job_config_path)
         scenario_configs{i}.name = scenario_name;
     end
 
+    % Sort scenarios so baseline always runs first
+    scenario_names = cellfun(@(x) x.name, scenario_configs, 'UniformOutput', false);
+    baseline_idx = find(strcmp(scenario_names, 'baseline'));
+    if ~isempty(baseline_idx)
+        % Move baseline to first position
+        baseline_config = scenario_configs{baseline_idx};
+        baseline_config_path = scenario_config_paths(baseline_idx);
+        scenario_configs(baseline_idx) = [];
+        scenario_config_paths(baseline_idx) = [];
+        scenario_configs = [{baseline_config}; scenario_configs];
+        scenario_config_paths = [baseline_config_path; scenario_config_paths];
+    end
+
     % Get the highest false positive rate to inflate pandemic arrivals
     highest_false_positive_rate = 0;
     for i = 1:length(scenario_configs)
@@ -109,16 +122,102 @@ function run_job(job_config_path)
                                                                   response_rd_timelines, ...
                                                                   simulation_params);
 
-        scenario_simulation_table_path = fullfile(raw_results_path, sprintf('%s_simulation_table.mat', scenario_name));
-        save(scenario_simulation_table_path, 'scenario_simulation_table');
-
         % Run scenario
-        event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
+        [annual_results, scenario_pandemic_table] = ...
+            event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
+
+        %% Post-process results
+        fprintf('Post-processing results for scenario: %s\n', scenario_name);
+        if strcmp(scenario_name, "baseline")
+           % Save then store baseline results now to compute relative outcomes later
+            annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
+            save(annual_absolute_filename', '-struct', "annual_results");
+            save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out);
+
+            annual_results_baseline = annual_results;
+            continue;
+        end
+
+        % Compute results relative to baseline during simulation loop
+        result_names = fieldnames(annual_results);
+        sum_horizons = [10, 30, 50];
+        
+        % Preallocate table to store summed results
+        num_results = length(result_names);
+        num_horizons = length(sum_horizons) + 1; % +1 for full horizon
+        num_cols = num_results * num_horizons;
+        scenario_sum_table = table('Size', [job_config.num_simulations, num_cols], ...
+                                   'VariableTypes', repmat({'double'}, 1, num_cols));
+        
+        % Initialize struct to store all relative annual results
+        relative_annual_results = struct();
+
+        for j = 1:length(result_names)
+            result = result_names{j};
+            annual_result_baseline = annual_results_baseline.(result);
+            annual_result_scenario = annual_results.(result);
+
+            % Calculate relative annual results
+            relative_annual_result = annual_result_scenario - annual_result_baseline;
+            relative_annual_results.(result) = relative_annual_result;
+            
+            % Calculate sums over different horizons
+            col_idx = (j-1) * num_horizons + 1;
+            for k = 1:length(sum_horizons)
+                sum_horizon = sum_horizons(k);
+                relative_result_sum = sum(relative_annual_result(:, 1:sum_horizon), 2);
+                varname = strcat(result, '_', num2str(sum_horizon), '_years');
+                scenario_sum_table.Properties.VariableNames{col_idx} = varname;
+                scenario_sum_table{:, col_idx} = relative_result_sum;
+                col_idx = col_idx + 1;
+            end
+
+            % Calculate sum over full horizon
+            relative_result_whole_horizon_sum = sum(relative_annual_result, 2);
+            varname = strcat(result, '_full');
+            scenario_sum_table.Properties.VariableNames{col_idx} = varname;
+            scenario_sum_table{:, col_idx} = relative_result_whole_horizon_sum;
+        end
+        
+        fprintf('Saving post-processed results\n');
+        annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
+        save(annual_absolute_filename, '-struct', 'annual_results');
+
+        % Save all relative annual results to single .mat file
+        annual_relative_filename = fullfile(raw_results_path, sprintf('%s_relative_annual.mat', scenario_name));
+        save(annual_relative_filename, '-struct', 'relative_annual_results');
+        
+        % Save the summed results table
+        sum_table_filename = fullfile(raw_results_path, sprintf('%s_relative_sums.mat', scenario_name));
+        save(sum_table_filename, 'scenario_sum_table');
+
+        % Save the pandemic table
+        fprintf('Saving pandemic table\n');
+        save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out)
     end
 
     % Save job and scenario params
     config_outpath = fullfile(sim_results_path, "job_config.yaml");
     yaml.dumpFile(config_outpath, out_params);
+end
+
+function save_pandemic_table(pandemic_table, scenario_name, outdir, outstyle)
+
+    if strcmp(outstyle, "none")
+        return;
+    elseif strcmp(outstyle, "skinny")
+        remove_cols = {'mrna_vax_state', 'trad_vax_state', 'ufv_vax_state', ...
+                       'natural_dur', 'yr_end', 'severity', 'rd_state', 'u_deaths'};
+        pandemic_table(:, remove_cols) = [];
+    elseif strcmp(outstyle, "full")
+        % Do nothing
+    else
+        warning("Invalid pandemic_table_out option: %s. Must be 'none', 'skinny', or 'full'.", outstyle);
+    end
+
+    fp = fullfile(outdir, sprintf('%s_pandemic_table.mat', scenario_name));
+    save(fp, 'pandemic_table', '-v7.3');
+    fprintf('Saved pandemic table to %s\n', fp);
 end
 
 function updated_params = update_params(job_config, scenario_config, arrival_rates)

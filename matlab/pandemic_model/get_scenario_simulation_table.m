@@ -4,6 +4,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 															  response_rd_timelines, ... %Deprecated but keeping logic in case we want to return
 															  params)
 	% First thing to do is to deal with the false positive outbreaks
+	% Keeping right amount for false positive rate implied by early warning
 	scenario_false_positive_rate = params.improved_early_warning.active .* (1 -  params.improved_early_warning.precision); % Need this to be a zero
 	false_keep_rate = (...
 		(scenario_false_positive_rate .* (1 - params.highest_false_positive_rate)) ./ ...

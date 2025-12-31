@@ -1,21 +1,19 @@
-function event_list_simulation(simulation_table, econ_loss_model, params)
+function [annual_results, simulation_table] = event_list_simulation(simulation_table, econ_loss_model, params)
     % Extract events from simulation table
-    event_sim_idx = ~isnan(simulation_table.yr_start);
-    event_sim_table = simulation_table(event_sim_idx, :); % Remove simulations with no events
-    event_sim_table = sortrows(event_sim_table, ["sim_num", "yr_start"]); % Make sure sorted
+    simulation_table = sortrows(simulation_table, ["sim_num", "yr_start"]); % Make sure sorted
 
     % Basic simulation parameters
-    sim_num = event_sim_table.sim_num;
-    year_start = event_sim_table.yr_start;
-    year_dur = event_sim_table.actual_dur;
-    is_false = event_sim_table.is_false;
-    prep_start_month = event_sim_table.prep_start_month;
+    sim_num = simulation_table.sim_num;
+    year_start = simulation_table.yr_start;
+    year_dur = simulation_table.actual_dur;
+    is_false = simulation_table.is_false;
+    prep_start_month = simulation_table.prep_start_month;
     false_pos_ignored = isnan(prep_start_month) & is_false;
-    ufv_protection = event_sim_table.ufv_protection;
+    ufv_protection = simulation_table.ufv_protection;
 
     num_sims = params.num_simulations;
     max_years = params.sim_periods;
-    num_events = height(event_sim_table);
+    num_events = height(simulation_table);
 
     % Event indices for aggregation
     event_start_idx = sub2ind([num_sims, max_years], sim_num, year_start);
@@ -111,9 +109,10 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     tailoring_costs_pv = tailoring_costs_nom .* pv_factors_annual;
 
     % In-pandemic R&D costs
-    base_inp_rd_nom = repmat(params.inp_RD_spend, height(event_sim_table), 1);
+    base_inp_rd_nom = repmat(params.inp_RD_spend, height(simulation_table), 1);
 
-    if params.universal_flu_rd.active && params.universal_flu_rd.platform_response_invest == "single" % When strategy is only to invest in single platform, halve the in-pandemic R&D costs
+    if params.universal_flu_rd.active && ...
+       params.universal_flu_rd.platform_response_invest == "single" % When strategy is only to invest in single platform, halve the in-pandemic R&D costs
         base_inp_rd_nom(ufv_protection) = base_inp_rd_nom(ufv_protection) .* 0.5;
     end
 
@@ -125,26 +124,6 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     inp_rd_costs_pv = inp_rd_costs_nom .* pv_factors_annual;
 
     %% Pandemic simlations
-    % Groups simulations by length to minimize redundant computation
-    [sim_groups, group_ids] = findgroups(event_sim_table.actual_dur);
-    results = cell(numel(group_ids), 1);
-
-    % Parallelize pandemic simulations
-    for g = 1:numel(group_ids)
-        group_idx = (sim_groups == g);
-        group_data = event_sim_table(group_idx, :);
-
-        group_sim_nums = unique(group_data.sim_num);
-        group_all_cap_m = all_cap_m(group_sim_nums, :);
-        group_all_cap_o = all_cap_o(group_sim_nums, :);
-
-        group_results = process_group(group_data, group_all_cap_m, group_all_cap_o, ...
-                                      econ_loss_model, params);
-
-        results{g} = group_results;
-    end
-    % Aggregate simulation results from group results, store in arrays, and put in sim_results table
-
     % Initialize arrays for simulation-level results (indexed by sim_num, year)
     sim_deaths_unmitigated = zeros(num_sims, max_years);
     sim_deaths_mitigated = zeros(num_sims, max_years);
@@ -170,11 +149,20 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
     ex_post_severity = zeros(num_events, 1);
     inp_marg_costs_PV = zeros(num_events, 1);
 
-    % Loop through each group and extract relevant simulation and event results
+    % Groups simulations by length to minimize redundant computation
+    [sim_groups, group_ids] = findgroups(simulation_table.actual_dur);
+
+    % Parallelize pandemic simulations
     for g = 1:numel(group_ids)
-        group_results = results{g};
         group_idx = (sim_groups == g);
-        group_sim_nums = unique(group_results.true_sim_nums);
+        group_data = simulation_table(group_idx, :);
+
+        group_sim_nums = unique(group_data.sim_num);
+        group_all_cap_m = all_cap_m(group_sim_nums, :);
+        group_all_cap_o = all_cap_o(group_sim_nums, :);
+
+        group_results = process_group(group_data, group_all_cap_m, group_all_cap_o, ...
+                                      econ_loss_model, params);
 
         % Add simulation-level results (indexed by simulation and year) to the existing stock
         sim_deaths_unmitigated(group_sim_nums, :) = sim_deaths_unmitigated(group_sim_nums, :) + group_results.sim_deaths_unmitigated;
@@ -202,65 +190,77 @@ function event_list_simulation(simulation_table, econ_loss_model, params)
         inp_marg_costs_PV(group_idx) = group_results.inp_marg_costs_PV;
     end
 
-    % Set up sim_results table with all simulation and event-level results
-    sim_table_cols = simulation_table.Properties.VariableNames;
-    sim_table_types = varfun(@class, simulation_table, 'OutputFormat', 'cell');
-
+    % Aggregate simulation results from group results, store in arrays, and put in simulation_table table
     result_cols = {'cap_avail_m', 'cap_avail_o', 'u_deaths', 'm_deaths', 'vax_benefits', ...
                    'm_mortality_losses', 'm_output_losses', 'm_learning_losses', 'ex_post_severity', ...
-                   'vax_fraction_end', 'inp_marg_costs_PV', 'inp_tailoring_costs_PV', 'inp_RD_costs_PV', ...
+                   'inp_marg_costs_PV', 'inp_tailoring_costs_PV', 'inp_RD_costs_PV', ...
                    'inp_cap_costs_PV'};
-    result_var_types = repmat({'double'}, [1, numel(result_cols)]);
-
-    sim_results_cols = [sim_table_cols, result_cols];
-    sim_results_var_types = [sim_table_types, result_var_types];
-
-    % Create results table with all simulations
-    sim_results = table('Size', [height(simulation_table), numel(sim_results_cols)], ...
-                        'VariableTypes', sim_results_var_types, ...
-                        'VariableNames', sim_results_cols);
-
-    % Copy all scenario parameters 
-    sim_results(:, sim_table_cols) = simulation_table;
-
-    % Initialize results columns with zeros
-    sim_results{:, result_cols} = 0;
+    
+    % Add result columns
+    for i = 1:numel(result_cols)
+        simulation_table.(result_cols{i}) = nan(height(simulation_table), 1);
+    end
 
     % Fill in results only for simulations that had events
-    sim_results.cap_avail_m(event_sim_idx) = cap_avail_m;
-    sim_results.cap_avail_o(event_sim_idx) = cap_avail_o;
-    sim_results.u_deaths(event_sim_idx) = u_deaths;
-    sim_results.m_deaths(event_sim_idx) = m_deaths;
-    sim_results.vax_benefits(event_sim_idx) = vax_benefits;
-    sim_results.m_mortality_losses(event_sim_idx) = m_mortality_losses;
-    sim_results.m_output_losses(event_sim_idx) = m_output_losses;
-    sim_results.m_learning_losses(event_sim_idx) = m_learning_losses;
-    sim_results.ex_post_severity(event_sim_idx) = ex_post_severity;
-    sim_results.ufv_vax_end(event_sim_idx) = ufv_vax_end;
-    sim_results.all_vax_end(event_sim_idx) = all_vax_end;
-    sim_results.inp_marg_costs_PV(event_sim_idx) = inp_marg_costs_PV;
-    sim_results.inp_tailoring_costs_PV(event_sim_idx) = tailoring_costs_pv(event_start_idx);
-    sim_results.inp_RD_costs_PV(event_sim_idx) = inp_rd_costs_pv(event_start_idx);
-    sim_results.inp_cap_costs_PV(event_sim_idx) = surge_cap_total_costs_pv(event_start_idx);
+    simulation_table.cap_avail_m = cap_avail_m;
+    simulation_table.cap_avail_o = cap_avail_o;
+    simulation_table.u_deaths = u_deaths;
+    simulation_table.m_deaths = m_deaths;
+    simulation_table.vax_benefits = vax_benefits;
+    simulation_table.m_mortality_losses = m_mortality_losses;
+    simulation_table.m_output_losses = m_output_losses;
+    simulation_table.m_learning_losses = m_learning_losses;
+    simulation_table.ex_post_severity = ex_post_severity;
+    simulation_table.ufv_vax_end = ufv_vax_end;
+    simulation_table.all_vax_end = all_vax_end;
+    simulation_table.inp_marg_costs_PV = inp_marg_costs_PV;
+    simulation_table.inp_tailoring_costs_PV = tailoring_costs_pv(event_start_idx);
+    simulation_table.inp_RD_costs_PV = inp_rd_costs_pv(event_start_idx);
+    simulation_table.inp_cap_costs_PV = surge_cap_total_costs_pv(event_start_idx);
 
-    % Save results if requested
-    if params.save_output
-        save_to_file_fast(params.scenario_name, params.rawoutpath, sim_results, ...
-            repmat(adv_cap_total_costs_nom, num_sims, 1), repmat(adv_cap_total_costs_pv, num_sims, 1), ...
-            repmat(prototype_rd_costs_nom, num_sims, 1), repmat(prototype_rd_costs_pv, num_sims, 1), ...
-            repmat(ufv_rd_costs_nom, num_sims, 1), repmat(ufv_rd_costs_pv, num_sims, 1), ...
-            repmat(surveil_costs_nom, num_sims, 1), repmat(surveil_costs_pv, num_sims, 1), ...
-            surge_cap_total_costs_nom, surge_cap_total_costs_pv, ...
-            sim_marginal_costs_nom, sim_marginal_costs_pv, ...
-            tailoring_costs_nom, tailoring_costs_pv, ...
-            inp_rd_costs_nom, inp_rd_costs_pv, ...
-            sim_deaths_unmitigated, sim_deaths_mitigated, ...
-            sim_mortality_losses_pv, sim_output_losses_pv, ...
-            sim_learning_losses_pv, sim_benefits_vaccine_pv, ...
-            sim_benefits_vaccine_nom);
-    end
+    % Calculate total costs and net value
+    total_costs_nom = surge_cap_total_costs_nom + adv_cap_total_costs_nom + prototype_rd_costs_nom + ...
+                      ufv_rd_costs_nom + surveil_costs_nom + sim_marginal_costs_nom + tailoring_costs_nom + ...
+                      inp_rd_costs_nom;
+    total_costs_pv = surge_cap_total_costs_pv + adv_cap_total_costs_pv + prototype_rd_costs_pv + ...
+                     ufv_rd_costs_pv + surveil_costs_pv + sim_marginal_costs_pv + tailoring_costs_pv + ...
+                     inp_rd_costs_pv;
+
+    net_value_nom = sim_benefits_vaccine_nom - total_costs_nom;
+    net_value_pv = sim_benefits_vaccine_pv - total_costs_pv;
+    lives_saved = sim_deaths_unmitigated - sim_deaths_mitigated;
+
+    % Store annual results in struct
+    annual_results = struct( ...
+        'costs_adv_cap_nom',                  adv_cap_total_costs_nom, ...
+        'costs_adv_cap_PV',                   adv_cap_total_costs_pv, ...
+        'costs_prototype_RD_nom',             prototype_rd_costs_nom, ...
+        'costs_prototype_RD_PV',              prototype_rd_costs_pv, ...
+        'costs_ufv_RD_nom',                   ufv_rd_costs_nom, ...
+        'costs_ufv_RD_PV',                    ufv_rd_costs_pv, ...
+        'costs_surveil_nom',                  surveil_costs_nom, ...
+        'costs_surveil_PV',                   surveil_costs_pv, ...
+        'costs_inp_cap_nom',                  surge_cap_total_costs_nom, ...
+        'costs_inp_cap_PV',                   surge_cap_total_costs_pv, ...
+        'costs_inp_marg_nom',                 sim_marginal_costs_nom, ...
+        'costs_inp_marg_PV',                  sim_marginal_costs_pv, ...
+        'costs_inp_tailoring_nom',            tailoring_costs_nom, ...
+        'costs_inp_tailoring_PV',             tailoring_costs_pv, ...
+        'costs_inp_RD_nom',                   inp_rd_costs_nom, ...
+        'costs_inp_RD_PV',                    inp_rd_costs_pv, ...
+        'total_costs_nom',                    total_costs_nom, ...
+        'total_costs_pv',                     total_costs_pv, ...
+        'net_value_nom',                      net_value_nom, ...
+        'net_value_pv',                       net_value_pv, ...
+        'u_deaths',                           sim_deaths_unmitigated, ...
+        'm_deaths',                           sim_deaths_mitigated, ...
+        'lives_saved',                        lives_saved, ...
+        'm_mortality_losses',                 sim_mortality_losses_pv, ...
+        'm_output_losses',                    sim_output_losses_pv, ...
+        'learning_losses',                    sim_learning_losses_pv, ...
+        'benefits_vaccine_nom',               sim_benefits_vaccine_nom, ...
+        'benefits_vaccine',                   sim_benefits_vaccine_pv);
 end
-
 
 function results = process_group(group_data, group_all_cap_m, group_all_cap_o, econ_loss_model, params)
 %PROCESS_GROUP Perform all calculations for a group of events with the same duration.
@@ -429,7 +429,7 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     results.sim_benefits_vaccine_nom = sim_benefits_vaccine_nom;
     results.sim_benefits_vaccine_pv = sim_benefits_vaccine_pv;
 
-    % Then those indexed by event (for sim_results table)
+    % Then those indexed by event (for simulation_table table)
     results.ufv_vax_end = vax_fraction_ufv(:, end);
     results.all_vax_end = vax_fraction_tot(:, end);
     results.u_deaths = sum(monthly_deaths_unmitigated, 2);

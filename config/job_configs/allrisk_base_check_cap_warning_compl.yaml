@@ -1,12 +1,13 @@
 # Run params
 num_simulations: 50000
-sim_periods: 50
+sim_periods: 200
 outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/pairwise_combos"
 seed: 42
 add_datetime_to_outdir: 0
 save_output: 1
 profile: false # Profile main parallel loop
+pandemic_table_out: "full" # Full, skinny, or none
 
 # Social value
 y: 0.016 # Growth rate
@@ -70,7 +71,7 @@ surveil_annual_installation_spend: 300e6 # Initial spending to install enhanced 
 surveil_installation_years: 2 # Time initial costs are incurred
 surveil_maintenance_spend: 300e6 # Maintenance spending on enhanced surveillance
 months_to_early_detect: 1
-months_to_regular_detect: 3
+months_to_regular_detect: 2
 base_early_detect_prob_true: 0.66
 base_early_detect_prob_false: 0
 inc_early_detect_prob_true: 0.2

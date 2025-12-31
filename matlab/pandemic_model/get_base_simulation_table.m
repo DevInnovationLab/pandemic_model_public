@@ -43,28 +43,28 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	early_detection_q = unifrnd(0, 1, num_response_scenario, 1); % Rank for true outbreak probability
 
 	% Create table of pandemic scenarios
-	response_table = table(sim_num, yr_start, severity, ...
+	simulation_table = table(sim_num, yr_start, severity, ...
 						   is_false, pathogen, ...
 						   mrna_vax_state, trad_vax_state, ufv_vax_state, ...
 						   natural_dur, early_detection_q, ...
 						   intensity, yr_end);
 
 	% Sort by sim_num and year_start for efficient comparison
-	response_table = sortrows(response_table, {'sim_num', 'yr_start'});
+	simulation_table = sortrows(simulation_table, {'sim_num', 'yr_start'});
 
 	% Shifted vectors for comparison
-	prev_sim = [NaN; response_table.sim_num(1:end-1)];
-	prev_end = [NaN; response_table.yr_end(1:end-1)];
+	prev_sim = [NaN; simulation_table.sim_num(1:end-1)];
+	prev_end = [NaN; simulation_table.yr_end(1:end-1)];
 
 	% Overlap if same sim_num and previous end >= current start
-	is_overlap = (response_table.sim_num == prev_sim) & (prev_end >= response_table.yr_start);
+	is_overlap = (simulation_table.sim_num == prev_sim) & (prev_end >= simulation_table.yr_start);
 	
-	[sim_groups, ~] = findgroups(response_table.sim_num);
+	[sim_groups, ~] = findgroups(simulation_table.sim_num);
 	groups_with_overlap = unique(sim_groups(is_overlap));
 	rows_with_overlap = ismember(sim_groups, groups_with_overlap);
 
 	% Fast path: rows in non-overlapping groups are kept as-is
-	tbl_passthrough = response_table(~rows_with_overlap, :);
+	tbl_passthrough = simulation_table(~rows_with_overlap, :);
 
 	% Indices we need to process
 	idx = find(rows_with_overlap);
@@ -73,7 +73,7 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	[gID, ~] = findgroups(sim_groups(idx));
 
 	% Use splitapply: give it the indices, grouped by gID.
-	payloads = splitapply(@(I) local_trim(I, response_table), idx, gID);
+	payloads = splitapply(@(I) local_trim(I, simulation_table), idx, gID);
 
 	% Stitch results
 	tbl_processed = vertcat(payloads.tbl);
@@ -82,39 +82,12 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 
 	% Final table = passthrough + processed (optionally resort if you want)
 	tbl_out = [tbl_passthrough; tbl_processed];
-	response_table = sortrows(tbl_out, {'sim_num','yr_start'});  % or whatever you need
+	simulation_table = sortrows(tbl_out, {'sim_num','yr_start'});
 		
 	% Get effective severity
 	% Effective severity is severity after snipping pandemics
-	response_table.actual_dur = response_table.yr_end - response_table.yr_start + 1;
-	response_table.eff_severity = response_table.severity .* (response_table.actual_dur ./ response_table.natural_dur);
-
-    % Create a table for simulations without pandemics
-	all_sims = 1:params.num_simulations;
-    no_pandemic_sims = setdiff(all_sims, response_table.sim_num);
-
-    no_response_table = table('Size', [length(no_pandemic_sims), width(response_table)], ...
-							  'VariableTypes', response_table.Properties.VariableTypes, ...
-							  'VariableNames', response_table.Properties.VariableNames);
-
-    % Fill numeric columns with NaN
-    numeric_vars = varfun(@isnumeric, response_table, 'OutputFormat', 'uniform');
-    numeric_cols = response_table.Properties.VariableNames(numeric_vars);
-    no_response_table{:, numeric_cols} = NaN;
-
-    % Fill logical columns with false 
-    logical_vars = varfun(@islogical, response_table, 'OutputFormat', 'uniform');
-    logical_cols = response_table.Properties.VariableNames(logical_vars);
-    no_response_table{:, logical_cols} = false;
-
-    % Fill string/char columns with empty strings
-    string_vars = varfun(@isstring, response_table, 'OutputFormat', 'uniform');
-    string_cols = response_table.Properties.VariableNames(string_vars);
-    no_response_table{:, string_cols} = missing;
-    
-    % Combine the original response_table with the no_pandemic_table and sort
-	no_response_table.sim_num = no_pandemic_sims(:);
-    simulation_table = sortrows([response_table; no_response_table], {'sim_num', 'yr_start'});
+	simulation_table.actual_dur = simulation_table.yr_end - simulation_table.yr_start + 1;
+	simulation_table.eff_severity = simulation_table.severity .* (simulation_table.actual_dur ./ simulation_table.natural_dur);
 
 	% Create advance R&D success states during baseline scenario setting it's constant across scenarios
 	pathogens_no_baseline_prototype = string(pathogen_info.pathogen(pathogen_info.has_prototype == 0));
@@ -141,9 +114,9 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 end
 
 
-function S = local_trim(I, response_table)
+function S = local_trim(I, simulation_table)
     % I: global row indices for one group
-    [tbl_i, num_removed, num_trimmed] = trim_overlaps(response_table(I,:));
+    [tbl_i, num_removed, num_trimmed] = trim_overlaps(simulation_table(I,:));
     S = struct('tbl', tbl_i, ...
                'num_removed', num_removed, ...
                'num_trimmed', num_trimmed);
