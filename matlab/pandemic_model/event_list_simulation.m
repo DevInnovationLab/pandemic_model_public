@@ -2,6 +2,16 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     % Extract events from simulation table
     simulation_table = sortrows(simulation_table, ["sim_num", "yr_start"]); % Make sure sorted
 
+    % Check data types
+    % Suppose your table is called T
+    varNames = simulation_table.Properties.VariableNames; % get column names
+    colClasses = varfun(@class, simulation_table, 'OutputFormat', 'cell'); % get class of each column
+
+    % Display results
+    for i = 1:numel(varNames)
+        fprintf('%s: %s\n', varNames{i}, colClasses{i});
+    end
+
     % Basic simulation parameters
     sim_num = simulation_table.sim_num;
     year_start = simulation_table.yr_start;
