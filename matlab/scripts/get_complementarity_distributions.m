@@ -300,7 +300,6 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
     % Generate bootstrap sample indices once, to be reused across all scenarios
     rng(42); % Set seed for reproducibility
     bootstrap_indices = randi(sample_size, sample_size, n_bootstrap);
-    disp(size(bootstrap_indices))
     
     % Create two figures: raw distributions and bootstrap means
     % Use tighter spacing

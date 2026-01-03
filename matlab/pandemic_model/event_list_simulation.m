@@ -2,16 +2,6 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     % Extract events from simulation table
     simulation_table = sortrows(simulation_table, ["sim_num", "yr_start"]); % Make sure sorted
 
-    % Check data types
-    % Suppose your table is called T
-    varNames = simulation_table.Properties.VariableNames; % get column names
-    colClasses = varfun(@class, simulation_table, 'OutputFormat', 'cell'); % get class of each column
-
-    % Display results
-    for i = 1:numel(varNames)
-        fprintf('%s: %s\n', varNames{i}, colClasses{i});
-    end
-
     % Basic simulation parameters
     sim_num = simulation_table.sim_num;
     year_start = simulation_table.yr_start;
@@ -272,6 +262,7 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
         'benefits_vaccine',                   sim_benefits_vaccine_pv);
 end
 
+
 function results = process_group(group_data, group_all_cap_m, group_all_cap_o, econ_loss_model, params)
 %PROCESS_GROUP Perform all calculations for a group of events with the same duration.
 %
@@ -335,48 +326,58 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     cap_tot = cap_m + cap_o;
 
     % Calculate protection from vaccination
-    using_univ_flu_vax = ufv_protection & (month_response_vaccine_ready >= months_matrix);
-    vax_fraction_ufv = cumsum((cap_tot / params.P0) .* using_univ_flu_vax, 2);
-    vax_steps_regular = (cap_tot / params.P0) .* ~using_univ_flu_vax;
-    vax_fraction_regular = cumsum(vax_steps_regular, 2);
+    max_vax_rate = 0.7;
+    cap_per_period = cap_tot / params.P0;
 
-    if params.conservative == 1 % Use beginning of period vaccinations (rather than end of period)
-        vax_fraction_ufv = [zeros(num_events, 1), vax_fraction_ufv(:, 1:end-1)] .* ~is_false;
-        vax_fraction_regular = [zeros(num_events, 1), vax_fraction_regular(:, 1:end-1)] .* ~is_false;
+    % Determine which vaccine is available each period
+    response_available = (month_response_vaccine_ready <= months_matrix);
+
+    % Initial UFV holders
+    initial_ufv = params.universal_flu_rd.initial_share_ufv .* ufv_protection;
+
+    % Phase 1: Cumulative UFV to unvaccinated (only while response not available)
+    cap_for_ufv = cumsum(cap_per_period .* ufv_protection .* ~response_available, 2);
+    ufv_holders = min(initial_ufv + cap_for_ufv, max_vax_rate);
+
+    % Get the UFV state at the moment response becomes available (carries forward)
+    % This is the max along each row up to when response starts, then held constant
+    ufv_at_response_start = max(ufv_holders, [], 2);
+    unvaccinated_at_response_start = max(0, max_vax_rate - ufv_at_response_start);
+
+    % Phase 2: Response vaccine capacity
+    cap_for_response = cumsum(cap_per_period .* response_available, 2);
+
+    % First: vaccinate remaining unvaccinated (up to max_vax_rate)
+    new_response_from_unvax = min(cap_for_response, unvaccinated_at_response_start);
+
+    % Second: replace UFV holders with remaining capacity
+    remaining_cap = max(0, cap_for_response - unvaccinated_at_response_start);
+    replacements = min(remaining_cap, ufv_at_response_start);
+
+    % Final fractions
+    response_vax_fraction = new_response_from_unvax + replacements;
+    ufv_only_fraction = max(0, ufv_holders - replacements);
+    total_protected = min(ufv_only_fraction + response_vax_fraction, max_vax_rate);
+
+    % Handle conservative timing
+    if params.conservative == 1
+        ufv_only_fraction = [initial_ufv, ufv_only_fraction(:, 1:end-1)] .* ~is_false;
+        response_vax_fraction = [zeros(num_events, 1), response_vax_fraction(:, 1:end-1)] .* ~is_false;
+        total_protected = ufv_only_fraction + response_vax_fraction;
     end
 
-    % Add universal flu vaccine pre-vaccination
-    vax_fraction_ufv = vax_fraction_ufv + params.universal_flu_rd.initial_share_ufv .* ufv_protection;
-
-    % Manage that we switch from universal to regular vaccine once it is approved.
-    max_vax_rate = 0.7; % Hardcoded, which is bad, but a downstrem consequence of h being hardcoded.
-
-    vax_fraction_tot = vax_fraction_ufv + vax_fraction_regular;
-
-    % Start substituting regular vaccines for UFV once at max_vaccination amount
-    beyond_max_vax = vax_fraction_tot > max_vax_rate;
-
-    vax_fraction_ufv(vax_fraction_ufv >= max_vax_rate) = max_vax_rate;
-    vax_fraction_ufv = vax_fraction_ufv - cumsum(vax_steps_regular .* beyond_max_vax, 2);
-    vax_fraction_ufv(vax_fraction_ufv <= 0) = 0;
-
-    % Enforce vaccination max for other vaccines
-    vax_fraction_regular(vax_fraction_regular >= max_vax_rate) = max_vax_rate;
-    vax_fraction_tot(vax_fraction_tot >= max_vax_rate) = max_vax_rate;
-
-    % We downscale effectiveness by share of the universal vaccine
-    ufv_share = vax_fraction_ufv ./ vax_fraction_tot;
-    ufv_share(vax_fraction_tot == 0) = 0;
+    % Calculate protection
+    ufv_share = ufv_only_fraction ./ total_protected;
+    ufv_share(total_protected == 0) = 0;
     eff_multiplier = 1 - ufv_share .* (1 - params.univ_flu_vax_eff_multiplier);
 
-    % Add damage mitigation
-    h_arr = params.gamma .* eff_multiplier .* h(vax_fraction_tot); % Protection factor
+    h_arr = params.gamma .* eff_multiplier .* h(total_protected);
 
     % Vaccinate at rate of capacity until all vaccinated, then annual
     % vaccination to maintain immunity.
     % share_cap_m = cap_m ./ (cap_tot + eps);
     % max_booster_rate = min(cap_tot, params.P0 / 12);
-    stopped_vaccinating_idx = vax_fraction_regular >= max_vax_rate;
+    stopped_vaccinating_idx = response_vax_fraction >= max_vax_rate;
 
     % Have taken out booster logic
     monthly_courses_m = (...
@@ -440,8 +441,8 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     results.sim_benefits_vaccine_pv = sim_benefits_vaccine_pv;
 
     % Then those indexed by event (for simulation_table table)
-    results.ufv_vax_end = vax_fraction_ufv(:, end);
-    results.all_vax_end = vax_fraction_tot(:, end);
+    results.ufv_vax_end = ufv_only_fraction(:, end);
+    results.all_vax_end = total_protected(:, end);
     results.u_deaths = sum(monthly_deaths_unmitigated, 2);
     results.m_deaths = sum(monthly_deaths_mitigated, 2);
     results.cap_avail_m = max(cap_m, [], 2);
