@@ -1,6 +1,6 @@
+from copy import deepcopy
 from itertools import combinations
 from pathlib import Path
-from copy import deepcopy
 
 import click
 import yaml
@@ -31,12 +31,12 @@ scenario_config_updates = {
     "universal_flu_rd": {
         "bcr": {
             "active": True,
-            "platform_response_invest": "both",
+            "platform_response_invest": "single",
             "initial_share_ufv": 0.1
         },
         "surplus" : {
             "active": True,
-            "platform_response_invest": "single",
+            "platform_response_invest": "both",
             "initial_share_ufv": 0.1
         },
     },
@@ -53,8 +53,9 @@ scenario_config_updates = {
 @click.command()
 @click.argument('config_dir', type=click.Path(), default="./config/scenario_configs/pairwise_combos")
 @click.argument('base_config_path', type=click.Path(exists=True), default="./config/scenario_configs/standard/baseline.yaml")
-
-def create_pairwise_configs(config_dir, base_config_path):
+@click.option('--include-prevac0', is_flag=True, default=False)
+@click.option('--include-prec1', is_flag=True, default=False)
+def create_pairwise_configs(config_dir, base_config_path, include_prevac0, include_prec1):
 
     # Create scenario config outdir
     outdir = Path(config_dir)
@@ -99,58 +100,60 @@ def create_pairwise_configs(config_dir, base_config_path):
                 yaml.dump(new_config, f, sort_keys=False)
 
     # Add configs for improved early warning with precision=1 for both bcr and surplus
-    for scenario_type in scenario_types:
-        # single: improved_early_warning, precision=1
-        new_config = deepcopy(baseline_config)
-        new_config['improved_early_warning'] = deepcopy(scenario_config_updates["improved_early_warning"][scenario_type])
-        new_config['improved_early_warning']['precision'] = 1
-
-        output_path = outdir / f"improved_early_warning_prec1_{scenario_type}.yaml"
-        with open(output_path, 'w') as f:
-            yaml.dump(new_config, f, sort_keys=False)
-
-        # pairwise: improved_early_warning (precision=1) with each other scenario
-        for other in [k for k in scenario_keys if k != "improved_early_warning"]:
-            combo_name = f"improved_early_warning_prec1_and_{other}"
+    if include_prec1:
+        for scenario_type in scenario_types:
+            # single: improved_early_warning, precision=1
             new_config = deepcopy(baseline_config)
-            # improved_early_warning with precision=1
             new_config['improved_early_warning'] = deepcopy(scenario_config_updates["improved_early_warning"][scenario_type])
             new_config['improved_early_warning']['precision'] = 1
-            # add the other scenario
-            param_update = scenario_config_updates[other][scenario_type]
-            new_config[other] = param_update
 
-            output_path = outdir / f"{combo_name}_{scenario_type}.yaml"
+            output_path = outdir / f"improved_early_warning_prec1_{scenario_type}.yaml"
             with open(output_path, 'w') as f:
                 yaml.dump(new_config, f, sort_keys=False)
 
+            # pairwise: improved_early_warning (precision=1) with each other scenario
+            for other in [k for k in scenario_keys if k != "improved_early_warning"]:
+                combo_name = f"improved_early_warning_prec1_and_{other}"
+                new_config = deepcopy(baseline_config)
+                # improved_early_warning with precision=1
+                new_config['improved_early_warning'] = deepcopy(scenario_config_updates["improved_early_warning"][scenario_type])
+                new_config['improved_early_warning']['precision'] = 1
+                # add the other scenario
+                param_update = scenario_config_updates[other][scenario_type]
+                new_config[other] = param_update
+
+                output_path = outdir / f"{combo_name}_{scenario_type}.yaml"
+                with open(output_path, 'w') as f:
+                    yaml.dump(new_config, f, sort_keys=False)
+
     # Also include pairwise and single scenarios where universal flu vaccine initial protection is zero,
     # so universal_flu_rd is combined with each other intervention *with* initial_share_ufv = 0
-    non_ufv_keys = [k for k in scenario_keys if k != "universal_flu_rd"]
+    if include_prevac0:
+        non_ufv_keys = [k for k in scenario_keys if k != "universal_flu_rd"]
 
-    for scenario_type in scenario_types:
-        # single: universal_flu_rd only, with initial_share_ufv=0
-        new_config = deepcopy(baseline_config)
-        new_config['universal_flu_rd'] = deepcopy(scenario_config_updates["universal_flu_rd"][scenario_type])
-        new_config['universal_flu_rd']['initial_share_ufv'] = 0
-        outpath = outdir / f"universal_flu_rd_prevac0_{scenario_type}.yaml"
-        with open(outpath, 'w') as f:
-            yaml.dump(new_config, f, sort_keys=False)
-
-        # pairwise: universal_flu_rd with each other (non ufv) scenario, with initial_share_ufv=0
-        for other in non_ufv_keys:
-            combo_name = f"universal_flu_rd_and_{other}_prevac0"
+        for scenario_type in scenario_types:
+            # single: universal_flu_rd only, with initial_share_ufv=0
             new_config = deepcopy(baseline_config)
-            # update universal_flu_rd with initshare0
             new_config['universal_flu_rd'] = deepcopy(scenario_config_updates["universal_flu_rd"][scenario_type])
             new_config['universal_flu_rd']['initial_share_ufv'] = 0
-            # update the other scenario investment
-            param_update = scenario_config_updates[other][scenario_type]
-            new_config[other] = param_update
-
-            outpath = outdir / f"{combo_name}_{scenario_type}.yaml"
+            outpath = outdir / f"universal_flu_rd_prevac0_{scenario_type}.yaml"
             with open(outpath, 'w') as f:
                 yaml.dump(new_config, f, sort_keys=False)
+
+            # pairwise: universal_flu_rd with each other (non ufv) scenario, with initial_share_ufv=0
+            for other in non_ufv_keys:
+                combo_name = f"universal_flu_rd_and_{other}_prevac0"
+                new_config = deepcopy(baseline_config)
+                # update universal_flu_rd with initshare0
+                new_config['universal_flu_rd'] = deepcopy(scenario_config_updates["universal_flu_rd"][scenario_type])
+                new_config['universal_flu_rd']['initial_share_ufv'] = 0
+                # update the other scenario investment
+                param_update = scenario_config_updates[other][scenario_type]
+                new_config[other] = param_update
+
+                outpath = outdir / f"{combo_name}_{scenario_type}.yaml"
+                with open(outpath, 'w') as f:
+                    yaml.dump(new_config, f, sort_keys=False)
 
 if __name__ == "__main__":
     create_pairwise_configs()

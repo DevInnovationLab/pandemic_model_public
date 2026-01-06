@@ -1,28 +1,17 @@
-function get_pairwise_program_table(job_dir, recalculate_bc)
-    if recalculate_bc
-        process_benefit_cost(job_dir, recalculate_bc);
-    end
-
-    % Load baseline data
+function get_pairwise_program_table(job_dir)
+    % Load data from raw results directory
     rawdata_dir = fullfile(job_dir, "raw");
     processed_dir = fullfile(job_dir, "processed");
-    baseline_npv = readmatrix(fullfile(processed_dir, "baseline_absolute_npv.csv"));
-    baseline_costs = readmatrix(fullfile(processed_dir, "baseline_pv_costs.csv"));
-    load(fullfile(rawdata_dir, "baseline_results.mat"), "m_deaths");
-    baseline_mortality = m_deaths;
-    
-    % Calculate total baseline values
-    total_baseline_npv = mean(sum(baseline_npv, 2));
-    total_baseline_costs = mean(sum(baseline_costs, 2));
+    create_folders_recursively(processed_dir);
 
     % Get scenarios from config
     config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
     scenarios = scenarios(~strcmp(scenarios, 'baseline') & ...
-                          ~contains(scenarios, "precision1") & ...
-                          ~contains(scenarios, "initshare0"));
+                          ~contains(scenarios, "prec1") & ...
+                          ~contains(scenarios, "prevac0"));
 
-    % Initialize table with baseline row, now with LivesAll and CostPerLifeAll
+    % Initialize table
     summary_table = table('Size', [length(scenarios) 13], ...
         'VariableTypes', {'string', 'double', 'double', 'double', ...
                          'double', 'double', 'double', 'double', 'double', ...
@@ -37,52 +26,31 @@ function get_pairwise_program_table(job_dir, recalculate_bc)
     for i = 1:length(scenarios)
         scen_name = scenarios(i);
 
-        % Load scenario data
-        scen_npv = readmatrix(fullfile(processed_dir, strcat(scen_name, "_absolute_npv.csv")));
-        scen_costs = readmatrix(fullfile(processed_dir, strcat(scen_name, "_pv_costs.csv")));
-        scen_benefits = scen_npv + scen_costs; % Benefits = NPV + Costs
-        load(fullfile(rawdata_dir, sprintf('%s_results.mat', scen_name)), 'm_deaths');
-        scen_mortality = m_deaths;
+        % Load relative sums table
+        sums_data = load(fullfile(rawdata_dir, sprintf('%s_relative_sums.mat', scen_name)));
+        sums_table = sums_data.scenario_sum_table;
         
-        % Calculate differences from baseline for different time horizons
-        total_scen_npv = mean(sum(scen_npv, 2));
-        total_scen_costs = mean(sum(scen_costs, 2));
-        total_scen_benefits = mean(sum(scen_benefits, 2));
+        % Extract values from the sums table
+        npv_diff = mean(sums_table.net_value_pv_full);
+        cost_diff = mean(sums_table.total_costs_pv_full);
+        benefit_diff = mean(sums_table.benefits_vaccine_full);
         
-        % 10 year costs and benefits
-        total_scen_costs_10yr = mean(sum(scen_costs(:,1:10), 2));
-        total_baseline_costs_10yr = mean(sum(baseline_costs(:,1:10), 2));
-        total_scen_benefits_10yr = mean(sum(scen_benefits(:,1:10), 2));
-        total_baseline_benefits_10yr = mean(sum(baseline_npv(:,1:10) + baseline_costs(:,1:10), 2));
+        cost_diff_10yr = mean(sums_table.total_costs_pv_10_years);
+        cost_diff_30yr = mean(sums_table.total_costs_pv_30_years);
+        benefit_diff_10yr = mean(sums_table.benefits_vaccine_10_years);
+        benefit_diff_30yr = mean(sums_table.benefits_vaccine_30_years);
         
-        % 30 year costs and benefits
-        total_scen_costs_30yr = mean(sum(scen_costs(:,1:30), 2));
-        total_baseline_costs_30yr = mean(sum(baseline_costs(:,1:30), 2));
-        total_scen_benefits_30yr = mean(sum(scen_benefits(:,1:30), 2));
-        total_baseline_benefits_30yr = mean(sum(baseline_npv(:,1:30) + baseline_costs(:,1:30), 2));
-        
-        % Calculate differences
-        npv_diff = total_scen_npv - total_baseline_npv;
-        cost_diff = total_scen_costs - total_baseline_costs;
-        benefit_diff = total_scen_benefits - (total_baseline_npv + total_baseline_costs);
-        
-        cost_diff_10yr = total_scen_costs_10yr - total_baseline_costs_10yr;
-        cost_diff_30yr = total_scen_costs_30yr - total_baseline_costs_30yr;
-        benefit_diff_10yr = total_scen_benefits_10yr - total_baseline_benefits_10yr;
-        benefit_diff_30yr = total_scen_benefits_30yr - total_baseline_benefits_30yr;
-        
-        % Calculate lives saved
-        lives_diff = baseline_mortality - scen_mortality;
-        lives_10yr = mean(sum(lives_diff(:,1:10), 2));
-        lives_30yr = mean(sum(lives_diff(:,1:30), 2));
-        lives_all = mean(sum(lives_diff, 2));
+        % Lives saved are negative as difference from baseline
+        lives_10yr = mean(-sums_table.m_deaths_10_years);
+        lives_30yr = mean(-sums_table.m_deaths_30_years);
+        lives_all = mean(-sums_table.m_deaths_full);
         
         % Calculate benefit-cost ratios for different time horizons
         bc_ratio_10yr = benefit_diff_10yr / (cost_diff_10yr + eps);
         bc_ratio_30yr = benefit_diff_30yr / (cost_diff_30yr + eps);
         bc_ratio_all = benefit_diff / (cost_diff + eps);
         
-        % Calculate cost per life saved using time-bound costs
+        % Calculate cost per life saved
         cost_per_life_10yr = (cost_diff_10yr / lives_10yr);
         cost_per_life_30yr = (cost_diff_30yr / lives_30yr);
         cost_per_life_all = (cost_diff / lives_all);
@@ -91,14 +59,9 @@ function get_pairwise_program_table(job_dir, recalculate_bc)
         summary_table(i,:) = {scen_name, benefit_diff, cost_diff, npv_diff, ...
                              bc_ratio_10yr, bc_ratio_30yr, bc_ratio_all, lives_10yr, lives_30yr, ...
                              lives_all, cost_per_life_10yr, cost_per_life_30yr, cost_per_life_all};
-
-        % % Convert any Inf values to NaN in the summary table
-        % summary_table.CostPerLife10yr(isinf(summary_table.CostPerLife10yr)) = NaN;
-        % summary_table.CostPerLife30yr(isinf(summary_table.CostPerLife30yr)) = NaN;
-        % summary_table.CostPerLifeAll(isinf(summary_table.CostPerLifeAll)) = NaN;
     end
 
-    % Now add accents and investments indicators to table.
+    % Add accents and investment indicators to table
     [accents, investment_indicators] = parse_scenario_name(scenarios);
 
     summary_table.accent = accents;
@@ -111,7 +74,7 @@ function get_pairwise_program_table(job_dir, recalculate_bc)
     % Save table to CSV
     writetable(summary_table, fullfile(processed_dir, 'pairwise_npv_summary.csv'));
 
-    % Now let's create the table
+    % Create LaTeX table for surplus scenarios
     surplus_summary_table = summary_table(strcmp(summary_table.accent, "surplus"), :);
 
     outpath = fullfile(processed_dir, "pairwise_npv_summary.tex");

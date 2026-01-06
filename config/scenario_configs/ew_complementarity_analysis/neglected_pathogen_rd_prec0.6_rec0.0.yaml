@@ -1,0 +1,5 @@
+!!python/object/apply:pathlib.WindowsPath
+- config
+- scenario_configs
+- ew_complementarity_analysis
+- neglected_pathogen_rd_prec0.6_rec0.0.yaml

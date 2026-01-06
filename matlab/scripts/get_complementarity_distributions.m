@@ -301,10 +301,13 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
     rng(42); % Set seed for reproducibility
     bootstrap_indices = randi(sample_size, sample_size, n_bootstrap);
     
-    % Create two figures: raw distributions and bootstrap means
+    % Create figures: raw distributions, bootstrap means, and relative to combined
     % Use tighter spacing
     fig_raw = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
+    fig_raw_pct = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
     fig_boot = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
+    fig_boot_pct = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
+    fig_relative = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
     
     % Extract simple metric name (remove "complementarity")
     simple_metric = strrep(metric_label, ' complementarity', '');
@@ -381,8 +384,64 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
             end
             
             hold off;
+
+            % ===== PLOT 2: Raw data distribution (% deviation from mean) =====
+            figure(fig_raw_pct);
+            subplot(n_investments, n_investments, subplot_idx);
+            hold on;
             
-            % ===== PLOT 2: Bootstrap mean distribution =====
+            % Get data for this cell
+            if ~isempty(data_matrix{i, j})
+                data = data_matrix{i, j};
+                
+                % Check if data is valid (not all NaN, not empty)
+                if ~isempty(data) && ~all(isnan(data)) && length(data) > 0
+                    % Create histogram
+                    mean_val = mean(data, 'omitnan');
+                    pct_deviations = 100 * (data - mean_val) ./ mean_val;
+
+                    histogram(pct_deviations, 'Normalization', 'probability', ...
+                             'FaceColor', [0.3 0.5 0.8], 'FaceAlpha', 0.6, ...
+                             'EdgeColor', 'none');
+                    
+                    yl = ylim;
+                    plot([0 0], yl, 'r:', 'LineWidth', 1); % Zero line
+                end
+            end
+            
+            % Style
+            box off;
+            ax = gca;
+            ax.XGrid = 'on';
+            ax.YGrid = 'on';
+            ax.GridAlpha = 0.15;
+            ax.LineWidth = 1;
+            ax.FontSize = 9;
+            ax.TickDir = 'out';
+            
+            % Labels
+            xlabel(strcat(simple_metric, " % deviation"), 'FontSize', 10);
+            if j == 1
+                ylabel('Probability', 'FontSize', 10);
+            end
+            
+            % Add row label on left side for first column
+            if j == 1
+                text(-0.3, 0.5, inv_i_label, 'Units', 'normalized', ...
+                     'Rotation', 90, 'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            % Add column label on top for first row
+            if i == 1
+                text(0.5, 1.15, inv_j_label, 'Units', 'normalized', ...
+                     'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            hold off;
+            
+            % ===== PLOT 3: Bootstrap mean distribution =====
             figure(fig_boot);
             subplot(n_investments, n_investments, subplot_idx);
             hold on;
@@ -447,6 +506,173 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
             end
             
             hold off;
+
+            % ===== PLOT 4: Bootstrap mean distribution (% deviation from mean) =====
+            figure(fig_boot_pct);
+            subplot(n_investments, n_investments, subplot_idx);
+            hold on;
+            
+            % Get data for this cell
+            if ~isempty(data_matrix{i, j})
+                data = data_matrix{i, j};
+                
+                % Check if data is valid
+                if ~isempty(data) && ~all(isnan(data)) && length(data) > 0
+                    % Bootstrap distribution of means using pre-generated indices
+                    bootstat = zeros(n_bootstrap, 1);
+                    mean_val = mean(data, 'omitnan');
+                    for b = 1:n_bootstrap
+                        bootstat(b) = mean(...
+                            (data(bootstrap_indices(:, b)) - mean_val) ./ mean_val, ...
+                            'omitnan'...
+                        );
+                    end
+                    bootstat = bootstat * 100;
+                    
+                    % Create histogram
+                    histogram(bootstat, 'Normalization', 'probability', ...
+                             'FaceColor', [0.8 0.3 0.3], 'FaceAlpha', 0.6, ...
+                             'EdgeColor', 'none');
+                    
+                    % Add mean line
+                    yl = ylim;
+                    plot([0 0], yl, 'r:', 'LineWidth', 1); % Zero line
+                end
+            end
+            
+            % Style
+            box off;
+            ax = gca;
+            ax.XGrid = 'on';
+            ax.YGrid = 'on';
+            ax.GridAlpha = 0.15;
+            ax.LineWidth = 1;
+            ax.FontSize = 9;
+            ax.TickDir = 'out';
+            
+            % Labels
+            xlabel(strcat(simple_metric, " % deviation"), 'FontSize', 10);
+            if j == 1
+                ylabel('Probability', 'FontSize', 10);
+            end
+            
+            % Add row label on left side for first column
+            if j == 1
+                text(-0.3, 0.5, inv_i_label, 'Units', 'normalized', ...
+                     'Rotation', 90, 'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            % Add column label on top for first row
+            if i == 1
+                text(0.5, 1.15, inv_j_label, 'Units', 'normalized', ...
+                     'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            hold off;
+
+            % ===== PLOT 5: Relative to combined investment =====
+            figure(fig_relative);
+            subplot(n_investments, n_investments, subplot_idx);
+            hold on;
+            
+            if i == j
+                % Diagonal: plot standalone distribution
+                if ~isempty(data_matrix{i, j})
+                    data = data_matrix{i, j};
+                    
+                    if ~isempty(data) && ~all(isnan(data)) && length(data) > 0
+                        % Create histogram
+                        histogram(data, 'Normalization', 'probability', ...
+                                 'FaceColor', [0.3 0.5 0.8], 'FaceAlpha', 0.6, ...
+                                 'EdgeColor', 'none');
+                        
+                        mean_val = mean(data, 'omitnan');
+                        
+                        % Add mean line
+                        yl = ylim;
+                        if ~isnan(mean_val)
+                            plot([mean_val mean_val], yl, 'k--', 'LineWidth', 1.5);
+                        end
+                    end
+                end
+            else
+                % Off-diagonal: plot percent change relative to combined investment
+                % Get complementarity data for this cell
+                if ~isempty(data_matrix{i, j})
+                    complementarity = data_matrix{i, j};
+                    
+                    % Get standalone data for both investments
+                    standalone_i = data_matrix{i, i};
+                    standalone_j = data_matrix{j, j};
+                    
+                    if ~isempty(complementarity) && ~isempty(standalone_i) && ~isempty(standalone_j) && ...
+                       ~all(isnan(complementarity)) && ~all(isnan(standalone_i)) && ~all(isnan(standalone_j))
+                        
+                        % Ensure same length
+                        min_len = min([length(complementarity), length(standalone_i), length(standalone_j)]);
+                        complementarity = complementarity(1:min_len);
+                        standalone_i = standalone_i(1:min_len);
+                        standalone_j = standalone_j(1:min_len);
+                        
+                        % Combined = Sum of standalones + Complementarity
+                        combined = standalone_i + standalone_j;
+                        
+                        % Percent change: (Combined - Sum of standalones) / Combined * 100
+                        pct_change = 100 * complementarity ./ combined;
+                        
+                        % Create histogram
+                        histogram(pct_change, 'Normalization', 'probability', ...
+                                 'FaceColor', [0.5 0.7 0.3], 'FaceAlpha', 0.6, ...
+                                 'EdgeColor', 'none');
+                        
+                        % Add mean line
+                        mean_val = mean(pct_change, 'omitnan');
+                        yl = ylim;
+                        if ~isnan(mean_val)
+                            plot([mean_val mean_val], yl, 'k--', 'LineWidth', 1.5);
+                        end
+                        plot([0 0], yl, 'r:', 'LineWidth', 1); % Zero line
+                    end
+                end
+            end
+            
+            % Style
+            box off;
+            ax = gca;
+            ax.XGrid = 'on';
+            ax.YGrid = 'on';
+            ax.GridAlpha = 0.15;
+            ax.LineWidth = 1;
+            ax.FontSize = 9;
+            ax.TickDir = 'out';
+            
+            % Labels
+            if i == j
+                xlabel(simple_metric, 'FontSize', 10);
+            else
+                xlabel('% change vs combined', 'FontSize', 10);
+            end
+            if j == 1
+                ylabel('Probability', 'FontSize', 10);
+            end
+            
+            % Add row label on left side for first column
+            if j == 1
+                text(-0.3, 0.5, inv_i_label, 'Units', 'normalized', ...
+                     'Rotation', 90, 'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            % Add column label on top for first row
+            if i == 1
+                text(0.5, 1.15, inv_j_label, 'Units', 'normalized', ...
+                     'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            hold off;
         end
     end
     
@@ -454,53 +680,65 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
     metric_short = strrep(metric_label, ' complementarity', '');
     accent_short = strrep(accent_label, ' scenarios', '');
     
-    % Create title for raw distribution figure
+    % Add titles and adjust spacing
+    metric_short = strrep(metric_label, ' complementarity', '');
+    accent_short = strrep(accent_label, ' scenarios', '');
+    
     figure(fig_raw);
-    sgtitle({sprintf('\\fontsize{16}\\bf Raw %s complementarity', lower(metric_short)), ...
-             sprintf('\\fontsize{14}Accent: %s', accent_short)}, ...
+    sgtitle({sprintf('\\fontsize{14}\\bf Raw %s complementarity', lower(metric_short)), ...
+             sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
             'FontWeight', 'normal', 'Interpreter', 'tex');
     
-    % Adjust subplot positions to add space below title
-    for i = 1:n_investments
-        for j = 1:n_investments
-            subplot_idx = (i - 1) * n_investments + j;
-            subplot(n_investments, n_investments, subplot_idx);
-            pos = get(gca, 'Position');
-            % Reduce height and shift down to create space for title
-            pos(4) = pos(4) * 0.92; % Reduce height by 8%
-            pos(2) = pos(2) - pos(4) * 0.08; % Shift down
-            set(gca, 'Position', pos);
-        end
-    end
+    figure(fig_raw_pct);
+    sgtitle({sprintf('\\fontsize{14}\\bf Raw %s %% deviations from mean', lower(metric_short)), ...
+             sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
+            'FontWeight', 'normal', 'Interpreter', 'tex');
     
-    % Create title for bootstrap figure
     figure(fig_boot);
     sgtitle({sprintf('\\fontsize{14}\\bf Bootstrapped mean complementarity in %s', lower(metric_short)), ...
              sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
             'FontWeight', 'normal', 'Interpreter', 'tex');
     
-    % Adjust subplot positions to add space below title
-    for i = 1:n_investments
-        for j = 1:n_investments
-            subplot_idx = (i - 1) * n_investments + j;
-            subplot(n_investments, n_investments, subplot_idx);
-            pos = get(gca, 'Position');
-            % Reduce height and shift down to create space for title
-            pos(4) = pos(4) * 0.92; % Reduce height by 8%
-            pos(2) = pos(2) - pos(4) * 0.08; % Shift down
-            set(gca, 'Position', pos);
+    figure(fig_boot_pct);
+    sgtitle({sprintf('\\fontsize{14}\\bf Bootstrapped %s mean %% deviation from mean', lower(metric_short)), ...
+             sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
+            'FontWeight', 'normal', 'Interpreter', 'tex');
+    
+    figure(fig_relative);
+    sgtitle({sprintf('\\fontsize{14}\\bf %s: Standalone (diagonal) and %% change vs combined (off-diagonal)', metric_short), ...
+             sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
+            'FontWeight', 'normal', 'Interpreter', 'tex');
+    
+    % Adjust subplot positions for all figures
+    for fig = [fig_raw, fig_raw_pct, fig_boot, fig_boot_pct, fig_relative]
+        figure(fig);
+        for i = 1:n_investments
+            for j = 1:n_investments
+                subplot_idx = (i - 1) * n_investments + j;
+                subplot(n_investments, n_investments, subplot_idx);
+                pos = get(gca, 'Position');
+                pos(4) = pos(4) * 0.94;
+                pos(2) = pos(2) - pos(4) * 0.06;
+                set(gca, 'Position', pos);
+            end
         end
     end
-    
+
     % Save figures
     filename_base = sprintf('complementarity_%s_%s', ...
         lower(strrep(metric_short, ' ', '_')), ...
         lower(accent_short));
     
     saveas(fig_raw, fullfile(figure_path, [filename_base '_raw.jpg']));
+    saveas(fig_raw_pct, fullfile(figure_path, [filename_base, '_raw_pct_deviation_from_mean.jpg']));
     saveas(fig_boot, fullfile(figure_path, [filename_base '_bootstrap.jpg']));
+    saveas(fig_boot_pct, fullfile(figure_path, [filename_base '_bootstrap_pct_deviation_from_mean.jpg']));
+    saveas(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.jpg']));
     close(fig_raw);
+    close(fig_raw_pct)
     close(fig_boot);
+    close(fig_boot_pct)
+    close(fig_relative)
     
     fprintf('Saved complementarity figures for %s %s\n', metric_label, accent_label);
 end

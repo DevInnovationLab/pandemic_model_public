@@ -129,10 +129,12 @@ function run_job(job_config_path)
         %% Post-process results
         fprintf('Post-processing results for scenario: %s\n', scenario_name);
         if strcmp(scenario_name, "baseline")
-           % Save then store baseline results now to compute relative outcomes later
-            annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
-            save(annual_absolute_filename', '-struct', "annual_results");
-            save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out);
+            % Save then store baseline results now to compute relative outcomes later
+            if ~strcmp(job_config.save_mode, "light")
+                annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
+                save(annual_absolute_filename', '-struct', "annual_results");
+                save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out);
+            end
 
             annual_results_baseline = annual_results;
             continue;
@@ -180,20 +182,24 @@ function run_job(job_config_path)
         end
         
         fprintf('Saving post-processed results\n');
-        annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
-        save(annual_absolute_filename, '-struct', 'annual_results');
+        if ~strcmp(job_config.save_mode, "light")
+            annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
+            save(annual_absolute_filename, '-struct', 'annual_results');
 
-        % Save all relative annual results to single .mat file
-        annual_relative_filename = fullfile(raw_results_path, sprintf('%s_relative_annual.mat', scenario_name));
-        save(annual_relative_filename, '-struct', 'relative_annual_results');
+            % Save all relative annual results to single .mat file
+            annual_relative_filename = fullfile(raw_results_path, sprintf('%s_relative_annual.mat', scenario_name));
+            save(annual_relative_filename, '-struct', 'relative_annual_results');
+        end
         
         % Save the summed results table
         sum_table_filename = fullfile(raw_results_path, sprintf('%s_relative_sums.mat', scenario_name));
         save(sum_table_filename, 'scenario_sum_table');
 
         % Save the pandemic table
-        fprintf('Saving pandemic table\n');
-        save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out)
+        if ~strcmp(job_config.save_mode, "light")
+            fprintf('Saving pandemic table\n');
+            save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out);
+        end
     end
 
     % Save job and scenario params
