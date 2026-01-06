@@ -8,7 +8,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --time=20:00:00
-#SBATCH --mem=32G
+#SBATCH --mem=48G
 
 #SBATCH --account=pi-rglennerster
 # Optional: email notifications
