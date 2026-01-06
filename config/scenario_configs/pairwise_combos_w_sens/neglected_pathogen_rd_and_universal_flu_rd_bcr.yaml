@@ -1,6 +1,6 @@
 neglected_pathogen_rd:
-  strategy: none
-  num: 0
+  strategy: top
+  num: 1
 universal_flu_rd:
   active: true
   platform_response_invest: both

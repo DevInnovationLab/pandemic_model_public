@@ -1,9 +1,13 @@
 function assemble_repeat_job_results(output_dir, overwrite, varargin)
     % Parse optional arguments
     p = inputParser;
+    addParameter(p, 'vars_to_keep', ['benefits_vaccine', 'total_costs_pv'], @isstring);
+    addParameter(p, 'n_bootstrap', 1000, @isnumeric);
     addParameter(p, 'parallel', false, @islogical);
     parse(p, varargin{:});
     use_parallel = p.Results.parallel;
+    vars_to_keep = p.Results.vars_to_keep;
+    n_bootstrap = p.Results.n_bootstrap;
 
     subdir_tab = struct2table(dir(output_dir));
     subdir_tab = subdir_tab(contains(subdir_tab.name, "seed_"), :);
@@ -22,12 +26,9 @@ function assemble_repeat_job_results(output_dir, overwrite, varargin)
     end
 
     % Get variable names
-    load(fullfile(subdirs(1), "raw", "advance_capacity_bcr_relative_sums.mat"));
-    all_varnames = scenario_sum_table.Properties.VariableNames;
-    keep_vars = all_varnames(contains(all_varnames, "_full"));
+    keep_vars = strcat(vars_to_keep, "_full");
 
     % Set up bootstrap indices
-    n_bootstrap = 200;
     rng(42);
     bootstrap_indices = randi(total_sims, total_sims, n_bootstrap);
 

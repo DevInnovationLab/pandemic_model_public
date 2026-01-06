@@ -620,7 +620,7 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
                         combined = standalone_i + standalone_j;
                         
                         % Percent change: (Combined - Sum of standalones) / Combined * 100
-                        pct_change = 100 * complementarity ./ combined;
+                        pct_change = 100 * complementarity ./ (combined + eps);
                         
                         % Create histogram
                         histogram(pct_change, 'Normalization', 'probability', ...

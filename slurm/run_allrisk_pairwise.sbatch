@@ -19,4 +19,4 @@
 module load matlab/2023a
 
 # Run MATLAB in batch mode
-matlab -batch "run('./matlab/load_project.m'); run_job('./config/job_configs/allrisk_base.yaml');"
+matlab -batch "run('./matlab/load_project.m'); run_job('./config/job_configs/allrisk_base_pairwise.yaml');"

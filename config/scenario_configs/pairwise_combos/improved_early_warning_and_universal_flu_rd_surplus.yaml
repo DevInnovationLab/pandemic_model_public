@@ -3,7 +3,7 @@ neglected_pathogen_rd:
   num: 0
 universal_flu_rd:
   active: true
-  platform_response_invest: single
+  platform_response_invest: both
   initial_share_ufv: 0.1
 advance_capacity:
   share_target_advance_capacity: 0

@@ -1,6 +1,6 @@
 # Run params
 num_simulations: 250000
-sim_periods: 50
+sim_periods: 200
 outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/pairwise_combos"
 seed: 42
@@ -39,8 +39,8 @@ c_m: 34 # marginal cost of producing mRNA vaccines ($ per course) (LB)
 c_o: 17 # marginal cost of producing traditional vaccines ($ per course) (LB)
 epsilon: 1 # decreasing returns to capacity investments during pandemic
 beta: 100e6 # in-pandemic kink in capital cost function
-base_cap_mrna: 3e9 # Annual courses baseline mRNA capacity. From expert survey.
-base_cap_trad: 3e9 # Annual courses baseline traditional capacity. Adding capacity egg-based and other platforms in expert survey.
+base_cap_mrna: 2.5e9 # Annual courses baseline mRNA capacity. From expert survey.
+base_cap_trad: 2.5e9 # Annual courses baseline traditional capacity. Adding capacity egg-based and other platforms in expert survey.
 surge_cap_mrna: 2.25e9 # Surge capacity in mRNA platform
 surge_cap_trad: 2.25e9 # Surge capacity in traditional platform
 f_m: 0.3 # fraction of at risk capacity successful in mRNA platform

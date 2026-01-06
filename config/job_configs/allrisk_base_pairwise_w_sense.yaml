@@ -2,7 +2,7 @@
 num_simulations: 250000
 sim_periods: 200
 outdir: "./output/jobs"
-scenario_configs: "./config/scenario_configs/pairwise_combos"
+scenario_configs: "./config/scenario_configs/pairwise_combos_w_sense"
 seed: 42
 add_datetime_to_outdir: 0
 save_output: 1

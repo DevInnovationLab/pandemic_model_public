@@ -234,11 +234,12 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
     bootstrap_matrix = complementarity_data.bootstrap_matrix;
     n_investments = length(investments);
     
-    % Create four figures
+    % Create five figures
     fig_raw = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
     fig_raw_pct = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
     fig_boot = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
     fig_boot_pct = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
+    fig_relative = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
     
     % Extract simple metric name
     simple_metric = strrep(metric_label, ' complementarity', '');
@@ -306,7 +307,7 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
             
             hold off;
             
-            % ===== PLOT 2: Raw data % deviation =====
+            % ===== PLOT 2: Raw data % deviation from mean =====
             figure(fig_raw_pct);
             subplot(n_investments, n_investments, subplot_idx);
             hold on;
@@ -403,7 +404,7 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
             
             hold off;
             
-            % ===== PLOT 4: Bootstrap % deviation =====
+            % ===== PLOT 4: Bootstrap % deviation from mean =====
             figure(fig_boot_pct);
             subplot(n_investments, n_investments, subplot_idx);
             hold on;
@@ -452,6 +453,108 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
             end
             
             hold off;
+            
+            % ===== PLOT 5: Relative to combined investment =====
+            figure(fig_relative);
+            subplot(n_investments, n_investments, subplot_idx);
+            hold on;
+            
+            if i == j
+                % Diagonal: plot standalone distribution
+                if ~isempty(data_matrix{i, j})
+                    data = data_matrix{i, j};
+                    
+                    if ~isempty(data) && ~all(isnan(data)) && length(data) > 0
+                        % Create histogram
+                        histogram(data, 'Normalization', 'probability', ...
+                                 'FaceColor', [0.3 0.5 0.8], 'FaceAlpha', 0.6, ...
+                                 'EdgeColor', 'none');
+                        
+                        mean_val = mean(data, 'omitnan');
+                        
+                        % Add mean line
+                        yl = ylim;
+                        if ~isnan(mean_val)
+                            plot([mean_val mean_val], yl, 'k--', 'LineWidth', 1.5);
+                        end
+                    end
+                end
+            else
+                % Off-diagonal: plot percent change relative to combined investment
+                % Get complementarity data for this cell
+                if ~isempty(data_matrix{i, j})
+                    complementarity = data_matrix{i, j};
+                    
+                    % Get standalone data for both investments
+                    standalone_i = data_matrix{i, i};
+                    standalone_j = data_matrix{j, j};
+                    
+                    if ~isempty(complementarity) && ~isempty(standalone_i) && ~isempty(standalone_j) && ...
+                       ~all(isnan(complementarity)) && ~all(isnan(standalone_i)) && ~all(isnan(standalone_j))
+                        
+                        % Ensure same length
+                        min_len = min([length(complementarity), length(standalone_i), length(standalone_j)]);
+                        complementarity = complementarity(1:min_len);
+                        standalone_i = standalone_i(1:min_len);
+                        standalone_j = standalone_j(1:min_len);
+                        
+                        % Combined = Sum of standalones + Complementarity
+                        combined = standalone_i + standalone_j;
+                        
+                        % Percent change: (Combined - Sum of standalones) / Combined * 100
+                        pct_change = 100 * complementarity ./ (combined + eps);
+                        
+                        % Create histogram
+                        histogram(pct_change, 'Normalization', 'probability', ...
+                                 'FaceColor', [0.5 0.7 0.3], 'FaceAlpha', 0.6, ...
+                                 'EdgeColor', 'none');
+                        
+                        % Add mean line
+                        mean_val = mean(pct_change, 'omitnan');
+                        yl = ylim;
+                        if ~isnan(mean_val)
+                            plot([mean_val mean_val], yl, 'k--', 'LineWidth', 1.5);
+                        end
+                        plot([0 0], yl, 'r:', 'LineWidth', 1); % Zero line
+                    end
+                end
+            end
+            
+            % Style
+            box off;
+            ax = gca;
+            ax.XGrid = 'on';
+            ax.YGrid = 'on';
+            ax.GridAlpha = 0.15;
+            ax.LineWidth = 1;
+            ax.FontSize = 9;
+            ax.TickDir = 'out';
+            
+            % Labels
+            if i == j
+                xlabel(simple_metric, 'FontSize', 10);
+            else
+                xlabel('% change vs combined', 'FontSize', 10);
+            end
+            if j == 1
+                ylabel('Probability', 'FontSize', 10);
+            end
+            
+            % Add row label on left side for first column
+            if j == 1
+                text(-0.3, 0.5, inv_i_label, 'Units', 'normalized', ...
+                     'Rotation', 90, 'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            % Add column label on top for first row
+            if i == 1
+                text(0.5, 1.15, inv_j_label, 'Units', 'normalized', ...
+                     'HorizontalAlignment', 'center', ...
+                     'FontSize', 10, 'FontWeight', 'bold');
+            end
+            
+            hold off;
         end
     end
     
@@ -460,13 +563,13 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
     accent_short = strrep(accent_label, ' scenarios', '');
     
     figure(fig_raw);
-    sgtitle({sprintf('\\fontsize{16}\\bf Raw %s complementarity', lower(metric_short)), ...
-             sprintf('\\fontsize{14}Accent: %s', accent_short)}, ...
+    sgtitle({sprintf('\\fontsize{14}\\bf Raw %s complementarity', lower(metric_short)), ...
+             sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
             'FontWeight', 'normal', 'Interpreter', 'tex');
     
     figure(fig_raw_pct);
-    sgtitle({sprintf('\\fontsize{16}\\bf Raw %s %% deviations', lower(metric_short)), ...
-             sprintf('\\fontsize{14}Accent: %s', accent_short)}, ...
+    sgtitle({sprintf('\\fontsize{14}\\bf Raw %s %% deviations from mean', lower(metric_short)), ...
+             sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
             'FontWeight', 'normal', 'Interpreter', 'tex');
     
     figure(fig_boot);
@@ -475,12 +578,17 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
             'FontWeight', 'normal', 'Interpreter', 'tex');
     
     figure(fig_boot_pct);
-    sgtitle({sprintf('\\fontsize{14}\\bf Bootstrapped %s mean %% deviation', lower(metric_short)), ...
+    sgtitle({sprintf('\\fontsize{14}\\bf Bootstrapped %s mean %% deviation from mean', lower(metric_short)), ...
+             sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
+            'FontWeight', 'normal', 'Interpreter', 'tex');
+    
+    figure(fig_relative);
+    sgtitle({sprintf('\\fontsize{14}\\bf %s: Standalone (diagonal) and %% change vs combined (off-diagonal)', metric_short), ...
              sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
             'FontWeight', 'normal', 'Interpreter', 'tex');
     
     % Adjust subplot positions for all figures
-    for fig = [fig_raw, fig_raw_pct, fig_boot, fig_boot_pct]
+    for fig = [fig_raw, fig_raw_pct, fig_boot, fig_boot_pct, fig_relative]
         figure(fig);
         for i = 1:n_investments
             for j = 1:n_investments
@@ -500,14 +608,16 @@ function create_complementarity_figures(complementarity_data, metric_label, acce
         lower(accent_short));
     
     saveas(fig_raw, fullfile(figure_path, [filename_base '_raw.jpg']));
-    saveas(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct.jpg']));
+    saveas(fig_raw_pct, fullfile(figure_path, [filename_base, '_raw_pct_deviation_from_mean.jpg']));
     saveas(fig_boot, fullfile(figure_path, [filename_base '_bootstrap.jpg']));
-    saveas(fig_boot_pct, fullfile(figure_path, [filename_base '_bootstrap_pct.jpg']));
+    saveas(fig_boot_pct, fullfile(figure_path, [filename_base '_bootstrap_pct_deviation_from_mean.jpg']));
+    saveas(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.jpg']));
     
     close(fig_raw);
     close(fig_raw_pct);
     close(fig_boot);
     close(fig_boot_pct);
+    close(fig_relative);
     
     fprintf('Saved complementarity figures for %s %s\n', metric_label, accent_label);
 end
