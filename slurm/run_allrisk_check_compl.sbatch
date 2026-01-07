@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=allrisk_pairwise
+#SBATCH --job-name=allrisk_check_compl
 #SBATCH --output=logs/%x_%j.out
 #SBATCH --error=logs/%x_%j.err
 
@@ -19,4 +19,4 @@
 module load matlab/2023a
 
 # Run MATLAB in batch mode
-matlab -batch "run('./matlab/load_project.m'); run_job('./config/job_configs/allrisk_base_pairwise.yaml', 'num_chunks', 20, 'parallel', false);"
+matlab -batch "run('./matlab/load_project.m'); run_job('./config/job_configs/allrisk_base_check_cap_warning_compl.yaml', 'num_chunks', 13, 'parallel', false);"
