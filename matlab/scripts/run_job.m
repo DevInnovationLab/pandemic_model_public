@@ -91,7 +91,8 @@ function run_job(job_config_path, varargin)
     if use_parallel && num_chunks > 1
         % Assume we are running on SLURM cluster
         pc = parcluster('local');
-        parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
+        num_workers = str2double(getenv('SLURM_CPUS_PER_TASK'));
+        parpool(pc, num_workers);
 
         % Create DataQueue for progress updates
         q = parallel.pool.DataQueue;
@@ -114,12 +115,16 @@ function run_job(job_config_path, varargin)
         delete(gcp('nocreate'));
     else
         for chunk_idx = 1:num_chunks
+            fprintf('Processing chunk %d/%d...\n', chunk_idx, num_chunks);
             chunk_config = job_config;
             chunk_config.seed = job_config.seed + chunk_idx;
 
             run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
                       job_config, scenario_configs, raw_results_path);
+            
+            fprintf('Completed chunk %d/%d (%.1f%%)\n', chunk_idx, num_chunks, 100*chunk_idx/num_chunks);
         end
+        fprintf('All chunks completed!\n');
     end
 
     % Aggregate relative sums from all chunks
@@ -160,7 +165,6 @@ function run_job(job_config_path, varargin)
 end
 
 
-% Add this helper function at the end of the file (outside run_job)
 function progressCallback(chunk_idx, total_chunks, start_time)
     persistent completed
     if isempty(completed)
@@ -232,7 +236,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
             event_list_simulation(scenario_simulation_table, econ_loss_model, num_simulations, simulation_params);
 
         baseline_chunk_path = fullfile(chunk_dir, 'baseline_annual.mat');
-        save(baseline_chunk_path, 'annual_results_baseline');
+        save(baseline_chunk_path, 'annual_results_baseline', '-v7.3');
 
         if ~strcmp(job_config.save_mode, "light")
             save_pandemic_table(scenario_pandemic_table, 'baseline', chunk_dir, job_config.pandemic_table_out);
@@ -263,12 +267,12 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         % Save chunk results
         chunk_sum_path = fullfile(chunk_dir, ...
             sprintf('%s_relative_sums.mat', scenario_name));
-        save(chunk_sum_path, 'scenario_sum_table');
+        save(chunk_sum_path, 'scenario_sum_table', '-v7.3');
         
         if ~strcmp(job_config.save_mode, "light")
             annual_rel_path = fullfile(chunk_dir, ...
                 sprintf('%s_relative_annual.mat', scenario_name));
-            save(annual_rel_path, '-struct', 'relative_annual_results');
+            save(annual_rel_path, '-struct', 'relative_annual_results', '-v7.3');
 
             save_pandemic_table(scenario_pandemic_table, scenario_name, chunk_dir, job_config.pandemic_table_out);
         end
