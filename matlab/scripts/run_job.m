@@ -1,48 +1,53 @@
 function run_job(job_config_path, varargin)
-    % Run a job config with parameters for a simulation run
-    % Job configs are found in ./config/job_configs
-
-    % Parse optional arguments
+    % Universal entry point for running jobs locally or on SLURM
+    % 
+    % Local usage:
+    %   run_job('job.yaml', 'num_chunks', 10,)
+    %
+    % SLURM job array usage:
+    %   run_job('job.yaml', 'array_task_id', 5, 'num_chunks', 10)
+    
     p = inputParser;
-    addParameter(p, 'num_chunks', nan, @isnumeric);
-    addParameter(p, 'parallel', false, @islogical);
+    addParameter(p, 'num_chunks', 1, @isnumeric);
+    addParameter(p, 'array_task_id', nan, @isnumeric);  % If set, run as array task
     parse(p, varargin{:});
+    
     num_chunks = p.Results.num_chunks;
-    use_parallel = p.Results.parallel;
-
-    % Load job config and set seed
+    array_task_id = p.Results.array_task_id;
+    
+    is_array_task = ~isnan(array_task_id);
+    
+    % Load job config
     job_config = yaml.loadFile(job_config_path);
-    if isnan(num_chunks)
-        num_chunks = 1;
-    end
-
-    % Create output dir
     [~, job_config_name, ~] = fileparts(job_config_path);
-
-    foldername = job_config_name;
-    if job_config.add_datetime_to_outdir
-        currentDateTime = datetime('now', 'Format', 'yyyyMMdd_HHmmss');
-        foldername = foldername + "_" + char(currentDateTime);
+    
+    % Determine output directory
+    base_foldername = job_config_name;
+    sim_results_path = fullfile(job_config.outdir, base_foldername);
+    
+    % Clear out directory
+    if ~is_array_task || array_task_id == 1
+        if exist(sim_results_path, 'dir')
+            rmdir(sim_results_path, 's');
+        end
     end
     
-    % Set results paths 
-    sim_results_path = fullfile(job_config.outdir, foldername);
     raw_results_path = fullfile(sim_results_path, "raw");
     figure_path = fullfile(sim_results_path, "figures");
     job_config.outdirpath = sim_results_path;
     job_config.rawoutpath = raw_results_path;
-    
-    % Delete folders if they already exist
-    if exist(sim_results_path, 'dir')
-        rmdir(sim_results_path, 's');
+
+    % Create directories
+    if ~is_array_task || array_task_id == 1
+        create_folders_recursively(raw_results_path);
+        create_folders_recursively(figure_path);
+    else
+        % Wait for task 1 to create directories
+        pause(5);
     end
-
-    create_folders_recursively(raw_results_path);
-    create_folders_recursively(figure_path);
-
+    
+    % Load scenario configs
     scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
-
-    % Clean scenario configs
     scenario_configs = cell(length(scenario_config_paths), 1);
     for i = 1:length(scenario_config_paths)
         scenario_config_path = fullfile(scenario_config_paths(i).folder, scenario_config_paths(i).name);
@@ -51,12 +56,11 @@ function run_job(job_config_path, varargin)
         [~, scenario_name, ~] = fileparts(scenario_config_path);
         scenario_configs{i}.name = scenario_name;
     end
-
-    % Sort scenarios so baseline always runs first
+    
+    % Sort scenarios
     scenario_names = cellfun(@(x) x.name, scenario_configs, 'UniformOutput', false);
     baseline_idx = find(strcmp(scenario_names, 'baseline'));
     if ~isempty(baseline_idx)
-        % Move baseline to first position
         baseline_config = scenario_configs{baseline_idx};
         baseline_config_path = scenario_config_paths(baseline_idx);
         scenario_configs(baseline_idx) = [];
@@ -64,8 +68,8 @@ function run_job(job_config_path, varargin)
         scenario_configs = [{baseline_config}; scenario_configs];
         scenario_config_paths = [baseline_config_path; scenario_config_paths];
     end
-
-    % Get the highest false positive rate to inflate pandemic arrivals
+    
+    % Get highest false positive rate
     highest_false_positive_rate = 0;
     for i = 1:length(scenario_configs)
         scenario_improved_early_warning = scenario_configs{i}.improved_early_warning;
@@ -75,110 +79,39 @@ function run_job(job_config_path, varargin)
         end
     end
     job_config.highest_false_positive_rate = highest_false_positive_rate;
-
-    % Calculate chunk boundaries (no need to load master objects)
-    if num_chunks > 1
-        chunk_size = ceil(job_config.num_simulations / num_chunks);
-        chunk_starts = 1:chunk_size:job_config.num_simulations;
-        chunk_ends = [chunk_starts(2:end)-1, job_config.num_simulations];
+    
+    % Calculate chunk boundaries
+    chunk_size = ceil(job_config.num_simulations / num_chunks);
+    chunk_starts = 1:chunk_size:job_config.num_simulations;
+    chunk_ends = [chunk_starts(2:end)-1, job_config.num_simulations];
+    
+    % Determine which chunks to process
+    if is_array_task
+        chunks_to_process = array_task_id;
+        fprintf('Running as SLURM array task %d/%d\n', array_task_id, num_chunks);
     else
-        num_chunks = 1;
-        chunk_starts = 1;
-        chunk_ends = job_config.num_simulations;
-    end
-
-    % Process chunks - pass config paths, not objects
-    if use_parallel && num_chunks > 1
-        % Assume we are running on SLURM cluster
-        pc = parcluster('local');
-        num_workers = str2double(getenv('SLURM_CPUS_PER_TASK'));
-        parpool(pc, num_workers);
-
-        % Create DataQueue for progress updates
-        q = parallel.pool.DataQueue;
-        start_time = tic;
-        
-        % Use persistent variable in callback
-        afterEach(q, @(x) progressCallback(x, num_chunks, start_time));
-
-        parfor chunk_idx = 1:num_chunks
-            chunk_config = job_config;
-            chunk_config.seed = job_config.seed + chunk_idx;
-
-            run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
-                      chunk_config, scenario_configs, raw_results_path);
-
-            % Send completion update
-            send(q, chunk_idx);
-        end
-
-        delete(gcp('nocreate'));
-    else
-        for chunk_idx = 1:num_chunks
-            fprintf('Processing chunk %d/%d...\n', chunk_idx, num_chunks);
-            chunk_config = job_config;
-            chunk_config.seed = job_config.seed + chunk_idx;
-
-            run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
-                      job_config, scenario_configs, raw_results_path);
-            
-            fprintf('Completed chunk %d/%d (%.1f%%)\n', chunk_idx, num_chunks, 100*chunk_idx/num_chunks);
-        end
-        fprintf('All chunks completed!\n');
-    end
-
-    % Aggregate relative sums from all chunks
-    processed_dir = fullfile(sim_results_path, "processed");
-    create_folders_recursively(processed_dir);
-
-    chunk_dirs = dir(fullfile(raw_results_path, 'chunk_*'));
-
-    for i = 1:length(scenario_configs)
-        scenario_name = scenario_configs{i}.name;
-        if strcmp(scenario_name, 'baseline')
-            continue;
-        end
-        scenario_sum_tables = cell(length(chunk_dirs), 1);
-        for j = 1:length(chunk_dirs)
-            chunk_dir = fullfile(raw_results_path, chunk_dirs(j).name);
-            scenario_sum_table = load(fullfile(chunk_dir, sprintf('%s_relative_sums.mat', scenario_name))).scenario_sum_table;
-            scenario_sum_tables{j} = scenario_sum_table;
-        end
-        all_relative_sums = vertcat(scenario_sum_tables{:});
-        save(fullfile(processed_dir, sprintf('%s_relative_sums.mat', scenario_name)), 'all_relative_sums');
-    end
-
-    % Save job and scenario params
-    out_params = job_config;
-    out_params.scenarios = struct();
-        
-    for i = 1:length(scenario_configs)
-        % Load scenario config
-        scenario_config_path = fullfile(scenario_config_paths(i).folder, scenario_config_paths(i).name);
-        [~, scenario_name, ~] = fileparts(scenario_config_path);
-        scenario_config = scenario_configs{i};
-        out_params.scenarios.(scenario_name) = scenario_config;
-    end 
-
-    config_outpath = fullfile(sim_results_path, "job_config.yaml");
-    yaml.dumpFile(config_outpath, out_params);
-end
-
-
-function progressCallback(chunk_idx, total_chunks, start_time)
-    persistent completed
-    if isempty(completed)
-        completed = 0;
+        chunks_to_process = 1:num_chunks;
     end
     
-    completed = completed + 1;
-    elapsed = toc(start_time);
-    if completed > 0
-        rate = completed / elapsed;
-        remaining = (total_chunks - completed) / rate;
-        fprintf('[%s] Chunk %d/%d completed (%.1f%%) - Elapsed: %.1fs, ETA: %.1fs\n', ...
-                datestr(now, 'HH:MM:SS'), completed, total_chunks, ...
-                100*completed/total_chunks, elapsed, remaining);
+    % Process chunks
+    for i = 1:length(chunks_to_process)
+        chunk_idx = chunks_to_process(i);
+        if ~is_array_task
+            fprintf('Processing chunk %d/%d...\n', chunk_idx, num_chunks);
+        end
+        chunk_config = job_config;
+        chunk_config.seed = job_config.seed + chunk_idx;
+        
+        run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
+                    job_config, scenario_configs, raw_results_path);
+        
+        if ~is_array_task
+            fprintf('Completed chunk %d/%d (%.1f%%)\n', chunk_idx, num_chunks, 100*chunk_idx/num_chunks);
+        end
+    end
+    
+    if ~is_array_task
+        fprintf('All chunks completed!\n');
     end
 end
 
