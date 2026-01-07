@@ -12,14 +12,12 @@ function bootstrap_sums(sim_results_path, varargin)
     p = inputParser;
     addParameter(p, 'keep_vars', ["benefits_vaccine_full", "total_costs_pv_full"], @(x) isstring(x) || isempty(x));
     addParameter(p, 'n_bootstrap', 1000, @isnumeric);
-    addParameter(p, 'overwrite', false, @islogical);
     addParameter(p, 'parallel', false, @islogical);
     addParameter(p, 'n_workers', 1, @isnumeric);
     addParameter(p, 'seed', 42, @isnumeric);
     parse(p, varargin{:});
     keep_vars = p.Results.keep_vars;
     n_bootstrap = p.Results.n_bootstrap;
-    overwrite = p.Results.overwrite;
     use_parallel = p.Results.parallel;
     n_workers = p.Results.n_workers;
     seed = p.Results.seed;
@@ -36,13 +34,13 @@ function bootstrap_sums(sim_results_path, varargin)
         parpool(pc, n_workers);
 
         parfor i = 1:length(scenario_names)
-            process_scenario(scenario_names{i}, processed_dir, keep_vars, n_bootstrap, overwrite, seed);
+            process_scenario(scenario_names{i}, processed_dir, keep_vars, n_bootstrap, seed);
         end
 
         delete(gcp('nocreate'));
     else
         for i = 1:length(scenario_names)
-            process_scenario(scenario_names{i}, processed_dir, keep_vars, n_bootstrap, overwrite, seed);
+            process_scenario(scenario_names{i}, processed_dir, keep_vars, n_bootstrap, seed);
         end
     end
 

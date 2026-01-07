@@ -1,5 +1,4 @@
 #!/bin/bash
-#SBATCH --job-name=allrisk_pairwise
 #SBATCH --output=logs/%x_%A_%a.out
 #SBATCH --error=logs/%x_%A_%a.err
 #SBATCH --partition=broadwl
@@ -12,12 +11,6 @@
 #SBATCH --account=pi-rglennerster
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=squaade@rcc.uchicago.edu
-
-# ============ CONFIGURATION ============
-JOB_CONFIG="./config/job_configs/allrisk_base_pairwise.yaml"
-NUM_CHUNKS=10
-#SBATCH --array=1-10 # Must be same as NUM_CHUNKS
-# =======================================
 
 module load matlab/2023a
 
