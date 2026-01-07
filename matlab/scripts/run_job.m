@@ -89,13 +89,29 @@ function run_job(job_config_path, varargin)
 
     % Process chunks - pass config paths, not objects
     if use_parallel && num_chunks > 1
+        % Assume we are running on SLURM cluster
+        pc = parcluster('local');
+        parpool(pc, str2num(getenv('SLURM_CPUS_ON_NODE')));
+
+        % Create DataQueue for progress updates
+        q = parallel.pool.DataQueue;
+        start_time = tic;
+        
+        % Use persistent variable in callback
+        afterEach(q, @(x) progressCallback(x, num_chunks, start_time));
+
         parfor chunk_idx = 1:num_chunks
             chunk_config = job_config;
             chunk_config.seed = job_config.seed + chunk_idx;
 
             run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
                       chunk_config, scenario_configs, raw_results_path);
+
+            % Send completion update
+            send(q, chunk_idx);
         end
+
+        delete(gcp('nocreate'));
     else
         for chunk_idx = 1:num_chunks
             chunk_config = job_config;
@@ -142,6 +158,26 @@ function run_job(job_config_path, varargin)
     config_outpath = fullfile(sim_results_path, "job_config.yaml");
     yaml.dumpFile(config_outpath, out_params);
 end
+
+
+% Add this helper function at the end of the file (outside run_job)
+function progressCallback(chunk_idx, total_chunks, start_time)
+    persistent completed
+    if isempty(completed)
+        completed = 0;
+    end
+    
+    completed = completed + 1;
+    elapsed = toc(start_time);
+    if completed > 0
+        rate = completed / elapsed;
+        remaining = (total_chunks - completed) / rate;
+        fprintf('[%s] Chunk %d/%d completed (%.1f%%) - Elapsed: %.1fs, ETA: %.1fs\n', ...
+                datestr(now, 'HH:MM:SS'), completed, total_chunks, ...
+                100*completed/total_chunks, elapsed, remaining);
+    end
+end
+
 
 function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_configs, raw_results_path)
 
