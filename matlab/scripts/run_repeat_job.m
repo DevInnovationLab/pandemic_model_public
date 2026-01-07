@@ -21,11 +21,11 @@ function run_repeat_job(job_config_path, num_repeats, varargin)
     
     % Use parfor if parallel, otherwise regular for
     if use_parallel
-        parfor seed = base_seed:(base_seed + num_repeats)
+        parfor seed = base_seed:(base_seed + num_repeats - 1)
             run_single_repeat(job_config, top_dir, seed);
         end
     else
-        for seed = base_seed:(base_seed + num_repeats)
+        for seed = base_seed:(base_seed + num_repeats - 1)
             run_single_repeat(job_config, top_dir, seed);
         end
     end

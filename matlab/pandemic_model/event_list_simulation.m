@@ -1,4 +1,4 @@
-function [annual_results, simulation_table] = event_list_simulation(simulation_table, econ_loss_model, params)
+function [annual_results, simulation_table] = event_list_simulation(simulation_table, econ_loss_model, num_sims, params)
     % Extract events from simulation table
     simulation_table = sortrows(simulation_table, ["sim_num", "yr_start"]); % Make sure sorted
 
@@ -11,7 +11,6 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     false_pos_ignored = isnan(prep_start_month) & is_false;
     ufv_protection = simulation_table.ufv_protection;
 
-    num_sims = params.num_simulations;
     max_years = params.sim_periods;
     num_events = height(simulation_table);
 

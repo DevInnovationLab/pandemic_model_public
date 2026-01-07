@@ -1,10 +1,21 @@
-function run_job(job_config_path)
+function run_job(job_config_path, varargin)
     % Run a job config with parameters for a simulation run
     % Job configs are found in ./config/job_configs
 
+    % Parse optional arguments
+    p = inputParser;
+    addParameter(p, 'num_chunks', nan, @isnumeric);
+    addParameter(p, 'parallel', false, @islogical);
+    parse(p, varargin{:});
+    num_chunks = p.Results.num_chunks;
+    use_parallel = p.Results.parallel;
+
     % Load job config and set seed
     job_config = yaml.loadFile(job_config_path);
-    
+    if isnan(num_chunks)
+        num_chunks = 1;
+    end
+
     % Create output dir
     [~, job_config_name, ~] = fileparts(job_config_path);
 
@@ -20,18 +31,16 @@ function run_job(job_config_path)
     figure_path = fullfile(sim_results_path, "figures");
     job_config.outdirpath = sim_results_path;
     job_config.rawoutpath = raw_results_path;
+    
+    % Delete folders if they already exist
+    if exist(sim_results_path, 'dir')
+        rmdir(sim_results_path, 's');
+    end
 
     create_folders_recursively(raw_results_path);
     create_folders_recursively(figure_path);
 
-    % Handle folderpath input for scenario configs
-    if isfolder(job_config.scenario_configs)
-        scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
-    elseif isfile(job_config.scenario_configs)
-        scenario_config_paths = dir(fullfile(job_config.scenario_configs));
-    else
-        print("Improper scenario config")
-    end
+    scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
 
     % Clean scenario configs
     scenario_configs = cell(length(scenario_config_paths), 1);
@@ -67,9 +76,87 @@ function run_job(job_config_path)
     end
     job_config.highest_false_positive_rate = highest_false_positive_rate;
 
-    % Load inputs from files
-    arrival_dist = load_arrival_dist(job_config.arrival_dist_config, highest_false_positive_rate);
-    duration_dist = load_duration_dist(job_config.duration_dist_config);
+    % Calculate chunk boundaries (no need to load master objects)
+    if num_chunks > 1
+        chunk_size = ceil(job_config.num_simulations / num_chunks);
+        chunk_starts = 1:chunk_size:job_config.num_simulations;
+        chunk_ends = [chunk_starts(2:end)-1, job_config.num_simulations];
+    else
+        num_chunks = 1;
+        chunk_starts = 1;
+        chunk_ends = job_config.num_simulations;
+    end
+
+    % Process chunks - pass config paths, not objects
+    if use_parallel && num_chunks > 1
+        parfor chunk_idx = 1:num_chunks
+            chunk_config = job_config;
+            chunk_config.seed = job_config.seed + chunk_idx;
+
+            run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
+                      chunk_config, scenario_configs, raw_results_path);
+        end
+    else
+        for chunk_idx = 1:num_chunks
+            chunk_config = job_config;
+            chunk_config.seed = job_config.seed + chunk_idx;
+
+            run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
+                      job_config, scenario_configs, raw_results_path);
+        end
+    end
+
+    % Aggregate relative sums from all chunks
+    processed_dir = fullfile(sim_results_path, "processed");
+    create_folders_recursively(processed_dir);
+
+    chunk_dirs = dir(fullfile(raw_results_path, 'chunk_*'));
+
+    for i = 1:length(scenario_configs)
+        scenario_name = scenario_configs{i}.name;
+        if strcmp(scenario_name, 'baseline')
+            continue;
+        end
+        scenario_sum_tables = cell(length(chunk_dirs), 1);
+        for j = 1:length(chunk_dirs)
+            chunk_dir = fullfile(raw_results_path, chunk_dirs(j).name);
+            scenario_sum_table = load(fullfile(chunk_dir, sprintf('%s_relative_sums.mat', scenario_name))).scenario_sum_table;
+            scenario_sum_tables{j} = scenario_sum_table;
+        end
+        all_relative_sums = vertcat(scenario_sum_tables{:});
+        save(fullfile(processed_dir, sprintf('%s_relative_sums.mat', scenario_name)), 'all_relative_sums');
+    end
+
+    % Save job and scenario params
+    out_params = job_config;
+    out_params.scenarios = struct();
+        
+    for i = 1:length(scenario_configs)
+        % Load scenario config
+        scenario_config_path = fullfile(scenario_config_paths(i).folder, scenario_config_paths(i).name);
+        [~, scenario_name, ~] = fileparts(scenario_config_path);
+        scenario_config = scenario_configs{i};
+        out_params.scenarios.(scenario_name) = scenario_config;
+    end 
+
+    config_outpath = fullfile(sim_results_path, "job_config.yaml");
+    yaml.dumpFile(config_outpath, out_params);
+end
+
+function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_configs, raw_results_path)
+
+    % Load chunk-specific distributions from files
+    chunk_dir = fullfile(raw_results_path, sprintf('chunk_%d', chunk_idx));
+    create_folders_recursively(chunk_dir);
+    chunk_range = chunk_start:chunk_end;
+    num_simulations = length(chunk_range);
+    
+
+    arrival_dist = load_arrival_dist(job_config.arrival_dist_config, ...
+                                job_config.highest_false_positive_rate, ...
+                                [chunk_start, chunk_end]);
+    duration_dist = load_duration_dist(job_config.duration_dist_config, [chunk_start, chunk_end]);
+
     arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
     pathogen_info = readtable(job_config.pathogen_info, "TextType", "string");
     ptrs_pathogen = readtable(job_config.ptrs_pathogen, "TextType", "string");
@@ -84,128 +171,111 @@ function run_job(job_config_path)
     response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
-    % Generate base simulation to be used across scenarios
-    [base_simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, ...
-                                                                                      arrival_rates, pathogen_info, ...
-                                                                                      job_config.seed, job_config);
+    % Generate base simulation table for this chunk
+    [base_simulation_table, total_removed, total_trimmed] = ...
+        get_base_simulation_table(arrival_dist, duration_dist, ...
+                                  arrival_rates, pathogen_info, ...
+                                  job_config.seed, job_config);
 
-    base_simulation_table_path = fullfile(raw_results_path, "base_simulation_table.mat");
-    save(base_simulation_table_path, 'base_simulation_table');
+    % Save chunk base table
+    chunk_base_path = fullfile(chunk_dir, 'base_simulation_table.mat');
+    save(chunk_base_path, 'base_simulation_table', 'total_removed', 'total_trimmed');
 
-    % Save trim and remove amounts
-    job_config.total_removed = total_removed;
-    job_config.total_trimmed = total_trimmed;
-
-    % Plot diagnostics for base simulation table 
-    plot_base_simulation_table_diagnostics(base_simulation_table, figure_path, job_config);
-
-    % Create object storing job and scenario configurations that we will save.
-    out_params = job_config;
-    out_params.scenarios = {};
-
-    for i = 1:length(scenario_configs)
-        % Load scenario config
-        scenario_config_path = fullfile(scenario_config_paths(i).folder, scenario_config_paths(i).name);
-        [~, scenario_name, ~] = fileparts(scenario_config_path);
-        disp(['Running configuration from file: ', scenario_config_path]);
-        scenario_config = scenario_configs{i};
-        out_params.scenarios.(scenario_name) = scenario_config;
-
-        % Add scenario specific parameter configurations
-        simulation_params = update_params(job_config, scenario_config, arrival_rates);
-        simulation_params.scenario_name = scenario_name;
-
-        %Update scenarion simulation table
+    % Process baseline first
+    baseline_idx = find(strcmp(cellfun(@(x) x.name, scenario_configs, 'UniformOutput', false), 'baseline'), 1);
+    if ~isempty(baseline_idx)
+        % Update params for this scenario
+        simulation_params = update_params(job_config, scenario_configs{baseline_idx}, arrival_rates);
+        
+        % Get scenario simulation table
         scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
-                                                                  ptrs_pathogen, ...
-                                                                  prototype_effect_ptrs, ...
-                                                                  response_rd_timelines, ...
-                                                                  simulation_params);
+            ptrs_pathogen, prototype_effect_ptrs, response_rd_timelines, simulation_params);
+        
+        % Run simulation
+        [annual_results_baseline, scenario_pandemic_table] = ...
+            event_list_simulation(scenario_simulation_table, econ_loss_model, num_simulations, simulation_params);
 
-        % Run scenario
-        [annual_results, scenario_pandemic_table] = ...
-            event_list_simulation(scenario_simulation_table, econ_loss_model, simulation_params);
+        baseline_chunk_path = fullfile(chunk_dir, 'baseline_annual.mat');
+        save(baseline_chunk_path, 'annual_results_baseline');
 
-        %% Post-process results
-        fprintf('Post-processing results for scenario: %s\n', scenario_name);
-        if strcmp(scenario_name, "baseline")
-            % Save then store baseline results now to compute relative outcomes later
-            if ~strcmp(job_config.save_mode, "light")
-                annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
-                save(annual_absolute_filename', '-struct', "annual_results");
-                save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out);
-            end
+        if ~strcmp(job_config.save_mode, "light")
+            save_pandemic_table(scenario_pandemic_table, 'baseline', chunk_dir, job_config.pandemic_table_out);
+        end
+    else
+        error('Baseline scenario required but not found');
+    end
 
-            annual_results_baseline = annual_results;
+    % Process other scenarios
+    for i = 1:length(scenario_configs)
+        scenario_name = scenario_configs{i}.name;
+        
+        if strcmp(scenario_name, 'baseline')
             continue;
         end
 
-        % Compute results relative to baseline during simulation loop
-        result_names = fieldnames(annual_results);
-        sum_horizons = [10, 30, 50];
+        % Run simulation
+        simulation_params = update_params(job_config, scenario_configs{i}, arrival_rates);
+        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
+            ptrs_pathogen, prototype_effect_ptrs, response_rd_timelines, simulation_params);
         
-        % Preallocate table to store summed results
-        num_results = length(result_names);
-        num_horizons = length(sum_horizons) + 1; % +1 for full horizon
-        num_cols = num_results * num_horizons;
-        scenario_sum_table = table('Size', [job_config.num_simulations, num_cols], ...
-                                   'VariableTypes', repmat({'double'}, 1, num_cols));
+        [annual_results, scenario_pandemic_table] = ...
+            event_list_simulation(scenario_simulation_table, econ_loss_model, num_simulations, simulation_params);
+
+        [scenario_sum_table, relative_annual_results] = get_relative_results(...
+            annual_results, annual_results_baseline, num_simulations);
+
+        % Save chunk results
+        chunk_sum_path = fullfile(chunk_dir, ...
+            sprintf('%s_relative_sums.mat', scenario_name));
+        save(chunk_sum_path, 'scenario_sum_table');
         
-        % Initialize struct to store all relative annual results
-        relative_annual_results = struct();
-
-        for j = 1:length(result_names)
-            result = result_names{j};
-            annual_result_baseline = annual_results_baseline.(result);
-            annual_result_scenario = annual_results.(result);
-
-            % Calculate relative annual results
-            relative_annual_result = annual_result_scenario - annual_result_baseline;
-            relative_annual_results.(result) = relative_annual_result;
-            
-            % Calculate sums over different horizons
-            col_idx = (j-1) * num_horizons + 1;
-            for k = 1:length(sum_horizons)
-                sum_horizon = sum_horizons(k);
-                relative_result_sum = sum(relative_annual_result(:, 1:sum_horizon), 2);
-                varname = strcat(result, '_', num2str(sum_horizon), '_years');
-                scenario_sum_table.Properties.VariableNames{col_idx} = varname;
-                scenario_sum_table{:, col_idx} = relative_result_sum;
-                col_idx = col_idx + 1;
-            end
-
-            % Calculate sum over full horizon
-            relative_result_whole_horizon_sum = sum(relative_annual_result, 2);
-            varname = strcat(result, '_full');
-            scenario_sum_table.Properties.VariableNames{col_idx} = varname;
-            scenario_sum_table{:, col_idx} = relative_result_whole_horizon_sum;
-        end
-        
-        fprintf('Saving post-processed results\n');
         if ~strcmp(job_config.save_mode, "light")
-            annual_absolute_filename = fullfile(raw_results_path, sprintf('%s_absolute_annual.mat', scenario_name));
-            save(annual_absolute_filename, '-struct', 'annual_results');
+            annual_rel_path = fullfile(chunk_dir, ...
+                sprintf('%s_relative_annual.mat', scenario_name));
+            save(annual_rel_path, '-struct', 'relative_annual_results');
 
-            % Save all relative annual results to single .mat file
-            annual_relative_filename = fullfile(raw_results_path, sprintf('%s_relative_annual.mat', scenario_name));
-            save(annual_relative_filename, '-struct', 'relative_annual_results');
-        end
-        
-        % Save the summed results table
-        sum_table_filename = fullfile(raw_results_path, sprintf('%s_relative_sums.mat', scenario_name));
-        save(sum_table_filename, 'scenario_sum_table');
-
-        % Save the pandemic table
-        if ~strcmp(job_config.save_mode, "light")
-            fprintf('Saving pandemic table\n');
-            save_pandemic_table(scenario_pandemic_table, scenario_name, raw_results_path, job_config.pandemic_table_out);
+            save_pandemic_table(scenario_pandemic_table, scenario_name, chunk_dir, job_config.pandemic_table_out);
         end
     end
-
-    % Save job and scenario params
-    config_outpath = fullfile(sim_results_path, "job_config.yaml");
-    yaml.dumpFile(config_outpath, out_params);
 end
+
+
+function [scenario_sum_table, relative_annual_results] = ...
+    get_relative_results(annual_results, annual_results_baseline, num_simulations)
+    % Compute relative results
+    result_names = fieldnames(annual_results);
+    sum_horizons = [10, 30, 50];
+    
+    num_results = length(result_names);
+    num_horizons = length(sum_horizons) + 1;
+    num_cols = num_results * num_horizons;
+    scenario_sum_table = table('Size', [num_simulations, num_cols], ...
+                            'VariableTypes', repmat({'double'}, 1, num_cols));
+    
+    relative_annual_results = struct();
+    
+    for j = 1:length(result_names)
+        result = result_names{j};
+        relative_annual_result = annual_results.(result) - annual_results_baseline.(result);
+        relative_annual_results.(result) = relative_annual_result;
+        
+        col_idx = (j-1) * num_horizons + 1;
+        for k = 1:length(sum_horizons)
+            sum_horizon = sum_horizons(k);
+            relative_result_sum = sum(relative_annual_result(:, 1:sum_horizon), 2);
+            varname = strcat(result, '_', num2str(sum_horizon), '_years');
+            scenario_sum_table.Properties.VariableNames{col_idx} = varname;
+            scenario_sum_table{:, col_idx} = relative_result_sum;
+            col_idx = col_idx + 1;
+        end
+        
+        relative_result_whole_horizon_sum = sum(relative_annual_result, 2);
+        varname = strcat(result, '_full');
+        scenario_sum_table.Properties.VariableNames{col_idx} = varname;
+        scenario_sum_table{:, col_idx} = relative_result_whole_horizon_sum;
+    end
+end
+
 
 function save_pandemic_table(pandemic_table, scenario_name, outdir, outstyle)
 
@@ -225,6 +295,7 @@ function save_pandemic_table(pandemic_table, scenario_name, outdir, outstyle)
     save(fp, 'pandemic_table', '-v7.3');
     fprintf('Saved pandemic table to %s\n', fp);
 end
+
 
 function updated_params = update_params(job_config, scenario_config, arrival_rates)
 
@@ -269,7 +340,7 @@ function updated_params = update_params(job_config, scenario_config, arrival_rat
     updated_params.universal_flu_rd = scenario_config.universal_flu_rd;
 end
 
-% Helper function to convert 'TRUE'/'FALSE'/NA columns to numeric 1/0/NaN
+
 function tbl = convert_logical_columns(tbl)
     %CONVERT_LOGICAL_COLUMNS Converts 'TRUE'/'FALSE'/NA columns to numeric 1/0/NaN.
     %

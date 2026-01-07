@@ -1,0 +1,4 @@
+[submodule "python/vendor/pandemic-statistics"]
+	path = python/vendor/pandemic-statistics
+	url = https://github.com/ganqili/pandemic-statistics
+	branch = prep-for-integration

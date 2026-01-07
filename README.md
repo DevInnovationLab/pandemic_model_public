@@ -3,6 +3,14 @@
 ## Installation
 This repository uses YAML configuration files. Clone [this repository](https://github.com/MartinKoch123/yaml) into the root directory of the pandemic model repository to add YAML read and write functions.
 
+You will also need to add the [pandemic-statistics]() repository as a submodule. If it is not already present, run
+
+```
+git submodule add -b prep-for-integration https://github.com/ganqili/pandemic-statistics python/vendor/pandemic-statistics
+```
+
+At a later stage we will update this to directly check out main.
+
 ## Python
 
 You may need to install C/C++ and Fortran compilers to install some of the packages (aesara).

@@ -1,9 +1,10 @@
-function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
+function arrival_dist = load_arrival_dist(config_path, false_positive_rate, param_range)
     % Load arrival distribution from YAML config file into MEVD object
     %
     % Parameters:
     %   config_path - Path to YAML config file containing arrival distribution parameters
     %   false_positive_rate - False positive rate
+    %   param_range - Optional [start_row, end_row] range for loading subset of parameters
     %
     % Returns:
     %   arrival_dist - MEVD object representing the arrival distribution
@@ -11,14 +12,21 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
     arguments
         config_path (1,1) string
         false_positive_rate (1,1) double
+        param_range (1,2) double = [nan, nan]
     end
 
     hyperparams = yaml.loadFile(fullfile(config_path, "hyperparams.yaml"));
     trunc_method = hyperparams.trunc_method;
     measure = hyperparams.measure;
 
-    % Create table with numeric arrays for each parameter
-    param_samples = readtable(fullfile(config_path, "param_samples.csv"));
+    % Load parameter samples, optionally with specified row range
+    if all(~isnan(param_range))
+        param_samples = readtable(fullfile(config_path, "param_samples.csv"), ...
+                                  'Range', sprintf('%d:%d', param_range(1) + 1, param_range(2) + 1), ...
+                                  'VariableNamesLine', 1);
+    else
+        param_samples = readtable(fullfile(config_path, "param_samples.csv"));
+    end
 
     if ismember('lambda', param_samples.Properties.VariableNames)
         param_samples.p = 1 - exp(-param_samples.lambda);

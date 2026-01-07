@@ -1,5 +1,5 @@
 # Run params
-num_simulations: 250000
+num_simulations: 50000
 sim_periods: 200
 outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/pairwise_combos_w_sense"

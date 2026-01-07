@@ -2,15 +2,15 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	% Set seed
 	rng(seed);
 
-	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, params.num_simulations, params.sim_periods));
+	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, height(duration_dist.param_table), params.sim_periods));
 	duration_matrix(:, 1) = 0; % Assume no pandemics in first year so capacity logic works.
 
 	if strcmp(arrival_dist.measure, 'severity')
-		severity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
+		severity_matrix = arrival_dist.ppf(unifrnd(0, 1, height(arrival_dist.param_samples), params.sim_periods));
 		severity_matrix(:, 1) = 0;  % Assume no pandemics in first year so capacity logic works.
 		intensity_matrix = severity_matrix ./ duration_matrix;
 	elseif strcmp(arrival_dist.measure, 'intensity')
-		intensity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
+		intensity_matrix = arrival_dist.ppf(unifrnd(0, 1, height(arrival_dist.param_samples), params.sim_periods));
 		intensity_matrix(:, 1) = 0;
 		severity_matrix = intensity_matrix .* duration_matrix;
 	else

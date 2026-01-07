@@ -4,10 +4,10 @@
 #SBATCH --error=logs/%x_%j.err
 
 #SBATCH --partition=broadwl
-#SBATCH --nodes=1
+#SBATCH --nodes=5
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --time=20:00:00
+#SBATCH --time=5:00:00
 #SBATCH --mem=48G
 
 #SBATCH --account=pi-rglennerster
@@ -19,4 +19,4 @@
 module load matlab/2023a
 
 # Run MATLAB in batch mode
-matlab -batch "run('./matlab/load_project.m'); run_job('./config/job_configs/allrisk_base_pairwise.yaml');"
+matlab -batch "run('./matlab/load_project.m'); run_job_repeat('./config/job_configs/allrisk_base_pairwise.yaml', 100, 'parallel', true);"
