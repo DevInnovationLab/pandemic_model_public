@@ -46,7 +46,6 @@ function bootstrap_sums(sim_results_path, varargin)
     fprintf('All bootstraps complete!\n');
 end
 
-
 function process_scenario(scenario_name, processed_dir, keep_vars, n_bootstrap, seed)
     if strcmp(scenario_name, 'baseline')
         return;

@@ -1,5 +1,5 @@
 # Run params
-num_simulations: 250000
+num_simulations: 1000000
 sim_periods: 200
 outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/pairwise_combos"
@@ -8,7 +8,7 @@ add_datetime_to_outdir: 0
 save_output: 1
 profile: false # Profile main parallel loop
 pandemic_table_out: "skinny" # Full, skinny, or none
-save_mode: "full"
+save_mode: "light"
 
 # Social value
 y: 0.016 # Growth rate
@@ -21,8 +21,8 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_threshold.yaml" # Response threshold in terms intensity
-arrival_dist_config: "output/arrival_distributions/modified/gpd_all_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_250000_seed_42"
-duration_dist_config: "./output/duration_distributions/clean_filt_all_int_0d01_1900_mod_trunc_10_n_250000_seed_42.csv"
+arrival_dist_config: "output/arrival_distributions/modified/gpd_all_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_1000000_seed_42"
+duration_dist_config: "./output/duration_distributions/clean_filt_all_int_0d01_1900_mod_trunc_10_n_1000000_seed_42.csv"
 arrival_rates: "./data/clean/arrival_rates_all.csv"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
 
