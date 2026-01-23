@@ -6,7 +6,6 @@ function bootstrap_sums(sim_results_path, varargin)
     %   varargin: Optional name-value pairs:
     %     'keep_vars': String array of variable names to bootstrap (default: all)
     %     'n_bootstrap': Number of bootstrap samples (default: 1000)
-    %     'overwrite': Whether to overwrite existing bootstrap files (default: false)
     
     % Parse optional arguments
     p = inputParser;
@@ -47,7 +46,8 @@ function bootstrap_sums(sim_results_path, varargin)
     fprintf('All bootstraps complete!\n');
 end
 
-function process_scenario(scenario_name, processed_dir, keep_vars, n_bootstrap, overwrite, seed)
+
+function process_scenario(scenario_name, processed_dir, keep_vars, n_bootstrap, seed)
     if strcmp(scenario_name, 'baseline')
         return;
     end
@@ -59,11 +59,6 @@ function process_scenario(scenario_name, processed_dir, keep_vars, n_bootstrap, 
     
     if ~exist(rel_sums_file, 'file')
         warning('Relative sums file not found for scenario %s. Skipping.', scenario_name);
-        return;
-    end
-    
-    if exist(bootstrap_file, 'file') && ~overwrite
-        fprintf('Bootstrap file already exists for scenario %s. Skipping.\n', scenario_name);
         return;
     end
     

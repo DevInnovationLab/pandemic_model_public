@@ -19,19 +19,18 @@ function aggregate_relative_sums(sim_results_path)
         if strcmp(scenario_name, 'baseline')
             continue;
         end
+        fprintf('Processing scenario %s\n', scenario_name);
         
         scenario_sum_tables = cell(length(chunk_dirs), 1);
         for j = 1:length(chunk_dirs)
             chunk_dir = fullfile(raw_results_path, chunk_dirs(j).name);
             result_file = fullfile(chunk_dir, sprintf('%s_relative_sums.mat', scenario_name));
-            if exist(result_file, 'file')
-                scenario_sum_table = load(result_file).scenario_sum_table;
-                scenario_sum_tables{j} = scenario_sum_table;
-            end
+            scenario_sum_table = load(result_file).scenario_sum_table;
+            scenario_sum_tables{j} = scenario_sum_table;
         end
         
         all_relative_sums = vertcat(scenario_sum_tables{:});
-        save(fullfile(processed_dir, sprintf('%s_relative_sums.mat', scenario_name)), 'all_relative_sums');
+        save(fullfile(processed_dir, sprintf('%s_relative_sums.mat', scenario_name)), 'all_relative_sums', '-v7.3');
     end
     
     fprintf('Aggregation complete!\n');
