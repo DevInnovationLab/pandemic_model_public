@@ -6,7 +6,6 @@ function bootstrap_sums(sim_results_path, varargin)
     %   varargin: Optional name-value pairs:
     %     'keep_vars': String array of variable names to bootstrap (default: all)
     %     'n_bootstrap': Number of bootstrap samples (default: 1000)
-    %     'overwrite': Whether to overwrite existing bootstrap files (default: false)
     
     % Parse optional arguments
     p = inputParser;
