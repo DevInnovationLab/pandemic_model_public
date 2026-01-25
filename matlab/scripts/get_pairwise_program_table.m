@@ -359,6 +359,7 @@ function create_table(summary_data, investments, outpath, complementarity_ci_tab
     ];
     fprintf(fileID, caption_str);
     fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c}\n');
+    fprintf(fileID, '\\small\n');
     fprintf(fileID, '\\hline\n');
     fprintf(fileID, ...
         ' & \\multicolumn{2}{c}{Benefits (\\$~bn)} & \\multicolumn{2}{c}{Costs (\\$~bn)} \\\\\n');
@@ -374,7 +375,6 @@ function create_table(summary_data, investments, outpath, complementarity_ci_tab
         fprintf('    Processing investment %d/%d: %s\n', i, length(investments), current_investment);
         investment_scenarios = summary_data(summary_data.(current_investment), :);
         clean_investment_name = get_clean_investment_name(current_investment);
-        fprintf(fileID, '%s \\\\\n', clean_investment_name);
 
         % For ordering: Alone first, then With-PROGRAM sorted alphabetically
         alone_idx = [];
@@ -401,11 +401,10 @@ function create_table(summary_data, investments, outpath, complementarity_ci_tab
             end
         end
 
-        % Print Alone first
+        % Print Alone on the same line as the investment name
         if ~isempty(alone_idx)
             fprintf('      Writing alone row...\n');
-            name = "Alone";
-            fprintf(fileID, '\\hspace{3mm} %s & ', name);
+            fprintf(fileID, '%s & ', clean_investment_name);
             fprintf(fileID, '%s & --- & %s & --- \\\\\n', ...
                 investment_scenarios.BenefitFormatted{alone_idx}, ...
                 investment_scenarios.CostFormatted{alone_idx});
