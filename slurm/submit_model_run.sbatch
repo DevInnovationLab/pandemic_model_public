@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
 #SBATCH --time=1:00:00
-#SBATCH --mem=50G
+#SBATCH --mem=45G
 #SBATCH --account=pi-rglennerster
 #SBATCH --account=pi-rglennerster
 #SBATCH --mail-type=ALL

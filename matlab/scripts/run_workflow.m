@@ -19,8 +19,6 @@ function run_workflow(job_config_path, varargin)
     %   
     %   Workflow control:
     %     'skip_run': Skip job execution, only aggregate/bootstrap (default: false)
-    %     'aggregate_only': Only run aggregation (default: false)
-    %     'bootstrap_only': Only run bootstrap (default: false)
     %     'skip_aggregate': Skip aggregation (default: false)
     %     'skip_bootstrap': Skip bootstrapping (default: false)
     %     'sim_results_path': Explicit path to results (for aggregate/bootstrap only)
@@ -30,7 +28,6 @@ function run_workflow(job_config_path, varargin)
     %     'n_bootstrap': Number of bootstrap samples (default: 1000)
     %     'bootstrap_parallel': Use parallel for bootstrap (default: false)
     %     'bootstrap_workers': Number of workers for bootstrap (default: 4)
-    %     'bootstrap_overwrite': Overwrite existing bootstraps (default: false)
     %     'bootstrap_seed': Random seed (default: 42)
     
     p = inputParser;
@@ -73,7 +70,6 @@ function run_workflow(job_config_path, varargin)
         fprintf('=== Running job ===\n');
         run_job(job_config_path, ...
                'num_chunks', opts.num_chunks, ...
-               'parallel', opts.parallel, ...
                'array_task_id', opts.array_task_id);
         
         % For array tasks, stop here
@@ -97,7 +93,6 @@ function run_workflow(job_config_path, varargin)
                       'n_bootstrap', opts.n_bootstrap, ...
                       'parallel', opts.bootstrap_parallel, ...
                       'n_workers', opts.bootstrap_workers, ...
-                      'overwrite', opts.bootstrap_overwrite, ...
                       'seed', opts.bootstrap_seed);
     end
     

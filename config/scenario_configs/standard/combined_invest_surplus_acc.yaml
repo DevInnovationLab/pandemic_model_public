@@ -16,5 +16,5 @@ advance_capacity:
 # Enhanced surveillance
 improved_early_warning:
   active: true
-  precision: 0.3
-  recall: 0.5
+  precision: 0.45
+  recall: 0.7

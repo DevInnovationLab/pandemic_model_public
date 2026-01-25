@@ -41,6 +41,10 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     delta_cap_m = params.surge_cap_mrna - min(params.theta * params.surge_cap_mrna, adv_cap_m);
     delta_cap_o = params.surge_cap_trad - min(params.theta * params.surge_cap_trad, adv_cap_o);
 
+    % Adjust delta cap for false positives
+    delta_cap_m(is_false & ~false_pos_ignored) = delta_cap_m(is_false & ~false_pos_ignored) .* params.frac_invest_on_false;
+    delta_cap_o(is_false & ~false_pos_ignored) = delta_cap_o(is_false & ~false_pos_ignored) .* params.frac_invest_on_false;
+
     % Get surge capacity
     [surge_cap_m, surge_cap_m_cost] = ...
         get_event_capacity(sim_num, year_start, false_pos_ignored, year_dur, max_years, delta_cap_m, frac_retained, base_cap_m, adv_cap_m, max_cap_m, params, 1, num_sims);
@@ -118,7 +122,7 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     inp_rd_costs_nom = zeros(num_sims, max_years);
     inp_rd_costs_nom(event_start_idx) = (...
         base_inp_rd_nom .* ~is_false + ... % Incur whole cost when true pandemic
-        params.inp_RD_sink_false .* is_false .* ~false_pos_ignored ... % Sink some cost when false positive acted upon
+        params.frac_invest_on_false .* base_inp_rd_nom .* is_false .* ~false_pos_ignored ... % Sink some cost when false positive acted upon
     );
     inp_rd_costs_pv = inp_rd_costs_nom .* pv_factors_annual;
 

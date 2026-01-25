@@ -109,9 +109,17 @@ function run_job(job_config_path, varargin)
             fprintf('Completed chunk %d/%d (%.1f%%)\n', chunk_idx, num_chunks, 100*chunk_idx/num_chunks);
         end
     end
+
+    % Add scenarios to config
+    scenarios = struct();
+    for i = 1:length(scenario_configs)
+	scenarios.(scenario_configs{i}.name) = scenario_configs{i};
+    end
     
+    job_config.scenarios = scenarios;
+    yaml.dumpFile(fullfile(sim_results_path, 'job_config.yaml'), job_config);
     if ~is_array_task
-        fprintf('All chunks completed!\n');
+	fprintf('All chunks completed!\n');
     end
 end
 
@@ -121,6 +129,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     % Load chunk-specific distributions from files
     chunk_dir = fullfile(raw_results_path, sprintf('chunk_%d', chunk_idx));
     create_folders_recursively(chunk_dir);
+    pause(10); % Pause to ensure folders have had time to be created
     chunk_range = chunk_start:chunk_end;
     num_simulations = length(chunk_range);
     
