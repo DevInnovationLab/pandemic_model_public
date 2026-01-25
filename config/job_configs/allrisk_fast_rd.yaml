@@ -64,9 +64,9 @@ advance_RD_cost_per_pathogen: 1.4e9 # $ nominal over period specified by advance
 advance_RD_benefit_start: 15 # years until advance R&D benefits apply
 
 # Surveillance
-surveil_annual_installation_spend: 300e6 # Initial spending to install enhanced surveillance
+surveil_annual_installation_spend: 490e6 # Initial spending to install enhanced surveillance
 surveil_installation_years: 2 # Time initial costs are incurred
-surveil_maintenance_spend: 300e6 # Maintenance spending on enhanced surveillance
+surveil_maintenance_spend: 490e6 # Maintenance spending on enhanced surveillance
 months_to_early_detect: 1
 months_to_regular_detect: 2
 base_early_detect_prob_true: 0.66

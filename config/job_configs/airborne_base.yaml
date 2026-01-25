@@ -56,6 +56,7 @@ prototype_effect_ptrs: "./output/ptrs/prototype_effect_preds.csv" # Probability 
 rd_timelines: "./output/rd_timelines/timelines_from_predictions.csv" # Current deprecated
 tau_m: 2 # months to repurpose mRNA capacity
 tau_o: 8 # months to repurpose traditional capacity
+frac_invest_on_false: 0.33 # Wasted expenditure on false positive.
 inp_RD_spend: 6.86e9 # $
 advance_RD_cost_per_pathogen: 1.06e9 # $ in 2024 use, see write_adv_rd_inputs.R
 advance_RD_benefit_start: 11 # years until advance R&D benefits apply
@@ -67,9 +68,9 @@ prototype_success_prob: 0.9 # Probability of prototype working if it is invested
 ufv_success_prob: 0.9 # Probability of universal flu vaccine success
 
 # Surveillance
-surveil_annual_installation_spend: 300e6 # Initial spending to install enhanced surveillance
+surveil_annual_installation_spend: 490e6 # Initial spending to install enhanced surveillance
 surveil_installation_years: 2 # Time initial costs are incurred
-surveil_maintenance_spend: 300e6 # Maintenance spending on enhanced surveillance
+surveil_maintenance_spend: 490e6 # Maintenance spending on enhanced surveillance
 months_to_early_detect: 1
 months_to_regular_detect: 2
 base_early_detect_prob_true: 0.66
