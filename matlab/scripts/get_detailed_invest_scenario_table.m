@@ -328,22 +328,26 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     summary_data.CostDiff_CI_low = summary_data.CostDiff_CI_low / 1e9;
     summary_data.CostDiff_CI_high = summary_data.CostDiff_CI_high / 1e9;
 
-    % Helper function to format value with CI
+    % Helper function to round nicely
+    round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
+    
+    % Helper function to format value with CI using nested tabular
     function s = format_with_ci(val, ci_low, ci_high)
-        round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
-        s = sprintf('%s (%s, %s)', round_nicely(val), round_nicely(ci_low), round_nicely(ci_high));
+        s = sprintf('\\begin{tabular}[c]{@{}c@{}}%s \\\\[-0.7em] \\footnotesize [%s, %s]\\end{tabular}', ...
+                    round_nicely(val), round_nicely(ci_low), round_nicely(ci_high));
     end
     
-    % Helper function to format lives with CI
+    % Helper function to format lives with CI using nested tabular
     function s = format_lives_with_ci(val, ci_low, ci_high)
         round_lives = @(x) round(x, -2) * (x < 1e4) + round(x, -3) * (x >= 1e4);
-        s = sprintf('%s (%s, %s)', comma_format(round_lives(val)), ...
-                    comma_format(round_lives(ci_low)), comma_format(round_lives(ci_high)));
+        s = sprintf('\\begin{tabular}[c]{@{}c@{}}%s \\\\[-0.7em] \\footnotesize [%s, %s]\\end{tabular}', ...
+                    comma_format(round_lives(val)), ...
+                    comma_format(round_lives(ci_low)), ...
+                    comma_format(round_lives(ci_high)));
     end
     
-    % Helper function to format BCR with CI
+    % Helper function to format BCR with CI using nested tabular
     function s = format_bcr_with_ci(val, ci_low, ci_high, less_than_zero_to_inf)
-        round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
         if (less_than_zero_to_inf && val < 0) || isinf(val)
             s = "$\infty$";
         else
@@ -353,7 +357,8 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
             if (less_than_zero_to_inf && ci_high < 0) || isinf(ci_high)
                 high_str = "$\infty$";
             end
-            s = sprintf('%s (%s, %s)', val_str, low_str, high_str);
+            s = sprintf('\\begin{tabular}[c]{@{}c@{}}%s \\\\[-0.7em] \\footnotesize [%s, %s]\\end{tabular}', ...
+                        val_str, low_str, high_str);
         end
     end
 
@@ -366,7 +371,6 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
         summary_data.CostDiff_CI_low(i), summary_data.CostDiff_CI_high(i)), ...
         (1:height(summary_data))', 'UniformOutput', false);
     
-    round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
     npv_str = round_nicely(summary_data.NPVDiff);
     
     if include_ten_thirty
@@ -410,7 +414,7 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
     caption_str = [
         '\\caption{\\textbf{Estimated expected benefits, costs, net value, and lives saved from advance investment programs.} ', ...
-        'Monetary estimates are discounted. Values shown as point estimate (95\\%% CI). ', ...
+        'Monetary estimates are discounted. 90\\%% confidence intervals shown in brackets. ', ...
         'Values $>\\!$10 rounded to integer; $<\\!$10 share $1$ decimal. Lives saved rounded to the nearest hundred if $<10{,}000$, else thousand. ', ...
         'Scenario rows group alternative program designs. }\n'
     ]; fprintf(fileID, caption_str);
@@ -467,7 +471,7 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
     caption_str = [
         '\\caption{\\textbf{Estimated cost-effectiveness for advance investment programs.} ', ...
-        'Ratios: discounted benefits/costs. Values shown as point estimate (95\\%% CI). ', ...
+        'Ratios: discounted benefits/costs. 90\\%% confidence intervals shown in brackets. ', ...
         'Values $>\\!$10 integer; $<\\!$10 one decimal. Lives saved rounded as above. ', ...
         'Scenario rows group program variants. }\n'
     ]; fprintf(fileID, caption_str);
