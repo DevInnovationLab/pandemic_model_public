@@ -113,17 +113,17 @@ function get_pairwise_program_table(job_dir, varargin)
             % Compute 90% confidence intervals using bootstrap
             fprintf('  Computing benefit CI...\n');
             tic;
-            benefit_ci = bootci(1000, {@mean, all_relative_sums.benefits_vaccine_full}, 'alpha', 0.1, 'type', 'percentile');
+            benefit_ci = bootci(200, {@mean, all_relative_sums.benefits_vaccine_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Benefit CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing cost CI...\n');
             tic;
-            cost_ci = bootci(1000, {@mean, all_relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
+            cost_ci = bootci(200, {@mean, all_relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Cost CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing BCR CI...\n');
             tic;
-            bcr_ci = bootci(1000, {@(x,y) mean(x)./mean(y), all_relative_sums.benefits_vaccine_full, all_relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
+            bcr_ci = bootci(200, {@(x,y) mean(x)./mean(y), all_relative_sums.benefits_vaccine_full, all_relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  BCR CI computed in %.2f seconds\n', toc);
             
             % Save to CI table
@@ -288,12 +288,12 @@ function complementarity_ci_table = compute_complementarity_cis(summary_data, in
             fprintf('    Computing CI for %s with %s\n', investment1, investment2);
             
             % Bootstrap for benefit complementarity
-            benefit_comp_ci = bootci(1000, {@(w,a,o) mean(w) - mean(a) - mean(o), ...
+            benefit_comp_ci = bootci(200, {@(w,a,o) mean(w) - mean(a) - mean(o), ...
                 with_benefits, alone1_benefits, alone2_benefits}, ...
                 'alpha', 0.1, 'type', 'percentile');
             
             % Bootstrap for cost complementarity
-            cost_comp_ci = bootci(1000, {@(w,a,o) mean(w) - mean(a) - mean(o), ...
+            cost_comp_ci = bootci(200, {@(w,a,o) mean(w) - mean(a) - mean(o), ...
                 with_costs, alone1_costs, alone2_costs}, ...
                 'alpha', 0.1, 'type', 'percentile');
             

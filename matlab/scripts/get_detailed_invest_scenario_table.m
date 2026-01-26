@@ -1,9 +1,9 @@
-function get_detailed_invest_scenario_table(job_dir, recalculate_bc)
-
-    % Process benefits and costs
-    if recalculate_bc
-        process_benefit_cost(job_dir, recalculate_bc);
-    end
+function get_detailed_invest_scenario_table(job_dir, varargin)
+    % Parse optional arguments
+    p = inputParser;
+    addParameter(p, 'recompute_ci', false, @islogical);
+    parse(p, varargin{:});
+    recompute_ci = p.Results.recompute_ci;
 
     % Load processed data
     processed_dir = fullfile(job_dir, "processed");
@@ -20,12 +20,36 @@ function get_detailed_invest_scenario_table(job_dir, recalculate_bc)
                     scenarios(combined_idx)];
     end
     
-    % Bootstrap parameters
-    n_bootstrap = 1000;
-    alpha = 0.05; % For 95% CI
+    fprintf('Processing %d scenarios\n', length(scenarios));
+    
+    % Check if CI file exists
+    ci_file = fullfile(processed_dir, 'detailed_invest_confidence_intervals.mat');
+    ci_exists = exist(ci_file, 'file');
+    
+    if ~recompute_ci && ci_exists
+        fprintf('Loading existing confidence intervals from %s\n', ci_file);
+        ci_data = load(ci_file);
+        ci_table = ci_data.ci_table;
+        
+        % Verify that all scenarios are present
+        if all(ismember(scenarios, ci_table.Scenario))
+            fprintf('All scenarios found in saved CI data\n');
+            use_saved_ci = true;
+        else
+            fprintf('Some scenarios missing from saved CI data, recomputing...\n');
+            use_saved_ci = false;
+        end
+    else
+        if recompute_ci
+            fprintf('Recomputing confidence intervals as requested\n');
+        else
+            fprintf('No saved confidence intervals found, computing...\n');
+        end
+        use_saved_ci = false;
+    end
     
     % Initialize table with confidence intervals
-    summary_table = table('Size', [length(scenarios) 27], ...
+    summary_table = table('Size', [length(scenarios) 28], ...
         'VariableTypes', {'string', 'string', 'string', ...
                          'double', 'double', 'double', ...  % BenefitDiff and CI
                          'double', 'double', 'double', ...  % CostDiff and CI
@@ -35,8 +59,8 @@ function get_detailed_invest_scenario_table(job_dir, recalculate_bc)
                          'double', 'double', 'double', ...  % BCRatioAll and CI
                          'double', 'double', 'double', ...  % Lives10yr and CI
                          'double', 'double', 'double', ...  % Lives30yr and CI
-                         'double', 'double', 'double'});    % LivesAll and CI
-    summary_table.Properties.VariableNames = {...
+                         'double', 'double', 'double'}, ... % LivesAll and CI
+        'VariableNames', {...
         'Category', 'Accent', 'Variation', ...
         'BenefitDiff', 'BenefitDiff_CI_low', 'BenefitDiff_CI_high', ...
         'CostDiff', 'CostDiff_CI_low', 'CostDiff_CI_high', ...
@@ -46,68 +70,151 @@ function get_detailed_invest_scenario_table(job_dir, recalculate_bc)
         'BCRatioAll', 'BCRatioAll_CI_low', 'BCRatioAll_CI_high', ...
         'Lives10yr', 'Lives10yr_CI_low', 'Lives10yr_CI_high', ...
         'Lives30yr', 'Lives30yr_CI_low', 'Lives30yr_CI_high', ...
-        'LivesAll', 'LivesAll_CI_low', 'LivesAll_CI_high'};
+        'LivesAll', 'LivesAll_CI_low', 'LivesAll_CI_high'});
+    
+    % Initialize CI table if computing
+    if ~use_saved_ci
+        ci_table = table('Size', [length(scenarios) 17], ...
+            'VariableTypes', {'string', ...
+                             'double', 'double', ...  % BenefitDiff CI
+                             'double', 'double', ...  % CostDiff CI
+                             'double', 'double', ...  % BCRatio10yr CI
+                             'double', 'double', ...  % BCRatio30yr CI
+                             'double', 'double', ...  % BCRatioAll CI
+                             'double', 'double', ...  % Lives10yr CI
+                             'double', 'double', ...  % Lives30yr CI
+                             'double', 'double'}, ... % LivesAll CI
+            'VariableNames', {...
+            'Scenario', ...
+            'BenefitDiff_CI_low', 'BenefitDiff_CI_high', ...
+            'CostDiff_CI_low', 'CostDiff_CI_high', ...
+            'BCRatio10yr_CI_low', 'BCRatio10yr_CI_high', ...
+            'BCRatio30yr_CI_low', 'BCRatio30yr_CI_high', ...
+            'BCRatioAll_CI_low', 'BCRatioAll_CI_high', ...
+            'Lives10yr_CI_low', 'Lives10yr_CI_high', ...
+            'Lives30yr_CI_low', 'Lives30yr_CI_high', ...
+            'LivesAll_CI_low', 'LivesAll_CI_high'});
+    end
     
     % Process each scenario
     for i = 1:length(scenarios)
         scen_name = scenarios(i);
+        fprintf('Processing scenario %d/%d: %s\n', i, length(scenarios), scen_name);
 
         [category_name, accent, variation] = parse_scenario_name(scen_name);
         
         % Load scenario relative sums data
         scen_file = fullfile(processed_dir, sprintf('%s_relative_sums.mat', scen_name));
-        load(scen_file, 'relative_sums');
-        
-        % Extract data from relative_sums structure
-        n_sims = size(relative_sums.npv_all, 1);
+        fprintf('  Loading file: %s\n', scen_file);
+        tic;
+        load(scen_file, 'all_relative_sums');
+        relative_sums = all_relative_sums;
+        fprintf('  Loaded in %.2f seconds\n', toc);
         
         % Get point estimates (means)
-        benefit_diff = mean(relative_sums.benefits_all);
-        cost_diff = mean(relative_sums.costs_all);
-        npv_diff = mean(relative_sums.npv_all);
+        fprintf('  Computing means...\n');
+        tic;
+        benefit_diff = mean(relative_sums.benefits_vaccine_full);
+        cost_diff = mean(relative_sums.total_costs_pv_full);
+        npv_diff = benefit_diff - cost_diff;
         
-        bc_ratio_10yr = mean(relative_sums.bcr_10yr);
-        bc_ratio_30yr = mean(relative_sums.bcr_30yr);
-        bc_ratio_all = mean(relative_sums.bcr_all);
+        % Calculate BCRs from benefits and costs, treating 0/0 as 0
+        benefits_10yr = mean(relative_sums.benefits_vaccine_10_years);
+        costs_10yr = mean(relative_sums.total_costs_pv_10_years);
+        if abs(costs_10yr) < 1e-7 && abs(benefits_10yr) < 1e-7
+            bc_ratio_10yr = 0;
+        else
+            bc_ratio_10yr = benefits_10yr / costs_10yr;
+        end
         
-        lives_10yr = mean(relative_sums.lives_10yr);
-        lives_30yr = mean(relative_sums.lives_30yr);
-        lives_all = mean(relative_sums.lives_all);
+        benefits_30yr = mean(relative_sums.benefits_vaccine_30_years);
+        costs_30yr = mean(relative_sums.total_costs_pv_30_years);
+        if abs(costs_30yr) < 1e-7  && abs(benefits_30yr) < 1e-7
+            bc_ratio_30yr = 0;
+        else
+            bc_ratio_30yr = benefits_30yr / costs_30yr;
+        end
         
-        % Bootstrap confidence intervals
-        bootstrap_indices = randi(n_sims, n_sims, n_bootstrap);
+        if abs(cost_diff) < 1e-7  && abs(benefits_diff) < 1e-7
+            bc_ratio_all = 0;
+        else
+            bc_ratio_all = benefit_diff / cost_diff;
+        end
         
-        % Bootstrap for benefits
-        benefit_boot = mean(relative_sums.benefits_all(bootstrap_indices), 1);
-        benefit_ci = prctile(benefit_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
+        lives_10yr = mean(relative_sums.lives_saved_10_years);
+        lives_30yr = mean(relative_sums.lives_saved_30_years);
+        lives_all = mean(relative_sums.lives_saved_full);
+        fprintf('  Means computed in %.2f seconds\n', toc);
         
-        % Bootstrap for costs
-        cost_boot = mean(relative_sums.costs_all(bootstrap_indices), 1);
-        cost_ci = prctile(cost_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
-        
-        % Bootstrap for BCR 10yr
-        bcr_10yr_boot = mean(relative_sums.bcr_10yr(bootstrap_indices), 1);
-        bcr_10yr_ci = prctile(bcr_10yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
-        
-        % Bootstrap for BCR 30yr
-        bcr_30yr_boot = mean(relative_sums.bcr_30yr(bootstrap_indices), 1);
-        bcr_30yr_ci = prctile(bcr_30yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
-        
-        % Bootstrap for BCR all
-        bcr_all_boot = mean(relative_sums.bcr_all(bootstrap_indices), 1);
-        bcr_all_ci = prctile(bcr_all_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
-        
-        % Bootstrap for lives 10yr
-        lives_10yr_boot = mean(relative_sums.lives_10yr(bootstrap_indices), 1);
-        lives_10yr_ci = prctile(lives_10yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
-        
-        % Bootstrap for lives 30yr
-        lives_30yr_boot = mean(relative_sums.lives_30yr(bootstrap_indices), 1);
-        lives_30yr_ci = prctile(lives_30yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
-        
-        % Bootstrap for lives all
-        lives_all_boot = mean(relative_sums.lives_all(bootstrap_indices), 1);
-        lives_all_ci = prctile(lives_all_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
+        % Get or compute confidence intervals
+        if use_saved_ci
+            % Look up CI from saved data
+            ci_row = ci_table(ci_table.Scenario == scen_name, :);
+            benefit_ci = [ci_row.BenefitDiff_CI_low; ci_row.BenefitDiff_CI_high];
+            cost_ci = [ci_row.CostDiff_CI_low; ci_row.CostDiff_CI_high];
+            bcr_10yr_ci = [ci_row.BCRatio10yr_CI_low; ci_row.BCRatio10yr_CI_high];
+            bcr_30yr_ci = [ci_row.BCRatio30yr_CI_low; ci_row.BCRatio30yr_CI_high];
+            bcr_all_ci = [ci_row.BCRatioAll_CI_low; ci_row.BCRatioAll_CI_high];
+            lives_10yr_ci = [ci_row.Lives10yr_CI_low; ci_row.Lives10yr_CI_high];
+            lives_30yr_ci = [ci_row.Lives30yr_CI_low; ci_row.Lives30yr_CI_high];
+            lives_all_ci = [ci_row.LivesAll_CI_low; ci_row.LivesAll_CI_high];
+            fprintf('  Using saved confidence intervals\n');
+        else
+            % Compute 90% confidence intervals using bootstrap
+            fprintf('  Computing benefit CI...\n');
+            tic;
+            benefit_ci = bootci(200, {@mean, relative_sums.benefits_vaccine_full}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Benefit CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing cost CI...\n');
+            tic;
+            cost_ci = bootci(200, {@mean, relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Cost CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing BCR 10yr CI...\n');
+            tic;
+            bcr_10yr_data = relative_sums.benefits_vaccine_10_years ./ relative_sums.total_costs_pv_10_years;
+            bcr_10yr_ci = bootci(200, {@mean, bcr_10yr_data}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  BCR 10yr CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing BCR 30yr CI...\n');
+            tic;
+            bcr_30yr_data = relative_sums.benefits_vaccine_30_years ./ relative_sums.total_costs_pv_30_years;
+            bcr_30yr_ci = bootci(200, {@mean, bcr_30yr_data}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  BCR 30yr CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing BCR all CI...\n');
+            tic;
+            bcr_all_data = relative_sums.benefits_vaccine_full ./ relative_sums.total_costs_pv_full;
+            bcr_all_ci = bootci(200, {@mean, bcr_all_data}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  BCR all CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing lives 10yr CI...\n');
+            tic;
+            lives_10yr_ci = bootci(200, {@mean, relative_sums.lives_saved_10_years}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Lives 10yr CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing lives 30yr CI...\n');
+            tic;
+            lives_30yr_ci = bootci(200, {@mean, relative_sums.lives_saved_30_years}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Lives 30yr CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing lives all CI...\n');
+            tic;
+            lives_all_ci = bootci(200, {@mean, relative_sums.lives_saved_full}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Lives all CI computed in %.2f seconds\n', toc);
+            
+            % Save to CI table
+            ci_table(i, :) = {scen_name, ...
+                             benefit_ci(1), benefit_ci(2), ...
+                             cost_ci(1), cost_ci(2), ...
+                             bcr_10yr_ci(1), bcr_10yr_ci(2), ...
+                             bcr_30yr_ci(1), bcr_30yr_ci(2), ...
+                             bcr_all_ci(1), bcr_all_ci(2), ...
+                             lives_10yr_ci(1), lives_10yr_ci(2), ...
+                             lives_30yr_ci(1), lives_30yr_ci(2), ...
+                             lives_all_ci(1), lives_all_ci(2)};
+        end
         
         % Add to table
         summary_table(i,:) = {category_name, accent, variation, ...
@@ -120,6 +227,13 @@ function get_detailed_invest_scenario_table(job_dir, recalculate_bc)
                              lives_10yr, lives_10yr_ci(1), lives_10yr_ci(2), ...
                              lives_30yr, lives_30yr_ci(1), lives_30yr_ci(2), ...
                              lives_all, lives_all_ci(1), lives_all_ci(2)};
+        fprintf('  Scenario %s complete\n\n', scen_name);
+    end
+    
+    % Save CI table if we computed it
+    if ~use_saved_ci
+        fprintf('Saving confidence intervals to %s\n', ci_file);
+        save(ci_file, 'ci_table');
     end
 
     % Save table to CSV

@@ -38,9 +38,11 @@ function [surge_cap, surge_cap_cost] = ...
     % Create capacity change matrix
     % This could be more memory efficient if you just had event list with groups
     surge_cap = zeros(num_sims, max_years);
-    surge_cap(event_start_idx) = delta_cap_by_year(year_start(~false_pos_ignored)) .* (1 - is_false(~false_pos_ignored) .*(1 - params.frac_invest_on_false));
+    surge_cap(event_start_idx) = delta_cap_by_year(year_start(~false_pos_ignored)) .* (1 - is_false(~false_pos_ignored) .* (1 - params.frac_invest_on_false));
     surge_cap(event_end_idx) = surge_cap(event_end_idx) - ...
-        (1 - surge_retained) * delta_cap_by_year(year_start(~false_pos_ignored & valid_end)) .* (1 - is_false(~false_pos_ignored & valid_end) .*(1 - params.frac_invest_on_false)); % In case pandemic end and start in same year.
+        (1 - is_false(~false_pos_ignored & valid_end) .* (1 - surge_retained)) .* ...
+        delta_cap_by_year(year_start(~false_pos_ignored & valid_end)) .* ...
+        (1 - is_false(~false_pos_ignored & valid_end) .* (1 - params.frac_invest_on_false)); % In case pandemic end and start in same year.
     
     % Accumulate changes over time
     surge_cap = cumsum(surge_cap, 2);
