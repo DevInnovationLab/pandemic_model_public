@@ -180,9 +180,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         baseline_chunk_path = fullfile(chunk_dir, 'baseline_annual.mat');
         save(baseline_chunk_path, 'annual_results_baseline', '-v7.3');
 
-        if ~strcmp(job_config.save_mode, "light")
-            save_pandemic_table(scenario_pandemic_table, 'baseline', chunk_dir, job_config.pandemic_table_out);
-        end
+        save_pandemic_table(scenario_pandemic_table, 'baseline', chunk_dir, job_config.pandemic_table_out);
     else
         error('Baseline scenario required but not found');
     end

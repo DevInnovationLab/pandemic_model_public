@@ -14,11 +14,31 @@ function compare_exceedances(outdir)
     [madhav_severity_lower, lower_idx] = sort(madhav_exceedances.severity_lower);
     madhav_exceedance_lower = madhav_exceedances.exceedance_lower(lower_idx);
 
-    % Load simulation data
+    % Load simulation data from all chunks
     rawdir = fullfile(outdir, "raw");
-    S = load(fullfile(rawdir, "baseline_pandemic_table.mat"));
-    pandemic_table = S.pandemic_table;
+    chunk_dirs = dir(fullfile(rawdir, "chunk_*"));
+    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
+    
+    all_tables = cell(length(chunk_dirs), 1);
+    table_count = 0;
+    for i = 1:length(chunk_dirs)
+        chunk_path = fullfile(rawdir, chunk_dirs(i).name, "base_simulation_table.mat");
+        if isfile(chunk_path)
+            S = load(chunk_path);
+            % Filter out false positives (rows where yr_start is NaN)
+            chunk_table = S.base_simulation_table;
+            chunk_table = chunk_table(~isnan(chunk_table.yr_start), :);
+            table_count = table_count + 1;
+            all_tables{table_count} = chunk_table;
+        end
+    end
+    
+    % Concatenate all tables
+    all_tables = all_tables(1:table_count);
+    pandemic_table = vertcat(all_tables{:});
     non_nan_table = pandemic_table(~isnan(pandemic_table.yr_start), :);
+
+    clear all_tables pandemic_table;
 
     % Job config
     job_config = yaml.loadFile(fullfile(outdir, "job_config.yaml"));
@@ -31,6 +51,8 @@ function compare_exceedances(outdir)
     idx = sub2ind(size(ante_severity_matrix), non_nan_table.sim_num, non_nan_table.yr_start);
     ante_severity_matrix(idx) = non_nan_table.eff_severity;
     post_severity_matrix(idx) = non_nan_table.ex_post_severity;
+
+    clear non_nan_table;
 
     function [boot_mat, grid] = bootstrap_exceedance_matrix(severity_matrix, sim_num_list, num_simulations, B)
     % Compute bootstrap exceedance matrix for a given severity matrix and return the grid.

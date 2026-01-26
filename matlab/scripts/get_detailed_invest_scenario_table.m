@@ -5,18 +5,9 @@ function get_detailed_invest_scenario_table(job_dir, recalculate_bc)
         process_benefit_cost(job_dir, recalculate_bc);
     end
 
-    % Load baseline data
-    rawdata_dir = fullfile(job_dir, "raw");
+    % Load processed data
     processed_dir = fullfile(job_dir, "processed");
-    baseline_npv = readmatrix(fullfile(processed_dir, "baseline_absolute_npv.csv"));
-    baseline_costs = readmatrix(fullfile(processed_dir, "baseline_pv_costs.csv"));
-    load(fullfile(rawdata_dir, "baseline_results.mat"), "m_deaths");
-    baseline_mortality = m_deaths;
     
-    % Calculate total baseline values
-    total_baseline_npv = mean(sum(baseline_npv, 2));
-    total_baseline_costs = mean(sum(baseline_costs, 2));
-
     % Get scenarios from config
     config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
@@ -28,81 +19,107 @@ function get_detailed_invest_scenario_table(job_dir, recalculate_bc)
                     scenarios((combined_idx+1):end);
                     scenarios(combined_idx)];
     end
-    % Initialize table with baseline row, now with LivesAll and CostPerLifeAll
-    summary_table = table('Size', [length(scenarios) 15], ...
-        'VariableTypes', {'string', 'string', 'string', 'double', 'double', 'double', ...
-                         'double', 'double', 'double', 'double', 'double', ...
-                         'double', 'double', 'double', 'double'});
-    summary_table.Properties.VariableNames = {...
-        'Category', 'Accent', 'Variation', 'BenefitDiff', 'CostDiff', 'NPVDiff',  ...
-        'BCRatio10yr', 'BCRatio30yr', 'BCRatioAll', 'Lives10yr', 'Lives30yr', ...
-        'LivesAll', 'CostPerLife10yr', 'CostPerLife30yr', 'CostPerLifeAll'};
     
-        % Process each scenario
+    % Bootstrap parameters
+    n_bootstrap = 1000;
+    alpha = 0.05; % For 95% CI
+    
+    % Initialize table with confidence intervals
+    summary_table = table('Size', [length(scenarios) 27], ...
+        'VariableTypes', {'string', 'string', 'string', ...
+                         'double', 'double', 'double', ...  % BenefitDiff and CI
+                         'double', 'double', 'double', ...  % CostDiff and CI
+                         'double', ...                       % NPVDiff
+                         'double', 'double', 'double', ...  % BCRatio10yr and CI
+                         'double', 'double', 'double', ...  % BCRatio30yr and CI
+                         'double', 'double', 'double', ...  % BCRatioAll and CI
+                         'double', 'double', 'double', ...  % Lives10yr and CI
+                         'double', 'double', 'double', ...  % Lives30yr and CI
+                         'double', 'double', 'double'});    % LivesAll and CI
+    summary_table.Properties.VariableNames = {...
+        'Category', 'Accent', 'Variation', ...
+        'BenefitDiff', 'BenefitDiff_CI_low', 'BenefitDiff_CI_high', ...
+        'CostDiff', 'CostDiff_CI_low', 'CostDiff_CI_high', ...
+        'NPVDiff', ...
+        'BCRatio10yr', 'BCRatio10yr_CI_low', 'BCRatio10yr_CI_high', ...
+        'BCRatio30yr', 'BCRatio30yr_CI_low', 'BCRatio30yr_CI_high', ...
+        'BCRatioAll', 'BCRatioAll_CI_low', 'BCRatioAll_CI_high', ...
+        'Lives10yr', 'Lives10yr_CI_low', 'Lives10yr_CI_high', ...
+        'Lives30yr', 'Lives30yr_CI_low', 'Lives30yr_CI_high', ...
+        'LivesAll', 'LivesAll_CI_low', 'LivesAll_CI_high'};
+    
+    % Process each scenario
     for i = 1:length(scenarios)
         scen_name = scenarios(i);
 
         [category_name, accent, variation] = parse_scenario_name(scen_name);
         
-        % Load scenario data
-        scen_npv = readmatrix(fullfile(processed_dir, strcat(scen_name, "_absolute_npv.csv")));
-        scen_costs = readmatrix(fullfile(processed_dir, strcat(scen_name, "_pv_costs.csv")));
-        scen_benefits = scen_npv + scen_costs; % Benefits = NPV + Costs
-        load(fullfile(rawdata_dir, sprintf('%s_results.mat', scen_name)), 'm_deaths');
-        scen_mortality = m_deaths;
+        % Load scenario relative sums data
+        scen_file = fullfile(processed_dir, sprintf('%s_relative_sums.mat', scen_name));
+        load(scen_file, 'relative_sums');
         
-        % Calculate differences from baseline for different time horizons
-        total_scen_npv = mean(sum(scen_npv, 2));
-        total_scen_costs = mean(sum(scen_costs, 2));
-        total_scen_benefits = mean(sum(scen_benefits, 2));
+        % Extract data from relative_sums structure
+        n_sims = size(relative_sums.npv_all, 1);
         
-        % 10 year costs and benefits
-        total_scen_costs_10yr = mean(sum(scen_costs(:,1:10), 2));
-        total_baseline_costs_10yr = mean(sum(baseline_costs(:,1:10), 2));
-        total_scen_benefits_10yr = mean(sum(scen_benefits(:,1:10), 2));
-        total_baseline_benefits_10yr = mean(sum(baseline_npv(:,1:10) + baseline_costs(:,1:10), 2));
+        % Get point estimates (means)
+        benefit_diff = mean(relative_sums.benefits_all);
+        cost_diff = mean(relative_sums.costs_all);
+        npv_diff = mean(relative_sums.npv_all);
         
-        % 30 year costs and benefits
-        total_scen_costs_30yr = mean(sum(scen_costs(:,1:30), 2));
-        total_baseline_costs_30yr = mean(sum(baseline_costs(:,1:30), 2));
-        total_scen_benefits_30yr = mean(sum(scen_benefits(:,1:30), 2));
-        total_baseline_benefits_30yr = mean(sum(baseline_npv(:,1:30) + baseline_costs(:,1:30), 2));
+        bc_ratio_10yr = mean(relative_sums.bcr_10yr);
+        bc_ratio_30yr = mean(relative_sums.bcr_30yr);
+        bc_ratio_all = mean(relative_sums.bcr_all);
         
-        % Calculate differences
-        npv_diff = total_scen_npv - total_baseline_npv;
-        cost_diff = total_scen_costs - total_baseline_costs;
-        benefit_diff = total_scen_benefits - (total_baseline_npv + total_baseline_costs);
+        lives_10yr = mean(relative_sums.lives_10yr);
+        lives_30yr = mean(relative_sums.lives_30yr);
+        lives_all = mean(relative_sums.lives_all);
         
-        cost_diff_10yr = total_scen_costs_10yr - total_baseline_costs_10yr;
-        cost_diff_30yr = total_scen_costs_30yr - total_baseline_costs_30yr;
-        benefit_diff_10yr = total_scen_benefits_10yr - total_baseline_benefits_10yr;
-        benefit_diff_30yr = total_scen_benefits_30yr - total_baseline_benefits_30yr;
+        % Bootstrap confidence intervals
+        bootstrap_indices = randi(n_sims, n_sims, n_bootstrap);
         
-        % Calculate lives saved
-        lives_diff = baseline_mortality - scen_mortality;
-        lives_10yr = mean(sum(lives_diff(:,1:10), 2));
-        lives_30yr = mean(sum(lives_diff(:,1:30), 2));
-        lives_all = mean(sum(lives_diff, 2));
+        % Bootstrap for benefits
+        benefit_boot = mean(relative_sums.benefits_all(bootstrap_indices), 1);
+        benefit_ci = prctile(benefit_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
         
-        % Calculate benefit-cost ratios for different time horizons
-        bc_ratio_10yr = benefit_diff_10yr / (cost_diff_10yr + eps);
-        bc_ratio_30yr = benefit_diff_30yr / (cost_diff_30yr + eps);
-        bc_ratio_all = benefit_diff / (cost_diff + eps);
+        % Bootstrap for costs
+        cost_boot = mean(relative_sums.costs_all(bootstrap_indices), 1);
+        cost_ci = prctile(cost_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
         
-        % Calculate cost per life saved using time-bound costs
-        cost_per_life_10yr = (cost_diff_10yr / lives_10yr);
-        cost_per_life_30yr = (cost_diff_30yr / lives_30yr);
-        cost_per_life_all = (cost_diff / lives_all);
+        % Bootstrap for BCR 10yr
+        bcr_10yr_boot = mean(relative_sums.bcr_10yr(bootstrap_indices), 1);
+        bcr_10yr_ci = prctile(bcr_10yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
+        
+        % Bootstrap for BCR 30yr
+        bcr_30yr_boot = mean(relative_sums.bcr_30yr(bootstrap_indices), 1);
+        bcr_30yr_ci = prctile(bcr_30yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
+        
+        % Bootstrap for BCR all
+        bcr_all_boot = mean(relative_sums.bcr_all(bootstrap_indices), 1);
+        bcr_all_ci = prctile(bcr_all_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
+        
+        % Bootstrap for lives 10yr
+        lives_10yr_boot = mean(relative_sums.lives_10yr(bootstrap_indices), 1);
+        lives_10yr_ci = prctile(lives_10yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
+        
+        % Bootstrap for lives 30yr
+        lives_30yr_boot = mean(relative_sums.lives_30yr(bootstrap_indices), 1);
+        lives_30yr_ci = prctile(lives_30yr_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
+        
+        % Bootstrap for lives all
+        lives_all_boot = mean(relative_sums.lives_all(bootstrap_indices), 1);
+        lives_all_ci = prctile(lives_all_boot, [alpha/2 * 100, (1-alpha/2) * 100]);
         
         % Add to table
-        summary_table(i,:) = {category_name, accent, variation, benefit_diff, cost_diff, npv_diff, ...
-                             bc_ratio_10yr, bc_ratio_30yr, bc_ratio_all, lives_10yr, lives_30yr, ...
-                             lives_all, cost_per_life_10yr, cost_per_life_30yr, cost_per_life_all};
-
-        % % Convert any Inf values to NaN in the summary table
-        % summary_table.CostPerLife10yr(isinf(summary_table.CostPerLife10yr)) = NaN;
-        % summary_table.CostPerLife30yr(isinf(summary_table.CostPerLife30yr)) = NaN;
-        % summary_table.CostPerLifeAll(isinf(summary_table.CostPerLifeAll)) = NaN;
+        summary_table(i,:) = {category_name, accent, variation, ...
+                             benefit_diff, benefit_ci(1), benefit_ci(2), ...
+                             cost_diff, cost_ci(1), cost_ci(2), ...
+                             npv_diff, ...
+                             bc_ratio_10yr, bcr_10yr_ci(1), bcr_10yr_ci(2), ...
+                             bc_ratio_30yr, bcr_30yr_ci(1), bcr_30yr_ci(2), ...
+                             bc_ratio_all, bcr_all_ci(1), bcr_all_ci(2), ...
+                             lives_10yr, lives_10yr_ci(1), lives_10yr_ci(2), ...
+                             lives_30yr, lives_30yr_ci(1), lives_30yr_ci(2), ...
+                             lives_all, lives_all_ci(1), lives_all_ci(2)};
     end
 
     % Save table to CSV
@@ -188,44 +205,81 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     parse(p, varargin{:});
     include_ten_thirty = p.Results.IncludeTenThirtyYearStats;
 
-    % Convert to appropriate units
-    summary_data.NPVDiff = summary_data.NPVDiff / 1e9; % to billions
+    % Convert to appropriate units (billions for monetary, thousands for lives)
+    summary_data.NPVDiff = summary_data.NPVDiff / 1e9;
     summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9;
+    summary_data.BenefitDiff_CI_low = summary_data.BenefitDiff_CI_low / 1e9;
+    summary_data.BenefitDiff_CI_high = summary_data.BenefitDiff_CI_high / 1e9;
     summary_data.CostDiff = summary_data.CostDiff / 1e9;
-    if include_ten_thirty
-        summary_data.CostPerLife10yr = summary_data.CostPerLife10yr / 1e3; % to thousands
-        summary_data.CostPerLife30yr = summary_data.CostPerLife30yr / 1e3;
+    summary_data.CostDiff_CI_low = summary_data.CostDiff_CI_low / 1e9;
+    summary_data.CostDiff_CI_high = summary_data.CostDiff_CI_high / 1e9;
+
+    % Helper function to format value with CI
+    function s = format_with_ci(val, ci_low, ci_high)
+        round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
+        s = sprintf('%s (%s, %s)', round_nicely(val), round_nicely(ci_low), round_nicely(ci_high));
     end
-    summary_data.CostPerLifeAll = summary_data.CostPerLifeAll / 1e3;
-
-    % Round lives saved
-    round_lives = @(x) arrayfun(@(y) round(y, -2) * (y < 1e4) + round(y, -3) * (y >= 1e4), x);
-
-    if include_ten_thirty
-        summary_data.Lives10yr = comma_format(round_lives(summary_data.Lives10yr));
-        summary_data.Lives30yr = comma_format(round_lives(summary_data.Lives30yr));
+    
+    % Helper function to format lives with CI
+    function s = format_lives_with_ci(val, ci_low, ci_high)
+        round_lives = @(x) round(x, -2) * (x < 1e4) + round(x, -3) * (x >= 1e4);
+        s = sprintf('%s (%s, %s)', comma_format(round_lives(val)), ...
+                    comma_format(round_lives(ci_low)), comma_format(round_lives(ci_high)));
     end
-    summary_data.LivesAll = comma_format(round_lives(summary_data.LivesAll));
+    
+    % Helper function to format BCR with CI
+    function s = format_bcr_with_ci(val, ci_low, ci_high, less_than_zero_to_inf)
+        round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
+        if (less_than_zero_to_inf && val < 0) || isinf(val)
+            s = "$\infty$";
+        else
+            val_str = round_nicely(val);
+            low_str = round_nicely(ci_low);
+            high_str = round_nicely(ci_high);
+            if (less_than_zero_to_inf && ci_high < 0) || isinf(ci_high)
+                high_str = "$\infty$";
+            end
+            s = sprintf('%s (%s, %s)', val_str, low_str, high_str);
+        end
+    end
 
-    % Nice rounding for BCR, costs, etc.
+    % Format all values with CIs
+    benefit_str = arrayfun(@(i) format_with_ci(summary_data.BenefitDiff(i), ...
+        summary_data.BenefitDiff_CI_low(i), summary_data.BenefitDiff_CI_high(i)), ...
+        (1:height(summary_data))', 'UniformOutput', false);
+    
+    cost_str = arrayfun(@(i) format_with_ci(summary_data.CostDiff(i), ...
+        summary_data.CostDiff_CI_low(i), summary_data.CostDiff_CI_high(i)), ...
+        (1:height(summary_data))', 'UniformOutput', false);
+    
     round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
-    function s = bcr_to_string(x, less_than_zero_to_inf)
-        inf_idx = isinf(x); if less_than_zero_to_inf, inf_idx = inf_idx | (x < 0); end
-        s = round_nicely(x); s(inf_idx) = "$\infty$";
-    end
-
-    summary_data.NPVDiff = round_nicely(summary_data.NPVDiff);
-    summary_data.BenefitDiff = round_nicely(summary_data.BenefitDiff);
-    summary_data.CostDiff = round_nicely(summary_data.CostDiff);
-
+    npv_str = round_nicely(summary_data.NPVDiff);
+    
     if include_ten_thirty
-        summary_data.BCRatio10yr = bcr_to_string(summary_data.BCRatio10yr, true);
-        summary_data.BCRatio30yr = bcr_to_string(summary_data.BCRatio30yr, true);
-        summary_data.CostPerLife10yr = bcr_to_string(summary_data.CostPerLife10yr, false);
-        summary_data.CostPerLife30yr = bcr_to_string(summary_data.CostPerLife30yr, false);
+        lives_10yr_str = arrayfun(@(i) format_lives_with_ci(summary_data.Lives10yr(i), ...
+            summary_data.Lives10yr_CI_low(i), summary_data.Lives10yr_CI_high(i)), ...
+            (1:height(summary_data))', 'UniformOutput', false);
+        
+        lives_30yr_str = arrayfun(@(i) format_lives_with_ci(summary_data.Lives30yr(i), ...
+            summary_data.Lives30yr_CI_low(i), summary_data.Lives30yr_CI_high(i)), ...
+            (1:height(summary_data))', 'UniformOutput', false);
+        
+        bcr_10yr_str = arrayfun(@(i) format_bcr_with_ci(summary_data.BCRatio10yr(i), ...
+            summary_data.BCRatio10yr_CI_low(i), summary_data.BCRatio10yr_CI_high(i), true), ...
+            (1:height(summary_data))', 'UniformOutput', false);
+        
+        bcr_30yr_str = arrayfun(@(i) format_bcr_with_ci(summary_data.BCRatio30yr(i), ...
+            summary_data.BCRatio30yr_CI_low(i), summary_data.BCRatio30yr_CI_high(i), true), ...
+            (1:height(summary_data))', 'UniformOutput', false);
     end
-    summary_data.BCRatioAll = bcr_to_string(summary_data.BCRatioAll, true);
-    summary_data.CostPerLifeAll = bcr_to_string(summary_data.CostPerLifeAll, false);
+    
+    lives_all_str = arrayfun(@(i) format_lives_with_ci(summary_data.LivesAll(i), ...
+        summary_data.LivesAll_CI_low(i), summary_data.LivesAll_CI_high(i)), ...
+        (1:height(summary_data))', 'UniformOutput', false);
+    
+    bcr_all_str = arrayfun(@(i) format_bcr_with_ci(summary_data.BCRatioAll(i), ...
+        summary_data.BCRatioAll_CI_low(i), summary_data.BCRatioAll_CI_high(i), true), ...
+        (1:height(summary_data))', 'UniformOutput', false);
 
     % Escape LaTeX special chars & in names
     summary_data.Category = replace(string(summary_data.Category), "&", "\&");
@@ -235,14 +289,14 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     % Group programs so only unique Category rows start scenario, others indented
     [unique_cats,~,cat_idx] = unique(summary_data.Category, 'stable');
 
-
     % Open LaTeX file for writing
     fileID = fopen(outpath, 'w');
 
     % Table 1: Effects summary (costs, benefits, net, lives)
     fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
     caption_str = [
-        '\\caption{\\textbf{Estimated expected benefits, costs, net value, and lives saved from advance investment programs.} Monetary estimates are discounted. ', ...
+        '\\caption{\\textbf{Estimated expected benefits, costs, net value, and lives saved from advance investment programs.} ', ...
+        'Monetary estimates are discounted. Values shown as point estimate (95\\%% CI). ', ...
         'Values $>\\!$10 rounded to integer; $<\\!$10 share $1$ decimal. Lives saved rounded to the nearest hundred if $<10{,}000$, else thousand. ', ...
         'Scenario rows group alternative program designs. }\n'
     ]; fprintf(fileID, caption_str);
@@ -258,7 +312,7 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
         fprintf(fileID, ...
             'Scenario & Accent & Costs (\\$~bn) & Benefits (\\$~bn) & Net value (\\$~bn) & \\multicolumn{3}{c}{Lives saved} \\\\\n');
         fprintf(fileID, '\\cline{6-8}\n');
-        fprintf(fileID, '& & & & & & 10 yr & 30 yr & 50 yr \\\\\n');
+        fprintf(fileID, '& & & & & 10 yr & 30 yr & 50 yr \\\\\n');
     else
         fprintf(fileID, ...
             'Scenario & Accent & Costs (\\$~bn) & Benefits (\\$~bn) & Net value (\\$~bn) & Lives saved \\\\\n');
@@ -274,20 +328,20 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
                 fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
                     summary_data.Category{i}, ...
                     summary_data.Accent{i}, ...
-                    summary_data.CostDiff(i), ...
-                    summary_data.BenefitDiff(i), ...
-                    summary_data.NPVDiff(i), ...
-                    summary_data.Lives10yr(i), ...
-                    summary_data.Lives30yr(i), ...
-                    summary_data.LivesAll(i));
+                    cost_str{i}, ...
+                    benefit_str{i}, ...
+                    npv_str(i), ...
+                    lives_10yr_str{i}, ...
+                    lives_30yr_str{i}, ...
+                    lives_all_str{i});
             else
                 fprintf(fileID, '%s & %s & %s & %s & %s & %s \\\\\n', ...
                     summary_data.Category{i}, ...
                     summary_data.Accent{i}, ...
-                    summary_data.CostDiff(i), ...
-                    summary_data.BenefitDiff(i), ...
-                    summary_data.NPVDiff(i), ...
-                    summary_data.LivesAll(i));
+                    cost_str{i}, ...
+                    benefit_str{i}, ...
+                    npv_str(i), ...
+                    lives_all_str{i});
             end
         end
     end
@@ -298,26 +352,27 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     % Table 2: Cost-effectiveness grouped, same display style
     fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
     caption_str = [
-        '\\caption{\\textbf{Estimated cost-effectiveness for advance investment programs.} Ratios: discounted benefits/costs. ', ...
+        '\\caption{\\textbf{Estimated cost-effectiveness for advance investment programs.} ', ...
+        'Ratios: discounted benefits/costs. Values shown as point estimate (95\\%% CI). ', ...
         'Values $>\\!$10 integer; $<\\!$10 one decimal. Lives saved rounded as above. ', ...
         'Scenario rows group program variants. }\n'
     ]; fprintf(fileID, caption_str);
 
     if include_ten_thirty
-        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c c c c}\n');
+        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c}\n');
     else
-        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c}\n');
+        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c}\n');
     end
 
     fprintf(fileID, '\\hline\n');
     if include_ten_thirty
         fprintf(fileID, ...
-            'Scenario & Accent & \\multicolumn{3}{c}{Benefit-cost ratio} & \\multicolumn{3}{c}{\\$k per expected life saved} \\\\\n');
-        fprintf(fileID, '\\cline{3-5}\\cline{6-8}\n');
-        fprintf(fileID, '& & & 10 yr & 30 yr & 50 yr & 10 yr & 30 yr & 50 yr \\\\\n');
+            'Scenario & Accent & \\multicolumn{3}{c}{Benefit-cost ratio} \\\\\n');
+        fprintf(fileID, '\\cline{3-5}\n');
+        fprintf(fileID, '& & 10 yr & 30 yr & 50 yr \\\\\n');
     else
         fprintf(fileID, ...
-            'Scenario & Accent & BCR & \\$k per life saved \\\\\n');
+            'Scenario & Accent & BCR \\\\\n');
     end
     fprintf(fileID, '\\hline\n');
 
@@ -326,21 +381,17 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
         for ii = 1:numel(idx)
             i = idx(ii);
             if include_ten_thirty
-                fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
+                fprintf(fileID, '%s & %s & %s & %s & %s \\\\\n', ...
                     summary_data.Category{i}, ...
                     summary_data.Accent{i}, ...
-                    summary_data.BCRatio10yr(i), ...
-                    summary_data.BCRatio30yr(i), ...
-                    summary_data.BCRatioAll(i), ...
-                    summary_data.CostPerLife10yr(i), ...
-                    summary_data.CostPerLife30yr(i), ...
-                    summary_data.CostPerLifeAll(i));
+                    bcr_10yr_str{i}, ...
+                    bcr_30yr_str{i}, ...
+                    bcr_all_str{i});
             else
-                fprintf(fileID, '%s & %s & %s & %s \\\\\n', ...
+                fprintf(fileID, '%s & %s & %s \\\\\n', ...
                     summary_data.Category{i}, ...
                     summary_data.Accent{i}, ...
-                    summary_data.BCRatioAll(i), ...
-                    summary_data.CostPerLifeAll(i));
+                    bcr_all_str{i});
             end
         end
     end
@@ -351,4 +402,3 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
 
     fclose(fileID);
 end
-
