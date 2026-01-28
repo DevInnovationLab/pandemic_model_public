@@ -40,7 +40,7 @@ function [surge_cap, surge_cap_cost] = ...
     surge_cap = zeros(num_sims, max_years);
     surge_cap(event_start_idx) = delta_cap_by_year(year_start(~false_pos_ignored)) .* (1 - is_false(~false_pos_ignored) .* (1 - params.frac_invest_on_false));
     surge_cap(event_end_idx) = surge_cap(event_end_idx) - ...
-        (1 - ~is_false(~false_pos_ignored & valid_end) .* (1 - surge_retained)) .* ...
+        (1 - surge_retained) .* ...
         delta_cap_by_year(year_start(~false_pos_ignored & valid_end)) .* ...
         (1 - is_false(~false_pos_ignored & valid_end) .* (1 - params.frac_invest_on_false)); % In case pandemic end and start in same year.
     
@@ -56,9 +56,10 @@ function [surge_cap, surge_cap_cost] = ...
     
     % Get the existing surge capacity right before each event
     pre_event_surge_cap = zeros(size(event_surge_cap));
-    valid_idx = year_start(~false_pos_ignored) > 1;
+    valid_idx = ~false_pos_ignored & year_start > 1;
     pre_event_idx = sub2ind([num_sims, max_years], sim_num(valid_idx), year_start(valid_idx) - 1);
-    pre_event_surge_cap(valid_idx) = surge_cap(pre_event_idx);
+    valid_in_considered = (year_start(~false_pos_ignored)) > 1;
+    pre_event_surge_cap(valid_in_considered) = surge_cap(pre_event_idx);
     
     % Calculate the incremental surge capacity needed
     event_surge_cap_diff = event_surge_cap - pre_event_surge_cap;
