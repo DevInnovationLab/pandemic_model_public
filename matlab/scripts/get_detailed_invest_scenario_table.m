@@ -170,25 +170,20 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
             tic;
             cost_ci = bootci(200, {@mean, relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Cost CI computed in %.2f seconds\n', toc);
-            
             fprintf('  Computing BCR 10yr CI...\n');
             tic;
-            bcr_10yr_data = relative_sums.benefits_vaccine_10_years ./ relative_sums.total_costs_pv_10_years;
-            bcr_10yr_ci = bootci(200, {@mean, bcr_10yr_data}, 'alpha', 0.1, 'type', 'percentile');
+            bcr_10yr_ci = bootci(200, {@(b,c) mean(b)./mean(c), relative_sums.benefits_vaccine_10_years, relative_sums.total_costs_pv_10_years}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  BCR 10yr CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing BCR 30yr CI...\n');
             tic;
-            bcr_30yr_data = relative_sums.benefits_vaccine_30_years ./ relative_sums.total_costs_pv_30_years;
-            bcr_30yr_ci = bootci(200, {@mean, bcr_30yr_data}, 'alpha', 0.1, 'type', 'percentile');
+            bcr_30yr_ci = bootci(200, {@(b,c) mean(b)./mean(c), relative_sums.benefits_vaccine_30_years, relative_sums.total_costs_pv_30_years}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  BCR 30yr CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing BCR all CI...\n');
             tic;
-            bcr_all_data = relative_sums.benefits_vaccine_full ./ relative_sums.total_costs_pv_full;
-            bcr_all_ci = bootci(200, {@mean, bcr_all_data}, 'alpha', 0.1, 'type', 'percentile');
+            bcr_all_ci = bootci(200, {@(b,c) mean(b)./mean(c), relative_sums.benefits_vaccine_full, relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  BCR all CI computed in %.2f seconds\n', toc);
-            
             fprintf('  Computing lives 10yr CI...\n');
             tic;
             lives_10yr_ci = bootci(200, {@mean, relative_sums.lives_saved_10_years}, 'alpha', 0.1, 'type', 'percentile');
