@@ -3,7 +3,7 @@
 #SBATCH --error=logs/%x_%j.err
 #SBATCH --partition=broadwl
 #SBATCH --time=2:00:00
-#SBATCH --mem-per-cpu=10G  
+#SBATCH --mem-per-cpu=15G  
 #SBATCH --account=pi-rglennerster
 
 # Usage: sbatch --dependency=afterok:JOBID slurm_bootstrap.sh <job_config> [n_bootstrap]

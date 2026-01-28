@@ -8,7 +8,7 @@ add_datetime_to_outdir: 0
 save_output: 1
 profile: false # Profile main parallel loop
 pandemic_table_out: "skinny" # Full, skinny, or none
-save_mode: "full"
+save_mode: "light"
 
 # Social value
 y: 0.016 # Growth rate
