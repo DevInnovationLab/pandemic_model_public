@@ -202,7 +202,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
             event_list_simulation(scenario_simulation_table, econ_loss_model, num_simulations, simulation_params);
 
         [scenario_sum_table, relative_annual_results] = get_relative_results(...
-            annual_results, annual_results_baseline, num_simulations);
+            annual_results, annual_results_baseline, num_simulations, params.tolerance);
 
         % Save chunk results
         chunk_sum_path = fullfile(chunk_dir, ...
@@ -221,7 +221,7 @@ end
 
 
 function [scenario_sum_table, relative_annual_results] = ...
-    get_relative_results(annual_results, annual_results_baseline, num_simulations)
+    get_relative_results(annual_results, annual_results_baseline, num_simulations, tolerance)
     % Compute relative results
     result_names = fieldnames(annual_results);
     sum_horizons = [10, 30, 50];
@@ -237,6 +237,7 @@ function [scenario_sum_table, relative_annual_results] = ...
     for j = 1:length(result_names)
         result = result_names{j};
         relative_annual_result = annual_results.(result) - annual_results_baseline.(result);
+        relative_annual_result(abs(relative_annual_result) < tolerance) = 0;
         relative_annual_results.(result) = relative_annual_result;
         
         col_idx = (j-1) * num_horizons + 1;

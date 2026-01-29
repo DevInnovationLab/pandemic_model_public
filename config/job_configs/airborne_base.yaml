@@ -9,6 +9,7 @@ save_output: 1
 profile: false # Profile main parallel loop
 pandemic_table_out: "full" # Full, skinny, or none
 save_mode: "light"
+tolerance: 9e-4 # Make zero in out arraystolerance: 9e-4 # Make zero in out arrays
 
 # Social value
 y: 0.016 # Growth rate

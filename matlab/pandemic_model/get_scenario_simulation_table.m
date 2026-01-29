@@ -5,7 +5,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 															  params)
 	% First thing to do is to deal with the false positive outbreaks
 	% Keeping right amount for false positive rate implied by early warning
-	scenario_false_positive_rate = params.improved_early_warning.active .* (1 -  params.improved_early_warning.precision); % Need this to be a zero
+	scenario_false_positive_rate = params.improved_early_warning.active .* (1 -  params.improved_early_warning.precision); 
 	false_keep_rate = (...
 		(scenario_false_positive_rate .* (1 - params.highest_false_positive_rate)) ./ ...
 		(params.highest_false_positive_rate .* (1 - scenario_false_positive_rate)) ...
@@ -194,10 +194,9 @@ function prep_start_month_arr = run_surveillance(early_detection_q, is_false_arr
 												 months_to_early_detect, months_to_regular_detect)
 	% Compute early detection indicator
 	early_detect_prob_true = improved_early_warning.recall;
-	early_detect_prob_false = improved_early_warning.precision;
-	early_detection = early_detection_q < (early_detect_prob_true .* ~is_false_arr + early_detect_prob_false .* is_false_arr);
+	early_detection = (early_detection_q < early_detect_prob_true .* ~is_false_arr) | is_false_arr;
 
 	prep_start_month_arr = nan(size(is_false_arr));
 	prep_start_month_arr(early_detection) = months_to_early_detect;
-	prep_start_month_arr(~early_detection & ~is_false_arr) = months_to_regular_detect;
+	prep_start_month_arr(~early_detection) = months_to_regular_detect;
 end
