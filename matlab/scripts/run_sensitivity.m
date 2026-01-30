@@ -80,7 +80,7 @@ function run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite)
             continue;
         end
 
-        run_single_scenario(run_config, run_type);
+        run_single_scenario(run_config, run_type, run_type, overwrite);
     end
 end
 

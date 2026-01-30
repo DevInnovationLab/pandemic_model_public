@@ -2,7 +2,7 @@ base_job_config: "./config/job_configs/allrisk_base.yaml"
 outdir: "./output/sensitivity"
 fix_params:
   gamma: 0
-  scenario_configs: "./config/scenario_configs/standard/baseline.yaml"
+  scenario_configs: "./config/scenario_configs/baseline"
   response_threshold: 0
 sensitivities:
   arrival_dist_config:
