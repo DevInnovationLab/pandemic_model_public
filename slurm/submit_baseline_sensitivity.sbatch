@@ -14,4 +14,4 @@
 
 module load matlab/2023a
 
-matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program', 'response', true);"
+matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program.yaml', 'response', true);"
