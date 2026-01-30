@@ -2,7 +2,7 @@
 base_job_config: "./config/job_configs/allrisk_base.yaml"
 outdir: "./output/sensitivity"
 fix_params: # Parameters to update and fix in the base config
-  scenario_configs: "./config/scenario_configs/standard/baseline.yaml"
+  scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:
   # Vaccine-supply parameters
   gamma:  # Fraction remaining harm mitigated by vaccine
