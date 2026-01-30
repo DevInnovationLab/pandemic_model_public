@@ -55,6 +55,12 @@ function get_complementarity_distributions(job_dir, raw_only)
                 metric, ...
                 investment_types, ...
                 raw_only);
+
+            % Save complementarity data
+            complementarity_filename = sprintf('complementarity_%s_%s.mat', metric, accent);
+            complementarity_filepath = fullfile(processed_dir, complementarity_filename);
+            save(complementarity_filepath, 'complementarity_data');
+            fprintf('Saved complementarity data to %s\n', complementarity_filepath);
             
             % Create figures: raw distributions and bootstrap means
             plot_complementarity_raw(complementarity_data, ...

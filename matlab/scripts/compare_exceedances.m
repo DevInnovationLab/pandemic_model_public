@@ -48,7 +48,7 @@ function compare_exceedances(outdir)
     ante_severity_matrix = zeros(num_simulations, sim_periods);
     post_severity_matrix = zeros(num_simulations, sim_periods);
     idx = sub2ind(size(ante_severity_matrix), pandemic_table.sim_num, pandemic_table.yr_start);
-    ante_severity_matrix(idx) = pandemic_table.eff_severity;
+    ante_severity_matrix(idx) = pandemic_table.severity;
     post_severity_matrix(idx) = pandemic_table.ex_post_severity;
 
     clear pandemic_table;
@@ -96,8 +96,8 @@ function compare_exceedances(outdir)
     ante_interp = zeros(B, length(common_grid)-1);
     post_interp = zeros(B, length(common_grid)-1);
     for b = 1:B
-        ante_interp(b,:) = interp1(ante_grid(1:end-1), ante_boot_mat(b,:), common_grid(1:end-1), 'linear', 'extrap');
-        post_interp(b,:) = interp1(post_grid(1:end-1), post_boot_mat(b,:), common_grid(1:end-1), 'linear', 'extrap');
+        ante_interp(b,:) = interp1(ante_grid(2:end), ante_boot_mat(b,:), common_grid(1:end-1), 'linear', 'extrap');
+        post_interp(b,:) = interp1(post_grid(2:end), post_boot_mat(b,:), common_grid(1:end-1), 'linear', 'extrap');
     end
 
     mean_ante = mean(ante_interp, 1);
@@ -173,7 +173,7 @@ function compare_exceedances(outdir)
 
     % Output mean annual recurrence rates to CSV
     T = table(common_grid(1:end-1), 1 ./ (mean_ante'), 1 ./ (mean_post'), ...
-        'VariableNames', {'severity', 'mean_ante_exceedance', 'mean_post_exceedance'});
+        'VariableNames', {'severity', 'mean_ante_recurrence', 'mean_post_recurrence'});
     writetable(T, fullfile(outdir, 'mean_annual_recurrence_rates.csv'));
 
 end

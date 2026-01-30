@@ -13,7 +13,7 @@ function get_result_distribution(job_dir, results)
     end
     
     % Set up paths
-    rawdata_dir = fullfile(job_dir, "raw");
+    rawdata_dir = fullfile(job_dir, "processed");
     figure_path = fullfile(job_dir, "figures");
     if ~exist(figure_path, 'dir')
         mkdir(figure_path);
@@ -46,13 +46,12 @@ function get_result_distribution(job_dir, results)
             scen_name = scenarios(i);
             
             % Load relative sums table for non-baseline scenarios
-            disp("hi")
             sum_table_file = fullfile(rawdata_dir, sprintf("%s_relative_sums.mat", scen_name));
-            load(sum_table_file, 'scenario_sum_table');
+            load(sum_table_file, 'all_relative_sums');
            
             % Get the full horizon column for this result
             col_name = strcat(result, '_full');
-            data = scenario_sum_table.(col_name);
+            data = all_relative_sums.(col_name);
             
             % Set labels based on result type
             switch result

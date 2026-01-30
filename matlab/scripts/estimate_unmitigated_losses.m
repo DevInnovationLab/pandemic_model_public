@@ -44,18 +44,22 @@ function estimate_unmitigated_losses(job_config_path)
     end
 
     % Load inputs from files (same as run_job.m)
-    arrival_dist = load_arrival_dist(job_config.arrival_dist_config, job_config.false_positive_rate);
+    arrival_dist = load_arrival_dist(job_config.arrival_dist_config, 0);
     assert(strcmp(arrival_dist.measure, "severity"), ...
            "Please use an arrival distribution estimated on pandemic severities.")
     duration_dist = load_duration_dist(job_config.duration_dist_config);
 
     % Load arrival rates, pathogen info, etc. as in run_job.m
     arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
+    pathogen_info = readtable(job_config.pathogen_info, "TextType", "string");
     econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
 
+    % Convert logical columns in both arrival_rates and pathogen_info tables
+    pathogen_info = convert_logical_columns(pathogen_info);
+    arrival_rates = convert_logical_columns(arrival_rates);
+
     % Generate base simulation table (same as run_job.m, but no scenario config)
-    [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, job_config.seed, job_config);
-    simulation_table = simulation_table(~isnan(simulation_table.yr_start), :); % Remove simulations with no outbreaks
+    [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, job_config.seed, job_config);
 
     sim_idx = simulation_table.sim_num;
     yr_start = simulation_table.yr_start;
@@ -64,7 +68,6 @@ function estimate_unmitigated_losses(job_config_path)
 
     % Compute the number of years for each pandemic
     intensity_mat = zeros([job_config.num_simulations, job_config.sim_periods]);
-
     % Vectorized expansion using repelem and arrayfun
     pandemic_lengths = yr_end - yr_start + 1;
     row_idx = repelem(sim_idx, pandemic_lengths);
@@ -98,4 +101,41 @@ function estimate_unmitigated_losses(job_config_path)
         'total_losses', ...
         '-v7.3');
     fprintf('Saved unmitigated losses to %s\n', mat_filename);
+end
+
+
+
+function tbl = convert_logical_columns(tbl)
+    %CONVERT_LOGICAL_COLUMNS Converts 'TRUE'/'FALSE'/NA columns to numeric 1/0/NaN.
+    %
+    %   tbl = CONVERT_LOGICAL_COLUMNS(tbl) converts any columns in the table tbl
+    %   that contain 'TRUE'/'FALSE'/NA values (as strings or logicals) to numeric
+    %   columns with 1 for TRUE, 0 for FALSE, and NaN for NA/missing.
+    %
+    %   This is useful for harmonizing imported CSV data where logical columns
+    %   may be read as strings.
+    %
+    %   Parameters
+    %   ----------
+    %   tbl : table
+    %       Input table with possible logical columns as strings.
+    %
+    %   Returns
+    %   -------
+    %   tbl : table
+    %       Table with logical columns converted to numeric.
+    
+    logical_colnames = {'has_prototype', 'airborne'};
+    for i = 1:length(logical_colnames)
+        col = logical_colnames{i};
+        if ismember(col, tbl.Properties.VariableNames)
+            col_data = tbl.(col);
+            col_str = string(col_data);
+            col_numeric = nan(height(tbl), 1);
+            col_numeric(strcmpi(col_str, "TRUE")) = 1;
+            col_numeric(strcmpi(col_str, "FALSE")) = 0;
+            col_numeric(strcmpi(col_str, "NA")) = 0;
+            tbl.(col) = col_numeric;
+        end
+    end
 end
