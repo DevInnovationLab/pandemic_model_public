@@ -1,12 +1,25 @@
-function run_sensitivity(config_path, run_type, overwrite)
+function run_sensitivity(config_path, run_type, varargin)
     % Run a sensivitity config, which takes a job_config and details parameter variations to run.
     % The script has capacity for sens
     % 
     % Run type options:
     %   - 'unmitigated': Calls estimate_unmitigated_losses.m, which runs the model without any response interventions.
     %   - 'response': Calls run_job.m, which includes the full response model with interventions.
-    % Overwrite:
-    %   - true or false; helpful for restarting run that was interrupted without running the same scenarios.
+    % 
+    % Optional parameters:
+    %   - 'overwrite': true or false; helpful for restarting run that was interrupted without running the same scenarios.
+    %   - 'num_chunks': Number of chunks to split simulations into (default: 1)
+    %   - 'array_task_id': SLURM array task ID for parallel processing (default: nan)
+
+    p = inputParser;
+    addParameter(p, 'overwrite', true, @islogical);
+    addParameter(p, 'num_chunks', 1, @isnumeric);
+    addParameter(p, 'array_task_id', nan, @isnumeric);
+    parse(p, varargin{:});
+    
+    overwrite = p.Results.overwrite;
+    num_chunks = p.Results.num_chunks;
+    array_task_id = p.Results.array_task_id;
 
     fprintf('Loading configuration files...\n');
     sensitivity_config = yaml.loadFile(config_path);
@@ -23,18 +36,18 @@ function run_sensitivity(config_path, run_type, overwrite)
     if isstruct(first_sensitivity) && ~isempty(fieldnames(first_sensitivity))
         % Multi-parameter case: first sensitivity is a struct with fields
         % specifying multiple parameters to change
-        run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite);
+        run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite, num_chunks, array_task_id);
     elseif iscell(first_sensitivity) || isnumeric(first_sensitivity)
         % Single-parameter case: first sensitivity is an array of values
         % to try for a single parameter
-        run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite);
+        run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite, num_chunks, array_task_id);
     else
         error('Invalid sensitivity configuration structure. Each sensitivity must either be a struct of parameters or an array of values.');
     end
 end
 
 
-function run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite)
+function run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite, num_chunks, array_task_id)
     % Runs sensitivity analysis where each variation changes multiple parameters
     % E.g. compare_old.yaml style configs
     
@@ -49,7 +62,7 @@ function run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite)
     end
 
     base_dir = setup_sensitivity_dirs(sensitivity_config);
-    run_baseline(base_config, base_dir);
+    run_baseline(base_config, base_dir, run_type, overwrite, num_chunks, array_task_id);
 
     % Run variations
     sensitivities = sensitivity_config.sensitivities;
@@ -80,12 +93,12 @@ function run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite)
             continue;
         end
 
-        run_single_scenario(run_config, run_type, run_type, overwrite);
+        run_single_scenario(run_config, run_type, num_chunks, array_task_id);
     end
 end
 
 
-function run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite)
+function run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite, num_chunks, array_task_id)
     % Runs sensitivity analysis where each variation changes one parameter
     % E.g. no_mitigation.yaml style configs
     
@@ -100,7 +113,7 @@ function run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite)
     end
 
     base_dir = setup_sensitivity_dirs(sensitivity_config);
-    run_baseline(base_config, base_dir, run_type, overwrite);
+    run_baseline(base_config, base_dir, run_type, overwrite, num_chunks, array_task_id);
 
     % Run variations
     sensitivities = sensitivity_config.sensitivities;
@@ -129,7 +142,7 @@ function run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite)
                 continue;
             end
 
-            run_single_scenario(run_config, run_type);
+            run_single_scenario(run_config, run_type, num_chunks, array_task_id);
         end
     end
 end
@@ -149,7 +162,7 @@ function base_dir = setup_sensitivity_dirs(sensitivity_config)
 end
 
 
-function run_baseline(base_config, base_dir, run_type, overwrite)
+function run_baseline(base_config, base_dir, run_type, overwrite, num_chunks, array_task_id)
     fprintf('Running baseline configuration...\n');
     run_config = base_config;
     run_config.outdir = fullfile(base_dir, 'baseline');
@@ -162,22 +175,25 @@ function run_baseline(base_config, base_dir, run_type, overwrite)
         return;
     end
 
-    run_single_scenario(run_config, run_type);
+    run_single_scenario(run_config, run_type, num_chunks, array_task_id);
 end
 
 
-function run_single_scenario(run_config, run_type)
+function run_single_scenario(run_config, run_type, num_chunks, array_task_id)
     % Run a single scenario and handle output organization
     %
     % Args:
     %   run_config (struct): Configuration for this scenario run
+    %   run_type (string): Either 'response' or 'unmitigated'
+    %   num_chunks (numeric): Number of chunks to split simulations into
+    %   array_task_id (numeric): SLURM array task ID (nan if not array task)
     
     temp_config_path = tempname;
     yaml.dumpFile(temp_config_path, run_config);
 
     % Handle run_type argument: either 'response' or 'unmitigated'
     if strcmp(run_type, "response")
-        run_job(temp_config_path);
+        run_job(temp_config_path, 'num_chunks', num_chunks, 'array_task_id', array_task_id);
     elseif strcmp(run_type, "unmitigated")
         estimate_unmitigated_losses(temp_config_path);
     else

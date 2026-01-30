@@ -14,4 +14,6 @@
 
 module load matlab/2023a
 
-matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program.yaml', 'response', true);"
+NUM_CHUNKS=$1
+
+matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program.yaml', 'response', 'num_chunks', ${NUM_CHUNKS});"
