@@ -37,7 +37,7 @@ function compare_exceedances(outdir)
     all_tables = all_tables(1:table_count);
     pandemic_table = vertcat(all_tables{:});
 
-    clear all_tables;
+    clear all_tables chunk_table;
 
     % Job config
     job_config = yaml.loadFile(fullfile(outdir, "job_config.yaml"));

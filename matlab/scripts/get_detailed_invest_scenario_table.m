@@ -49,7 +49,7 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
     end
     
     % Initialize table with confidence intervals
-    summary_table = table('Size', [length(scenarios) 31], ...
+    summary_table = table('Size', [length(scenarios) 40], ...
         'VariableTypes', {'string', 'string', 'string', ...
                          'double', 'double', 'double', ...  % BenefitDiff and CI
                          'double', 'double', 'double', ...  % CostDiff and CI
@@ -60,6 +60,9 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
                          'double', 'double', 'double', ...  % Lives10yr and CI
                          'double', 'double', 'double', ...  % Lives30yr and CI
                          'double', 'double', 'double', ...  % LivesAll and CI
+                         'double', 'double', 'double', ...  % CostPerLife10yr and CI
+                         'double', 'double', 'double', ...  % CostPerLife30yr and CI
+                         'double', 'double', 'double', ...  % CostPerLifeAll and CI
                          'double', 'double', 'double'}, ... % PctCostSaving and CI
         'VariableNames', {...
         'Category', 'Accent', 'Variation', ...
@@ -72,11 +75,14 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
         'Lives10yr', 'Lives10yr_CI_low', 'Lives10yr_CI_high', ...
         'Lives30yr', 'Lives30yr_CI_low', 'Lives30yr_CI_high', ...
         'LivesAll', 'LivesAll_CI_low', 'LivesAll_CI_high', ...
+        'CostPerLife10yr', 'CostPerLife10yr_CI_low', 'CostPerLife10yr_CI_high', ...
+        'CostPerLife30yr', 'CostPerLife30yr_CI_low', 'CostPerLife30yr_CI_high', ...
+        'CostPerLifeAll', 'CostPerLifeAll_CI_low', 'CostPerLifeAll_CI_high', ...
         'PctCostSaving', 'PctCostSaving_CI_low', 'PctCostSaving_CI_high'});
     
     % Initialize CI table if computing
     if ~use_saved_ci
-        ci_table = table('Size', [length(scenarios) 19], ...
+        ci_table = table('Size', [length(scenarios) 25], ...
             'VariableTypes', {'string', ...
                              'double', 'double', ...  % BenefitDiff CI
                              'double', 'double', ...  % CostDiff CI
@@ -86,6 +92,9 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
                              'double', 'double', ...  % Lives10yr CI
                              'double', 'double', ...  % Lives30yr CI
                              'double', 'double', ...  % LivesAll CI
+                             'double', 'double', ...  % CostPerLife10yr CI
+                             'double', 'double', ...  % CostPerLife30yr CI
+                             'double', 'double', ...  % CostPerLifeAll CI
                              'double', 'double'}, ... % PctCostSaving CI
             'VariableNames', {...
             'Scenario', ...
@@ -97,6 +106,9 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
             'Lives10yr_CI_low', 'Lives10yr_CI_high', ...
             'Lives30yr_CI_low', 'Lives30yr_CI_high', ...
             'LivesAll_CI_low', 'LivesAll_CI_high', ...
+            'CostPerLife10yr_CI_low', 'CostPerLife10yr_CI_high', ...
+            'CostPerLife30yr_CI_low', 'CostPerLife30yr_CI_high', ...
+            'CostPerLifeAll_CI_low', 'CostPerLifeAll_CI_high', ...
             'PctCostSaving_CI_low', 'PctCostSaving_CI_high'});
     end
     
@@ -149,6 +161,11 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
         lives_30yr = mean(relative_sums.lives_saved_30_years);
         lives_all = mean(relative_sums.lives_saved_full);
         
+        % Calculate cost per life saved
+        cost_per_life_10yr = costs_10yr / lives_10yr;
+        cost_per_life_30yr = costs_30yr / lives_30yr;
+        cost_per_life_all = cost_diff / lives_all;
+        
         % Calculate percentage of simulations that are cost saving
         pct_cost_saving = mean(relative_sums.total_costs_pv_full < -1) * 100;
         
@@ -166,6 +183,9 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
             lives_10yr_ci = [ci_row.Lives10yr_CI_low; ci_row.Lives10yr_CI_high];
             lives_30yr_ci = [ci_row.Lives30yr_CI_low; ci_row.Lives30yr_CI_high];
             lives_all_ci = [ci_row.LivesAll_CI_low; ci_row.LivesAll_CI_high];
+            cost_per_life_10yr_ci = [ci_row.CostPerLife10yr_CI_low; ci_row.CostPerLife10yr_CI_high];
+            cost_per_life_30yr_ci = [ci_row.CostPerLife30yr_CI_low; ci_row.CostPerLife30yr_CI_high];
+            cost_per_life_all_ci = [ci_row.CostPerLifeAll_CI_low; ci_row.CostPerLifeAll_CI_high];
             pct_cost_saving_ci = [ci_row.PctCostSaving_CI_low; ci_row.PctCostSaving_CI_high];
             fprintf('  Using saved confidence intervals\n');
         else
@@ -195,18 +215,33 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
             fprintf('  BCR all CI computed in %.2f seconds\n', toc);
             fprintf('  Computing lives 10yr CI...\n');
             tic;
-            lives_10yr_ci = bootci(200, {@mean, relative_sums.lives_saved_10_years}, 'alpha', 0.1, 'type', 'percentile');
+            lives_10yr_ci = bootci(200, {@(c,l) mean(c)./mean(l), relative_sums.total_costs_pv_10_years, relative_sums.lives_saved_10_years}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Lives 10yr CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing lives 30yr CI...\n');
             tic;
-            lives_30yr_ci = bootci(200, {@mean, relative_sums.lives_saved_30_years}, 'alpha', 0.1, 'type', 'percentile');
+            lives_30yr_ci = bootci(200, {@(c,l) mean(c)./mean(l), relative_sums.total_costs_pv_30_years, relative_sums.lives_saved_30_years}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Lives 30yr CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing lives all CI...\n');
             tic;
-            lives_all_ci = bootci(200, {@mean, relative_sums.lives_saved_full}, 'alpha', 0.1, 'type', 'percentile');
+            lives_all_ci = bootci(200, {@(c,l) mean(c)./mean(l), relative_sums.total_costs_pv_full, relative_sums.lives_saved_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Lives all CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing cost per life 10yr CI...\n');
+            tic;
+            cost_per_life_10yr_ci = bootci(200, {@(c,l) mean(c)./mean(l), relative_sums.total_costs_pv_10_years, relative_sums.lives_saved_10_years}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Cost per life 10yr CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing cost per life 30yr CI...\n');
+            tic;
+            cost_per_life_30yr_ci = bootci(200, {@(c,l) mean(c)./mean(l), relative_sums.total_costs_pv_30_years, relative_sums.lives_saved_30_years}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Cost per life 30yr CI computed in %.2f seconds\n', toc);
+            
+            fprintf('  Computing cost per life all CI...\n');
+            tic;
+            cost_per_life_all_ci = bootci(200, {@(c,l) mean(c)./mean(l), relative_sums.total_costs_pv_full, relative_sums.lives_saved_full}, 'alpha', 0.1, 'type', 'percentile');
+            fprintf('  Cost per life all CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing percent cost saving CI...\n');
             tic;
@@ -223,6 +258,9 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
                              lives_10yr_ci(1), lives_10yr_ci(2), ...
                              lives_30yr_ci(1), lives_30yr_ci(2), ...
                              lives_all_ci(1), lives_all_ci(2), ...
+                             cost_per_life_10yr_ci(1), cost_per_life_10yr_ci(2), ...
+                             cost_per_life_30yr_ci(1), cost_per_life_30yr_ci(2), ...
+                             cost_per_life_all_ci(1), cost_per_life_all_ci(2), ...
                              pct_cost_saving_ci(1), pct_cost_saving_ci(2)};
         end
         
@@ -237,6 +275,9 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
                              lives_10yr, lives_10yr_ci(1), lives_10yr_ci(2), ...
                              lives_30yr, lives_30yr_ci(1), lives_30yr_ci(2), ...
                              lives_all, lives_all_ci(1), lives_all_ci(2), ...
+                             cost_per_life_10yr, cost_per_life_10yr_ci(1), cost_per_life_10yr_ci(2), ...
+                             cost_per_life_30yr, cost_per_life_30yr_ci(1), cost_per_life_30yr_ci(2), ...
+                             cost_per_life_all, cost_per_life_all_ci(1), cost_per_life_all_ci(2), ...
                              pct_cost_saving, pct_cost_saving_ci(1), pct_cost_saving_ci(2)};
         fprintf('  Scenario %s complete\n\n', scen_name);
     end
@@ -330,7 +371,7 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     parse(p, varargin{:});
     include_ten_thirty = p.Results.IncludeTenThirtyYearStats;
 
-    % Convert to appropriate units (billions for monetary, thousands for lives)
+    % Convert to appropriate units (billions for monetary, thousands for lives and cost per life)
     summary_data.NPVDiff = summary_data.NPVDiff / 1e9;
     summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9;
     summary_data.BenefitDiff_CI_low = summary_data.BenefitDiff_CI_low / 1e9;
@@ -349,6 +390,17 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     summary_data.LivesAll = summary_data.LivesAll / 1e3;
     summary_data.LivesAll_CI_low = summary_data.LivesAll_CI_low / 1e3;
     summary_data.LivesAll_CI_high = summary_data.LivesAll_CI_high / 1e3;
+    
+    % Convert cost per life to thousands
+    summary_data.CostPerLife10yr = summary_data.CostPerLife10yr / 1e3;
+    summary_data.CostPerLife10yr_CI_low = summary_data.CostPerLife10yr_CI_low / 1e3;
+    summary_data.CostPerLife10yr_CI_high = summary_data.CostPerLife10yr_CI_high / 1e3;
+    summary_data.CostPerLife30yr = summary_data.CostPerLife30yr / 1e3;
+    summary_data.CostPerLife30yr_CI_low = summary_data.CostPerLife30yr_CI_low / 1e3;
+    summary_data.CostPerLife30yr_CI_high = summary_data.CostPerLife30yr_CI_high / 1e3;
+    summary_data.CostPerLifeAll = summary_data.CostPerLifeAll / 1e3;
+    summary_data.CostPerLifeAll_CI_low = summary_data.CostPerLifeAll_CI_low / 1e3;
+    summary_data.CostPerLifeAll_CI_high = summary_data.CostPerLifeAll_CI_high / 1e3;
 
     % Helper function to round nicely
     round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x,1));
@@ -374,6 +426,22 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
             low_str = round_nicely(ci_low);
             high_str = round_nicely(ci_high);
             if (less_than_zero_to_inf && ci_high < 0) || isinf(ci_high)
+                high_str = "$\infty$";
+            end
+            s = sprintf('\\begin{tabular}[c]{@{}c@{}}%s \\\\[-0.7em] \\footnotesize [%s, %s]\\end{tabular}', ...
+                        val_str, low_str, high_str);
+        end
+    end
+    
+    % Helper function to format cost per life with CI using nested tabular
+    function s = format_cost_per_life_with_ci(val, ci_low, ci_high)
+        if isinf(val)
+            s = "$\infty$";
+        else
+            val_str = round_nicely(val);
+            low_str = round_nicely(ci_low);
+            high_str = round_nicely(ci_high);
+            if isinf(ci_high)
                 high_str = "$\infty$";
             end
             s = sprintf('\\begin{tabular}[c]{@{}c@{}}%s \\\\[-0.7em] \\footnotesize [%s, %s]\\end{tabular}', ...
@@ -437,6 +505,14 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
         bcr_30yr_str = arrayfun(@(i) format_bcr_with_ci(summary_data.BCRatio30yr(i), ...
             summary_data.BCRatio30yr_CI_low(i), summary_data.BCRatio30yr_CI_high(i), true), ...
             (1:height(summary_data))', 'UniformOutput', false);
+        
+        cost_per_life_10yr_str = arrayfun(@(i) format_cost_per_life_with_ci(summary_data.CostPerLife10yr(i), ...
+            summary_data.CostPerLife10yr_CI_low(i), summary_data.CostPerLife10yr_CI_high(i)), ...
+            (1:height(summary_data))', 'UniformOutput', false);
+        
+        cost_per_life_30yr_str = arrayfun(@(i) format_cost_per_life_with_ci(summary_data.CostPerLife30yr(i), ...
+            summary_data.CostPerLife30yr_CI_low(i), summary_data.CostPerLife30yr_CI_high(i)), ...
+            (1:height(summary_data))', 'UniformOutput', false);
     end
     
     lives_all_str = arrayfun(@(i) format_lives_with_ci(summary_data.LivesAll(i), ...
@@ -445,6 +521,10 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     
     bcr_all_str = arrayfun(@(i) format_bcr_with_ci(summary_data.BCRatioAll(i), ...
         summary_data.BCRatioAll_CI_low(i), summary_data.BCRatioAll_CI_high(i), true), ...
+        (1:height(summary_data))', 'UniformOutput', false);
+    
+    cost_per_life_all_str = arrayfun(@(i) format_cost_per_life_with_ci(summary_data.CostPerLifeAll(i), ...
+        summary_data.CostPerLifeAll_CI_low(i), summary_data.CostPerLifeAll_CI_high(i)), ...
         (1:height(summary_data))', 'UniformOutput', false);
     
     pct_cost_saving_str = arrayfun(@(i) format_pct_with_ci(summary_data.PctCostSaving(i), ...
@@ -481,15 +561,21 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
             'Scenario & Accent & Costs (\\$~bn) & Benefits (\\$~bn) & Net value (\\$~bn) & Lives saved (thousands) \\\\\n');
     end
     fprintf(fileID, '\\hline\n');
-
     % Print data in grouped scenario style
     for c = 1:numel(unique_cats)
         idx = find(cat_idx == c);
         for ii = 1:numel(idx)
             i = idx(ii);
+            % Only print category for first row of each category group
+            if ii == 1
+                cat_str = summary_data.Category{i};
+            else
+                cat_str = '';
+            end
+            
             if include_ten_thirty
                 fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
-                    summary_data.Category{i}, ...
+                    cat_str, ...
                     summary_data.Accent{i}, ...
                     cost_str{i}, ...
                     benefit_str{i}, ...
@@ -499,7 +585,7 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
                     lives_all_str{i});
             else
                 fprintf(fileID, '%s & %s & %s & %s & %s & %s \\\\\n', ...
-                    summary_data.Category{i}, ...
+                    cat_str, ...
                     summary_data.Accent{i}, ...
                     cost_str{i}, ...
                     benefit_str{i}, ...
@@ -520,20 +606,20 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     ]; fprintf(fileID, caption_str);
 
     if include_ten_thirty
-        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c}\n');
+        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c c c c}\n');
     else
-        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c}\n');
+        fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c}\n');
     end
 
     fprintf(fileID, '\\hline\n');
     if include_ten_thirty
         fprintf(fileID, ...
-            'Scenario & Accent & \\multicolumn{3}{c}{Benefit-cost ratio} \\\\\n');
-        fprintf(fileID, '\\cline{3-5}\n');
-        fprintf(fileID, '& & 10 yr & 30 yr & 50 yr \\\\\n');
+            'Scenario & Accent & \\multicolumn{3}{c}{Benefit-cost ratio} & \\multicolumn{3}{c}{\\$ thousands per life saved} \\\\\n');
+        fprintf(fileID, '\\cline{3-5}\\cline{6-8}\n');
+        fprintf(fileID, '& & 10 yr & 30 yr & 50 yr & 10 yr & 30 yr & 50 yr \\\\\n');
     else
         fprintf(fileID, ...
-            'Scenario & Accent & BCR & \\%% cost saving \\\\\n');
+            'Scenario & Accent & BCR & \\$ thousands per life saved & \\%% cost saving \\\\\n');
     end
     fprintf(fileID, '\\hline\n');
 
@@ -542,17 +628,21 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
         for ii = 1:numel(idx)
             i = idx(ii);
             if include_ten_thirty
-                fprintf(fileID, '%s & %s & %s & %s & %s \\\\\n', ...
+                fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
                     summary_data.Category{i}, ...
                     summary_data.Accent{i}, ...
                     bcr_10yr_str{i}, ...
                     bcr_30yr_str{i}, ...
-                    bcr_all_str{i});
+                    bcr_all_str{i}, ...
+                    cost_per_life_10yr_str{i}, ...
+                    cost_per_life_30yr_str{i}, ...
+                    cost_per_life_all_str{i});
             else
-                fprintf(fileID, '%s & %s & %s & %s \\\\\n', ...
+                fprintf(fileID, '%s & %s & %s & %s & %s \\\\\n', ...
                     summary_data.Category{i}, ...
                     summary_data.Accent{i}, ...
                     bcr_all_str{i}, ...
+                    cost_per_life_all_str{i}, ...
                     pct_cost_saving_str{i});
             end
         end

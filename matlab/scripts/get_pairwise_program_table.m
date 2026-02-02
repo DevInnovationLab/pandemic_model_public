@@ -450,7 +450,7 @@ function create_table(summary_data, investments, outpath, complementarity_ci_tab
 
     fprintf('  Writing table footer...\n');
     fprintf(fileID, '\\hline\n\\end{tabular*}\n');
-    fprintf(fileID, '\\label{tab:adv_invest_summary}\n');
+    fprintf(fileID, '\\label{tab:adv_invest_compl_summary}\n');
     fprintf(fileID, '\\end{table}\n\n');
     
     fclose(fileID);
