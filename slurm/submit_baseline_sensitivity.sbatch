@@ -19,4 +19,4 @@ OVERWRITE=${2:-true};
 
 matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program.yaml', 'response', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"
 
-matlab -batch "agg_sensitivity_benefits('./sensitivity_results/baseline_vaccine_program');"
+matlab -batch "run('./matlab/load_project.m'); agg_sensitivity_benefits('./sensitivity_results/baseline_vaccine_program');"
