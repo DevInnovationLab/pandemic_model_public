@@ -1,7 +1,16 @@
-function compare_exceedances(outdir)
+function compare_exceedances(outdir, varargin)
 % Compare Madhav et al. exceedance with our model using bootstrap pointwise CIs.
 % Args:
 %   outdir (string): Path to output directory containing simulation results
+%   varargin: Optional name-value pairs:
+%       'IncludeCI' (logical): Whether to include confidence intervals in plots (default: false)
+    p = inputParser;
+    addRequired(p, 'outdir', @ischar);
+    addParameter(p, 'Include90CI', false, @islogical);
+    parse(p, outdir, varargin{:});
+    
+    include_90ci = p.Results.Include90CI;
+    
     rng(42);
     B = 100;
 
@@ -48,7 +57,7 @@ function compare_exceedances(outdir)
     ante_severity_matrix = zeros(num_simulations, sim_periods);
     post_severity_matrix = zeros(num_simulations, sim_periods);
     idx = sub2ind(size(ante_severity_matrix), pandemic_table.sim_num, pandemic_table.yr_start);
-    ante_severity_matrix(idx) = pandemic_table.severity;
+    ante_severity_matrix(idx) = pandemic_table.eff_severity;
     post_severity_matrix(idx) = pandemic_table.ex_post_severity;
 
     clear pandemic_table;
@@ -100,12 +109,24 @@ function compare_exceedances(outdir)
         post_interp(b,:) = interp1(post_grid(2:end), post_boot_mat(b,:), common_grid(1:end-1), 'linear', 'extrap');
     end
 
-    mean_ante = mean(ante_interp, 1);
-    mean_post = mean(post_interp, 1);
-    lo_ante = prctile(ante_interp, 2.5, 1);
-    hi_ante = prctile(ante_interp, 97.5, 1);
-    lo_post = prctile(post_interp, 2.5, 1);
-    hi_post = prctile(post_interp, 97.5, 1);
+    median_ante_boot = median(ante_interp, 1);
+    median_post_boot = median(post_interp, 1);
+    lo_ante = prctile(ante_interp, 5, 1);
+    hi_ante = prctile(ante_interp, 95, 1);
+    lo_post = prctile(post_interp, 5, 1);
+    hi_post = prctile(post_interp, 95, 1);
+
+    % Compute direct exceedance curves from all data (no bootstrap)
+    ante_sev_all = ante_severity_matrix(:);
+    ante_sev_all = ante_sev_all(~isnan(ante_sev_all));
+    post_sev_all = post_severity_matrix(:);
+    post_sev_all = post_sev_all(~isnan(post_sev_all));
+
+    % Use a grid that includes 0 so zeros (no-event years) are counted by histcounts.
+    % common_grid starts at min_grid > 0, so zeros would fall outside and distort exceedance.
+    direct_edges = [0; logspace(log10(min_grid), log10(max_grid), num_grid_points - 1)'];
+    ante_direct = (numel(ante_sev_all) - histcounts(ante_sev_all, direct_edges, 'Normalization', 'cumcount')) ./ (numel(ante_sev_all) + 1);
+    post_direct = (numel(post_sev_all) - histcounts(post_sev_all, direct_edges, 'Normalization', 'cumcount')) ./ (numel(post_sev_all) + 1);
 
     % Madhav data for plotting
     mad_valid = madhav_severity_central > 0;
@@ -116,64 +137,92 @@ function compare_exceedances(outdir)
     madhav_exceedance_upper_plot  = madhav_exceedance_upper(mad_valid) / 100;
     madhav_exceedance_lower_plot  = madhav_exceedance_lower(mad_valid) / 100;
 
-    fig = figure('Position', [100 100 900 650]); hold on;
     ex_ante_color = [0 0.4470 0.7410];
     ex_post_color = [0.8500 0.3250 0.0980];
     madhav_color  = [0.4940 0.1840 0.5560];
-
-    % Ante: Bootstrap CI band (now as dashed lines)
     x_ribbon = common_grid(1:end-1)';
-    % Plot lower and upper CI as dashed lines
-    % plot(x_ribbon, lo_ante, '--', 'LineWidth', 1.5, 'Color', ex_ante_color, 'DisplayName', 'Without vaccination 95% CI');
-    % plot(x_ribbon, hi_ante, '--', 'LineWidth', 1.5, 'Color', ex_ante_color, 'HandleVisibility', 'off');
-    % Ante mean
-    plot(x_ribbon, mean_ante, 'LineWidth', 2, 'Color', ex_ante_color, ...
+    x_ribbon_direct = direct_edges(2:end)';
+    % ========== Figure 1: Bootstrap median ==========
+    fig1 = figure('Position', [100 100 900 650]); hold on;
+
+    % Add confidence intervals if requested
+    if include_90ci
+        plot(x_ribbon, lo_ante, '--', 'LineWidth', 1, 'Color', ex_ante_color, 'HandleVisibility', 'off');
+        plot(x_ribbon, hi_ante, '--', 'LineWidth', 1, 'Color', ex_ante_color, 'HandleVisibility', 'off');
+        plot(x_ribbon, lo_post, '--', 'LineWidth', 1, 'Color', ex_post_color, 'HandleVisibility', 'off');
+        plot(x_ribbon, hi_post, '--', 'LineWidth', 1, 'Color', ex_post_color, 'HandleVisibility', 'off');
+    end
+
+    plot(x_ribbon, median_ante_boot, 'LineWidth', 2, 'Color', ex_ante_color, ...
         'DisplayName', 'Without vaccination');
-
-    % Post: Bootstrap CI band (now as dashed lines)
-    % plot(x_ribbon, lo_post, '--', 'LineWidth', 1.5, 'Color', ex_post_color, 'DisplayName', 'With vaccination 95% CI');
-    % plot(x_ribbon, hi_post, '--', 'LineWidth', 1.5, 'Color', ex_post_color, 'HandleVisibility', 'off');
-    % Post mean
-    plot(x_ribbon, mean_post, 'LineWidth', 2, 'Color', ex_post_color, ...
+    plot(x_ribbon, median_post_boot, 'LineWidth', 2, 'Color', ex_post_color, ...
         'DisplayName', 'With vaccination');
-
-    % Madhav CI as dashed lines instead of fill for efficiency
-    % plot(madhav_severity_lower_plot, madhav_exceedance_lower_plot, '--', 'Color', madhav_color, 'LineWidth', 1.2, 'DisplayName', 'Madhav 95% CI');
-    % plot(madhav_severity_upper_plot, madhav_exceedance_upper_plot, '--', 'Color', madhav_color, 'LineWidth', 1.2, 'HandleVisibility', 'off');
     plot(madhav_severity_central_plot, madhav_exceedance_central_plot, ...
         'LineWidth', 2, 'Color', madhav_color, 'DisplayName', 'Madhav et al. (2023)');
 
     set(gca, 'XScale', 'log', 'YScale', 'log'); grid on; box off;
     xlabel('Severity (deaths per 10,000)', 'FontSize', 14);
     ylabel('Exceedance probability', 'FontSize', 14);
-    title('Exceedance probability curves', 'FontSize', 15);
+    title('Exceedance probability curves (Bootstrap median)', 'FontSize', 15);
+    legend('Location', 'best');
 
-    % Direct labels (unchanged)
-    idx_madhav = min(2, numel(madhav_severity_central_plot));
-    idx_post = min( max(1, round(0.4*numel(common_grid))), numel(common_grid) );
-    idx_ante = min( max(1, round(0.25*numel(common_grid))), numel(common_grid) );
-    text(madhav_severity_central_plot(idx_madhav), madhav_exceedance_central_plot(idx_madhav), ...
-        'Madhav et al. (2023)', 'FontSize', 11, 'HorizontalAlignment', 'left', ...
-        'VerticalAlignment', 'bottom', 'Color', madhav_color);
-    text(common_grid(idx_post), mean_post(idx_post), 'With vaccination', ...
-        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_post_color);
-    text(common_grid(idx_ante), mean_ante(idx_ante), 'Without vaccination', ...
-        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_ante_color);
-
-    legend('off');
     min_x = max([min(common_grid(:)); min(madhav_severity_central_plot(:))]);
     max_x = min([max(common_grid(:)); max(madhav_severity_central_plot(:))]);
     xlim([min_x, max_x]);
     xt = get(gca, 'XTick');
     set(gca, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
 
-    % Save figure
     [~, dirname] = fileparts(outdir);
-    print(fig, fullfile(outdir, sprintf("%s_exceedance_comparison.png", dirname)), '-dpng', '-r400');
+    ci_suffix = '';
+    if include_90ci
+        ci_suffix = '_with_ci';
+    end
+    print(fig1, fullfile(outdir, sprintf("%s_exceedance_bootstrap_median%s.png", dirname, ci_suffix)), '-dpng', '-r400');
 
-    % Output mean annual recurrence rates to CSV
-    T = table(common_grid(1:end-1), 1 ./ (mean_ante'), 1 ./ (mean_post'), ...
-        'VariableNames', {'severity', 'mean_ante_recurrence', 'mean_post_recurrence'});
-    writetable(T, fullfile(outdir, 'mean_annual_recurrence_rates.csv'));
+    % ========== Figure 2: Direct calculation (all data) ==========
+    fig2 = figure('Position', [100 100 900 650]); hold on;
+
+    % Plot direct exceedance curves (use x_ribbon_direct from direct_edges)
+    plot(x_ribbon_direct, ante_direct, 'LineWidth', 2, 'Color', ex_ante_color, ...
+        'DisplayName', 'Without vaccination');
+    plot(x_ribbon_direct, post_direct, 'LineWidth', 2, 'Color', ex_post_color, ...
+        'DisplayName', 'With vaccination');
+
+    % Madhav
+    plot(madhav_severity_central_plot, madhav_exceedance_central_plot, ...
+        'LineWidth', 2, 'Color', madhav_color, 'DisplayName', 'Madhav et al. (2023)');
+
+    set(gca, 'XScale', 'log', 'YScale', 'log'); grid on; box off;
+    xlabel('Severity (deaths per 10,000)', 'FontSize', 14);
+    ylabel('Exceedance probability', 'FontSize', 14);
+    title('Exceedance probability curves (Direct calculation)', 'FontSize', 15);
+
+    % Direct labels (index into direct curve length = numel(x_ribbon_direct))
+    n_direct = numel(x_ribbon_direct);
+    idx_madhav = min(2, numel(madhav_severity_central_plot));
+    idx_post = min(max(1, round(0.4 * n_direct)), n_direct);
+    idx_ante = min(max(1, round(0.25 * n_direct)), n_direct);
+    text(madhav_severity_central_plot(idx_madhav), madhav_exceedance_central_plot(idx_madhav), ...
+        'Madhav et al. (2023)', 'FontSize', 11, 'HorizontalAlignment', 'left', ...
+        'VerticalAlignment', 'bottom', 'Color', madhav_color);
+    text(x_ribbon_direct(idx_post), post_direct(idx_post), 'With vaccination', ...
+        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_post_color);
+    text(x_ribbon_direct(idx_ante), ante_direct(idx_ante), 'Without vaccination', ...
+        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_ante_color);
+
+    legend('off');
+    min_x = max([min(x_ribbon_direct); min(madhav_severity_central_plot(:))]);
+    max_x = min([max(x_ribbon_direct); max(madhav_severity_central_plot(:))]);
+    xlim([min_x, max_x]);
+    xt = get(gca, 'XTick');
+    set(gca, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
+
+    % Save figure 2
+    print(fig2, fullfile(outdir, sprintf("%s_exceedance_direct.png", dirname)), '-dpng', '-r400');
+
+    % Output median annual recurrence rates to CSV (using bootstrap median)
+    T = table(common_grid(1:end-1), 1 ./ (median_ante_boot'), 1 ./ (median_post_boot'), ...
+        'VariableNames', {'severity', 'median_ante_recurrence', 'median_post_recurrence'});
+    writetable(T, fullfile(outdir, 'median_annual_recurrence_rates.csv'));
 
 end
