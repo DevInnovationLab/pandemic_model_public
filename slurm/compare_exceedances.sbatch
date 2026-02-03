@@ -16,5 +16,5 @@ module load matlab/2023a
 
 JOB_CONFIG=$1
 
-matlab -batch "run('./matlab/load_project.m'); compare_exceedances('${JOB_CONFIG}'); compare_exceedances('${JOB_CONFIG}', 'Include90CI', true);"
+matlab -batch "run('./matlab/load_project.m'); compare_exceedances('${JOB_CONFIG}');"
 
