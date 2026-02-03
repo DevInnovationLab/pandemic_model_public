@@ -97,7 +97,6 @@ function get_baseline_vaccine_sensitivity_table()
     fprintf('Sensitivity summary generated and saved to %s\n', sensitivity_dir);
 end
 
-
 function benefits = calculate_vaccine_benefits(scenario_dir)
     %% Calculate the total discounted benefits from vaccines for a scenario
     % Args:
@@ -106,9 +105,53 @@ function benefits = calculate_vaccine_benefits(scenario_dir)
     % Returns:
     %   benefits (double): Mean total discounted benefits from vaccines
 
-    mat_file = fullfile(scenario_dir, 'raw', 'baseline_results.mat');
-    S = load(mat_file, 'benefits_vaccine');
-    benefits = mean(sum(S.benefits_vaccine, 2));
+    % Get all chunk directories
+    raw_dir = fullfile(scenario_dir, 'raw');
+    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
+    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
+    
+    if isempty(chunk_dirs)
+        error('No chunk directories found in %s', raw_dir);
+    end
+    
+    % Extract chunk numbers and sort
+    chunk_numbers = zeros(length(chunk_dirs), 1);
+    for i = 1:length(chunk_dirs)
+        tokens = regexp(chunk_dirs(i).name, 'chunk_(\d+)', 'tokens');
+        chunk_numbers(i) = str2double(tokens{1}{1});
+    end
+    [chunk_numbers, sort_idx] = sort(chunk_numbers);
+    chunk_dirs = chunk_dirs(sort_idx);
+    
+    % Check that chunk numbers are contiguous
+    expected_chunks = 1:length(chunk_dirs);
+    if ~isequal(chunk_numbers', expected_chunks)
+        error('Chunk numbers are not contiguous. Found: %s, Expected: %s', ...
+              mat2str(chunk_numbers'), mat2str(expected_chunks));
+    end
+    
+    % Load first chunk to get dimensions
+    first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
+    S_first = load(first_chunk_path, 'benefits_vaccine');
+    [n_sims_per_chunk, n_periods] = size(S_first.benefits_vaccine);
+    n_chunks = length(chunk_dirs);
+    
+    % Preallocate array for all benefits
+    all_benefits = zeros(n_sims_per_chunk * n_chunks, n_periods);
+    % Preallocate array for sum of benefits per simulation
+    sum_benefits = zeros(n_sims_per_chunk * n_chunks, 1);
+    
+    % Load benefits_vaccine from all chunks and calculate sums
+    for i = 1:n_chunks
+        chunk_path = fullfile(raw_dir, chunk_dirs(i).name, 'baseline_annual.mat');
+        S = load(chunk_path, 'benefits_vaccine');
+        start_idx = (i-1) * n_sims_per_chunk + 1;
+        end_idx = i * n_sims_per_chunk;
+        sum_benefits(start_idx:end_idx) = sum(S.benefits_vaccine, 2);
+    end
+    
+    % Calculate mean of sums
+    benefits = mean(sum_benefits);
 end
 
 
