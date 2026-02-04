@@ -14,9 +14,15 @@ function get_baseline_vaccine_sensitivity_table()
     sensitivity_dir = "./output/sensitivity/baseline_vaccine_program";
     sensitivity_config = yaml.loadFile(fullfile(sensitivity_dir, 'sensitivity_config.yaml'));
     
+    % Load baseline vaccine benefits from aggregated results
+    baseline_results_path = fullfile(sensitivity_dir, 'processed', 'baseline_benefits_summary.mat');
+    baseline_data = load(baseline_results_path, 'mean_benefits', 'job_config');
+    baseline_benefits = baseline_data.mean_benefits;
+    baseline_config = baseline_data.job_config;
+    
     % Initialize summary table
     parameters = fieldnames(sensitivity_config.sensitivities);
-    num_rows = length(parameters); % +1 for baseline
+    num_rows = length(parameters) + 1; % +1 for baseline
 
     % Add columns for percent differences and max absolute percent difference
     summary_table = table('Size', [num_rows, 9], ...
@@ -24,52 +30,58 @@ function get_baseline_vaccine_sensitivity_table()
                          'VariableNames', {'Parameter', 'BaselineValue', 'LowValue', 'HighValue', 'LowBenefit', 'HighBenefit', ...
                                            'LowBenefitPctDiff', 'HighBenefitPctDiff', 'MaxAbsPctDiff'});
 
+    % Add baseline row (percent differences are zero for baseline)
+    summary_table(1,:) = {'Baseline', NaN, NaN, NaN, baseline_benefits, baseline_benefits, 0, 0, 0};
+
     % Process each parameter
     for i = 1:length(parameters)
         param_name = parameters{i};
         param_values = sensitivity_config.sensitivities.(param_name);
 
+        % Get baseline value for this parameter
+        baseline_value = baseline_config.(param_name);
+
+        if strcmp(param_name, 'duration_dist_config')
+            parts = split(baseline_value, "_");
+            baseline_value = str2double(parts{10});
+        end
+
         % Load benefits from aggregated results
         value_1_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_1_benefits_summary.mat', param_name));
         value_2_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_2_benefits_summary.mat', param_name));
         
-        value_1_data = load(value_1_path, 'mean_benefits', 'param_name', 'param_value');
-        value_2_data = load(value_2_path, 'mean_benefits', 'param_name', 'param_value');
+        value_1_data = load(value_1_path, 'mean_benefits', 'job_config');
+        value_2_data = load(value_2_path, 'mean_benefits', 'job_config');
         
         benefits_value_1 = value_1_data.mean_benefits;
         benefits_value_2 = value_2_data.mean_benefits;
-
-        % Get baseline value for this parameter from value_1_data
-        baseline_value = value_1_data.param_value;
-
+        
+        % Get parameter values from job configs
+        param_value_1 = value_1_data.job_config.(param_name);
+        param_value_2 = value_2_data.job_config.(param_name);
+        
+        % Handle duration_dist_config specially
         if strcmp(param_name, 'duration_dist_config')
-            parts = split(baseline_value, "_");
-            baseline_value = parts(10);
+            parts = split(param_value_1, "_");
+            param_value_1 = str2double(parts{10});
+            parts = split(param_value_2, "_");
+            param_value_2 = str2double(parts{10});
         end
-
-        % Determine which benefit is low/high
+        % Order by parameter value (low/high) and benefits (low/high) independently
+        if param_value_1 < param_value_2
+            low_value = param_value_1;
+            high_value = param_value_2;
+        else
+            low_value = param_value_2;
+            high_value = param_value_1;
+        end
+        
         if benefits_value_1 < benefits_value_2
             low_benefits = benefits_value_1;
             high_benefits = benefits_value_2;
         else
             low_benefits = benefits_value_2;
             high_benefits = benefits_value_1;
-        end
-
-        % Determine which parameter value is low/high
-        if param_values{1} < param_values{2}
-            low_value = param_values{1};
-            high_value = param_values{2};
-        else
-            low_value = param_values{2};
-            high_value = param_values{1};
-        end
-
-        if strcmp(param_name, 'duration_dist_config')
-            parts = split(low_value, "_");
-            low_value = parts(10);
-            parts = split(high_value, "_");
-            high_value = parts(10);
         end
 
         % Calculate percent differences from baseline
@@ -214,7 +226,6 @@ function formatted_value = format_value(value, param_name)
     
     % Parameters that should be displayed in millions
     million_params = {'value_of_death'};
-    disp(value)
     
     % Format based on parameter type
     if any(strcmp(param_name, percentage_params))

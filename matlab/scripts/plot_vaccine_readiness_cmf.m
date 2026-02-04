@@ -18,8 +18,30 @@ function plot_vaccine_readiness_cmf(job_dir)
     % Plot the cumulative mass function (CMF) for each scenario
     for i = 1:length(scenarios)
         scenario = scenarios{i};
-        S = load(fullfile(raw_dir, sprintf("%s_pandemic_table.mat", scenario)));
-        pandemic_table = S.pandemic_table;
+        
+        % Load pandemic table from all chunks
+        chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
+        pandemic_tables = cell(length(chunk_dirs), 1);
+        
+        for j = 1:length(chunk_dirs)
+            chunk_dir = fullfile(chunk_dirs(j).folder, chunk_dirs(j).name);
+            pandemic_file = fullfile(chunk_dir, sprintf("%s_pandemic_table.mat", scenario));
+            
+            if exist(pandemic_file, 'file')
+                S = load(pandemic_file);
+                pandemic_tables{j} = S.pandemic_table;
+            end
+        end
+        
+        % Remove empty cells and concatenate
+        pandemic_tables = pandemic_tables(~cellfun('isempty', pandemic_tables));
+        
+        if isempty(pandemic_tables)
+            warning('No pandemic table found for scenario: %s', scenario);
+            continue;
+        end
+        
+        pandemic_table = vertcat(pandemic_tables{:});
 
         % Filter to events with a start year
         has_event_table = pandemic_table(~isnan(pandemic_table.yr_start), :);
