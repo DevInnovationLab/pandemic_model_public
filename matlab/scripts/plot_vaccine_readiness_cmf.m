@@ -6,6 +6,7 @@ function plot_vaccine_readiness_cmf(job_dir)
     % Load job configuration and scenario names
     job_config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
     scenarios = fieldnames(job_config.scenarios);
+    disp(scenarios)
     raw_dir = fullfile(job_dir, "raw");
 
     % Set up figure for plotting
@@ -69,6 +70,7 @@ function plot_vaccine_readiness_cmf(job_dir)
         'FontSize', 16, 'FontWeight', 'normal', 'Units', 'normalized', 'Position', [0.5, 1.04, 0]);
 
     % Legend formatting
+    disp(scenarios)
     leg = legend(convert_varnames(scenarios), ...
         'Location', 'southeast', ...
         'Box', 'on', ...
@@ -91,3 +93,4 @@ function plot_vaccine_readiness_cmf(job_dir)
     % Save the figure as high-resolution PNG and PDF
     print(fig, fullfile(figure_dir, 'vaccine_readiness_cmf'), '-dpng', '-r400');
     close(fig);
+end

@@ -52,6 +52,9 @@ function agg_sensitivity_results(sensitivity_dir)
             
             % Preallocate array for sum of net values per simulation
             sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
+            % Preallocate arrays for net values over time
+            net_value_pv_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
+            net_value_nom_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
             
             % Load net_value from all chunks and calculate sums
             for k = 1:n_chunks
@@ -60,15 +63,22 @@ function agg_sensitivity_results(sensitivity_dir)
                 start_idx = (k-1) * n_sims_per_chunk + 1;
                 end_idx = k * n_sims_per_chunk;
                 sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
+                net_value_pv_all(start_idx:end_idx, :) = S.annual_results_baseline.net_value_pv;
+                net_value_nom_all(start_idx:end_idx, :) = S.annual_results_baseline.net_value_nom;
             end
             
             % Calculate mean of sums
             mean_benefits = mean(sum_net_values);
             
+            % Calculate mean net values over time
+            mean_net_value_pv_over_time = mean(net_value_pv_all, 1);
+            mean_net_value_nom_over_time = mean(net_value_nom_all, 1);
+            
             % Save baseline results to top-level processed directory
             output_filename = 'baseline_benefits_summary.mat';
             output_path = fullfile(top_processed_dir, output_filename);
-            save(output_path, 'mean_benefits', 'sum_net_values', 'job_config');
+            save(output_path, 'mean_benefits', 'sum_net_values', 'job_config', ...
+                 'mean_net_value_pv_over_time', 'mean_net_value_nom_over_time');
             
             fprintf('Processed baseline: mean benefits = %.2f\n', mean_benefits);
         else

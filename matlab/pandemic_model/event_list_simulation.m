@@ -450,7 +450,7 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     results.m_mortality_losses = sum(mortality_losses_pv, 2);
     results.m_output_losses = sum(output_losses_pv, 2);
     results.m_learning_losses = sum(learning_losses_pv, 2);
-    results.ex_post_severity = sum(monthly_deaths_mitigated, 2) ./ (params.P0 / 10000);
+    results.ex_post_severity = results.m_deaths ./ (params.P0 / 10000);
     results.inp_marg_costs_PV = sum(marginal_costs_pv, 2);
 end
 

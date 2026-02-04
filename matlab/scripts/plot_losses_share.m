@@ -3,9 +3,28 @@ function plot_losses_share(job_dir)
     % Args:
     %   job_dir: Directory containing job configuration and results
 
-    % Load pandemic table
-    S = load(fullfile(job_dir, "raw", "baseline_pandemic_table.mat"));
-    pandemic_table = S.pandemic_table;
+    % Load and merge pandemic tables from all chunks
+    raw_dir = fullfile(job_dir, "raw");
+    chunk_dirs = dir(fullfile(raw_dir, "chunk_*"));
+    
+    % Preallocate cell array for tables
+    pandemic_tables = cell(length(chunk_dirs), 1);
+    valid_chunks = 0;
+    
+    % Load all tables
+    for i = 1:length(chunk_dirs)
+        chunk_dir = fullfile(raw_dir, chunk_dirs(i).name);
+        baseline_file = fullfile(chunk_dir, "baseline_pandemic_table.mat");
+        
+        S = load(baseline_file);
+        valid_chunks = valid_chunks + 1;
+        pandemic_tables{valid_chunks} = S.pandemic_table;
+    end
+    
+    % Concatenate all tables
+    pandemic_tables = pandemic_tables(1:valid_chunks);
+    pandemic_table = vertcat(pandemic_tables{:});
+    
     pandemic_table = pandemic_table(~pandemic_table.is_false, :); % Remove false positives
 
     % Load intensity threshold
@@ -20,7 +39,7 @@ function plot_losses_share(job_dir)
 
     % Create figure for histograms
     fig1 = figure('Position', [100 100 1000 500]);
-    sgtitle('Pandemic intensity distribution')
+    sgtitle('Pandemic severity distribution')
 
     % Calculate max y value for consistent axis
     max_severity = max(severity);
