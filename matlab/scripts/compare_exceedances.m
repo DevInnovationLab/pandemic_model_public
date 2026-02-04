@@ -197,7 +197,7 @@ function compare_exceedances(outdir, varargin)
     set(gca, 'XScale', 'log', 'YScale', 'log'); grid on; box off;
     xlabel('Severity (deaths per 10,000)', 'FontSize', 14);
     ylabel('Exceedance probability', 'FontSize', 14);
-    title('Exceedance probability curves (Direct calculation)', 'FontSize', 15);
+    title('Exceedance probability curves', 'FontSize', 15);
 
     % Direct labels (index into direct curve length = numel(x_ribbon_direct))
     n_direct = numel(x_ribbon_direct);
