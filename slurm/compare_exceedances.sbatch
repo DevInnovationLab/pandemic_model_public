@@ -14,7 +14,7 @@
 
 module load matlab/2023a
 
-JOB_CONFIG=$1
+OUTDIR=$1
 
-matlab -batch "run('./matlab/load_project.m'); compare_exceedances('${JOB_CONFIG}');"
+matlab -batch "run('./matlab/load_project.m'); compare_exceedances('${OUTDIR}');"
 

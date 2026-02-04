@@ -113,13 +113,13 @@ function run_job(job_config_path, varargin)
     % Add scenarios to config
     scenarios = struct();
     for i = 1:length(scenario_configs)
-	scenarios.(scenario_configs{i}.name) = scenario_configs{i};
+	    scenarios.(scenario_configs{i}.name) = scenario_configs{i};
     end
     
     job_config.scenarios = scenarios;
     yaml.dumpFile(fullfile(sim_results_path, 'job_config.yaml'), job_config);
     if ~is_array_task
-	fprintf('All chunks completed!\n');
+	    fprintf('All chunks completed!\n');
     end
 end
 

@@ -41,6 +41,7 @@ function compare_exceedances(outdir, varargin)
             all_tables{table_count} = chunk_table;
         end
     end
+    disp(sprintf("Loaded %d tables", table_count));
     
     % Concatenate all tables
     all_tables = all_tables(1:table_count);
@@ -109,8 +110,8 @@ function compare_exceedances(outdir, varargin)
         post_interp(b,:) = interp1(post_grid(2:end), post_boot_mat(b,:), common_grid(1:end-1), 'linear', 'extrap');
     end
 
-    median_ante_boot = median(ante_interp, 1);
-    median_post_boot = median(post_interp, 1);
+    mean_ante_boot = mean(ante_interp, 1);
+    mean_post_boot = mean(post_interp, 1);
     lo_ante = prctile(ante_interp, 5, 1);
     hi_ante = prctile(ante_interp, 95, 1);
     lo_post = prctile(post_interp, 5, 1);
@@ -142,7 +143,7 @@ function compare_exceedances(outdir, varargin)
     madhav_color  = [0.4940 0.1840 0.5560];
     x_ribbon = common_grid(1:end-1)';
     x_ribbon_direct = direct_edges(2:end)';
-    % ========== Figure 1: Bootstrap median ==========
+    % ========== Figure 1: Bootstrap mean ==========
     fig1 = figure('Position', [100 100 900 650]); hold on;
 
     % Add confidence intervals if requested
@@ -153,9 +154,9 @@ function compare_exceedances(outdir, varargin)
         plot(x_ribbon, hi_post, '--', 'LineWidth', 1, 'Color', ex_post_color, 'HandleVisibility', 'off');
     end
 
-    plot(x_ribbon, median_ante_boot, 'LineWidth', 2, 'Color', ex_ante_color, ...
+    plot(x_ribbon, mean_ante_boot, 'LineWidth', 2, 'Color', ex_ante_color, ...
         'DisplayName', 'Without vaccination');
-    plot(x_ribbon, median_post_boot, 'LineWidth', 2, 'Color', ex_post_color, ...
+    plot(x_ribbon, mean_post_boot, 'LineWidth', 2, 'Color', ex_post_color, ...
         'DisplayName', 'With vaccination');
     plot(madhav_severity_central_plot, madhav_exceedance_central_plot, ...
         'LineWidth', 2, 'Color', madhav_color, 'DisplayName', 'Madhav et al. (2023)');
@@ -163,7 +164,7 @@ function compare_exceedances(outdir, varargin)
     set(gca, 'XScale', 'log', 'YScale', 'log'); grid on; box off;
     xlabel('Severity (deaths per 10,000)', 'FontSize', 14);
     ylabel('Exceedance probability', 'FontSize', 14);
-    title('Exceedance probability curves (Bootstrap median)', 'FontSize', 15);
+    title('Exceedance probability curves (Bootstrap mean)', 'FontSize', 15);
     legend('Location', 'best');
 
     min_x = max([min(common_grid(:)); min(madhav_severity_central_plot(:))]);
@@ -177,7 +178,7 @@ function compare_exceedances(outdir, varargin)
     if include_90ci
         ci_suffix = '_with_ci';
     end
-    print(fig1, fullfile(outdir, sprintf("%s_exceedance_bootstrap_median%s.png", dirname, ci_suffix)), '-dpng', '-r400');
+    print(fig1, fullfile(outdir, sprintf("%s_exceedance_bootstrap_mean%s.png", dirname, ci_suffix)), '-dpng', '-r400');
 
     % ========== Figure 2: Direct calculation (all data) ==========
     fig2 = figure('Position', [100 100 900 650]); hold on;
@@ -220,9 +221,9 @@ function compare_exceedances(outdir, varargin)
     % Save figure 2
     print(fig2, fullfile(outdir, sprintf("%s_exceedance_direct.png", dirname)), '-dpng', '-r400');
 
-    % Output median annual recurrence rates to CSV (using bootstrap median)
-    T = table(common_grid(1:end-1), 1 ./ (median_ante_boot'), 1 ./ (median_post_boot'), ...
-        'VariableNames', {'severity', 'median_ante_recurrence', 'median_post_recurrence'});
-    writetable(T, fullfile(outdir, 'median_annual_recurrence_rates.csv'));
+    % Output mean annual recurrence rates to CSV (using bootstrap mean)
+    T = table(common_grid(1:end-1), 1 ./ (mean_ante_boot'), 1 ./ (mean_post_boot'), ...
+        'VariableNames', {'severity', 'mean_ante_recurrence', 'mean_post_recurrence'});
+    writetable(T, fullfile(outdir, 'mean_annual_recurrence_rates.csv'));
 
 end

@@ -1,5 +1,5 @@
 # Run params
-num_simulations: 20000
+num_simulations: 50000
 sim_periods: 200
 outdir: "./output/jobs"
 scenario_configs: "./config/scenario_configs/pairwise_combos"
@@ -9,6 +9,8 @@ save_output: 1
 profile: false # Profile main parallel loop
 pandemic_table_out: "full" # Full, skinny, or none
 save_mode: "full"
+tolerance: 9e-4 # Tolerance for natural COVID-19 deaths
+
 
 # Social value
 y: 0.016 # Growth rate
