@@ -43,7 +43,7 @@ function agg_sensitivity_results(sensitivity_dir)
             % Load first chunk to get dimensions
             first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
             S_first = load(first_chunk_path, 'annual_results_baseline');
-            [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value);
+            [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value_pv);
             n_chunks = length(chunk_dirs);
             
             % Load job_config from baseline
@@ -59,7 +59,7 @@ function agg_sensitivity_results(sensitivity_dir)
                 S = load(chunk_path, 'annual_results_baseline');
                 start_idx = (k-1) * n_sims_per_chunk + 1;
                 end_idx = k * n_sims_per_chunk;
-                sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value, 2);
+                sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
             end
             
             % Calculate mean of sums
@@ -126,7 +126,7 @@ function agg_sensitivity_results(sensitivity_dir)
             first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
             disp(first_chunk_path)
             S_first = load(first_chunk_path, 'annual_results_baseline');
-            [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value);
+            [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value_pv);
             n_chunks = length(chunk_dirs);
             
             % Load job_config from value directory
@@ -142,7 +142,7 @@ function agg_sensitivity_results(sensitivity_dir)
                 S = load(chunk_path, 'annual_results_baseline');
                 start_idx = (k-1) * n_sims_per_chunk + 1;
                 end_idx = k * n_sims_per_chunk;
-                sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value, 2);
+                sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
             end
             
             % Calculate mean of sums
