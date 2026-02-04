@@ -60,7 +60,7 @@ function agg_sensitivity_results(sensitivity_dir)
             n_chunks = length(chunk_dirs);
             
             % Load job_config from first chunk
-            job_config_path = fullfile(raw_dir, 'job_config.yaml');
+            job_config_path = fullfile(value_dir, 'job_config.yaml');
             job_config = yaml.loadFile(job_config_path);
             
             % Preallocate array for sum of benefits per simulation
