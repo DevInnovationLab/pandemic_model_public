@@ -5,10 +5,14 @@ function agg_sensitivity_results(sensitivity_dir)
     % Returns:
     %   None
     
+    % Create top-level processed directory
+    top_processed_dir = fullfile(sensitivity_dir, 'processed');
+    create_folders_recursively(top_processed_dir);
+    
     % Get the list of sensitivity directories
     param_dirs = dir(fullfile(sensitivity_dir));
     param_dirs = param_dirs([param_dirs.isdir]);
-    param_dirs = param_dirs(~ismember({param_dirs.name}, {'.', '..'}));
+    param_dirs = param_dirs(~ismember({param_dirs.name}, {'.', '..', 'processed'}));
     
     % Loop through each sensitivity directory
     for i = 1:length(param_dirs)
@@ -22,10 +26,6 @@ function agg_sensitivity_results(sensitivity_dir)
             value_name = value_dirs(j).name;
             value_dir = fullfile(param_dir, value_name);
             raw_dir = fullfile(value_dir, 'raw');
-            
-            % Create processed directory for this scenario
-            processed_dir = fullfile(value_dir, 'processed');
-            create_folders_recursively(processed_dir);
             
             % Get all chunk directories
             chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
@@ -74,13 +74,14 @@ function agg_sensitivity_results(sensitivity_dir)
             % Calculate mean of sums
             mean_benefits = mean(sum_benefits);
             
-            % Save to this scenario's processed directory
-            output_path = fullfile(processed_dir, 'benefits_summary.mat');
+            % Save to top-level processed directory with param and value in filename
+            output_filename = sprintf('%s_%s_benefits_summary.mat', param_name, value_name);
+            output_path = fullfile(top_processed_dir, output_filename);
             save(output_path, 'mean_benefits', 'sum_benefits', 'param_name', 'value_name');
             
             fprintf('Processed %s/%s: mean benefits = %.2f\n', param_name, value_name, mean_benefits);
         end
     end
     
-    fprintf('All sensitivity results aggregated and saved to respective processed directories\n');
+    fprintf('All sensitivity results aggregated and saved to %s\n', top_processed_dir);
 end
