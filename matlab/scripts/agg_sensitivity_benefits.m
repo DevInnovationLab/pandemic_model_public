@@ -59,6 +59,10 @@ function agg_sensitivity_results(sensitivity_dir)
             [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.benefits_vaccine);
             n_chunks = length(chunk_dirs);
             
+            % Load job_config from first chunk
+            job_config_path = fullfile(raw_dir, chunk_dirs(1).name, 'job_config.yaml');
+            job_config = yaml.loadFile(job_config_path);
+            
             % Preallocate array for sum of benefits per simulation
             sum_benefits = zeros(n_sims_per_chunk * n_chunks, 1);
             
@@ -77,7 +81,7 @@ function agg_sensitivity_results(sensitivity_dir)
             % Save to top-level processed directory with param and value in filename
             output_filename = sprintf('%s_%s_benefits_summary.mat', param_name, value_name);
             output_path = fullfile(top_processed_dir, output_filename);
-            save(output_path, 'mean_benefits', 'sum_benefits', 'param_name', 'value_name');
+            save(output_path, 'mean_benefits', 'sum_benefits', 'param_name', 'value_name', 'job_config');
             
             fprintf('Processed %s/%s: mean benefits = %.2f\n', param_name, value_name, mean_benefits);
         end

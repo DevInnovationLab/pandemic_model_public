@@ -23,11 +23,14 @@ function compare_exceedances(outdir, varargin)
     [madhav_severity_lower, lower_idx] = sort(madhav_exceedances.severity_lower);
     madhav_exceedance_lower = madhav_exceedances.exceedance_lower(lower_idx);
 
-    % Load simulation data from all chunks
+    % Load simulation data from all chunks (sorted by chunk index for consistent ordering)
     rawdir = fullfile(outdir, "raw");
     chunk_dirs = dir(fullfile(rawdir, "chunk_*"));
     chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-    
+    chunk_numbers = cellfun(@(x) sscanf(x, 'chunk_%d'), {chunk_dirs.name});
+    [~, sort_idx] = sort(chunk_numbers);
+    chunk_dirs = chunk_dirs(sort_idx);
+
     all_tables = cell(length(chunk_dirs), 1);
     table_count = 0;
     for i = 1:length(chunk_dirs)
@@ -119,9 +122,7 @@ function compare_exceedances(outdir, varargin)
 
     % Compute direct exceedance curves from all data (no bootstrap)
     ante_sev_all = ante_severity_matrix(:);
-    ante_sev_all = ante_sev_all(~isnan(ante_sev_all));
     post_sev_all = post_severity_matrix(:);
-    post_sev_all = post_sev_all(~isnan(post_sev_all));
 
     % Use a grid that includes 0 so zeros (no-event years) are counted by histcounts.
     % common_grid starts at min_grid > 0, so zeros would fall outside and distort exceedance.

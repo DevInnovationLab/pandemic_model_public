@@ -178,6 +178,9 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         [annual_results_baseline, scenario_pandemic_table] = ...
             event_list_simulation(scenario_simulation_table, econ_loss_model, num_simulations, simulation_params);
 
+        % Use global sim_num so compare_exceedances can merge chunks correctly
+        scenario_pandemic_table.sim_num = scenario_pandemic_table.sim_num + chunk_start - 1;
+
         baseline_chunk_path = fullfile(chunk_dir, 'baseline_annual.mat');
         save(baseline_chunk_path, 'annual_results_baseline', '-v7.3');
 
@@ -201,6 +204,9 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         
         [annual_results, scenario_pandemic_table] = ...
             event_list_simulation(scenario_simulation_table, econ_loss_model, num_simulations, simulation_params);
+
+        % Use global sim_num so downstream scripts can merge chunks correctly
+        scenario_pandemic_table.sim_num = scenario_pandemic_table.sim_num + chunk_start - 1;
 
         [scenario_sum_table, relative_annual_results] = get_relative_results(...
             annual_results, annual_results_baseline, num_simulations, job_config.tolerance);

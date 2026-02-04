@@ -14,15 +14,9 @@ function get_baseline_vaccine_sensitivity_table()
     sensitivity_dir = "./output/sensitivity/baseline_vaccine_program";
     sensitivity_config = yaml.loadFile(fullfile(sensitivity_dir, 'sensitivity_config.yaml'));
     
-    % Load baseline configuration to get reference values
-    baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'job_config.yaml'));
-    
-    % Calculate baseline vaccine benefits
-    baseline_benefits = calculate_vaccine_benefits(fullfile(sensitivity_dir, 'baseline'));
-    
     % Initialize summary table
     parameters = fieldnames(sensitivity_config.sensitivities);
-    num_rows = length(parameters) + 1; % +1 for baseline
+    num_rows = length(parameters); % +1 for baseline
 
     % Add columns for percent differences and max absolute percent difference
     summary_table = table('Size', [num_rows, 9], ...
@@ -30,26 +24,28 @@ function get_baseline_vaccine_sensitivity_table()
                          'VariableNames', {'Parameter', 'BaselineValue', 'LowValue', 'HighValue', 'LowBenefit', 'HighBenefit', ...
                                            'LowBenefitPctDiff', 'HighBenefitPctDiff', 'MaxAbsPctDiff'});
 
-    % Add baseline row (percent differences are zero for baseline)
-    summary_table(1,:) = {'Baseline', NaN, NaN, NaN, baseline_benefits, baseline_benefits, 0, 0, 0};
-
     % Process each parameter
     for i = 1:length(parameters)
         param_name = parameters{i};
         param_values = sensitivity_config.sensitivities.(param_name);
-        param_dir = fullfile(sensitivity_dir, param_name);
 
-        % Get baseline value for this parameter
-        baseline_value = baseline_config.(param_name);
+        % Load benefits from aggregated results
+        value_1_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_1_benefits_summary.mat', param_name));
+        value_2_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_2_benefits_summary.mat', param_name));
+        
+        value_1_data = load(value_1_path, 'mean_benefits', 'param_name', 'param_value');
+        value_2_data = load(value_2_path, 'mean_benefits', 'param_name', 'param_value');
+        
+        benefits_value_1 = value_1_data.mean_benefits;
+        benefits_value_2 = value_2_data.mean_benefits;
+
+        % Get baseline value for this parameter from value_1_data
+        baseline_value = value_1_data.param_value;
 
         if strcmp(param_name, 'duration_dist_config')
             parts = split(baseline_value, "_");
             baseline_value = parts(10);
         end
-
-        % Calculate benefits for low and high values
-        benefits_value_1 = calculate_vaccine_benefits(fullfile(param_dir, 'value_1'));
-        benefits_value_2 = calculate_vaccine_benefits(fullfile(param_dir, 'value_2'));
 
         % Determine which benefit is low/high
         if benefits_value_1 < benefits_value_2
@@ -95,63 +91,6 @@ function get_baseline_vaccine_sensitivity_table()
     generate_latex_table(summary_table, fullfile(sensitivity_dir, 'sensitivity_summary.tex'), baseline_benefits);
     
     fprintf('Sensitivity summary generated and saved to %s\n', sensitivity_dir);
-end
-
-function benefits = calculate_vaccine_benefits(scenario_dir)
-    %% Calculate the total discounted benefits from vaccines for a scenario
-    % Args:
-    %   scenario_dir (string): Path to scenario output directory
-    %
-    % Returns:
-    %   benefits (double): Mean total discounted benefits from vaccines
-
-    % Get all chunk directories
-    raw_dir = fullfile(scenario_dir, 'raw');
-    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
-    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-    
-    if isempty(chunk_dirs)
-        error('No chunk directories found in %s', raw_dir);
-    end
-    
-    % Extract chunk numbers and sort
-    chunk_numbers = zeros(length(chunk_dirs), 1);
-    for i = 1:length(chunk_dirs)
-        tokens = regexp(chunk_dirs(i).name, 'chunk_(\d+)', 'tokens');
-        chunk_numbers(i) = str2double(tokens{1}{1});
-    end
-    [chunk_numbers, sort_idx] = sort(chunk_numbers);
-    chunk_dirs = chunk_dirs(sort_idx);
-    
-    % Check that chunk numbers are contiguous
-    expected_chunks = 1:length(chunk_dirs);
-    if ~isequal(chunk_numbers', expected_chunks)
-        error('Chunk numbers are not contiguous. Found: %s, Expected: %s', ...
-              mat2str(chunk_numbers'), mat2str(expected_chunks));
-    end
-    
-    % Load first chunk to get dimensions
-    first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
-    S_first = load(first_chunk_path, 'benefits_vaccine');
-    [n_sims_per_chunk, n_periods] = size(S_first.benefits_vaccine);
-    n_chunks = length(chunk_dirs);
-    
-    % Preallocate array for all benefits
-    all_benefits = zeros(n_sims_per_chunk * n_chunks, n_periods);
-    % Preallocate array for sum of benefits per simulation
-    sum_benefits = zeros(n_sims_per_chunk * n_chunks, 1);
-    
-    % Load benefits_vaccine from all chunks and calculate sums
-    for i = 1:n_chunks
-        chunk_path = fullfile(raw_dir, chunk_dirs(i).name, 'baseline_annual.mat');
-        S = load(chunk_path, 'benefits_vaccine');
-        start_idx = (i-1) * n_sims_per_chunk + 1;
-        end_idx = i * n_sims_per_chunk;
-        sum_benefits(start_idx:end_idx) = sum(S.benefits_vaccine, 2);
-    end
-    
-    % Calculate mean of sums
-    benefits = mean(sum_benefits);
 end
 
 
@@ -292,4 +231,3 @@ function formatted_value = format_value(value, param_name)
         formatted_value = sprintf('%g', value);
     end
 end
-
