@@ -10,8 +10,6 @@ sensitivities:
     - "output/arrival_distributions/modified/gpd_all_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_10000_n_1000000_seed_42"
     - "output/arrival_distributions/modified/gpd_all_filt_intensity_fit_severity_1d0_1900_poisson_sharp_upper_200_n_1000000_seed_42"
     - "output/arrival_distributions/modified/gpd_airborne_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_1000000_seed_42"
-    - "output/arrival_distributions/modified/gpd_all_filt_intensity_fit_severity_0d01_1950_poisson_sharp_upper_200_n_1000000_seed_42"
-    - "output/arrival_distributions/modified/gpd_all_incl_unid_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_1000000_seed_42"
   value_of_death:
     - 1e6
     - 1.6e6
