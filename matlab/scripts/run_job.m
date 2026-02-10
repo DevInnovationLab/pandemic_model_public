@@ -164,7 +164,6 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     save(chunk_base_path, 'base_simulation_table', 'total_removed', 'total_trimmed');
 
     % Process baseline first
-    disp(scenario_configs)
     baseline_idx = find(strcmp(cellfun(@(x) x.name, scenario_configs, 'UniformOutput', false), 'baseline'), 1);
     if ~isempty(baseline_idx)
         % Update params for this scenario

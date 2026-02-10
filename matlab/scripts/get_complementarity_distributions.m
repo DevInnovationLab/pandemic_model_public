@@ -26,7 +26,7 @@ function get_complementarity_distributions(job_dir, raw_only)
     [scenario_info, investment_types] = parse_all_scenarios(all_scenarios, job_config);
     
     % Metrics to plot
-    metrics = {'benefits_vaccine', 'total_costs_pv'};
+    metrics = {'tot_benefits_pv'};
     metric_labels = {'Benefits complementarity', 'Costs complementarity'};
     
     % Accent types

@@ -88,14 +88,14 @@ function get_pairwise_program_table(job_dir, varargin)
         fprintf('  Loaded in %.2f seconds\n', toc);
         
         % Store raw data for complementarity calculations
-        raw_data.(scen_name).benefits = all_relative_sums.benefits_vaccine_full;
-        raw_data.(scen_name).costs = all_relative_sums.total_costs_pv_full;
+        raw_data.(scen_name).benefits = all_relative_sums.tot_benefits_pv_full;
+        raw_data.(scen_name).costs = all_relative_sums.costs_adv_invest_pv_full;
         
         % Extract values from the sums table
         fprintf('  Computing means...\n');
         tic;
-        cost_diff = mean(all_relative_sums.total_costs_pv_full);
-        benefit_diff = mean(all_relative_sums.benefits_vaccine_full);
+        cost_diff = mean(all_relative_sums.costs_adv_invest_pv_full);
+        benefit_diff = mean(all_relative_sums.tot_benefits_full);
         fprintf('  Means computed in %.2f seconds\n', toc);
         
         % Calculate benefit-cost ratio
@@ -113,17 +113,17 @@ function get_pairwise_program_table(job_dir, varargin)
             % Compute 90% confidence intervals using bootstrap
             fprintf('  Computing benefit CI...\n');
             tic;
-            benefit_ci = bootci(200, {@mean, all_relative_sums.benefits_vaccine_full}, 'alpha', 0.1, 'type', 'percentile');
+            benefit_ci = bootci(200, {@mean, all_relative_sums.tot_benefits_pv_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Benefit CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing cost CI...\n');
             tic;
-            cost_ci = bootci(200, {@mean, all_relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
+            cost_ci = bootci(200, {@mean, all_relative_sums.costs_adv_invest_pv_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  Cost CI computed in %.2f seconds\n', toc);
             
             fprintf('  Computing BCR CI...\n');
             tic;
-            bcr_ci = bootci(200, {@(x,y) mean(x)./mean(y), all_relative_sums.benefits_vaccine_full, all_relative_sums.total_costs_pv_full}, 'alpha', 0.1, 'type', 'percentile');
+            bcr_ci = bootci(200, {@(x,y) mean(x)./mean(y), all_relative_sums.tot_benefits_pv_full, all_relative_sums.costs_adv_invest_pv_full}, 'alpha', 0.1, 'type', 'percentile');
             fprintf('  BCR CI computed in %.2f seconds\n', toc);
             
             % Save to CI table

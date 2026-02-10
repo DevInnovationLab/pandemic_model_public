@@ -5,11 +5,11 @@ function get_result_distribution(job_dir, results)
     % Args:
     %   job_dir (string): Directory containing job configuration and results
     %   results (cell array, optional): Cell array of result types to plot
-    %                                   Default: {'benefits_vaccine', 'total_costs_pv', 'lives_saved'}
+    %                                   Default: {'tot_benefits_pv', 'lives_saved'}
     
     % Set default results if not provided
     if nargin < 2 || isempty(results)
-        results = {'benefits_vaccine', 'total_costs_pv', 'lives_saved'};
+        results = {'tot_benefits_pv' 'lives_saved'};
     end
     
     % Set up paths
@@ -55,12 +55,9 @@ function get_result_distribution(job_dir, results)
             
             % Set labels based on result type
             switch result
-                case 'benefits_vaccine'
+                case 'tot_benefits_pv'
                     ylabel_text = 'Net value (PV, $)';
                     title_text = sprintf('%s: Benefits', scen_name);
-                case 'total_costs_pv'
-                    ylabel_text = 'Total costs (PV, $)';
-                    title_text = sprintf('%s: Costs', scen_name);
                 case 'm_deaths'
                     ylabel_text = 'Lives saved';
                     title_text = sprintf('%s: Lives saved', scen_name);

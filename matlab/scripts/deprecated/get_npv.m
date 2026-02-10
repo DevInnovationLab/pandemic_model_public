@@ -346,8 +346,8 @@ function write_benefits_costs_npv_table(job_dir, scenario)
     processed_npv_file = fullfile(processed_dir, sprintf("%s_absolute_npv.csv", scenario));
 
     % Load benefits
-    raw_out = load(benefits_file, "benefits_vaccine"); % [sim x year]
-    benefits = raw_out.benefits_vaccine;
+    raw_out = load(benefits_file, "tot_benefits_pv"); % [sim x year]
+    benefits = raw_out.tot_benefits_pv;
 
     % Load costs and NPV
     costs = readmatrix(processed_costs_file); % [sim x year]

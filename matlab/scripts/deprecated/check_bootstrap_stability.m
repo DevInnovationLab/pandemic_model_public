@@ -7,14 +7,14 @@ function check_bootstrap_stability(sim_results_path, varargin)
     %   varargin: Optional name-value pairs:
     %     'n_bootstrap': Number of bootstrap samples per iteration (default: 1000)
     %     'n_iterations': Number of bootstrap iterations for stability check (default: 100)
-    %     'variables': Cell array of variable names to check (default: {'benefits_vaccine_full', 'total_costs_pv_full'})
+    %     'variables': Cell array of variable names to check (default: {'tot_benefits_pv_full'})
     %     'check_complementarity': Whether to check complementarity stability (default: true)
     
     % Parse optional arguments
     p = inputParser;
     addParameter(p, 'n_bootstrap', 200, @isnumeric);
     addParameter(p, 'n_iterations', 20, @isnumeric);
-    addParameter(p, 'variables', {'benefits_vaccine_full', 'total_costs_pv_full'}, @iscell);
+    addParameter(p, 'variables', {'tot_benefits_pv_full'}, @iscell);
     addParameter(p, 'check_complementarity', true, @islogical);
     parse(p, varargin{:});
     
@@ -72,11 +72,8 @@ function check_bootstrap_stability(sim_results_path, varargin)
         fprintf('  Loaded data in %.2f seconds\n', toc);
         
         % Store raw data for complementarity calculations
-        if ismember('benefits_vaccine_full', all_relative_sums.Properties.VariableNames)
-            raw_data.(scenario_name).benefits = all_relative_sums.benefits_vaccine_full;
-        end
-        if ismember('total_costs_pv_full', all_relative_sums.Properties.VariableNames)
-            raw_data.(scenario_name).costs = all_relative_sums.total_costs_pv_full;
+        if ismember('tot_benefits_pv_full', all_relative_sums.Properties.VariableNames)
+            raw_data.(scenario_name).benefits = all_relative_sums.tot_benefits_pv_full;
         end
         
         % Analyze each variable
@@ -326,7 +323,7 @@ function [comp_bias_results, comp_skew_results, comp_percentile_results] = ...
             fprintf('  Analyzing complementarity for %s with %s\n', investment1, investment2);
             
             % Get data for the "with" scenario
-            with_benefits = raw_data.(with_scenario).benefits;
+            with_benefits = raw_data.(with_scenario).tot_benefits_pv_full ;
             with_costs = raw_data.(with_scenario).costs;
             
             % Find investment1's alone scenario

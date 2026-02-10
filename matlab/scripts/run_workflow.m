@@ -24,7 +24,7 @@ function run_workflow(job_config_path, varargin)
     %     'sim_results_path': Explicit path to results (for aggregate/bootstrap only)
     %
     %   Bootstrap parameters:
-    %     'keep_vars': Variables to bootstrap (default: ["benefits_vaccine_full", "total_costs_pv_full"])
+    %     'keep_vars': Variables to bootstrap (default: ["tot_benefits_pv_full"])
     %     'n_bootstrap': Number of bootstrap samples (default: 1000)
     %     'bootstrap_parallel': Use parallel for bootstrap (default: false)
     %     'bootstrap_workers': Number of workers for bootstrap (default: 4)
@@ -43,7 +43,7 @@ function run_workflow(job_config_path, varargin)
     addParameter(p, 'sim_results_path', '', @ischar);
     
     % Bootstrap parameters
-    addParameter(p, 'keep_vars', ["benefits_vaccine_full", "total_costs_pv_full"], @(x) isstring(x) || isempty(x));
+    addParameter(p, 'keep_vars', ["tot_benefits_pv_full"], @(x) isstring(x) || isempty(x));
     addParameter(p, 'n_bootstrap', 1000, @isnumeric);
     addParameter(p, 'bootstrap_parallel', false, @islogical);
     addParameter(p, 'bootstrap_workers', 1, @(x) isnumeric(x) || isempty(x));
