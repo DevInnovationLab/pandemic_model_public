@@ -14,7 +14,7 @@ function check_bootstrap_stability(sim_results_path, varargin)
     p = inputParser;
     addParameter(p, 'n_bootstrap', 200, @isnumeric);
     addParameter(p, 'n_iterations', 20, @isnumeric);
-    addParameter(p, 'variables', {'tot_benefits_pv_full'}, @iscell);
+    addParameter(p, 'variables', {'net_value_pv_full'}, @iscell);
     addParameter(p, 'check_complementarity', true, @islogical);
     parse(p, varargin{:});
     
