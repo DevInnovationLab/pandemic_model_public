@@ -1,20 +1,24 @@
-function get_result_distribution(job_dir, results)
-    % GET_RESULT_DISTRIBUTION
-    % Generate distribution plots for scenario results using full-horizon sums.
+function plot_exceedance_curves(job_dir, results)
+    % PLOT_EXCEEDANCE_CURVES
+    % Plot exceedance curves for scenario result distributions on normal and log-y scales.
+    %
+    % This function mirrors the grid layout of get_result_distribution.m but
+    % replaces histograms with exceedance curves. For each scenario and
+    % result type, it:
+    %   - selects a common set of thresholds over the global data range,
+    %   - bootstraps exceedance probabilities at those thresholds, and
+    %   - plots the median and 5th/95th percentile exceedance curves.
     %
     % Args:
     %   job_dir (string): Directory containing job configuration and results.
     %   results (cell array, optional): Cell array of result types to plot.
     %                                   Default: {'net_value_pv'}.
-    %
-    % By default, this function produces grid histogram plots.
-    % Columns are BCR/Surplus, rows are investments types. No subplot for baseline.
 
     if nargin < 2 || isempty(results)
         results = {'net_value_pv'};
     end
 
-    % Investment types and nice labels in row order
+    % Investment types and labels, row order
     investment_tags = {'improved_early_warning', ...
                        'advance_capacity', ...
                        'neglected_pathogen_rd', ...
@@ -40,16 +44,15 @@ function get_result_distribution(job_dir, results)
     all_scenarios = all_scenarios(~strcmp(all_scenarios, "baseline"));
 
     % -------- Map scenarios to (row,col) --------
-    position_map = containers.Map(); % scenario name -> [row,col]
+    position_map = containers.Map(); % scenario name -> [row,col] (kept for symmetry)
     scenario_grid_labels = cell(n_rows, n_cols); % grid cell stores scenario or empty
 
-    % Assign scenarios to (row, col) in grid, only if that investment-accent present
     for i = 1:n_rows
         for j = 1:n_cols
             found_idx = [];
             for si = 1:numel(all_scenarios)
                 scen = all_scenarios(si);
-                [row_tag, accent] = parse_grid_scenario_tag(scen); % Helper below
+                [row_tag, accent] = parse_grid_scenario_tag_exceed(scen);
                 if strcmp(row_tag, investment_tags{i}) && strcmpi(accent, col_accents{j})
                     found_idx = si; break;
                 end
@@ -64,33 +67,41 @@ function get_result_distribution(job_dir, results)
     end
 
     n_bootstrap = 200;
-    num_bins = 20; % for all
+    n_thresholds = 40;
 
-    % --- For each result type (e.g., net_value_pv), plot grid of distributions ---
+    % --- For each result type, construct exceedance grids ---
     for jj = 1:length(results)
         result = results{jj};
+        result_title = prettify_result_name_exceed(result);
 
-        % Convert result variable name to nice title string for the figure
-        result_title = prettify_result_name(result);
+        data_grid = cell(n_rows, n_cols);
 
-        data_grid     = cell(n_rows, n_cols);
-        mean_grid     = nan(n_rows, n_cols);
-        bootCIs_grid  = nan(n_rows, n_cols, 2);
-
-        % Gather all data (for global binning)
+        % Gather all data for global thresholds
         all_data_flat = [];
         for i = 1:n_rows
             for j = 1:n_cols
                 scen_name = scenario_grid_labels{i, j};
-                if strlength(scen_name)==0; continue; end
+                if strlength(scen_name) == 0
+                    continue;
+                end
                 sum_table_file = fullfile(rawdata_dir, sprintf("%s_relative_sums.mat", scen_name));
-                if ~exist(sum_table_file, "file"); continue; end
+                if ~exist(sum_table_file, "file")
+                    continue;
+                end
                 load(sum_table_file, 'all_relative_sums');
                 col_name = strcat(result, '_full');
+                if ~ismember(col_name, all_relative_sums.Properties.VariableNames)
+                    continue;
+                end
                 data = all_relative_sums.(col_name);
                 data_grid{i, j} = data;
                 all_data_flat = [all_data_flat; data];
             end
+        end
+
+        if isempty(all_data_flat)
+            warning('plot_exceedance_curves: no data found for result %s in %s', result, job_dir);
+            continue;
         end
 
         min_val = min(all_data_flat);
@@ -99,85 +110,88 @@ function get_result_distribution(job_dir, results)
             min_val = min_val - 0.5;
             max_val = max_val + 0.5;
         end
-        bin_edges = linspace(min_val, max_val, num_bins + 1);
 
-        % ---- Summary tables: negatives and bin probabilities ----
-        neg_rows = {};
-        bin_rows = {};
+        thresholds = linspace(min_val, max_val, n_thresholds);
+
+        % Precompute bootstrap exceedance summaries for each cell
+        med_exceed = cell(n_rows, n_cols);
+        lo_exceed = cell(n_rows, n_cols);
+        hi_exceed = cell(n_rows, n_cols);
 
         for i = 1:n_rows
             for j = 1:n_cols
-                scen_name = scenario_grid_labels{i, j};
                 data = data_grid{i, j};
-
-                if isempty(data) || strlength(scen_name) == 0
+                if isempty(data)
                     continue;
                 end
 
                 n_samples = numel(data);
-                n_negative = sum(data < 0);
-                p_negative = n_negative / n_samples;
-
-                % Row for negative summary table
-                neg_rows(end+1, :) = {char(scen_name), investment_labels{i}, col_accents{j}, ...
-                                      n_samples, n_negative, p_negative}; %#ok<AGROW>
-
-                % Rows for bin probability table
-                probs = histcounts(data, bin_edges, 'Normalization', 'probability');
-                for b = 1:num_bins
-                    bin_rows(end+1, :) = {char(scen_name), investment_labels{i}, col_accents{j}, ...
-                                          bin_edges(b), bin_edges(b+1), probs(b)}; %#ok<AGROW>
+                if n_samples < 2
+                    % With only one observation, exceedance is either 0 or 1/(n+1)
+                    ex_probs = zeros(1, numel(thresholds));
+                    ex_probs(data > thresholds) = 1 / (n_samples + 1);
+                    med_exceed{i, j} = ex_probs;
+                    lo_exceed{i, j} = ex_probs;
+                    hi_exceed{i, j} = ex_probs;
+                    continue;
                 end
+
+                % Bootstrap exceedance curves
+                boot_exceed = nan(n_bootstrap, numel(thresholds));
+                for b = 1:n_bootstrap
+                    idx = randsample(n_samples, n_samples, true);
+                    boot_sample = data(idx);
+                    for t = 1:numel(thresholds)
+                        boot_exceed(b, t) = sum(boot_sample > thresholds(t)) / (n_samples + 1);
+                    end
+                end
+
+                med_exceed{i, j} = median(boot_exceed, 1);
+                lo_exceed{i, j} = prctile(boot_exceed, 5, 1);
+                hi_exceed{i, j} = prctile(boot_exceed, 95, 1);
             end
         end
 
-        if ~isempty(neg_rows)
-            neg_table = cell2table(neg_rows, ...
-                'VariableNames', {'Scenario', 'InvestmentType', 'Accent', ...
-                                  'NumSamples', 'NumNegative', 'ProbNegative'});
-            writetable(neg_table, fullfile(rawdata_dir, sprintf('%s_negative_summary.csv', result)));
-        end
-
-        if ~isempty(bin_rows)
-            bin_table = cell2table(bin_rows, ...
-                'VariableNames', {'Scenario', 'InvestmentType', 'Accent', ...
-                                  'BinLower', 'BinUpper', 'Probability'});
-            writetable(bin_table, fullfile(rawdata_dir, sprintf('%s_bin_probabilities.csv', result)));
-        end
-
-        % ---- Linear scale ----
+        % ---- Normal y scale figure ----
         fig_normal = figure('Visible', 'off', 'Position', [100 100 1050 1050]);
+        example_band_normal = [];
+        example_line_normal = [];
+        example_subplot_normal = [];
 
         for i = 1:n_rows
             for j = 1:n_cols
-                idx = sub2ind([n_cols n_rows], j, i); % MATLAB is column major (but subplot row,col ordering is inverse of our grid)
-                subplot(n_rows, n_cols, (i-1)*n_cols + j);
-
+                subplot_idx = (i - 1) * n_cols + j;
+                subplot(n_rows, n_cols, subplot_idx);
                 data = data_grid{i, j};
-                if isempty(data); box off; axis off; continue; end
+                if isempty(data)
+                    box off; axis off; continue;
+                end
 
-                h = histogram(data, 'BinEdges', bin_edges, 'Normalization', 'pdf', ...
-                    'FaceAlpha', 0.7, 'EdgeColor', 'none');
+                med_y = med_exceed{i, j};
+                lo_y = lo_exceed{i, j};
+                hi_y = hi_exceed{i, j};
+
                 hold on;
 
-                bootstat = bootstrp(n_bootstrap, @mean, data);
-                mean_val = mean(data); mean_grid(i,j) = mean_val;
-                bootCI = prctile(bootstat, [2.5, 97.5]); bootCIs_grid(i,j,:) = bootCI;
-                yl = ylim;
+                % Shaded 5–95% band
+                xx = [thresholds, fliplr(thresholds)];
+                yy = [lo_y, fliplr(hi_y)];
+                h_band = fill(xx, yy, [0.82 0.86 0.96], 'EdgeColor', 'none', 'FaceAlpha', 0.7);
 
-                % Mean and CI
-                plot([mean_val mean_val], yl, '--k', 'LineWidth', 1.1);
-                plot([bootCI(1) bootCI(1)], yl, '-r', 'LineWidth', 0.8);
-                plot([bootCI(2) bootCI(2)], yl, '-r', 'LineWidth', 0.8);
+                % Median curve
+                h_line = plot(thresholds, med_y, '-', 'Color', [0.10 0.15 0.28], 'LineWidth', 1.5);
 
-                % Style -- only major ticks, no minor grid lines
+                if isempty(example_band_normal)
+                    example_band_normal = h_band;
+                    example_line_normal = h_line;
+                    example_subplot_normal = subplot_idx;
+                end
+
                 box off; ax = gca;
                 ax.XGrid = 'on'; ax.YGrid = 'on'; ax.GridAlpha = 0.13;
                 ax.LineWidth = 1; ax.FontSize = 10; ax.TickDir = 'out';
-                ax.XMinorGrid = 'off'; ax.YMinorGrid = 'off'; % REMOVE minor grid
-                grid on;
+                ax.XMinorGrid = 'off'; ax.YMinorGrid = 'off';
 
-                % Only show labels on edge subplots
                 if i == n_rows
                     switch result
                         case 'net_value_pv'
@@ -189,32 +203,36 @@ function get_result_distribution(job_dir, results)
                     end
                 end
                 if j == 1
-                    ylabel('Density', 'FontSize', 11);
+                    ylabel('Exceedance probability', 'FontSize', 11);
                 end
             end
         end
 
-        % Column labels (move them up for clarity)
-        col_label_ypos = 1.12; % Increase from default to add space
+        % Single legend explaining line and shaded band
+        if ~isempty(example_band_normal)
+            subplot(n_rows, n_cols, example_subplot_normal);
+            legend([example_line_normal, example_band_normal], ...
+                {'Median exceedance probability', '5th–95th percentile band'}, ...
+                'Location', 'northeast', 'FontSize', 9, 'Box', 'off');
+        end
+
+        % Column labels
+        col_label_ypos = 1.12;
         for j = 1:n_cols
             subplot(n_rows, n_cols, j);
             t = title(col_accents{j}, 'FontWeight', 'bold', 'FontSize', 13);
             t.Units = 'normalized';
-            t.Position(2) = col_label_ypos; % Move up for extra space
+            t.Position(2) = col_label_ypos;
         end
 
-        % Row labels (on first col), JUST beyond y-axis and vertically centered in axis
+        % Row labels on first column
         for i = 1:n_rows
-            subplot(n_rows, n_cols, (i-1)*n_cols + 1);
-            ax = gca;
+            subplot(n_rows, n_cols, (i - 1) * n_cols + 1);
             yl = ylim;
             ymid = mean(yl);
-
-            % Find a reasonable gap from y-label: use xlim and a fraction beyond min(xlim)
             xl = xlim;
-            xgap = (xl(2) - xl(1)) * 0.2; % 20% of range beyond axis minimum
+            xgap = (xl(2) - xl(1)) * 0.2;
             xpos = xl(1) - xgap;
-
             text(xpos, ymid, investment_labels{i}, ...
                 'HorizontalAlignment', 'center', ...
                 'Rotation', 90, ...
@@ -223,59 +241,75 @@ function get_result_distribution(job_dir, results)
                 'Interpreter', 'none');
         end
 
-        % Nicer, well-formatted figure title (readable, not snake_case)
         annotation(fig_normal, 'textbox', [0 0.97 1 0.025], ...
-            'String', sprintf('%s across simulations', result_title), ...
+            'String', sprintf('%s exceedance curves across simulations', result_title), ...
             'EdgeColor', 'none', ...
             'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 14);
 
-        saveas(fig_normal, fullfile(figure_path, sprintf('%s_dist_grid_normal.jpg', result)));
+        saveas(fig_normal, fullfile(figure_path, sprintf('%s_exceed_grid_normal.jpg', result)));
         close(fig_normal);
 
-        % ---- Log scale ----
+        % ---- Log-y scale figure ----
         fig_log = figure('Visible', 'off', 'Position', [100 100 1050 1050]);
+        example_band_log = [];
+        example_line_log = [];
+        example_subplot_log = [];
 
-        % Calculate the full Y axis limits for each row (for leftmost subplot), so we can align row labels with center of each row's displayed y-range
-        row_ylims_log = zeros(n_rows, 2); % [ymin ymax] for each row's first column subplot after logscale
+        % Determine a reasonable lower bound for log scale from all probabilities
+        all_probs = [];
         for i = 1:n_rows
-            subplot(n_rows, n_cols, (i-1)*n_cols + 1);
-            data = data_grid{i, 1};
-            if isempty(data)
-                row_ylims_log(i, :) = [NaN NaN];
-            else
-                h = histogram(data, 'BinEdges', bin_edges, 'Normalization', 'pdf', ...
-                    'FaceAlpha', 0.7, 'EdgeColor', 'none');
-                set(gca, 'YScale', 'log');
-                drawnow; % force axis update
-                row_ylims_log(i, :) = ylim;
+            for j = 1:n_cols
+                if isempty(med_exceed{i, j})
+                    continue;
+                end
+                all_probs = [all_probs, med_exceed{i, j}, lo_exceed{i, j}, hi_exceed{i, j}]; %#ok<AGROW>
             end
+        end
+        all_probs = all_probs(all_probs > 0);
+        if isempty(all_probs)
+            y_min_log = 1e-4;
+        else
+            y_min_log = min(min(all_probs) / 2, 1e-6);
         end
 
         for i = 1:n_rows
             for j = 1:n_cols
-                subplot(n_rows, n_cols, (i-1)*n_cols + j);
+                subplot_idx = (i - 1) * n_cols + j;
+                subplot(n_rows, n_cols, subplot_idx);
                 data = data_grid{i, j};
-                if isempty(data); box off; axis off; continue; end
+                if isempty(data)
+                    box off; axis off; continue;
+                end
 
-                histogram(data, 'BinEdges', bin_edges, 'Normalization', 'pdf', ...
-                    'FaceAlpha', 0.7, 'EdgeColor', 'none');
+                med_y = med_exceed{i, j};
+                lo_y = lo_exceed{i, j};
+                hi_y = hi_exceed{i, j};
+
+                % Avoid exact zeros on log scale by clipping to y_min_log
+                med_y = max(med_y, y_min_log);
+                lo_y = max(lo_y, y_min_log);
+                hi_y = max(hi_y, y_min_log);
+
                 hold on;
 
-                bootstat = bootstrp(n_bootstrap, @mean, data);
-                mean_val = mean(data);
-                bootCI = prctile(bootstat, [2.5,97.5]);
-                yl = ylim;
+                xx = [thresholds, fliplr(thresholds)];
+                yy = [lo_y, fliplr(hi_y)];
+                h_band = fill(xx, yy, [0.82 0.86 0.96], 'EdgeColor', 'none', 'FaceAlpha', 0.7);
 
-                plot([mean_val mean_val], yl, '--k', 'LineWidth', 1.1);
-                plot([bootCI(1) bootCI(1)], yl, '-r', 'LineWidth', 0.8);
-                plot([bootCI(2) bootCI(2)], yl, '-r', 'LineWidth', 0.8);
+                h_line = plot(thresholds, med_y, '-', 'Color', [0.10 0.15 0.28], 'LineWidth', 1.5);
+
+                if isempty(example_band_log)
+                    example_band_log = h_band;
+                    example_line_log = h_line;
+                    example_subplot_log = subplot_idx;
+                end
 
                 set(gca, 'YScale', 'log');
-                ax = gca;
+
+                box off; ax = gca;
                 ax.XGrid = 'on'; ax.YGrid = 'on'; ax.GridAlpha = 0.13;
                 ax.LineWidth = 1; ax.FontSize = 10; ax.TickDir = 'out';
                 ax.XMinorGrid = 'off'; ax.YMinorGrid = 'off';
-                grid on;
 
                 if i == n_rows
                     switch result
@@ -288,12 +322,19 @@ function get_result_distribution(job_dir, results)
                     end
                 end
                 if j == 1
-                    ylabel('Density', 'FontSize', 11);
+                    ylabel('Exceedance probability', 'FontSize', 11);
                 end
             end
         end
 
-        % Column labels for log plot (space as for normal plot)
+        % Single legend for log-y figure
+        if ~isempty(example_band_log)
+            subplot(n_rows, n_cols, example_subplot_log);
+            legend([example_line_log, example_band_log], ...
+                {'Median exceedance probability', '5th–95th percentile band'}, ...
+                'Location', 'northeast', 'FontSize', 9, 'Box', 'off');
+        end
+
         for j = 1:n_cols
             subplot(n_rows, n_cols, j);
             t = title(col_accents{j}, 'FontWeight', 'bold', 'FontSize', 13);
@@ -301,17 +342,11 @@ function get_result_distribution(job_dir, results)
             t.Position(2) = col_label_ypos;
         end
 
-        % Row labels for log plot -- vertical position more robust to log scale axis
+        % Row labels for log-y plot
         for i = 1:n_rows
-            subplot(n_rows, n_cols, (i-1)*n_cols + 1);
-            ax = gca;
-            % Use saved row_ylims_log for vertical center regardless of current auto ylims
-            yl_fix = row_ylims_log(i, :);
-            if any(isnan(yl_fix))
-                continue; % row was empty
-            end
-            % ymid in log space
-            ymid_log = 10^mean(log10(yl_fix));
+            subplot(n_rows, n_cols, (i - 1) * n_cols + 1);
+            yl = ylim;
+            ymid_log = 10 ^ mean(log10(yl));
             xl = xlim;
             xgap = (xl(2) - xl(1)) * 0.2;
             xpos = xl(1) - xgap;
@@ -324,17 +359,18 @@ function get_result_distribution(job_dir, results)
         end
 
         annotation(fig_log, 'textbox', [0 0.97 1 0.025], ...
-            'String', sprintf('%s across simulations', result_title), ...
+            'String', sprintf('%s exceedance curves across simulations', result_title), ...
             'EdgeColor', 'none', ...
             'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 14);
 
-        saveas(fig_log, fullfile(figure_path, sprintf('%s_dist_grid_logy.jpg', result)));
+        saveas(fig_log, fullfile(figure_path, sprintf('%s_exceed_grid_logy.jpg', result)));
         close(fig_log);
     end
 end
 
-% --- Helper for grid: gets row/col for a scenario name
-function [row_tag, accent] = parse_grid_scenario_tag(scen_name)
+function [row_tag, accent] = parse_grid_scenario_tag_exceed(scen_name)
+    % Parse scenario name into investment row tag and BCR or surplus accent.
+
     scen = char(scen_name); % string to char
     accent = "";
     row_tag = "";
@@ -377,27 +413,30 @@ function [row_tag, accent] = parse_grid_scenario_tag(scen_name)
     end
 end
 
-% --- Helper to prettify result variable names to readable figure titles
-function pretty = prettify_result_name(result_var)
+function pretty = prettify_result_name_exceed(result_var)
+    % Convert an internal result variable name to a readable figure title.
+
     switch lower(result_var)
         case {'net_value_pv', 'netvaluepv'}
-            pretty = 'Net Value ($ PV)';
+            pretty = 'Net value ($ PV)';
         case {'lives_saved', 'livessaved'}
-            pretty = 'Lives Saved';
+            pretty = 'Lives saved';
         case {'bcr'}
-            pretty = 'Benefit-Cost Ratio';
+            pretty = 'Benefit-cost ratio';
         case {'surplus'}
             pretty = 'Surplus';
         otherwise
-            % Replace underscores with spaces and capitalize words
             pretty = regexprep(result_var, '_', ' ');
             pretty = lower(pretty);
-            pretty(1) = upper(pretty(1));
+            if ~isempty(pretty)
+                pretty(1) = upper(pretty(1));
+            end
             underscore_idx = strfind(pretty, ' ');
             for k = underscore_idx
                 if k < length(pretty)
-                    pretty(k+1) = upper(pretty(k+1));
+                    pretty(k + 1) = upper(pretty(k + 1));
                 end
             end
-        end
+    end
 end
+

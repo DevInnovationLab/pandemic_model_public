@@ -72,8 +72,8 @@ function check_bootstrap_stability(sim_results_path, varargin)
         fprintf('  Loaded data in %.2f seconds\n', toc);
         
         % Store raw data for complementarity calculations
-        if ismember('tot_benefits_pv_full', all_relative_sums.Properties.VariableNames)
-            raw_data.(scenario_name).benefits = all_relative_sums.tot_benefits_pv_full;
+        if ismember('net_value_pv_full', all_relative_sums.Properties.VariableNames)
+            raw_data.(scenario_name).benefits = all_relative_sums.net_value_pv_full;
         end
         
         % Analyze each variable
@@ -246,6 +246,7 @@ function check_bootstrap_stability(sim_results_path, varargin)
     fprintf('Results saved to: %s\n', processed_dir);
     fprintf('Figures saved to: %s\n', figures_dir);
 end
+
 function [comp_bias_results, comp_skew_results, comp_percentile_results] = ...
     check_complementarity_stability(raw_data, scenario_names, n_bootstrap, n_iterations, figures_dir)
     % Check stability of complementarity estimates
@@ -323,7 +324,7 @@ function [comp_bias_results, comp_skew_results, comp_percentile_results] = ...
             fprintf('  Analyzing complementarity for %s with %s\n', investment1, investment2);
             
             % Get data for the "with" scenario
-            with_benefits = raw_data.(with_scenario).tot_benefits_pv_full ;
+            with_benefits = raw_data.(with_scenario).net_value_pv_full ;
             with_costs = raw_data.(with_scenario).costs;
             
             % Find investment1's alone scenario
