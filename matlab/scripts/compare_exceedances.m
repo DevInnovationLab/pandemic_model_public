@@ -227,4 +227,22 @@ function compare_exceedances(outdir, varargin)
         'VariableNames', {'severity', 'mean_ante_recurrence', 'mean_post_recurrence'});
     writetable(T, fullfile(outdir, 'mean_annual_recurrence_rates.csv'));
 
+    % Output a smaller table with interpolated values at specific severities
+    target_severities = [1, 9.17, 10, 44.6, 50, 100, 150, 177];
+
+    % Get the variables from the table for interpolation
+    severity = T.severity;
+    mean_ante_recurrence = T.mean_ante_recurrence;
+    mean_post_recurrence = T.mean_post_recurrence;
+
+    % Interpolate both columns at requested severities
+    interp_mean_ante = interp1(severity, mean_ante_recurrence, target_severities, 'linear', 'extrap');
+    interp_mean_post = interp1(severity, mean_post_recurrence, target_severities, 'linear', 'extrap');
+
+    small_T = table(target_severities(:), interp_mean_ante(:), interp_mean_post(:), ...
+                    'VariableNames', {'severity', 'mean_ante_recurrence', 'mean_post_recurrence'});
+
+    writetable(small_T, fullfile(outdir, 'mean_annual_recurrence_rates_selected.csv'));
+
+
 end
