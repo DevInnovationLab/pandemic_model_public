@@ -144,6 +144,7 @@ function compare_exceedances(outdir, varargin)
     madhav_color  = [0.4940 0.1840 0.5560];
     x_ribbon = common_grid(1:end-1)';
     x_ribbon_direct = direct_edges(2:end)';
+    disp(min(x_ribbon_direct))
     % ========== Figure 1: Bootstrap mean ==========
     fig1 = figure('Position', [100 100 900 650]); hold on;
 
@@ -228,7 +229,7 @@ function compare_exceedances(outdir, varargin)
     writetable(T, fullfile(outdir, 'mean_annual_recurrence_rates.csv'));
 
     % Output a smaller table with interpolated values at specific severities
-    target_severities = [1, 9.17, 10, 44.6, 50, 100, 150, 177];
+    target_severities = [min(x_ribbon_direct); 9.17, 10, 44.6, 50, 100, 150, 177];
 
     % Get the variables from the table for interpolation
     severity = T.severity;
