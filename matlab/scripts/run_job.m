@@ -163,6 +163,8 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     chunk_base_path = fullfile(chunk_dir, 'base_simulation_table.mat');
     save(chunk_base_path, 'base_simulation_table', 'total_removed', 'total_trimmed');
 
+    response_simulation_table = base_simulation_table(base_simulation_table.response_outbreak, :);
+
     % Process baseline first
     baseline_idx = find(strcmp(cellfun(@(x) x.name, scenario_configs, 'UniformOutput', false), 'baseline'), 1);
     if ~isempty(baseline_idx)
@@ -170,7 +172,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         simulation_params = update_params(job_config, scenario_configs{baseline_idx}, arrival_rates);
         
         % Get scenario simulation table
-        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
+        scenario_simulation_table = get_scenario_simulation_table(response_simulation_table, ...
             ptrs_pathogen, prototype_effect_ptrs, response_rd_timelines, simulation_params);
         
         % Run simulation
@@ -198,7 +200,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
 
         % Run simulation
         simulation_params = update_params(job_config, scenario_configs{i}, arrival_rates);
-        scenario_simulation_table = get_scenario_simulation_table(base_simulation_table, ...
+        scenario_simulation_table = get_scenario_simulation_table(response_simulation_table, ...
             ptrs_pathogen, prototype_effect_ptrs, response_rd_timelines, simulation_params);
         
         [annual_results, scenario_pandemic_table] = ...

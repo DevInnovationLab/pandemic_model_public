@@ -19,15 +19,15 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 
 	intensity_matrix(duration_matrix == 0) = 0; % No intensity when pandemic has zero duration.
 	
-	response_idx = find(intensity_matrix > params.response_threshold); % indicator array for when severity triggers pandemic response
-	num_response_scenario = size(response_idx, 1);
+	outbreak_idx = find(intensity_matrix > 0);
+	num_response_scenario = size(outbreak_idx, 1);
 	
 	% Create table of pandemic scenarios
-	sim_num = mod(response_idx - 1, size(duration_matrix, 1)) + 1;
-	yr_start = ceil(response_idx / size(duration_matrix, 1));
-	severity = severity_matrix(response_idx);
-	natural_dur = duration_matrix(response_idx);
-	intensity = intensity_matrix(response_idx);
+	sim_num = mod(outbreak_idx - 1, size(duration_matrix, 1)) + 1;
+	yr_start = ceil(outbreak_idx / size(duration_matrix, 1));
+	severity = severity_matrix(outbreak_idx);
+	natural_dur = duration_matrix(outbreak_idx);
+	intensity = intensity_matrix(outbreak_idx);
 	is_false = rand(num_response_scenario, 1) < arrival_dist.false_positive_rate;
 
 	% Set intensities, severities, etc, for false positives. Some will get chucked by trim_overlaps.
@@ -36,6 +36,7 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	natural_dur(is_false) = 1;
 
 	pathogen = randsample(arrival_rates.pathogen, num_response_scenario, true, arrival_rates.estimate);
+	pathogen = categorical(pathogen, unique(arrival_rates.pathogen));
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	ufv_vax_state = unifrnd(0, 1, num_response_scenario, 1);
@@ -82,6 +83,11 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 
 	% Combine simulation table and advance R&D success table
 	simulation_table = [simulation_table, advance_rd_success_table];
+
+	% Now determine response outbreaks
+	response_outbreak_idx = find(simulation_table.intensity > params.response_threshold);
+	simulation_table.response_outbreak = false(height(simulation_table), 1);
+	simulation_table.response_outbreak(response_outbreak_idx) = true;
 end
 
 
