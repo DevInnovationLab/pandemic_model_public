@@ -1,24 +1,22 @@
 function plot_num_outbreaks_per_sim(job_dir)
-    % Plot a histogram of the number of outbreaks per simulation for the baseline scenario and save as CSV.
+    % Plot a histogram of the number of outbreaks per simulation for the baseline
+    % scenario and save as CSV. Supports chunked raw results (raw/chunk_1, chunk_2, ...)
+    % or a single raw/baseline_pandemic_table.mat.
+    %
     % Args:
-    %   job_dir: Directory containing job configuration and results
+    %   job_dir (char/string): Directory containing job configuration and raw results.
 
-    % Load job configuration and scenario names
     raw_dir = fullfile(job_dir, "raw");
 
-    % Prepare output directory for figures and CSV
     figure_dir = fullfile(job_dir, "figures");
     if ~exist(figure_dir, 'dir')
         mkdir(figure_dir);
     end
-    
-    % Only use the baseline scenario
-    scenario = 'baseline';
-    S = load(fullfile(raw_dir, sprintf("%s_pandemic_table.mat", scenario)));
-    pandemic_table = S.pandemic_table;
 
-    % Count number of outbreaks per simulation efficiently
-    % Only count rows with a valid outbreak (yr_start not NaN)
+    scenario = 'baseline';
+    pandemic_table = load_baseline_pandemic_table(raw_dir, scenario);
+
+    % Count number of outbreaks per simulation (only rows with valid yr_start)
     valid_rows = ~isnan(pandemic_table.yr_start);
     sim_nums = pandemic_table.sim_num(valid_rows);
     num_sims = max(pandemic_table.sim_num);
@@ -47,6 +45,38 @@ function plot_num_outbreaks_per_sim(job_dir)
     bin_centers = edges(1:end-1) + diff(edges)/2;
     T = table(bin_centers(:), counts(:), 'VariableNames', {'num_outbreaks', 'probability'});
     writetable(T, fullfile(job_dir, 'baseline_num_outbreaks_per_sim.csv'));
+end
 
+function pandemic_table = load_baseline_pandemic_table(raw_dir, scenario)
+    % Load baseline pandemic table from chunked (raw/chunk_1, ...) or single file.
+    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
+    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
 
+    if ~isempty(chunk_dirs)
+        chunk_numbers = cellfun(@(x) sscanf(x, 'chunk_%d'), {chunk_dirs.name});
+        [~, sort_idx] = sort(chunk_numbers);
+        chunk_dirs = chunk_dirs(sort_idx);
+        pandemic_tables = cell(length(chunk_dirs), 1);
+        n_loaded = 0;
+        for i = 1:length(chunk_dirs)
+            chunk_path = fullfile(raw_dir, chunk_dirs(i).name, sprintf('%s_pandemic_table.mat', scenario));
+            if isfile(chunk_path)
+                S = load(chunk_path);
+                n_loaded = n_loaded + 1;
+                pandemic_tables{n_loaded} = S.pandemic_table;
+            end
+        end
+        pandemic_tables = pandemic_tables(1:n_loaded);
+        if isempty(pandemic_tables)
+            error('plot_num_outbreaks_per_sim: no baseline pandemic table found in any chunk under %s', raw_dir);
+        end
+        pandemic_table = vertcat(pandemic_tables{:});
+    else
+        single_path = fullfile(raw_dir, sprintf('%s_pandemic_table.mat', scenario));
+        if ~isfile(single_path)
+            error('plot_num_outbreaks_per_sim: no baseline pandemic table at %s and no chunk_* dirs in %s', single_path, raw_dir);
+        end
+        S = load(single_path);
+        pandemic_table = S.pandemic_table;
+    end
 end
