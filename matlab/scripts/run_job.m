@@ -26,11 +26,8 @@ function run_job(job_config_path, varargin)
     sim_results_path = fullfile(job_config.outdir, base_foldername);
     
     % Clear out directory
-    if ~exist(raw_results_path, 'dir')
+    if exist(sim_results_path, 'dir')
         rmdir(sim_results_path, 's');
-    else
-        % Wait for task 1 to create directories
-        pause(5);
     end
     
     raw_results_path = fullfile(sim_results_path, "raw");
@@ -42,9 +39,7 @@ function run_job(job_config_path, varargin)
     if ~exist(raw_results_path, 'dir')
         create_folders_recursively(raw_results_path);
         create_folders_recursively(figure_path);
-    else
-        % Wait for task 1 to create directories
-        pause(5);
+
     end
     
     % Load scenario configs
