@@ -26,10 +26,11 @@ function run_job(job_config_path, varargin)
     sim_results_path = fullfile(job_config.outdir, base_foldername);
     
     % Clear out directory
-    if ~is_array_task || array_task_id == 1
-        if exist(sim_results_path, 'dir')
-            rmdir(sim_results_path, 's');
-        end
+    if ~exist(raw_results_path, 'dir')
+        rmdir(sim_results_path, 's');
+    else
+        % Wait for task 1 to create directories
+        pause(5);
     end
     
     raw_results_path = fullfile(sim_results_path, "raw");
@@ -38,7 +39,7 @@ function run_job(job_config_path, varargin)
     job_config.rawoutpath = raw_results_path;
 
     % Create directories
-    if ~is_array_task || array_task_id == 1
+    if ~exist(raw_results_path, 'dir')
         create_folders_recursively(raw_results_path);
         create_folders_recursively(figure_path);
     else
