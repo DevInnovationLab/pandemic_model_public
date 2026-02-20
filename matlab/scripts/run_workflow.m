@@ -63,6 +63,14 @@ function run_workflow(job_config_path, varargin)
         [~, job_config_name, ~] = fileparts(job_config_path);
         
         sim_results_path = fullfile(job_config.outdir, job_config_name);
+   
+        % Clear out directory
+        if ~is_array_task && exist(sim_results_path, 'dir')
+            rmdir(sim_results_path, 's');
+            create_folders_recursively(sim_results_path);
+            create_folders_recursively(fullfile(sim_results_path, "raw"));
+            create_folders_recursively(fullfile(sim_results_path, "figures"));
+        end
     end
     
     % Run simulation (unless skipped)

@@ -24,23 +24,10 @@ function run_job(job_config_path, varargin)
     % Determine output directory
     base_foldername = job_config_name;
     sim_results_path = fullfile(job_config.outdir, base_foldername);
-    
-    % Clear out directory
-    if exist(sim_results_path, 'dir')
-        rmdir(sim_results_path, 's');
-    end
-    
     raw_results_path = fullfile(sim_results_path, "raw");
     figure_path = fullfile(sim_results_path, "figures");
     job_config.outdirpath = sim_results_path;
     job_config.rawoutpath = raw_results_path;
-
-    % Create directories
-    if ~exist(raw_results_path, 'dir')
-        create_folders_recursively(raw_results_path);
-        create_folders_recursively(figure_path);
-
-    end
     
     % Load scenario configs
     scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
@@ -125,7 +112,6 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     % Load chunk-specific distributions from files
     chunk_dir = fullfile(raw_results_path, sprintf('chunk_%d', chunk_idx));
     create_folders_recursively(chunk_dir);
-    pause(10); % Pause to ensure folders have had time to be created
     chunk_range = chunk_start:chunk_end;
     num_simulations = length(chunk_range);
     
