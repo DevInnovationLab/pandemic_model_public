@@ -21,6 +21,7 @@ function run_job(job_config_path, varargin)
     job_config = yaml.loadFile(job_config_path);
     [~, job_config_name, ~] = fileparts(job_config_path);
     
+    
     % Determine output directory
     base_foldername = job_config_name;
     sim_results_path = fullfile(job_config.outdir, base_foldername);
@@ -28,7 +29,11 @@ function run_job(job_config_path, varargin)
     figure_path = fullfile(sim_results_path, "figures");
     job_config.outdirpath = sim_results_path;
     job_config.rawoutpath = raw_results_path;
-    
+
+    create_folders_recursively(sim_results_path);
+    create_folders_recursively(raw_results_path);
+    create_folders_recursively(figure_path);
+
     % Load scenario configs
     scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
     scenario_configs = cell(length(scenario_config_paths), 1);
