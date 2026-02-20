@@ -164,6 +164,9 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     save(chunk_base_path, 'base_simulation_table', 'total_removed', 'total_trimmed');
 
     response_simulation_table = base_simulation_table(base_simulation_table.response_outbreak, :);
+    clear base_simulation_table;
+    clear total_removed;
+    clear total_trimmed;
 
     % Process baseline first
     baseline_idx = find(strcmp(cellfun(@(x) x.name, scenario_configs, 'UniformOutput', false), 'baseline'), 1);
