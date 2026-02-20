@@ -1,16 +1,16 @@
-function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, seed, params)
+function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, seed, chunk_idx, params)
 	% Set seed
 	rng(seed);
 
-	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, height(duration_dist.param_table), params.sim_periods));
+	duration_matrix = duration_dist.get_duration(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 	duration_matrix(:, 1) = 0; % Assume no pandemics in first year so capacity logic works.
 
 	if strcmp(arrival_dist.measure, 'severity')
-		severity_matrix = arrival_dist.ppf(unifrnd(0, 1, height(arrival_dist.param_samples), params.sim_periods));
+		severity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 		severity_matrix(:, 1) = 0;  % Assume no pandemics in first year so capacity logic works.
 		intensity_matrix = severity_matrix ./ duration_matrix;
 	elseif strcmp(arrival_dist.measure, 'intensity')
-		intensity_matrix = arrival_dist.ppf(unifrnd(0, 1, height(arrival_dist.param_samples), params.sim_periods));
+		intensity_matrix = arrival_dist.ppf(unifrnd(0, 1, params.num_simulations, params.sim_periods));
 		intensity_matrix(:, 1) = 0;
 		severity_matrix = intensity_matrix .* duration_matrix;
 	else
@@ -23,7 +23,7 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	num_response_scenario = size(outbreak_idx, 1);
 	
 	% Create table of pandemic scenarios
-	sim_num = mod(outbreak_idx - 1, size(duration_matrix, 1)) + 1;
+	sim_num = mod(outbreak_idx - 1, size(duration_matrix, 1)) + (chunk_idx - 1) * params.num_simulations + 1;
 	yr_start = ceil(outbreak_idx / size(duration_matrix, 1));
 	severity = severity_matrix(outbreak_idx);
 	natural_dur = duration_matrix(outbreak_idx);

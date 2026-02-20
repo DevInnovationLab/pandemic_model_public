@@ -23,48 +23,73 @@ function compare_exceedances(outdir, varargin)
     [madhav_severity_lower, lower_idx] = sort(madhav_exceedances.severity_lower);
     madhav_exceedance_lower = madhav_exceedances.exceedance_lower(lower_idx);
 
-    % Load simulation data from all chunks (sorted by chunk index for consistent ordering)
+    % Job config (needed for chunk bounds and matrix size)
+    job_config = yaml.loadFile(fullfile(outdir, "job_config.yaml"));
+    sim_periods = job_config.sim_periods;
+    num_simulations = job_config.num_simulations;
+    sim_num_list = 1:num_simulations;
+
+    % Chunk layout: same as run_job so we can convert chunk-local sim_num to global
     rawdir = fullfile(outdir, "raw");
     chunk_dirs = dir(fullfile(rawdir, "chunk_*"));
     chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
     chunk_numbers = cellfun(@(x) sscanf(x, 'chunk_%d'), {chunk_dirs.name});
     [~, sort_idx] = sort(chunk_numbers);
     chunk_dirs = chunk_dirs(sort_idx);
+    num_chunks = length(chunk_dirs);
 
-    all_tables = cell(length(chunk_dirs), 1);
-    table_count = 0;
-    for i = 1:length(chunk_dirs)
-        chunk_path = fullfile(rawdir, chunk_dirs(i).name, "baseline_pandemic_table.mat");
-        if isfile(chunk_path)
-            S = load(chunk_path);
-            % Filter out false positives (rows where yr_start is NaN)
-            chunk_table = S.pandemic_table;
-            chunk_table = chunk_table(~isnan(chunk_table.yr_start), :);
-            table_count = table_count + 1;
-            all_tables{table_count} = chunk_table;
+    % Columns we need from each table (keep loading light)
+    base_vars = {'sim_num', 'yr_start', 'eff_severity', 'is_false'};
+    pandemic_vars = {'sim_num', 'yr_start', 'ex_post_severity'};
+
+    all_base = cell(num_chunks, 1);
+    all_pandemic = cell(num_chunks, 1);
+    base_count = 0;
+    pandemic_count = 0;
+
+    for i = 1:num_chunks
+        chunk_dir = fullfile(rawdir, chunk_dirs(i).name);
+
+        % Base table: all outbreaks (including those below response threshold)
+        base_path = fullfile(chunk_dir, 'base_simulation_table.mat');
+        if isfile(base_path)
+            S = load(base_path, 'base_simulation_table');
+            base_t = S.base_simulation_table;
+            base_t = base_t(:, base_vars);
+            base_t = base_t(~base_t.is_false & ~isnan(base_t.yr_start), :);
+            base_t.is_false = [];  % no longer needed
+            base_count = base_count + 1;
+            all_base{base_count} = base_t;
+        end
+
+        % Baseline pandemic table: only outbreaks that passed response threshold
+        pandemic_path = fullfile(chunk_dir, 'baseline_pandemic_table.mat');
+        if isfile(pandemic_path)
+            S = load(pandemic_path, 'pandemic_table');
+            pan_t = S.pandemic_table(:, pandemic_vars);
+            pan_t = pan_t(~isnan(pan_t.yr_start), :);
+            pandemic_count = pandemic_count + 1;
+            all_pandemic{pandemic_count} = pan_t;
         end
     end
-    disp(sprintf("Loaded %d tables", table_count));
-    
-    % Concatenate all tables
-    all_tables = all_tables(1:table_count);
-    pandemic_table = vertcat(all_tables{:});
 
-    clear all_tables chunk_table;
+    base_merged = vertcat(all_base{1:base_count});
+    pandemic_merged = vertcat(all_pandemic{1:pandemic_count});
+    clear all_base all_pandemic S base_t pan_t;
 
-    % Job config
-    job_config = yaml.loadFile(fullfile(outdir, "job_config.yaml"));
-    sim_periods = job_config.sim_periods;
-    num_simulations = job_config.num_simulations;
-    sim_num_list = 1:num_simulations;
+    % Merge on (sim_num, yr_start). Ex-post severity from pandemic when present; otherwise eff_severity.
+    pandemic_keys = pandemic_merged(:, {'sim_num', 'yr_start', 'ex_post_severity'});
+    merged = outerjoin(base_merged, pandemic_keys, 'Keys', {'sim_num', 'yr_start'}, 'Type', 'left', 'MergeKeys', true);
+    missing_post = isnan(merged.ex_post_severity);
+    merged.ex_post_severity(missing_post) = merged.eff_severity(missing_post);
 
     ante_severity_matrix = zeros(num_simulations, sim_periods);
     post_severity_matrix = zeros(num_simulations, sim_periods);
-    idx = sub2ind(size(ante_severity_matrix), pandemic_table.sim_num, pandemic_table.yr_start);
-    ante_severity_matrix(idx) = pandemic_table.eff_severity;
-    post_severity_matrix(idx) = pandemic_table.ex_post_severity;
+    idx = sub2ind(size(ante_severity_matrix), merged.sim_num, merged.yr_start);
+    ante_severity_matrix(idx) = merged.eff_severity;
+    post_severity_matrix(idx) = merged.ex_post_severity;
 
-    clear pandemic_table;
+    clear base_merged pandemic_merged pandemic_keys merged missing_post;
 
     function [boot_mat, grid] = bootstrap_exceedance_matrix(severity_matrix, sim_num_list, num_simulations, B)
     % Compute bootstrap exceedance matrix for a given severity matrix and return the grid.
@@ -144,7 +169,7 @@ function compare_exceedances(outdir, varargin)
     madhav_color  = [0.4940 0.1840 0.5560];
     x_ribbon = common_grid(1:end-1)';
     x_ribbon_direct = direct_edges(2:end)';
-    disp(min(x_ribbon_direct))
+
     % ========== Figure 1: Bootstrap mean ==========
     fig1 = figure('Position', [100 100 900 650]); hold on;
 
@@ -200,23 +225,26 @@ function compare_exceedances(outdir, varargin)
     ylabel('Exceedance probability', 'FontSize', 14);
     title('Exceedance probability curves', 'FontSize', 15);
 
-    % Direct labels (index into direct curve length = numel(x_ribbon_direct))
-    n_direct = numel(x_ribbon_direct);
-    idx_madhav = min(2, numel(madhav_severity_central_plot));
-    idx_post = min(max(1, round(0.4 * n_direct)), n_direct);
-    idx_ante = min(max(1, round(0.25 * n_direct)), n_direct);
-    text(madhav_severity_central_plot(idx_madhav), madhav_exceedance_central_plot(idx_madhav), ...
-        'Madhav et al. (2023)', 'FontSize', 11, 'HorizontalAlignment', 'left', ...
-        'VerticalAlignment', 'bottom', 'Color', madhav_color);
-    text(x_ribbon_direct(idx_post), post_direct(idx_post), 'With vaccination', ...
-        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_post_color);
-    text(x_ribbon_direct(idx_ante), ante_direct(idx_ante), 'Without vaccination', ...
-        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_ante_color);
-
-    legend('off');
+    % Set xlim first so label positions fall inside the visible range
     min_x = max([min(x_ribbon_direct); min(madhav_severity_central_plot(:))]);
     max_x = min([max(x_ribbon_direct); max(madhav_severity_central_plot(:))]);
     xlim([min_x, max_x]);
+
+    % Place line labels at x positions inside the visible range (log-spaced fractions)
+    x_ante = 10^(log10(min_x) + 0.4 * (log10(max_x) - log10(min_x)));
+    x_post = 10^(log10(min_x) + 0.55 * (log10(max_x) - log10(min_x)));
+    y_ante = interp1(x_ribbon_direct, ante_direct, x_ante, 'linear', 'extrap');
+    y_post = interp1(x_ribbon_direct, post_direct, x_post, 'linear', 'extrap');
+    idx_madhav = min(2, numel(madhav_severity_central_plot));
+    text(madhav_severity_central_plot(idx_madhav), madhav_exceedance_central_plot(idx_madhav), ...
+        'Madhav et al. (2023) (digitized)', 'FontSize', 11, 'HorizontalAlignment', 'left', ...
+        'VerticalAlignment', 'bottom', 'Color', madhav_color);
+    text(x_post, y_post, 'With vaccination', ...
+        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_post_color);
+    text(x_ante, y_ante, 'Without vaccination', ...
+        'FontSize', 11, 'HorizontalAlignment', 'left', 'VerticalAlignment', 'bottom', 'Color', ex_ante_color);
+
+    legend('off');
     xt = get(gca, 'XTick');
     set(gca, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
 
@@ -229,7 +257,7 @@ function compare_exceedances(outdir, varargin)
     writetable(T, fullfile(outdir, 'mean_annual_recurrence_rates.csv'));
 
     % Output a smaller table with interpolated values at specific severities
-    target_severities = [min(x_ribbon_direct); 9.17, 10, 44.6, 50, 100, 150, 177];
+    target_severities = [min(x_ribbon_direct); 9.17; 10; 44.6; 50; 100; 150; 177];
 
     % Get the variables from the table for interpolation
     severity = T.severity;
@@ -244,6 +272,4 @@ function compare_exceedances(outdir, varargin)
                     'VariableNames', {'severity', 'mean_ante_recurrence', 'mean_post_recurrence'});
 
     writetable(small_T, fullfile(outdir, 'mean_annual_recurrence_rates_selected.csv'));
-
-
 end
