@@ -25,7 +25,7 @@ function [pathogens_with_baseline_prototype, new_invested_pathogens] = parse_neg
     elseif strcmpi(rd_strategy, "specific")
         new_invested_pathogens = rd_investment_config.invest_families;
 
-        if ~all(ismember(new_invested_pathogens, pathogens_no_prototype.pathogen))
+        if ~all(ismember(string(new_invested_pathogens), string(pathogens_no_prototype.pathogen)))
             error("Viral family targeted for advance R&D not eligible.")
         end
     else

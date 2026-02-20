@@ -32,8 +32,8 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 										params.months_to_early_detect, ...
 										params.months_to_regular_detect);
 
-	% Add R&D success states
-	has_baseline_prototype = ismember(pathogen, params.pathogens_with_baseline_prototype);
+	% Add R&D success states (convert to string for ismember to avoid categorical/string mismatch across MATLAB versions)
+	has_baseline_prototype = ismember(string(pathogen), string(params.pathogens_with_baseline_prototype));
 	advance_rd_done = yr_start > params.advance_RD_benefit_start;
 	response_initiated = ~is_false | (is_false & ~isnan(prep_start_month));
 
@@ -43,7 +43,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 		for i = 1:numel(params.new_invested_pathogens)
 			invest_path = params.new_invested_pathogens(i);
 			colname = strcat(invest_path, "_prototype_state");
-			if ismember(colname, new_simulation_table.Properties.VariableNames)
+			if ismember(string(colname), string(new_simulation_table.Properties.VariableNames))
 				has_adv_prototype = has_adv_prototype | (strcmp(pathogen, invest_path) & new_simulation_table.(colname) & advance_rd_done);
 			end
 		end
@@ -87,7 +87,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 
 	% Track prototype acquisition: successful development for non-baseline pathogens
 	response_rd_success = trad_success | mrna_success;
-	non_id_virus = ismember(sorted_pathogen, ["unknown_virus", "other_known_virus"]);
+	non_id_virus = ismember(string(sorted_pathogen), ["unknown_virus", "other_known_virus"]);
 
 	[grp, ~] = findgroups(sorted_sim_num, sorted_pathogen);
 

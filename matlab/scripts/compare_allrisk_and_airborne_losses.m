@@ -24,7 +24,7 @@ function compare_allrisk_and_airborne_losses()
                   
     % Get respiratory pandemics from all-risk scenario
     airborne_families = pathogen_data.pathogen(strcmp(pathogen_data.airborne, 'Yes'));
-    airborne_idx = ismember(allrisk_table.pathogen, airborne_families);
+    airborne_idx = ismember(string(allrisk_table.pathogen), string(airborne_families));
     
     % Calculate total losses for airborne scenario
     airborne_totals = (airborne_table.m_mortality_losses + ...
