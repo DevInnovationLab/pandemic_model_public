@@ -21,7 +21,6 @@ function run_job(job_config_path, varargin)
     job_config = yaml.loadFile(job_config_path);
     [~, job_config_name, ~] = fileparts(job_config_path);
     
-    
     % Determine output directory
     base_foldername = job_config_name;
     sim_results_path = fullfile(job_config.outdir, base_foldername);

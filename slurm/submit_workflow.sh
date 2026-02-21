@@ -12,6 +12,14 @@ echo "Submitting workflow for ${JOB_CONFIG}"
 echo "  Chunks: ${NUM_CHUNKS}"
 echo "  Bootstrap samples: ${N_BOOTSTRAP}"
 
+# Clear job outdir before submitting so array order does not matter (matches run_job.m path)
+OUTDIR=$(grep -E '^outdir:' "$JOB_CONFIG" | sed -E 's/^outdir:[[:space:]]*["'\'']?(.*)["'\'']?/\1/' | sed 's|^\./||')
+JOB_OUTDIR="${OUTDIR}/${CONFIG_NAME}"
+if [ -d "$JOB_OUTDIR" ]; then
+  echo "Removing existing job outdir: ${JOB_OUTDIR}"
+  rm -rf "$JOB_OUTDIR"
+fi
+
 # Submit array job
 JOB_NAME=${CONFIG_NAME}_model_run
 ARRAY_JOB=$(sbatch --parsable --array=1-${NUM_CHUNKS} \

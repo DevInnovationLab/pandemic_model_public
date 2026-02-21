@@ -67,6 +67,11 @@ function run_workflow(job_config_path, varargin)
     
     % Run simulation (unless skipped)
     if ~opts.skip_run
+        % Remove previous job results
+        if ~is_array_task && isfolder(sim_results_path)
+            rmdir(sim_results_path, 's');
+            fprintf('Removed existing job outdir: %s\n', sim_results_path);
+        end
         fprintf('=== Running job ===\n');
         run_job(job_config_path, ...
                'num_chunks', opts.num_chunks, ...
