@@ -40,7 +40,7 @@ function compare_exceedances(outdir, varargin)
 
     % Columns we need from each table (keep loading light)
     base_vars = {'sim_num', 'yr_start', 'eff_severity', 'is_false'};
-    pandemic_vars = {'sim_num', 'yr_start', 'ex_post_severity'};
+    pandemic_vars = {'sim_num', 'yr_start', 'ex_post_severity', 'is_false'};
 
     all_base = cell(num_chunks, 1);
     all_pandemic = cell(num_chunks, 1);
@@ -66,8 +66,10 @@ function compare_exceedances(outdir, varargin)
         pandemic_path = fullfile(chunk_dir, 'baseline_pandemic_table.mat');
         if isfile(pandemic_path)
             S = load(pandemic_path, 'pandemic_table');
-            pan_t = S.pandemic_table(:, pandemic_vars);
-            pan_t = pan_t(~isnan(pan_t.yr_start), :);
+            pan_t = S.pandemic_table;
+            pan_t = pan_t(:, pandemic_vars);
+            pan_t = pan_t(~pan_t.is_false & ~isnan(pan_t.yr_start), :);
+            pan_t.is_false = [];  % no longer needed
             pandemic_count = pandemic_count + 1;
             all_pandemic{pandemic_count} = pan_t;
         end

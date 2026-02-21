@@ -119,7 +119,6 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     create_folders_recursively(chunk_dir);
     chunk_range = chunk_start:chunk_end;
     num_simulations = length(chunk_range);
-    
 
     arrival_dist = load_arrival_dist(job_config.arrival_dist_config, ...
                                 job_config.highest_false_positive_rate, ...
@@ -140,17 +139,18 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
     job_config.response_threshold = response_threshold_dict.response_threshold;
 
-    % Generate base simulation table for this chunk
+    % Generate base simulation table for this chunk (sim_num is 1:num_simulations within chunk)
     [base_simulation_table, total_removed, total_trimmed] = ...
         get_base_simulation_table(arrival_dist, duration_dist, ...
                                   arrival_rates, pathogen_info, ...
-                                  job_config.seed, chunk_idx, job_config);
-
-    % Save chunk base table
-    chunk_base_path = fullfile(chunk_dir, 'base_simulation_table.mat');
-    save(chunk_base_path, 'base_simulation_table', 'total_removed', 'total_trimmed');
+                                  job_config.seed, num_simulations, job_config);
 
     response_simulation_table = base_simulation_table(base_simulation_table.response_outbreak, :);
+
+    % Save base table with global sim_num for compare_exceedances; simulation uses local sim_num
+    base_simulation_table.sim_num = base_simulation_table.sim_num + chunk_start - 1;
+    chunk_base_path = fullfile(chunk_dir, 'base_simulation_table.mat');
+    save(chunk_base_path, 'base_simulation_table', 'total_removed', 'total_trimmed');
     clear base_simulation_table;
     clear total_removed;
     clear total_trimmed;

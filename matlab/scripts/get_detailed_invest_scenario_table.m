@@ -1,82 +1,20 @@
 function get_detailed_invest_scenario_table(job_dir, varargin)
-    % Parse optional arguments
+    % Build NPV summary table for advance investment scenarios and write CSV + LaTeX.
+    % Scenario order and which scenarios to include are defined in get_scenario_order().
+
     p = inputParser;
     parse(p, varargin{:});
 
-    % Load processed data
     processed_dir = fullfile(job_dir, "processed");
-    
-    % Get scenarios from config
     config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
-    scenarios = string(fieldnames(config.scenarios));
-    scenarios = scenarios(~strcmp(scenarios, 'baseline'));
-    % Move combined_invest to end
-    combined_idx = find(strcmp(scenarios, 'combined_invest'));
-    if ~isempty(combined_idx)
-        scenarios = [scenarios(1:(combined_idx-1)); 
-                    scenarios((combined_idx+1):end);
-                    scenarios(combined_idx)];
-    end
-    
+    available = string(fieldnames(config.scenarios));
+    available = available(~strcmp(available, 'baseline'));
+
+    scenarios = get_scenario_order(available);
     fprintf('Processing %d scenarios\n', length(scenarios));
-    
-    % Initialize summary table: Remove CI columns. Add BCR column after NPVDiff.
-    summary_table = table('Size', [length(scenarios) 10], ...
-        'VariableTypes', {'string', 'string', 'string', ...
-                         'double', ... % BenefitDiff
-                         'double', ... % CostDiff
-                         'double', ... % NPVDiff
-                         'double', ... % BCRatio all
-                         'double', ... % Lives10yr
-                         'double', ... % Lives30yr
-                         'double'}, ...% LivesAll
-        'VariableNames', {'Category', 'Accent', 'Variation', ...
-        'BenefitDiff', 'CostDiff', 'NPVDiff', 'BCRatioAll', ...
-        'Lives10yr', 'Lives30yr', 'LivesAll'});
 
-    % Process each scenario
-    for i = 1:length(scenarios)
-        scen_name = scenarios(i);
-        fprintf('Processing scenario %d/%d: %s\n', i, length(scenarios), scen_name);
+    summary_table = load_scenario_means(processed_dir, scenarios);
 
-        [category_name, accent, variation] = parse_scenario_name(scen_name);
-        
-        % Load scenario relative sums data
-        scen_file = fullfile(processed_dir, sprintf('%s_relative_sums.mat', scen_name));
-        fprintf('  Loading file: %s\n', scen_file);
-        tic;
-        load(scen_file, 'all_relative_sums');
-        relative_sums = all_relative_sums;
-        fprintf('  Loaded in %.2f seconds\n', toc);
-        
-        % Get point estimates (means)
-        fprintf('  Computing means...\n');
-        tic;
-        benefit_diff = mean(relative_sums.tot_benefits_pv_full);
-        cost_diff = mean(relative_sums.costs_adv_invest_pv_full);
-        npv_diff = benefit_diff - cost_diff;
-        
-        % Calculate BCR (all years): benefit/cost, treating 0/0 as 0
-        if abs(cost_diff) < 1e-7  && abs(benefit_diff) < 1e-7
-            bc_ratio_all = 0;
-        else
-            bc_ratio_all = benefit_diff / cost_diff;
-        end
-        
-        % Lives saved
-        lives_10yr = mean(relative_sums.lives_saved_10_years);
-        lives_30yr = mean(relative_sums.lives_saved_30_years);
-        lives_all = mean(relative_sums.lives_saved_full);
-        
-        fprintf('  Means computed in %.2f seconds\n', toc);
-        
-        % Add row to table
-        summary_table(i,:) = {category_name, accent, variation, ...
-                             benefit_diff, cost_diff, npv_diff, bc_ratio_all, ...
-                             lives_10yr, lives_30yr, lives_all};
-        fprintf('  Scenario %s complete\n\n', scen_name);
-    end
-    
     % Save table to CSV
     writetable(summary_table, fullfile(processed_dir, 'npv_summary_detailed.csv'));
 
@@ -90,77 +28,96 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
         'IncludeTenThirtyYearStats', false);
 end
 
-function [category_name, accent, variation]  = parse_scenario_name(scenario_name)
+function scenarios = get_scenario_order(available)
+    % Return scenario names in display order. Only scenarios in available are included.
+    % Early warning: low threshold only. Universal flu: both only. Others: Moderate then Expanded. Combined last.
+    order = ["improved_early_warning_low_threshold", ...
+             "universal_flu_rd_invest_both", ...
+             "advance_capacity_9_month", "advance_capacity_6_month", ...
+             "neglected_pathogen_rd_single", "neglected_pathogen_rd_all", ...
+             "combined_invest_bcr_acc", "combined_invest_surplus_acc"];
+    scenarios = order(ismember(order, available));
+end
 
-    disp(scenario_name);
+function summary_table = load_scenario_means(processed_dir, scenarios)
+    % Load each scenario's relative_sums.mat and return a table of (Category, Variation, means).
+    n = length(scenarios);
+    summary_table = table('Size', [n 9], ...
+        'VariableTypes', {'string', 'string', 'double', 'double', 'double', 'double', 'double', 'double', 'double'}, ...
+        'VariableNames', {'Category', 'Variation', 'BenefitDiff', 'CostDiff', 'NPVDiff', 'BCRatioAll', 'Lives10yr', 'Lives30yr', 'LivesAll'});
+
+    for i = 1:n
+        scen_name = scenarios(i);
+        S = load(fullfile(processed_dir, scen_name + "_relative_sums.mat"), 'all_relative_sums');
+        r = S.all_relative_sums;
+        benefit = mean(r.tot_benefits_pv_full);
+        cost = mean(r.costs_adv_invest_pv_full);
+        npv = benefit - cost;
+        bcr = 0;
+        if abs(cost) >= 1e-7 || abs(benefit) >= 1e-7
+            bcr = benefit / cost;
+        end
+        [cat_name, variation] = parse_scenario_name(scen_name);
+        summary_table(i, :) = {cat_name, variation, benefit, cost, npv, bcr, ...
+            mean(r.lives_saved_10_years), mean(r.lives_saved_30_years), mean(r.lives_saved_full)};
+    end
+end
+
+function [category_name, variation] = parse_scenario_name(scenario_name)
+    % Returns category and variation (Moderate/Expanded for multi-row categories, or description for single-row).
     if startsWith(scenario_name, "combined_invest")
         category_name = "Combined";
         if contains(scenario_name, "bcr_acc")
-            accent = "BCR";
-            variation = "";
+            variation = "Moderate";
         elseif contains(scenario_name, "surplus_acc")
-            accent = "Surplus";
+            variation = "Expanded";
+        else
             variation = "";
         end
     elseif startsWith(scenario_name, "advance_capacity")
         category_name = "Advance capacity";
         if contains(scenario_name, "9_month")
-            accent = "BCR";
-            variation = "Vaccinate within 9 months";
+            variation = "Moderate";
         elseif contains(scenario_name, "6_month")
-            accent = "Surplus";
-            variation = "Vaccinate within 6 months";
+            variation = "Expanded";
+        else
+            variation = "";
         end
     elseif startsWith(scenario_name, "universal_flu_rd")
         category_name = "Universal flu vaccine R&D";
-        if contains(scenario_name, "single")
-            accent = "BCR";
-            variation = "Single platform response R&D";
-        elseif contains(scenario_name, "both")
-            accent = "Surplus";
+        if contains(scenario_name, "both")
             variation = "Both platform response R&D";
+        else
+            variation = "";
         end
     elseif startsWith(scenario_name, "neglected_pathogen_rd")
         category_name = "Neglected pathogen R&D";
         if contains(scenario_name, "single")
-            accent = "BCR";
-            variation = "Prototype R&D for highest risk neglected pathogen";
+            variation = "Moderate";
         elseif contains(scenario_name, "all")
-            accent = "Surplus";
-            variation = "Prototype R&D for three neglected pathogens";
+            variation = "Expanded";
+        else
+            variation = "";
         end
     elseif startsWith(scenario_name, "improved_early_warning")
         category_name = "Improved early warning";
-        if contains(scenario_name, "high_threshold")
-            accent = "BCR";
-            variation = "Higher warning threshold";
-        elseif contains(scenario_name, "low_threshold")
-            accent = "Surplus";
-            variation = "Lower warning threshold";
-        end
+        variation = "";  % Single scenario (low threshold only)
+    else
+        category_name = scenario_name;
+        variation = "";
     end
-
 end
 
 function write_advance_investment_table_latex(summary_data, outpath, varargin)
-    % Write a LaTeX table summarizing scenario results, grouping accents under scenario lines.
-    %
-    % Args:
-    %   summary_data (table): Table with scenario summary data, including 'Category', 'Accent', and 'Variation'.
-    %   outpath (string): Output path for the LaTeX file.
-    %   varargin: Optional name-value pairs.
-    %       'IncludeTenThirtyYearStats' (logical, default: true): Whether to include 10- and 30-year columns.
-    %
-    % Example:
-    %   write_advance_investment_table_latex(summary_data, 'out.tex', 'IncludeTenThirtyYearStats', false);
+    % Write LaTeX table: multi-row categories get a header line then indented Moderate/Expanded rows.
+    p = inputParser;
 
     % Parse optional arguments
-    p = inputParser;
     addParameter(p, 'IncludeTenThirtyYearStats', true, @(x) islogical(x) && isscalar(x));
     parse(p, varargin{:});
     include_ten_thirty = p.Results.IncludeTenThirtyYearStats;
 
-    % Convert to appropriate units (billions for monetary, thousands for lives)
+    % Convert to billions and thousands
     summary_data.NPVDiff = summary_data.NPVDiff / 1e9;
     summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9;
     summary_data.CostDiff = summary_data.CostDiff / 1e9;
@@ -194,30 +151,11 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     % Helper function to round nicely and format with commas
     round_and_comma = @(x) arrayfun(@(v) commafy((v >= 10).*round(v) + (v < 10).*round(v,1)), x);
 
-    % Escape LaTeX special chars & in names
+    % Escape LaTeX special chars
     summary_data.Category = replace(string(summary_data.Category), "&", "\&");
-    summary_data.Accent = replace(string(summary_data.Accent), "&", "\&");
     summary_data.Variation = replace(string(summary_data.Variation), "&", "\&");
 
-    % Sort data: alphabetically by Category (with "Combined" last), then by Accent
-    is_combined = strcmp(summary_data.Category, "Combined");
-    non_combined_data = summary_data(~is_combined, :);
-    combined_data = summary_data(is_combined, :);
-    
-    % Sort non-combined by Category, then Accent
-    [~, sort_idx] = sortrows(non_combined_data, {'Category', 'Accent'});
-    non_combined_data = non_combined_data(sort_idx, :);
-    
-    % Sort combined by Accent
-    if height(combined_data) > 0
-        [~, sort_idx] = sortrows(combined_data, 'Accent');
-        combined_data = combined_data(sort_idx, :);
-    end
-    
-    % Concatenate: non-combined first, then combined
-    summary_data = [non_combined_data; combined_data];
-    
-    % Prepare formatted strings for table
+    % Format numeric columns
     benefit_str = round_and_comma(summary_data.BenefitDiff);
     cost_str = round_and_comma(summary_data.CostDiff);
     npv_str = round_and_comma(summary_data.NPVDiff);
@@ -226,8 +164,7 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     lives_30yr_str = round_and_comma(summary_data.Lives30yr);
     lives_all_str = round_and_comma(summary_data.LivesAll);
 
-    % Group programs so only unique Category rows start scenario, others indented
-    [unique_cats,~,cat_idx] = unique(summary_data.Category, 'stable');
+    [unique_cats, ~, cat_idx] = unique(summary_data.Category, 'stable');
 
     % Open LaTeX file for writing
     fileID = fopen(outpath, 'w');
@@ -246,48 +183,38 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     end
 
     fprintf(fileID, '\\hline\n');
-    % First row: labels
     if include_ten_thirty
-        fprintf(fileID, ['Scenario & Accent & Costs & Benefits & Net value & BCR & \\multicolumn{3}{c}{Lives saved} \\\\\n']);
-        fprintf(fileID, ['& & (\\$~bn) & (\\$~bn) & (\\$~bn) & & 10 yr & 30 yr & 50 yr \\\\\n']);
+        fprintf(fileID, ['Scenario & Costs & Benefits & Net value & BCR & \\multicolumn{3}{c}{Lives saved} \\\\\n']);
+        fprintf(fileID, ['& (\\$~bn) & (\\$~bn) & (\\$~bn) & & 10 yr & 30 yr & 50 yr \\\\\n']);
     else
-        fprintf(fileID, ['Scenario & Accent & Costs & Benefits & Net value & BCR & Lives saved \\\\\n']);
-        fprintf(fileID, ['& & (\\$~bn) & (\\$~bn) & (\\$~bn) & & (thousands) \\\\\n']);
+        fprintf(fileID, ['Scenario & Costs & Benefits & Net value & BCR & Lives saved \\\\\n']);
+        fprintf(fileID, ['& (\\$~bn) & (\\$~bn) & (\\$~bn) & & (thousands) \\\\\n']);
     end
     fprintf(fileID, '\\hline\n');
-    
-    % Print data in grouped scenario style
+
+    % Print data: for multi-row categories, category name on its own line then indented Moderate/Expanded with numbers
+    n_data_col = 5 + 3 * include_ten_thirty;  % 5 or 8
+    empty_cells = repmat(' &', 1, n_data_col);
     for c = 1:numel(unique_cats)
         idx = find(cat_idx == c);
+        if numel(idx) > 1
+            % Header row: category name only, empty data cells
+            fprintf(fileID, '%s%s \\\\\n', char(summary_data.Category{idx(1)}), empty_cells);
+        end
         for ii = 1:numel(idx)
             i = idx(ii);
-            % Only print category for first row of each category group
-            if ii == 1
-                cat_str = summary_data.Category{i};
+            if numel(idx) > 1
+                label_str = ['\hspace{3mm} ' char(summary_data.Variation(i))];
             else
-                cat_str = '';
+                label_str = char(summary_data.Category{i});
             end
-            
             if include_ten_thirty
-                fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
-                    cat_str, ...
-                    summary_data.Accent{i}, ...
-                    cost_str(i), ...
-                    benefit_str(i), ...
-                    npv_str(i), ...
-                    bcr_str(i), ...
-                    lives_10yr_str(i), ...
-                    lives_30yr_str(i), ...
-                    lives_all_str(i));
+                fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
+                    label_str, cost_str(i), benefit_str(i), npv_str(i), bcr_str(i), ...
+                    lives_10yr_str(i), lives_30yr_str(i), lives_all_str(i));
             else
-                fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s \\\\\n', ...
-                    cat_str, ...
-                    summary_data.Accent{i}, ...
-                    cost_str(i), ...
-                    benefit_str(i), ...
-                    npv_str(i), ...
-                    bcr_str(i), ...
-                    lives_all_str(i));
+                fprintf(fileID, '%s & %s & %s & %s & %s & %s \\\\\n', ...
+                    label_str, cost_str(i), benefit_str(i), npv_str(i), bcr_str(i), lives_all_str(i));
             end
         end
     end
