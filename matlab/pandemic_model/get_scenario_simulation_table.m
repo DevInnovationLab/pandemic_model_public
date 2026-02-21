@@ -181,7 +181,6 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	new_simulation_table.rd_state(isnan(yr_start)) = nan; % Set to nan if no pandemic
 
     % Define the categories in order
-    rd_state_categories = ["both", "mRNA_only", "trad_only", "none", "no_pandemic"];
     rd_state_desc = strings(size(new_simulation_table, 1), 1);
 
     rd_state_desc(new_simulation_table.rd_state==1) = "both";
@@ -189,9 +188,7 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
     rd_state_desc(new_simulation_table.rd_state==3) = "trad_only";
     rd_state_desc(new_simulation_table.rd_state==4) = "none";
     rd_state_desc(isnan(new_simulation_table.rd_state)) = "no_pandemic";
-
-    % Convert to categorical variable
-    new_simulation_table.rd_state_desc = categorical(rd_state_desc, rd_state_categories);
+    new_simulation_table.rd_state_desc = rd_state_desc;
 end
 
 

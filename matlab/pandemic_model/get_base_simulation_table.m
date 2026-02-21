@@ -36,7 +36,6 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	natural_dur(is_false) = 1;
 
 	pathogen = randsample(arrival_rates.pathogen, num_response_scenario, true, arrival_rates.estimate);
-	pathogen = categorical(pathogen, unique(arrival_rates.pathogen));
 	mrna_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	trad_vax_state = unifrnd(0, 1, num_response_scenario, 1);
 	ufv_vax_state = unifrnd(0, 1, num_response_scenario, 1);
