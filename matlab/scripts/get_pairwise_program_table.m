@@ -11,10 +11,10 @@ function get_pairwise_program_table(job_dir)
 
     fprintf('Processing %d scenarios\n', length(scenarios));
 
-    % Initialize summary table (point estimates only)
-    summary_table = table('Size', [length(scenarios) 4], ...
-        'VariableTypes', {'string', 'double', 'double', 'double'});
-    summary_table.Properties.VariableNames = {'Scenario', 'BenefitDiff', 'CostDiff', 'BCRatio'};
+    % Initialize summary table (point estimates only): net value = benefits - costs
+    summary_table = table('Size', [length(scenarios) 2], ...
+        'VariableTypes', {'string', 'double'});
+    summary_table.Properties.VariableNames = {'Scenario', 'NetValue'};
 
     % Store raw data for complementarity calculations
     raw_data = struct();
@@ -36,18 +36,14 @@ function get_pairwise_program_table(job_dir)
         raw_data.(scen_name).benefits = all_relative_sums.tot_benefits_pv_full;
         raw_data.(scen_name).costs = all_relative_sums.costs_adv_invest_pv_full;
         
-        % Extract values from the sums table
+        % Extract net value (benefits - costs, same definition as detailed table)
         fprintf('  Computing means...\n');
         tic;
-        cost_diff = mean(all_relative_sums.costs_adv_invest_pv_full);
-        benefit_diff = mean(all_relative_sums.tot_benefits_full);
+        net_value = mean(all_relative_sums.tot_benefits_pv_full - all_relative_sums.costs_adv_invest_pv_full);
         fprintf('  Means computed in %.2f seconds\n', toc);
-        
-        % Calculate benefit-cost ratio
-        bc_ratio = benefit_diff / cost_diff;
 
         % Add to table
-        summary_table(i, :) = {scen_name, benefit_diff, cost_diff, bc_ratio};
+        summary_table(i, :) = {scen_name, net_value};
         fprintf('  Scenario %s complete\n\n', scen_name);
     end
 
@@ -98,7 +94,7 @@ function [accent, investment_indicators] = parse_scenario_name(scenario_name)
 end
 
 function complementarity_table = compute_complementarity(summary_data, investments, raw_data)
-    % Compute complementarity point estimates (benefit and cost) for each investment pair.
+    % Compute complementarity point estimates (net value) for each investment pair.
     n_pairs = 0;
     for i = 1:length(investments)
         for j = (i+1):length(investments)
@@ -115,10 +111,10 @@ function complementarity_table = compute_complementarity(summary_data, investmen
         end
     end
 
-    complementarity_table = table('Size', [n_pairs 4], ...
-        'VariableTypes', {'string', 'string', 'double', 'double'});
+    complementarity_table = table('Size', [n_pairs 3], ...
+        'VariableTypes', {'string', 'string', 'double'});
     complementarity_table.Properties.VariableNames = {...
-        'Investment', 'WithInvestment', 'BenefitComp', 'CostComp'};
+        'Investment', 'WithInvestment', 'NetValueComp'};
 
     row_idx = 1;
     for i = 1:length(investments)
@@ -171,10 +167,12 @@ function complementarity_table = compute_complementarity(summary_data, investmen
             alone2_benefits = raw_data.(alone2_scenario).benefits;
             alone2_costs = raw_data.(alone2_scenario).costs;
 
-            benefit_comp = mean(with_benefits) - mean(alone1_benefits) - mean(alone2_benefits);
-            cost_comp = mean(with_costs) - mean(alone1_costs) - mean(alone2_costs);
+            net_with = mean(with_benefits - with_costs);
+            net_alone1 = mean(alone1_benefits - alone1_costs);
+            net_alone2 = mean(alone2_benefits - alone2_costs);
+            net_value_comp = net_with - net_alone1 - net_alone2;
 
-            complementarity_table(row_idx, :) = {investment1, investment2, benefit_comp, cost_comp};
+            complementarity_table(row_idx, :) = {investment1, investment2, net_value_comp};
             row_idx = row_idx + 1;
         end
     end
@@ -183,22 +181,13 @@ end
 function create_table(summary_data, investments, outpath, complementarity_table)
 
     fprintf('  Converting units...\n');
-    summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9;
-    summary_data.CostDiff = summary_data.CostDiff / 1e9;
-    complementarity_table.BenefitComp = complementarity_table.BenefitComp / 1e9;
-    complementarity_table.CostComp = complementarity_table.CostComp / 1e9;
+    summary_data.NetValue = summary_data.NetValue / 1e9;
+    complementarity_table.NetValueComp = complementarity_table.NetValueComp / 1e9;
 
     round_nicely = @(x) string((x >= 10).*round(x) + (x < 10).*round(x, 1));
 
-    function s = bcr_to_string(x, less_than_zero_to_inf)
-        inf_idx = isinf(x); if less_than_zero_to_inf, inf_idx = inf_idx | (x < 0); end
-        s = round_nicely(x); s(inf_idx) = "$\infty$";
-    end
-
     fprintf('  Formatting values...\n');
-    summary_data.BenefitFormatted = arrayfun(@(i) round_nicely(summary_data.BenefitDiff(i)), (1:height(summary_data))', 'UniformOutput', false);
-    summary_data.CostFormatted = arrayfun(@(i) round_nicely(summary_data.CostDiff(i)), (1:height(summary_data))', 'UniformOutput', false);
-    summary_data.BCRFormatted = bcr_to_string(summary_data.BCRatio, true);
+    summary_data.NetValueFormatted = arrayfun(@(i) round_nicely(summary_data.NetValue(i)), (1:height(summary_data))', 'UniformOutput', false);
     
     % Escape LaTeX special chars & in names
     summary_data.Scenario = replace(string(summary_data.Scenario), "&", "\&");
@@ -211,18 +200,13 @@ function create_table(summary_data, investments, outpath, complementarity_table)
     fprintf('  Writing table header...\n');
     fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
     caption_str = [
-        '\\caption{\\textbf{Estimated expected benefits and costs from advance investment programs.} Monetary estimates are discounted.}\n'
+        '\\caption{\\textbf{Estimated expected net value from advance investment programs.} Net value is benefits minus costs; monetary estimates are discounted.}\n'
     ];
     fprintf(fileID, caption_str);
-    fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c c c}\n');
+    fprintf(fileID, '\\begin{tabular*}{\\linewidth}{@{\\extracolsep{\\fill}} l c c}\n');
     fprintf(fileID, '\\small\n');
     fprintf(fileID, '\\hline\n');
-    fprintf(fileID, ...
-        ' & \\multicolumn{2}{c}{Benefits (\\$~bn)} & \\multicolumn{2}{c}{Costs (\\$~bn)} \\\\\n');
-    fprintf(fileID, ...
-        '\\cline{2-3} \\cline{4-5}\n');
-    fprintf(fileID, ...
-        'Investment & Total & Complementarity & Total & Complementarity \\\\\n');
+    fprintf(fileID, 'Investment & Net value (\\$~bn) & Complementarity \\\\\n');
     fprintf(fileID, '\\hline\n');
 
     fprintf('  Writing table rows...\n');
@@ -260,10 +244,9 @@ function create_table(summary_data, investments, outpath, complementarity_table)
         % Print Alone on the same line as the investment name
         if ~isempty(alone_idx)
             fprintf('      Writing alone row...\n');
-            fprintf(fileID, '%s & ', clean_investment_name);
-            fprintf(fileID, '%s & --- & %s & --- \\\\\n', ...
-                investment_scenarios.BenefitFormatted{alone_idx}, ...
-                investment_scenarios.CostFormatted{alone_idx});
+            fprintf(fileID, '%s & %s & --- \\\\\n', ...
+                clean_investment_name, ...
+                investment_scenarios.NetValueFormatted{alone_idx});
         end
 
         % Print With combos in alphabetical order
@@ -285,19 +268,15 @@ function create_table(summary_data, investments, outpath, complementarity_table)
 
                 if isempty(comp_row)
                     warning('No complementarity data found for %s with %s', current_investment, other_investment_name);
-                    benefit_comp_formatted = '---';
-                    cost_comp_formatted = '---';
+                    comp_formatted = '---';
                 else
-                    benefit_comp_formatted = round_nicely(comp_row.BenefitComp);
-                    cost_comp_formatted = round_nicely(comp_row.CostComp);
+                    comp_formatted = round_nicely(comp_row.NetValueComp);
                 end
-                
-                fprintf(fileID, '\\hspace{3mm} %s & ', name);
-                fprintf(fileID, '%s & %s & %s & %s \\\\\n', ...
-                    investment_scenarios.BenefitFormatted{idx}, ...
-                    benefit_comp_formatted, ...
-                    investment_scenarios.CostFormatted{idx}, ...
-                    cost_comp_formatted);
+
+                fprintf(fileID, '\\hspace{3mm} %s & %s & %s \\\\\n', ...
+                    name, ...
+                    investment_scenarios.NetValueFormatted{idx}, ...
+                    comp_formatted);
             end
         end
     end

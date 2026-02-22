@@ -30,7 +30,7 @@ end
 
 function scenarios = get_scenario_order(available)
     % Return scenario names in display order. Only scenarios in available are included.
-    % Early warning: low threshold only. Universal flu: both only. Others: Moderate then Expanded. Combined last.
+    % Early warning: low threshold only. Universal flu: both only. Others: Moderate then Expansive. Combined last.
     order = ["improved_early_warning_low_threshold", ...
              "universal_flu_rd_invest_both", ...
              "advance_capacity_9_month", "advance_capacity_6_month", ...
@@ -64,13 +64,13 @@ function summary_table = load_scenario_means(processed_dir, scenarios)
 end
 
 function [category_name, variation] = parse_scenario_name(scenario_name)
-    % Returns category and variation (Moderate/Expanded for multi-row categories, or description for single-row).
+    % Returns category and variation (Moderate/Expansive for multi-row categories, or description for single-row).
     if startsWith(scenario_name, "combined_invest")
         category_name = "Combined";
         if contains(scenario_name, "bcr_acc")
             variation = "Moderate";
         elseif contains(scenario_name, "surplus_acc")
-            variation = "Expanded";
+            variation = "Expansive";
         else
             variation = "";
         end
@@ -79,7 +79,7 @@ function [category_name, variation] = parse_scenario_name(scenario_name)
         if contains(scenario_name, "9_month")
             variation = "Moderate";
         elseif contains(scenario_name, "6_month")
-            variation = "Expanded";
+            variation = "Expansive";
         else
             variation = "";
         end
@@ -95,7 +95,7 @@ function [category_name, variation] = parse_scenario_name(scenario_name)
         if contains(scenario_name, "single")
             variation = "Moderate";
         elseif contains(scenario_name, "all")
-            variation = "Expanded";
+            variation = "Expansive";
         else
             variation = "";
         end
@@ -109,7 +109,7 @@ function [category_name, variation] = parse_scenario_name(scenario_name)
 end
 
 function write_advance_investment_table_latex(summary_data, outpath, varargin)
-    % Write LaTeX table: multi-row categories get a header line then indented Moderate/Expanded rows.
+    % Write LaTeX table: multi-row categories get a header line then indented Moderate/Expansive rows.
     p = inputParser;
 
     % Parse optional arguments
@@ -192,7 +192,7 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     end
     fprintf(fileID, '\\hline\n');
 
-    % Print data: for multi-row categories, category name on its own line then indented Moderate/Expanded with numbers
+    % Print data: for multi-row categories, category name on its own line then indented Moderate/Expansive with numbers
     n_data_col = 5 + 3 * include_ten_thirty;  % 5 or 8
     empty_cells = repmat(' &', 1, n_data_col);
     for c = 1:numel(unique_cats)

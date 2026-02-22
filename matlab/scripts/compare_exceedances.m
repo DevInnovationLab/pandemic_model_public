@@ -259,7 +259,7 @@ function compare_exceedances(outdir, varargin)
     writetable(T, fullfile(outdir, 'mean_annual_recurrence_rates.csv'));
 
     % Output a smaller table with interpolated values at specific severities
-    target_severities = [min(x_ribbon_direct); 9.17; 10; 44.6; 50; 100; 150; 177];
+    target_severities = [min(x_ribbon_direct); 4.46; 9.17; 10; 44.6; 50; 100; 150; 171];
 
     % Get the variables from the table for interpolation
     severity = T.severity;

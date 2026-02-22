@@ -98,7 +98,7 @@ function get_exceedance_table(allrisk_csv_path, airborne_csv_path, outpath)
     % Write LaTeX table using only base environments.
     fprintf(fileID, '\\begin{table}[htbp]\n');
     fprintf(fileID, '\\centering\n');
-    fprintf(fileID, ['\\caption{\\textbf{Expected recurrence rates for novel viral and novel airborne viral pandemics with intensity $\\underline{\\zeta} \\geq 4.46$ deaths per 10,000} ', ...
+    fprintf(fileID, ['\\caption{\\textbf{Expected recurrence rates for novel viral and novel airborne viral pandemics.} ', ...
                      'Entries show the expected recurrence interval in years at different severity levels.}\n']);
     fprintf(fileID, '\\footnotesize\n');
     fprintf(fileID, '\\begin{tabular}{ccccc}\n');
@@ -137,7 +137,7 @@ function get_exceedance_table(allrisk_csv_path, airborne_csv_path, outpath)
         if abs(sev_val - 9.17) < 1e-6
             sev_cell = sprintf(['\\begin{tabular}[m]{@{}c@{}}%s\\\\[-0.4em] ', ...
                                 '\\scriptsize (realized COVID-19)\\end{tabular}'], sev_cell);
-        elseif abs(sev_val - 177) < 1e-6
+        elseif abs(sev_val - 171) < 1e-6
             sev_cell = sprintf(['\\begin{tabular}[m]{@{}c@{}}%s\\\\[-0.4em] ', ...
                                 '\\scriptsize (1918--20 flu)\\end{tabular}'], sev_cell);
         end

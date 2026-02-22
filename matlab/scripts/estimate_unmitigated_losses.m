@@ -48,6 +48,7 @@ function estimate_unmitigated_losses(job_config_path)
     assert(strcmp(arrival_dist.measure, "severity"), ...
            "Please use an arrival distribution estimated on pandemic severities.")
     duration_dist = load_duration_dist(job_config.duration_dist_config);
+    num_simulations = height(arrival_dist.param_samples);
 
     % Load arrival rates, pathogen info, etc. as in run_job.m
     arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
@@ -59,7 +60,7 @@ function estimate_unmitigated_losses(job_config_path)
     arrival_rates = convert_logical_columns(arrival_rates);
 
     % Generate base simulation table (same as run_job.m, but no scenario config)
-    [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, job_config.seed, job_config);
+    [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, job_config.seed, num_simulations, job_config);
 
     sim_idx = simulation_table.sim_num;
     yr_start = simulation_table.yr_start;

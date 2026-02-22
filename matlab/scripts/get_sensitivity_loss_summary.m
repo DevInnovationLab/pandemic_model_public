@@ -217,11 +217,33 @@ function write_to_latex(summary_data, outpath)
     fprintf(fileID, ' & $\\overline{D}$ & $AV\\!\\left(\\overline{ML}\\right)$ & $AV\\!\\left(\\overline{OL}\\right)$ & $AV\\!\\left(\\overline{LL}\\right)$ & $AV\\!\\left(\\overline{TL}\\right)$\\\\\n');
     fprintf(fileID, '\\hline\n');
     
-    % Identify unique scenario categories (Variable column)
-    uniqueVars = unique(summary_data.Variable);
+    % Identify unique scenario categories (Variable column) and order them.
+    % Desired order: Baseline first, then lower severity threshold, pathogen types,
+    % sample period, severity upper bound, per capita GDP, VSL, social discount rate.
+    variableOrder = [
+        "Lower severity threshold ($\underline{s}$)"
+        "Pathogen types"
+        "Sample period"
+        "Severity upper bound ($\overline{s}$)"
+        "Per capita GDP growth rate ($y$)"
+        "Value of statistical life (VSL)"
+        "Social discount rate $r$"
+    ];
+    uniqueVars = unique(summary_data.Variable, 'stable');
     baselineIdx = strcmp(uniqueVars, 'Baseline');
-    uniqueVars = [uniqueVars(baselineIdx); uniqueVars(~baselineIdx)];
-    
+    ordered = uniqueVars(baselineIdx);
+    for k = 1:length(variableOrder)
+        idx = find(strcmp(uniqueVars, variableOrder(k)), 1);
+        if ~isempty(idx)
+            ordered = [ordered; uniqueVars(idx)];
+        end
+    end
+    remaining = ~ismember(uniqueVars, ordered);
+    if any(remaining)
+        ordered = [ordered; uniqueVars(remaining)];
+    end
+    uniqueVars = ordered;
+
     for i = 1:length(uniqueVars)
         varRows = strcmp(summary_data.Variable, uniqueVars{i});
         varData = summary_data(varRows, :);
@@ -305,11 +327,14 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 formatted_value = sprintf("Increase to \\$%g million", var_value/1e6);
             end
         case "arrival_dist_config"
-            % Compare baseline and sensitivity meta for intensity upper bound and lower threshold
+            % Compare baseline and sensitivity meta for intensity upper bound, lower threshold,
+            % start year, pathogen scope (airborne), and unidentified-inclusion.
             s_meta = parse_arrival_dist_fp(var_value);
             trunc_diff = s_meta.trunc_value ~= b_meta.trunc_value;
             threshold_diff = s_meta.lower_threshold ~= b_meta.lower_threshold;
-            airborne = strcmp(s_meta.scope, "airborne"); 
+            year_min_diff = s_meta.year_min ~= b_meta.year_min;
+            airborne = strcmp(s_meta.scope, "airborne");
+            incl_unid = s_meta.has_unid_token && s_meta.incl_unid;
 
             if trunc_diff
                 formatted_name = "Severity upper bound ($\overline{s}$)";
@@ -317,9 +342,15 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             elseif threshold_diff
                 formatted_name = "Lower severity threshold ($\underline{s}$)";
                 formatted_value = sprintf("%g SU", s_meta.lower_threshold);
+            elseif year_min_diff
+                formatted_name = "Sample period";
+                formatted_value = sprintf("Outbreaks after %g only", s_meta.year_min);
             elseif airborne
                 formatted_name = "Pathogen types";
                 formatted_value = "Airborne pathogens only";
+            elseif incl_unid
+                formatted_name = "Pathogen types";
+                formatted_value = "Include unidentified pathogens";
             end
         case "duration_dist_config"
             formatted_name = "Duration upper bound ($\overline{d}$)";
@@ -328,14 +359,14 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             trunc_value = config_metadata(8);
             formatted_value = sprintf("%g years", trunc_value);
         case "y"
-            formatted_name = "Per capita GDP growth rate ($y$)";
+            formatted_name = "Per capita GDP growth rate ($r_g$)";
             if var_value < baseline_y
                 formatted_value = sprintf("Reduce to %.1f\\%%", var_value * 100);
             elseif var_value > baseline_y
                 formatted_value = sprintf("Increase to %.1f\\%%", var_value * 100);
             end
         case "r"
-            formatted_name = "Social discount rate $r$";
+            formatted_name = "Social discount rate $r_s$";
             if var_value < baseline_r
                 formatted_value = sprintf("Reduce to %.1f\\%%", var_value * 100);
             elseif var_value > baseline_r
