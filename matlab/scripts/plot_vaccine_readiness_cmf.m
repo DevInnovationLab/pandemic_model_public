@@ -167,6 +167,6 @@ function plot_vaccine_readiness_cmf(job_dir)
     end
 
     % Save the figure as high-resolution PNG and PDF
-    print(fig, fullfile(figure_dir, 'vaccine_readiness_cmf_subplots'), '-dpng', '-r400');
+    print(fig, fullfile(figure_dir, 'vaccine_readiness_cmf_subplots'), '-dpng', '-r600');
     close(fig);
 end

@@ -9,7 +9,7 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     xlabel("Effective severity");
     ylabel("Average number of pandemics per simulation (200 years)");
     title("Histogram of pandemic severities for average simulation");
-    saveas(average_simulation_hist, fullfile(figure_path, "average_simulation_hist.jpg"));
+    print(average_simulation_hist, fullfile(figure_path, "average_simulation_hist"), '-djpeg', '-r600');
 
     % Ex post severity exceedance function
     ex_post_severity_fig = figure('Visible', 'off');
@@ -30,7 +30,7 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     set(gca, 'XScale', 'log');
     set(gca, 'FontSize', 11); % Set axis font size
 
-    saveas(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.jpg"))
+    print(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance"), '-djpeg', '-r600')
 
     % Plot duration distribution
     plot_duration_distributions(base_simulation_table, figure_path, false); % No clipped durations
@@ -44,7 +44,7 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     title('Effective severity vs pandemic duration');
     grid on;
     
-    saveas(dur_severity_scatterhist, fullfile(figure_path, "dur_severity_scatterhist.jpg"))
+    print(dur_severity_scatterhist, fullfile(figure_path, "dur_severity_scatterhist"), '-djpeg', '-r600')
 
     % 3d histogram of effective duration and severity
     severity_dur_hist = figure('Visible', 'off');
@@ -55,5 +55,5 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     ylabel("Actual duration (years)");
     zlabel("Probability");
     title("Realized pandemic severity and duration histogram");
-    saveas(severity_dur_hist, fullfile(figure_path, 'dur_severity_histogram.jpg'));
+    print(severity_dur_hist, fullfile(figure_path, 'dur_severity_histogram'), '-djpeg', '-r600');
 end

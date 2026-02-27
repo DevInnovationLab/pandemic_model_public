@@ -92,7 +92,7 @@ function compare_with_estimation_error(job_base, trunc_thresholds)
     sgtitle({'Comparison of MLE and estimation error across truncation levels', ''}, ...
             'FontWeight', 'normal', 'FontSize', 13);
             
-    print(fig, sprintf('./output/est_error_vs_mle_grid_%s.png', job_base), '-dpng', '-r400');
+    print(fig, sprintf('./output/est_error_vs_mle_grid_%s.png', job_base), '-dpng', '-r600');
     
     close all;
 end

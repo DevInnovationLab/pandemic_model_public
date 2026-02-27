@@ -78,8 +78,8 @@ function plot_raw_ts(results_dir)
                 fig = plot_timeseries(ts_array, var, ...
                                      'cumulative', true, ...
                                      'plot_samples', 2e2);
-                figpath = fullfile(raw_ts_fig_dir, strcat(scenario, "_", var, ".png"));
-                saveas(fig, figpath);
+                figpath = fullfile(raw_ts_fig_dir, strcat(scenario, "_", var));
+                print(fig, figpath, '-dpng', '-r600');
                 close(fig);
             end
         end
@@ -105,8 +105,8 @@ function plot_raw_ts(results_dir)
             fig = plot_timeseries(ts_array, var, ...
                                  'cumulative', true, ...
                                  'plot_samples', 2e2);
-            figpath = fullfile(raw_ts_fig_dir, strcat(scenario, "_", var, ".png"));
-            saveas(fig, figpath);
+            figpath = fullfile(raw_ts_fig_dir, strcat(scenario, "_", var));
+            print(fig, figpath, '-dpng', '-r600');
             close(fig);
         end
     end
@@ -148,7 +148,7 @@ function plot_raw_ts(results_dir)
     end
 
     % Save figure
-    figpath = fullfile(raw_ts_fig_dir, "mean_costs_over_time.png");
-    saveas(fig, figpath);
+    figpath = fullfile(raw_ts_fig_dir, "mean_costs_over_time");
+    print(fig, figpath, '-dpng', '-r600');
     close(fig);
 end

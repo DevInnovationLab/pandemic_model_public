@@ -124,7 +124,7 @@ function plot_dot_whisker(out_dir)
         'FontSize', 9, 'Interpreter','none');
 
     title(ax, 'Net value across scenarios', 'FontSize', 12);
-    saveas(fig, fullfile(figure_path, 'net_value_dot_whisker.jpg'));
+    print(fig, fullfile(figure_path, 'net_value_dot_whisker'), '-djpeg', '-r600');
     close(fig);
 
 end

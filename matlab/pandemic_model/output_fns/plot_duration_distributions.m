@@ -54,7 +54,7 @@ function plot_duration_distributions(base_simulation_table, figure_path, clipped
         suffix = "_no_clipped";
     end
 
-    fn = strcat("duration_distributions", suffix, ".jpg");
-    saveas(fig, fullfile(figure_path, fn));
+    fn = strcat("duration_distributions", suffix);
+    print(fig, fullfile(figure_path, fn), '-djpeg', '-r600');
     close(fig);
 end

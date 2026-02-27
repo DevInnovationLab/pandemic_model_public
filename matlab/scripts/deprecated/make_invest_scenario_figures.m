@@ -176,7 +176,7 @@ function make_invest_scenario_figures(job_dir, recalculate_bc)
 
     % Save high-quality versions using saveas (PNG and vector PDF)
     set(fig1, 'PaperPositionMode', 'auto');
-    print(fig1, fullfile(figure_dir, 'fig_impact_vs_cost.png'), '-dpng', '-r400');
+    print(fig1, fullfile(figure_dir, 'fig_impact_vs_cost.png'), '-dpng', '-r600');
 
     % ------------------------------------------------------------
     % 3) FIGURE 2 — Cumulative lives saved over time
@@ -197,5 +197,5 @@ function make_invest_scenario_figures(job_dir, recalculate_bc)
 
     % Save high-quality versions using saveas (PNG and vector PDF)
     set(fig2, 'PaperPositionMode', 'auto');
-    print(fig2, fullfile(figure_dir, 'fig_lives_saved_timeline.png'), '-dpng', '-r400');
+    print(fig2, fullfile(figure_dir, 'fig_lives_saved_timeline.png'), '-dpng', '-r600');
 end

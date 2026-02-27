@@ -44,5 +44,5 @@ text(0.53, 0.816, '(0.5, 0.816)', 'FontSize', 11)
 text(0.7, 0.97, '(0.7, 1)', 'FontSize', 11)
 
 % Save figure
-print(fig, './output/h_function.png', '-dpng', '-r450');
+print(fig, './output/h_function.png', '-dpng', '-r600');
 close(fig)

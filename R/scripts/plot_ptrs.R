@@ -79,4 +79,4 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
   )
 
 # Save the plot
-ggsave("output/ptrs/marginal_ptrs_by_pathogen.png", ptrs_plot, width = 8, height = 5.5, dpi = 300)
+ggsave("output/ptrs/marginal_ptrs_by_pathogen.png", ptrs_plot, width = 8, height = 5.5, dpi = 600)

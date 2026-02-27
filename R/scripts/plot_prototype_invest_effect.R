@@ -71,4 +71,4 @@ proto_effect_plot <- ggplot(proto_effect, aes(
   )
 
 # Save the plot
-ggsave("output/ptrs/prototype_invest_effect.png", proto_effect_plot, width = 7, height = 3.5, dpi = 300)
+ggsave("output/ptrs/prototype_invest_effect.png", proto_effect_plot, width = 7, height = 3.5, dpi = 600)

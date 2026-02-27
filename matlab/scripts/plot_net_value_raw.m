@@ -138,7 +138,7 @@ function plot_net_value_raw(out_dir)
             'Location', 'northeast', 'FontSize', 9, 'Interpreter', 'none');
     end
     title(ax, 'Net value across scenarios', 'FontSize', 12);
-    saveas(fig, fullfile(figure_path, 'net_value_boxplot.jpg'));
+    print(fig, fullfile(figure_path, 'net_value_boxplot'), '-djpeg', '-r600');
     close(fig);
 end
 

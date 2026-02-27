@@ -229,7 +229,7 @@ function get_result_distribution(job_dir, results)
             'EdgeColor', 'none', ...
             'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 14);
 
-        saveas(fig_normal, fullfile(figure_path, sprintf('%s_dist_grid_normal.jpg', result)));
+        print(fig_normal, fullfile(figure_path, sprintf('%s_dist_grid_normal', result)), '-djpeg', '-r600');
         close(fig_normal);
 
         % ---- Log scale ----
@@ -328,7 +328,7 @@ function get_result_distribution(job_dir, results)
             'EdgeColor', 'none', ...
             'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 14);
 
-        saveas(fig_log, fullfile(figure_path, sprintf('%s_dist_grid_logy.jpg', result)));
+        print(fig_log, fullfile(figure_path, sprintf('%s_dist_grid_logy', result)), '-djpeg', '-r600');
         close(fig_log);
     end
 end

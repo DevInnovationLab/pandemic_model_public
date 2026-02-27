@@ -166,7 +166,7 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
         plt.gca().spines[['top', 'right']].set_visible(False)
 
         fig_fn = outdir / f"{outstring}.png"
-        plt.savefig(fig_fn, dpi=500)
+        plt.savefig(fig_fn, dpi=600)
 
 
 if __name__ == "__main__":

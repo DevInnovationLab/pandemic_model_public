@@ -40,7 +40,7 @@ grid on;
 hold off;
 
 % Save the figure to output
-saveas(gcf, './output/covid19_confirmed_deaths_per_10k_owid_plot.png');
+print(gcf, './output/covid19_confirmed_deaths_per_10k_owid_plot', '-dpng', '-r600');
 
 % Save the cleaned data
 writetable(annual_data, './data/clean/covid19_deaths_per_10k_owid.csv');

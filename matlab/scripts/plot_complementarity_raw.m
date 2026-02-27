@@ -349,9 +349,9 @@ function plot_complementarity_raw(complementarity_data, metric_label, accent_lab
         lower(strrep(metric_short, ' ', '_')), ...
         lower(accent_short));
     
-    saveas(fig_raw, fullfile(figure_path, [filename_base '_raw.jpg']));
-    saveas(fig_raw_pct, fullfile(figure_path, [filename_base, '_raw_pct_deviation_from_mean.jpg']));
-    saveas(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.jpg']));
+    print(fig_raw, fullfile(figure_path, [filename_base '_raw']), '-djpeg', '-r600');
+    print(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct_deviation_from_mean']), '-djpeg', '-r600');
+    print(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined']), '-djpeg', '-r600');
     close(fig_raw);
     close(fig_raw_pct);
     close(fig_relative);

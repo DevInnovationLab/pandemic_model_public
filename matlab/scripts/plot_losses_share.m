@@ -87,7 +87,7 @@ function plot_losses_share(job_dir)
     comparisons_dir = fullfile(job_dir, "figures", "comparison");
     create_folders_recursively(comparisons_dir);
     % Save high resolution figure using print instead of saveas
-    print(fig1, fullfile(comparisons_dir, "losses_share_bars.png"), '-dpng', '-r450');
+    print(fig1, fullfile(comparisons_dir, "losses_share_bars.png"), '-dpng', '-r600');
     close(fig1);
 
     %% Create separate figure for Lorenz curve
@@ -113,6 +113,6 @@ function plot_losses_share(job_dir)
     ax.GridAlpha = 0.1;
 
     % Save high resolution figure using print instead of saveas
-    print(fig2, fullfile(comparisons_dir, "losses_share_lorenz.png"), '-dpng', '-r450');
+    print(fig2, fullfile(comparisons_dir, "losses_share_lorenz.png"), '-dpng', '-r600');
     close(fig2);
 end

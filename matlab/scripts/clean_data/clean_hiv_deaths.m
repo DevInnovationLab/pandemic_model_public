@@ -37,7 +37,7 @@ grid on;
 hold off;
 
 % Save the figure to output
-saveas(gcf, './output/hiv_deaths_per_10k_plot.png');
+print(gcf, './output/hiv_deaths_per_10k_plot', '-dpng', '-r600');
 
 % Save the cleaned and merged data
 writetable(merged_data, './data/clean/hiv_deaths_per_10k.csv');

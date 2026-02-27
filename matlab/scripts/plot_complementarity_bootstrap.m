@@ -252,8 +252,8 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
         lower(strrep(metric_short, ' ', '_')), ...
         lower(accent_short));
     
-    saveas(fig_boot, fullfile(figure_path, [filename_base '_bootstrap.jpg']));
-    saveas(fig_boot_pct, fullfile(figure_path, [filename_base '_bootstrap_pct_deviation_from_mean.jpg']));
+    print(fig_boot, fullfile(figure_path, [filename_base '_bootstrap']), '-djpeg', '-r600');
+    print(fig_boot_pct, fullfile(figure_path, [filename_base '_bootstrap_pct_deviation_from_mean']), '-djpeg', '-r600');
     close(fig_boot);
     close(fig_boot_pct);
     

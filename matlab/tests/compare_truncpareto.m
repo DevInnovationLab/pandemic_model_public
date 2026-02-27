@@ -22,7 +22,7 @@ title('Comparison of Truncated Pareto CDFs: MATLAB vs Python Implementation', 'U
 legend('show');
 
 % Save the linear scale figure
-saveas(gcf, './output/truncpareto_cdf_comparison_linear.png');
+print(gcf, './output/truncpareto_cdf_comparison_linear', '-dpng', '-r600');
 
 % Create figure and plot both CDFs - log scale
 figure();
@@ -40,4 +40,4 @@ title('Comparison of Truncated Pareto CDFs: MATLAB vs Python Implementation', 'U
 legend('show');
 
 % Save the log scale figure
-saveas(gcf, './output/truncpareto_cdf_comparison_log.png');
+print(gcf, './output/truncpareto_cdf_comparison_log', '-dpng', '-r600');

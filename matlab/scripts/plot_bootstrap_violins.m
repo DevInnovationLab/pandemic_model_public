@@ -195,7 +195,7 @@ function plot_bootstrap_violins(out_dir)
 
     title(ax, 'Bootstrap means of net value across scenarios', 'FontSize', 12);
 
-    saveas(fig, fullfile(figure_path, 'net_value_bootstrap_violins.jpg'));
+    print(fig, fullfile(figure_path, 'net_value_bootstrap_violins'), '-djpeg', '-r600');
     close(fig);
 end
 

@@ -70,6 +70,6 @@ if __name__ == "__main__":
     plt.legend(loc='lower right', frameon=False)
     plt.tight_layout()
     plt.gca().spines[['top', 'right']].set_visible(False)
-    plt.savefig("./output/rd_timelines/timeline_preds.png")
+    plt.savefig("./output/rd_timelines/timeline_preds.png", dpi=600)
 
     # Now let's do the same for the PTRS

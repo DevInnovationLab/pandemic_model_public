@@ -104,7 +104,7 @@ if __name__ == "__main__":
     outdir.mkdir(parents=True, exist_ok=True)
 
     figpath = outdir / "poisson_model.png"
-    plt.savefig(figpath, dpi=400)
+    plt.savefig(figpath, dpi=600)
 
     poisson_dict = {
         'family': 'poisson',
@@ -206,7 +206,7 @@ if __name__ == "__main__":
 
     # Save figure
     figpath = outdir / "loglog_model.png"
-    plt.savefig(figpath, dpi=400)
+    plt.savefig(figpath, dpi=600)
 
     # Save model parameters
     loglog_dict = {
@@ -258,4 +258,4 @@ if __name__ == "__main__":
 
     # Save comparison figure
     figpath = outdir / "model_comparison.png"
-    plt.savefig(figpath, dpi=400)
+    plt.savefig(figpath, dpi=600)

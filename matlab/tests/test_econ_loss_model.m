@@ -33,4 +33,4 @@ end
 legend('Model Prediction', 'Historical Data', 'Location', 'northwest');
 
 % Save the figure
-saveas(gcf, './output/tests/econ_loss_model_predictions.png');
+print(gcf, './output/tests/econ_loss_model_predictions', '-dpng', '-r600');

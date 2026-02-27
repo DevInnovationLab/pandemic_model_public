@@ -37,7 +37,7 @@ function plot_num_outbreaks_per_sim(job_dir)
 
     % Save figure
     fig_name = 'num_outbreaks_per_sim_baseline';
-    print(fig, fullfile(figure_dir, fig_name), '-dpng', '-r400');
+    print(fig, fullfile(figure_dir, fig_name), '-dpng', '-r600');
     close(fig);
 
     % Save histogram data as CSV

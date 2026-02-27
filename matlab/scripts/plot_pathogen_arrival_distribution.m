@@ -43,4 +43,4 @@ legend([dummy1, dummy2], {'Has prototype vaccine', 'No prototype vaccine'}, ...
     'Location', 'southeast', 'FontSize', 10);
 hold off;
 
-print(gcf, fullfile("output/pandemic_pathogen_share_all.jpg"), '-djpeg', '-r400');
+print(gcf, fullfile("output/pandemic_pathogen_share_all.jpg"), '-djpeg', '-r600');

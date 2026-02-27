@@ -58,8 +58,8 @@ function plot_agg_cost_comparison(job_dir, recalculate_costs)
     % Save figure
     comparisons_dir = fullfile(job_dir, "figures", "comparison");
     create_folders_recursively(comparisons_dir);
-    figpath = fullfile(comparisons_dir, "total_costs_relative_comparison.png");
-    saveas(fig, figpath);
+    figpath = fullfile(comparisons_dir, "total_costs_relative_comparison");
+    print(fig, figpath, '-dpng', '-r600');
     close(fig);
 
 end

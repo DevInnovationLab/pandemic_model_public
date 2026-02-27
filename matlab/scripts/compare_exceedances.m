@@ -207,7 +207,7 @@ function compare_exceedances(outdir, varargin)
     if include_90ci
         ci_suffix = '_with_ci';
     end
-    print(fig1, fullfile(outdir, sprintf("%s_exceedance_bootstrap_mean%s.png", dirname, ci_suffix)), '-dpng', '-r400');
+    print(fig1, fullfile(outdir, sprintf("%s_exceedance_bootstrap_mean%s.png", dirname, ci_suffix)), '-dpng', '-r600');
 
     % ========== Figure 2: Direct calculation (all data) ==========
     fig2 = figure('Position', [100 100 900 650]); hold on;
@@ -251,7 +251,7 @@ function compare_exceedances(outdir, varargin)
     set(gca, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
 
     % Save figure 2
-    print(fig2, fullfile(outdir, sprintf("%s_exceedance_direct.png", dirname)), '-dpng', '-r400');
+    print(fig2, fullfile(outdir, sprintf("%s_exceedance_direct.png", dirname)), '-dpng', '-r600');
 
     % Output mean annual recurrence rates to CSV (using bootstrap mean)
     T = table(common_grid(1:end-1), 1 ./ (mean_ante_boot'), 1 ./ (mean_post_boot'), ...

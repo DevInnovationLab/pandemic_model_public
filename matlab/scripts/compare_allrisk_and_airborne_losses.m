@@ -94,6 +94,6 @@ function compare_allrisk_and_airborne_losses()
     if ~exist(figures_dir, 'dir')
         mkdir(figures_dir);
     end
-    saveas(fig, fullfile(figures_dir, "allrisk_vs_airborne_losses.png"));
+    print(fig, fullfile(figures_dir, "allrisk_vs_airborne_losses"), '-dpng', '-r600');
     close(fig);
 end

@@ -103,4 +103,4 @@ timeline_plot <- ggplot(
   )
 
 # Save the plot
-ggsave("output/rd_timelines/timelines_from_predictions.png", timeline_plot, width = 8, height = 5.5, dpi = 300)
+ggsave("output/rd_timelines/timelines_from_predictions.png", timeline_plot, width = 8, height = 5.5, dpi = 600)

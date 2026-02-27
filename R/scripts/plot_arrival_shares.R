@@ -79,7 +79,7 @@ p <- ggplot(arrival_risk_plot, aes(
   guides(color = guide_legend(title.position = "top", title.hjust = 0.5, nrow = 1, byrow = TRUE, override.aes = list(size = 3)))
 
 # Reduce the plot height to bring points closer together
-ggsave("./output/pathogen_pandemic_share_all.png", plot = p, width = 10, height = 6, dpi = 300)
+ggsave("./output/pathogen_pandemic_share_all.png", plot = p, width = 10, height = 6, dpi = 600)
 
 # Also produce a similar plot without coloring by `has_prototype`
 p_nocolor <- ggplot(arrival_risk_plot, aes(
@@ -125,5 +125,5 @@ p_nocolor <- ggplot(arrival_risk_plot, aes(
     plot.margin = margin(10, 0, 10, 10)
   )
 
-ggsave("./output/pathogen_pandemic_share_all_nocolor.png", plot = p_nocolor, width = 10, height = 6, dpi = 300)
+ggsave("./output/pathogen_pandemic_share_all_nocolor.png", plot = p_nocolor, width = 10, height = 6, dpi = 600)
 
