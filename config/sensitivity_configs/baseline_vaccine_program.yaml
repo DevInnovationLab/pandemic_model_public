@@ -61,3 +61,6 @@ sensitivities:
     - "output/duration_distributions/clean_filt_all_int_0d01_1900_mod_trunc_20_n_1000000_seed_42.csv"
     - "output/duration_distributions/clean_filt_all_int_0d01_1900_mod_trunc_50_n_1000000_seed_42.csv"
 
+  ptrs_pathogen:
+    - "output/ptrs/marginal_ptrs_preds_always_succeed.csv"
+

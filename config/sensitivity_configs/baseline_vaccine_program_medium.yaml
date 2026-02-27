@@ -64,3 +64,6 @@ sensitivities:
   rd_timelines:
     - "output/rd_timelines/optimistic_rd_timelines.csv"
     - "output/rd_timelines/optimistic_rd_timelines.csv"
+
+  ptrs_pathogen:
+    - "output/ptrs/marginal_ptrs_preds_always_succeed.csv"
