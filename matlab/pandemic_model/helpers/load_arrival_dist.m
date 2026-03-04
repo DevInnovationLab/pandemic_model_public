@@ -28,12 +28,6 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate, para
         param_samples = readtable(fullfile(config_path, "param_samples.csv"));
     end
 
-    if ismember('lambda', param_samples.Properties.VariableNames)
-        param_samples.p = 1 - exp(-param_samples.lambda);
-    elseif ~ismember('p', param_samples.Properties.VariableNames)
-        error("Neither 'p' nor 'lambda' found in param_samples.csv.");
-    end
-
     param_samples.max_value = hyperparams.y_max .* ones(size(param_samples, 1), 1);
     param_samples.mu = hyperparams.y_min .* ones(size(param_samples, 1), 1);
 

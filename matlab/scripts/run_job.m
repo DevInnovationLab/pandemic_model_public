@@ -167,14 +167,20 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         % Run simulation
         [annual_results_baseline, scenario_pandemic_table] = ...
             event_list_simulation(scenario_simulation_table, econ_loss_model, num_simulations, simulation_params);
-
+        
         % Use global sim_num so compare_exceedances can merge chunks correctly
         scenario_pandemic_table.sim_num = scenario_pandemic_table.sim_num + chunk_start - 1;
-
+        
         baseline_chunk_path = fullfile(chunk_dir, 'baseline_annual.mat');
         save(baseline_chunk_path, 'annual_results_baseline', '-v7.3');
 
+        % Save baseline sums in a table (same layout as relative_sums); aggregate_results vertcats across chunks
+        baseline_sums = get_baseline_sums_table(annual_results_baseline, num_simulations);
+        save(fullfile(chunk_dir, 'baseline_sums.mat'), 'baseline_sums', '-v7.3');
+        
         save_pandemic_table(scenario_pandemic_table, 'baseline', chunk_dir, job_config.pandemic_table_out);
+        
+        result_names = fieldnames(annual_results_baseline);
     else
         error('Baseline scenario required but not found');
     end
@@ -234,7 +240,7 @@ function [scenario_sum_table, relative_annual_results] = ...
     for j = 1:length(result_names)
         result = result_names{j};
         relative_annual_result = annual_results.(result) - annual_results_baseline.(result);
-        relative_annual_result(abs(relative_annual_result) < tolerance) = 0;
+        relative_annual_result(abs(relative_annual_result) < tolerance) = 0; % Addressing numerical noise
         relative_annual_results.(result) = relative_annual_result;
         
         col_idx = (j-1) * num_horizons + 1;
@@ -272,6 +278,38 @@ function save_pandemic_table(pandemic_table, scenario_name, outdir, outstyle)
     fp = fullfile(outdir, sprintf('%s_pandemic_table.mat', scenario_name));
     save(fp, 'pandemic_table', '-v7.3');
     fprintf('Saved pandemic table to %s\n', fp);
+end
+
+
+function baseline_sums = get_baseline_sums_table(annual_results_baseline, num_simulations)
+    % Build a table of per-simulation horizon sums for all baseline annual result fields.
+    %
+    % Same column layout as get_relative_results (e.g. result_10_years, result_30_years,
+    % result_50_years, result_full). Aggregate_results vertcats these tables across chunks.
+
+    result_names = fieldnames(annual_results_baseline);
+    sum_horizons = [10, 30, 50];
+    num_results = length(result_names);
+    num_horizons = length(sum_horizons) + 1;
+    num_cols = num_results * num_horizons;
+
+    baseline_sums = table('Size', [num_simulations, num_cols], ...
+        'VariableTypes', repmat({'double'}, 1, num_cols));
+
+    for j = 1:num_results
+        result = result_names{j};
+        data = annual_results_baseline.(result);
+
+        col_idx = (j - 1) * num_horizons + 1;
+        for k = 1:length(sum_horizons)
+            h = sum_horizons(k);
+            baseline_sums.Properties.VariableNames{col_idx} = strcat(result, '_', num2str(h), '_years');
+            baseline_sums{:, col_idx} = sum(data(:, 1:h), 2);
+            col_idx = col_idx + 1;
+        end
+        baseline_sums.Properties.VariableNames{col_idx} = strcat(result, '_full');
+        baseline_sums{:, col_idx} = sum(data, 2);
+    end
 end
 
 

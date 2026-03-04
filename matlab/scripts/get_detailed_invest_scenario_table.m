@@ -41,10 +41,43 @@ end
 
 function summary_table = load_scenario_means(processed_dir, scenarios)
     % Load each scenario's relative_sums.mat and return a table of (Category, Variation, means).
+    % Includes a leading baseline row when baseline_annual_sums.mat is available (means taken here).
+
     n = length(scenarios);
-    summary_table = table('Size', [n 9], ...
+
+    % Optional baseline row from aggregated baseline_sums table (take means here)
+    baseline_row = {};
+    baseline_file = fullfile(processed_dir, 'baseline_annual_sums.mat');
+    if exist(baseline_file, 'file')
+        r = load(baseline_file).all_baseline_sums;
+        benefit0 = mean(r.tot_benefits_pv_full);
+        cost0 = mean(r.costs_adv_invest_pv_full);
+        npv0 = benefit0 - cost0;
+        bcr0 = 0;
+        if abs(cost0) >= 1e-7 || abs(benefit0) >= 1e-7
+            bcr0 = benefit0 / cost0;
+        end
+        lives10_0 = mean(r.lives_saved_10_years);
+        lives30_0 = mean(r.lives_saved_30_years);
+        livesAll_0 = mean(r.lives_saved_full);
+        baseline_row = {"Status quo response", "", benefit0, cost0, npv0, bcr0, ...
+                        lives10_0, lives30_0, livesAll_0};
+    else
+        warning('get_detailed_invest_scenario_table:BaselineMissing', ...
+            'baseline_annual_sums.mat not found in %s. Baseline row will be omitted.', processed_dir);
+    end
+
+    has_baseline = ~isempty(baseline_row);
+
+    summary_table = table('Size', [n + has_baseline, 9], ...
         'VariableTypes', {'string', 'string', 'double', 'double', 'double', 'double', 'double', 'double', 'double'}, ...
         'VariableNames', {'Category', 'Variation', 'BenefitDiff', 'CostDiff', 'NPVDiff', 'BCRatioAll', 'Lives10yr', 'Lives30yr', 'LivesAll'});
+
+    row_idx = 1;
+    if has_baseline
+        summary_table(row_idx, :) = baseline_row;
+        row_idx = row_idx + 1;
+    end
 
     for i = 1:n
         scen_name = scenarios(i);
@@ -58,8 +91,9 @@ function summary_table = load_scenario_means(processed_dir, scenarios)
             bcr = benefit / cost;
         end
         [cat_name, variation] = parse_scenario_name(scen_name);
-        summary_table(i, :) = {cat_name, variation, benefit, cost, npv, bcr, ...
+        summary_table(row_idx, :) = {cat_name, variation, benefit, cost, npv, bcr, ...
             mean(r.lives_saved_10_years), mean(r.lives_saved_30_years), mean(r.lives_saved_full)};
+        row_idx = row_idx + 1;
     end
 end
 

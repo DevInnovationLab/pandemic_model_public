@@ -87,7 +87,7 @@ function run_workflow(job_config_path, varargin)
     % Aggregate (unless skipped or array task)
     if ~opts.skip_aggregate && ~is_array_task
         fprintf('=== Aggregating results ===\n');
-        aggregate_relative_sums(sim_results_path);
+        aggregate_results(sim_results_path);
     end
     
     % Bootstrap (unless skipped or array task)

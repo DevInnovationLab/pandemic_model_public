@@ -15,7 +15,7 @@ classdef ArrivalDistSampler
             %   param_table: Table containing parameter combinations, one row per draw
             %   max_y_sample: Maximum allowed y_sample
             arguments
-                param_samples (:,6) table
+                param_samples (:,5) table
                 trunc_method (1,1) {mustBeMember(trunc_method, {'sharp', 'smooth'})}
                 false_positive_rate (1,1) {mustBeNumeric, mustBeInRange(false_positive_rate, 0, 1)} = 0
                 measure (1,1) string = "undefined"
@@ -39,20 +39,19 @@ classdef ArrivalDistSampler
 
             xi = obj.param_samples.xi;
             sigma = obj.param_samples.sigma;
-            p_tail_raw = obj.param_samples.p;
+            lambda_raw = obj.param_samples.lambda;
             mu = obj.param_samples.mu;
             max_val = obj.param_samples.max_value;
             y_sample = zeros(size(unifrnd_draw));
 
             % Adjust arrival probability for false positive rate
-            p_tail = p_tail_raw ./ (1 - obj.false_positive_rate);
-            assert(~any(p_tail >= 1), "Annual arrival probability cannot be greater than one. Ensure false positive rate not set too high.")
+            lambda = lambda_raw ./ (1 - obj.false_positive_rate);
 
             % --- rescale uniforms to (0,1) conditional on being in the tail --------
-            cum_prob_at_th = 1 - p_tail;
+            cum_prob_at_th = 1 - exp(-lambda);
             [row, col] = find(unifrnd_draw > cum_prob_at_th);
             lin_idx = sub2ind(size(unifrnd_draw), row, col);
-            u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
+            u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ (exp(-lambda(row)));
 
             if strcmp(obj.trunc_method, "sharp")
                 y_sample(lin_idx) = gpinv(u_raw, xi(row), sigma(row), mu(row));
@@ -76,15 +75,14 @@ classdef ArrivalDistSampler
 
             xi = obj.param_samples.xi;
             sigma = obj.param_samples.sigma;
-            p_tail_raw = obj.param_samples.p;
+            lambda_raw = obj.param_samples.lambda;
             mu = obj.param_samples.mu;
             max_val = obj.param_samples.max_value;
             rank = zeros(size(y_sample));
 
             % Adjust arrival probability for false positive rate
-            p_tail = p_tail_raw ./ (1 - obj.false_positive_rate);
-            assert(~any(p_tail >= 1), "Annual arrival probability cannot be greater than one. Ensure false positive rate not set too high.")
-            cum_prob_at_th = 1 - p_tail;
+            lambda = lambda_raw ./ (1 - obj.false_positive_rate);
+            cum_prob_at_th = 1 - exp(-lambda);
 
             % Case 1: at or below the threshold
             idx_th = y_sample <= mu;
@@ -98,14 +96,14 @@ classdef ArrivalDistSampler
             if strcmp(obj.trunc_method, "sharp")
                 if any(idx_mid(:))
                     F_y = gpcdf(y_sample(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + p_tail(row_mid) .* F_y;
+                    rank(idx_mid) = cum_prob_at_th(row_mid) + exp(-lambda(row_mid)) .* F_y;
                     rank(idx_top) = 1.0;
                 end
             elseif strcmp(obj.trunc_method, "smooth")
                 if any(idx_mid(:))
                     F_y = gpcdf(severity(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
                     F_max = gpcdf(max_val(row_mid), xi(row_mid), sigma(row_mid), mu(row_mid)); 
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + p_tail(row_mid) .* (F_y ./ F_max);
+                    rank(idx_mid) = cum_prob_at_th(row_mid) + exp(-lambda(row_mid)) .* (F_y ./ F_max);
                 end
             end
 

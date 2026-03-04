@@ -1,15 +1,16 @@
 function meta = parse_arrival_dist_fp(fp)
-% Parse metadata from an arrival distribution filename into a struct.
+% Parse metadata from a GPD arrival distribution filename into a struct.
 %
 %   meta = parse_arrival_dist_fp(fp)
 %
-%   Parses filenames of either form:
-%   gpd_<scope>_filt_<filt_measure>_fit_<fit_measure>_<lower_threshold>_<year_min>_<arrival_dist>_<trunc_method>_upper_<upper>_n_<n>_seed_<seed>.yaml
-%   gpd_<scope>_(incl_unid|excl_unid)_filt_<filt_measure>_fit_<fit_measure>_<lower_threshold>_<year_min>_<arrival_dist>_<trunc_method>_upper_<upper>_n_<n>_seed_<seed>.yaml
+%   Expected stem patterns (anchor-based; optional tokens do not shift positions):
+%   gpd_<scope>_filt_<filt_measure>_fit_<fit_measure>_<lower_threshold>_<year_min>_<arrival_dist>_<trunc_method>_upper_<upper>_n_<n>_seed_<seed>
+%   gpd_<scope>_(incl|excl)_unid_filt_..._fit_..._<lower_threshold>_<year_min>[_yearthreshonly]_<arrival_dist>_<trunc_method>_upper_<upper>_n_<n>_seed_<seed>
 %
-%   Notes:
-%   - The optional unid flag appears as two underscore-delimited tokens in the
-%     filename: 'incl_unid' -> {'incl','unid'}, 'excl_unid' -> {'excl','unid'}.
+%   Optional flags: incl_unid/excl_unid (two tokens after scope); yearthreshonly
+%   (flag: true if token appears anywhere in stem; does not shift other fields).
+%   Core fields are located via anchor tokens 'filt', 'fit', 'upper', 'n', 'seed'.
+%   Mirrors Python parse_arrival_dist_id / ArrivalDistMeta.
 %
 %   Args:
 %       fp (char or string): Path to the arrival distribution file.
@@ -24,6 +25,7 @@ function meta = parse_arrival_dist_fp(fp)
 %           - fit_measure (char)
 %           - lower_threshold (double)
 %           - year_min (double)
+%           - year_thresh_only (logical)
 %           - arrival_dist_type (char)
 %           - trunc_method (char)
 %           - trunc_type (char) (same as trunc_method; retained for compatibility)
@@ -97,7 +99,10 @@ function meta = parse_arrival_dist_fp(fp)
         error('Could not parse lower_threshold/year_min from stem: %s', stem);
     end
 
-    % Arrival distribution and truncation method are the next two tokens after year_min
+    % Optional yearthreshonly flag: true if token appears anywhere (does not shift positions)
+    meta.year_thresh_only = any(strcmp(parts, 'yearthreshonly'));
+
+    % Arrival distribution and truncation method always at fit_idx+4 and fit_idx+5
     meta.arrival_dist_type = "";
     meta.trunc_method = "";
     meta.trunc_type = ""; % retained for callers that expect trunc_type

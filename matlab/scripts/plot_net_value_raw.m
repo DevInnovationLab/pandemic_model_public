@@ -1,8 +1,8 @@
 function plot_net_value_raw(out_dir)
-    % PLOT_NET_VALUE_RAW
-    % Plot net value (PV) from raw results as two figures: mean-only dot plot and
-    % manual boxplot per scenario (box = IQR, line = median, whiskers = 5--95%,
-    % dot = mean). Y-axis: two levels (advance intervention outer, accent inner).
+    % Plot net value (PV) from raw results as a manual boxplot per scenario.
+    % The box shows the interquartile range, the vertical line shows the median,
+    % the whiskers show the 10th and 90th percentiles, and the dot shows the mean.
+    % Y-axis: surplus-only investment programs in a single layer of labels.
     % Uses only raw sample data (no bootstrap).
     %
     % Args:
@@ -11,11 +11,13 @@ function plot_net_value_raw(out_dir)
     result = 'net_value_pv';
     col_name = [result '_full'];
 
-    investment_tags = {'improved_early_warning', 'advance_capacity', 'neglected_pathogen_rd', ...
-                       'universal_flu_rd', 'combined_invest'};
-    investment_labels = {'Improved early warning', 'Advance capacity', 'Neglected pathogen R&D', ...
-                         'Universal flu vaccine R&D', 'Combined'};
-    col_accents = {'BCR', 'Surplus'};
+    % Order of programs on the y-axis (top to bottom when plotted):
+    % advance capacity, prototype vaccine R&D, universal flu vaccine R&D,
+    % early warning, then combined.
+    investment_tags = {'advance_capacity', 'neglected_pathogen_rd', 'universal_flu_rd', ...
+                       'improved_early_warning', 'combined_invest'};
+    investment_labels = {'Advance capacity', 'Prototype vaccine R&D', 'Universal flu vaccine R&D', ...
+                         'Early warning', 'Combined'};
 
     processed_dir = fullfile(out_dir, 'processed');
     figure_path = fullfile(out_dir, 'figures');
@@ -25,24 +27,20 @@ function plot_net_value_raw(out_dir)
     all_scenarios = string(fieldnames(job_config.scenarios));
     all_scenarios = all_scenarios(~strcmp(all_scenarios, 'baseline'));
 
-    % Build ordered list: (row, col) -> scenario name and labels
+    % Build ordered list: one surplus scenario per investment program
     scenarios_ordered = {};
-    outer_labels = {};
-    inner_labels = {};
+    y_labels = {};
     for i = 1:numel(investment_tags)
-        for j = 1:numel(col_accents)
-            for si = 1:numel(all_scenarios)
-                scen = all_scenarios(si);
-                [row_tag, accent] = parse_grid_scenario_tag(scen);
-                if strcmp(row_tag, investment_tags{i}) && strcmpi(accent, col_accents{j})
-                    sum_file = fullfile(processed_dir, scen + "_relative_sums.mat");
-                    if exist(sum_file, 'file')
-                        scenarios_ordered{end+1} = scen;
-                        outer_labels{end+1} = investment_labels{i};
-                        inner_labels{end+1} = col_accents{j};
-                    end
-                    break;
+        for si = 1:numel(all_scenarios)
+            scen = all_scenarios(si);
+            [row_tag, accent] = parse_grid_scenario_tag(scen);
+            if strcmp(row_tag, investment_tags{i}) && strcmpi(accent, "Surplus")
+                sum_file = fullfile(processed_dir, scen + "_relative_sums.mat");
+                if exist(sum_file, 'file')
+                    scenarios_ordered{end+1} = scen; %#ok<AGROW>
+                    y_labels{end+1} = investment_labels{i}; %#ok<AGROW>
                 end
+                break;
             end
         end
     end
@@ -66,16 +64,16 @@ function plot_net_value_raw(out_dir)
 
     y_pos = (1:n)';
 
-    % --- Manual boxplot: whiskers 5--95%, box IQR, median line, mean dot ---
+    % --- Manual boxplot: whiskers 10--90%, box IQR, median line, mean dot ---
     q1 = nan(n, 1);
     med = nan(n, 1);
     q3 = nan(n, 1);
-    perc_5_95 = nan(n, 2);
+    perc_10_90 = nan(n, 2);
     for k = 1:n
         d = all_data{k};
         if ~isempty(d)
-            p = prctile(d, [5, 25, 50, 75, 95]);
-            perc_5_95(k, :) = p([1, 5]);
+            p = prctile(d, [10, 25, 50, 75, 90]);
+            perc_10_90(k, :) = p([1, 5]);
             q1(k) = p(2);
             med(k) = p(3);
             q3(k) = p(4);
@@ -100,10 +98,10 @@ function plot_net_value_raw(out_dir)
             continue;
         end
         y = y_pos(k);
-        % Whisker: 5th to 95th with caps
-        hw = plot(ax, [perc_5_95(k, 1), perc_5_95(k, 2)], [y, y], '-', 'Color', whisker_color, 'LineWidth', 1.6);
-        plot(ax, [perc_5_95(k, 1), perc_5_95(k, 1)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
-        plot(ax, [perc_5_95(k, 2), perc_5_95(k, 2)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
+        % Whisker: 10th to 90th with caps
+        hw = plot(ax, [perc_10_90(k, 1), perc_10_90(k, 2)], [y, y], '-', 'Color', whisker_color, 'LineWidth', 1.6);
+        plot(ax, [perc_10_90(k, 1), perc_10_90(k, 1)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
+        plot(ax, [perc_10_90(k, 2), perc_10_90(k, 2)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
         % Box: Q1 to Q3
         xb = [q1(k), q3(k), q3(k), q1(k)];
         yb = [y - box_hw, y - box_hw, y + box_hw, y + box_hw];
@@ -123,43 +121,53 @@ function plot_net_value_raw(out_dir)
     ax.YDir = 'reverse';
     ax.YLim = [0.5, n + 0.5];
     ax.YTick = 1:n;
-    ax.YTickLabel = inner_labels;
+    ax.YTickLabel = y_labels;
     ax.TickLabelInterpreter = 'none';
     ax.FontSize = 10;
     ax.TickDir = 'out';
     ax.Box = 'off';
     ax.YAxisLocation = 'left';
-    xlabel(ax, 'Net value (PV, $ trillion)', 'FontSize', 11);
+    xlabel(ax, 'Net present value (trillion $)', 'FontSize', 11);
 
-    add_outer_ylabels(fig, ax, n, outer_labels);
-    if ~isempty(h_whisker)
-        legend(ax, [h_whisker, h_box, h_median, h_mean], ...
-            {'5/95% percentiles', 'IQR', 'Median', 'Mean'}, ...
-            'Location', 'northeast', 'FontSize', 9, 'Interpreter', 'none');
+    % X-axis limits and ticks at every trillion dollars, based on whisker endpoints
+    valid_whiskers = ~isnan(perc_10_90(:, 1));
+    if any(valid_whiskers)
+        global_min = min(perc_10_90(valid_whiskers, 1));
+        global_max = max(perc_10_90(valid_whiskers, 2));
+        x_lo = floor(global_min);
+        x_hi = ceil(global_max);
+        if x_lo == x_hi
+            x_hi = x_lo + 1;
+        end
+        ax.XLim = [x_lo, x_hi];
+        ax.XTick = x_lo:1:x_hi;
     end
-    title(ax, 'Net value across scenarios', 'FontSize', 12);
+
+    % Legend: customize only the median to appear clearly as a vertical line.
+    % (MATLAB's legend engine represents each entry with its own internal
+    % graphics objects, so we adjust the line-type icons after legend creation.)
+    if ~isempty(h_whisker)
+        [~, iconObjs, ~, ~] = legend(ax, [h_whisker, h_box, h_median, h_mean], ...
+            {'10/90 percentiles', 'Interquartile range', 'Median', 'Mean'}, ...
+            'Location', 'northeast', 'FontSize', 9, 'Interpreter', 'none');
+
+        % Work only with line-type icons to avoid touching text objects
+        isLineIcon = arrayfun(@(h) isa(h, 'matlab.graphics.primitive.Line'), iconObjs);
+        lineIcons = iconObjs(isLineIcon);
+
+        % Identify the median icon by color (same as box edge, no marker)
+        if ~isempty(lineIcons)
+            isMedianIcon = arrayfun(@(h) isequal(h.Color, edge_color) && strcmp(h.Marker, 'none'), lineIcons);
+            medIdx = find(isMedianIcon, 1);
+            if ~isempty(medIdx)
+                med_icon = lineIcons(medIdx);
+                med_icon.XData = [0.5 0.5];
+                med_icon.YData = [0.1 0.9];
+            end
+        end
+    end
     print(fig, fullfile(figure_path, 'net_value_boxplot'), '-djpeg', '-r600');
     close(fig);
-end
-
-function add_outer_ylabels(fig, ax, n, outer_labels)
-    % Add outer y-axis labels (investment groups) in the left margin.
-    [~, ~, grp_id] = unique(outer_labels, 'stable');
-    ax_pos = ax.Position;
-    for g = 1:max(grp_id)
-        idx = find(grp_id == g);
-        y_center = mean(idx);
-        if n == 1
-            group_frac = 0.5;
-        else
-            group_frac = (n - y_center) / (n - 1);
-        end
-        fig_y = ax_pos(2) + ax_pos(4) * group_frac;
-        annotation(fig, 'textbox', [0.01 fig_y - 0.022 0.13 0.045], ...
-            'String', outer_labels{idx(1)}, 'EdgeColor', 'none', ...
-            'FontWeight', 'bold', 'FontSize', 10, 'VerticalAlignment', 'middle', ...
-            'HorizontalAlignment', 'right', 'Interpreter', 'none');
-    end
 end
 
 function [row_tag, accent] = parse_grid_scenario_tag(scen_name)

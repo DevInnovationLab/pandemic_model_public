@@ -109,6 +109,11 @@ function get_sensitivity_loss_summary(sensitivity_dir)
     write_to_latex(annualized_summary_table, fullfile(sensitivity_dir, "sensitivity_annualized_loss_summary.tex"))
     write_to_latex(total_summary_table, fullfile(sensitivity_dir, "sensitivity_total_loss_summary.tex"))
 
+    % Stacked horizontal bar chart: annualized losses by category for each scenario
+    fig_dir = fullfile(sensitivity_dir, 'figures');
+    if ~isfolder(fig_dir), mkdir(fig_dir); end
+    plot_stacked_loss_bars(annualized_summary_table, fig_dir);
+
     %% Prepare and save CSVs (means only, snake_case column names)
 
     % Helper to extract mean from a cell containing a struct
@@ -297,6 +302,90 @@ function write_to_latex(summary_data, outpath)
     fprintf('LaTeX table successfully written to %s\n', outpath);
 end
 
+function plot_stacked_loss_bars(summary_table, fig_dir)
+    % Plot horizontal stacked bar chart of annualized losses (mortality, economic, learning) per scenario.
+    %
+    % Args:
+    %   summary_table (table): Table with Variable, Value, MortalityLoss, EconomicLoss, LearningLoss (cells with .mean).
+    %   fig_dir (char): Directory to save the figure.
+
+    n = height(summary_table);
+    mortality = zeros(n, 1);
+    economic  = zeros(n, 1);
+    learning  = zeros(n, 1);
+    for i = 1:n
+        mortality(i) = summary_table{i, 4}{1}.mean;
+        economic(i)  = summary_table{i, 5}{1}.mean;
+        learning(i)  = summary_table{i, 6}{1}.mean;
+    end
+    data = [mortality, economic, learning];  % each row = one scenario, cols = three categories ($ trillion)
+
+    % Order rows: baseline first, then by variable order (match write_to_latex)
+    variableOrder = [
+        "Lower severity threshold ($\underline{s}$)"
+        "Pathogen types"
+        "Sample period"
+        "Severity upper bound ($\overline{s}$)"
+        "Per capita GDP growth rate ($y$)"
+        "Value of statistical life (VSL)"
+        "Social discount rate $r$"
+    ];
+    uniqueVars = unique(summary_table.Variable, 'stable');
+    baselineIdx = strcmp(uniqueVars, 'Baseline');
+    orderedVars = uniqueVars(baselineIdx);
+    for k = 1:length(variableOrder)
+        idx = find(strcmp(uniqueVars, variableOrder(k)), 1);
+        if ~isempty(idx)
+            orderedVars = [orderedVars; uniqueVars(idx)];
+        end
+    end
+    remaining = ~ismember(uniqueVars, orderedVars);
+    if any(remaining)
+        orderedVars = [orderedVars; uniqueVars(remaining)];
+    end
+
+    % Build ordered index and labels
+    order_idx = [];
+    for v = 1:length(orderedVars)
+        order_idx = [order_idx; find(strcmp(summary_table.Variable, orderedVars(v)))];
+    end
+    data = data(order_idx, :);
+    labels = string(summary_table.Value(order_idx));
+    for i = 1:length(labels)
+        if ismissing(labels(i)) || strlength(labels(i)) == 0
+            labels(i) = "Baseline";
+        end
+    end
+
+    % Colors: mortality, economic, learning (distinct, print-friendly)
+    colors = [0.45 0.25 0.55;   % purple
+              0.85 0.45 0.25;   % orange
+              0.25 0.55 0.45];  % teal
+
+    fig = figure('Visible', 'off', 'Position', [100 100 640 420]);
+    ax = axes(fig);
+    b = barh(ax, data, 'stacked', 'FaceColor', 'flat');
+    for k = 1:3
+        b(k).CData = repmat(colors(k,:), size(data, 1), 1);
+    end
+    ax.YDir = 'reverse';
+    ax.YTick = 1:size(data, 1);
+    ax.YTickLabel = labels;
+    ax.TickLabelInterpreter = 'none';
+    ax.FontSize = 9;
+    ax.Box = 'on';
+    ax.XGrid = 'on';
+    xlabel(ax, 'Expected annualized pandemic loss ($ trillion)', 'FontSize', 10);
+    title(ax, 'Sensitivity of unmitigated losses by scenario', 'FontSize', 11);
+    legend(ax, {'Mortality', 'Economic', 'Learning'}, 'Location', 'eastoutside', 'FontSize', 9);
+    set(ax, 'Layer', 'top');
+
+    outpath = fullfile(fig_dir, 'sensitivity_stacked_losses.png');
+    exportgraphics(fig, outpath, 'Resolution', 300);
+    close(fig);
+    fprintf('Stacked loss chart saved to %s\n', outpath);
+end
+
 function [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_arrival_dist, ...
                                                           baseline_vsl, baseline_r, baseline_y)
     % Maps sensitivity variable names and values to nicely formatted strings for tables
@@ -351,6 +440,9 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             elseif incl_unid
                 formatted_name = "Pathogen types";
                 formatted_value = "Include unidentified pathogens";
+            elseif s_meta.year_thresh_only
+                formatted_name = "Pathogen types";
+                formatted_value = "Include unidentified and bacterial";
             end
         case "duration_dist_config"
             formatted_name = "Duration upper bound ($\overline{d}$)";
