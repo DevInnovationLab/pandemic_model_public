@@ -5,4 +5,4 @@ fix_params: # Parameters to update and fix in the base config
   scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:
   ptrs_pathogen:
-    - "output/ptrs/marginal_ptrs_preds_always_succeed.csv"
+    - "./output/ptrs/ptrs_table_always_succeed.csv"

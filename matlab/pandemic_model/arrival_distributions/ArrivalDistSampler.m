@@ -29,12 +29,11 @@ classdef ArrivalDistSampler
 
         % ---------------------------------------------------------------------
         function y_sample = get_y_sample(obj, unifrnd_draw)
-            % Draw severities from a GPD tail that is
-            %  – left-truncated  at  min_y_sample  (threshold)
-            %  – right-truncated at  max_y_sample
+            % Draw severities from a GPD tail mixed with a Poisson arrival process.
             %
-            % The mass (1-p) sits at the threshold, the remaining p is spread
-            % over (min_y_sample , max_y_sample].
+            % We model annual severity as:
+            %   - an atom at the threshold (no outbreak) with probability exp(-lambda)
+            %   - a GPD tail over (mu, max_val] with probability 1 - exp(-lambda)
             assert(height(unifrnd_draw) == height(obj.param_samples), 'First dimension of draws must match number of parameter samples');
 
             xi = obj.param_samples.xi;
@@ -48,10 +47,11 @@ classdef ArrivalDistSampler
             lambda = lambda_raw ./ (1 - obj.false_positive_rate);
 
             % --- rescale uniforms to (0,1) conditional on being in the tail --------
-            cum_prob_at_th = 1 - exp(-lambda);
+            % Atom at threshold has mass p0 = exp(-lambda); tail mass is 1 - p0.
+            cum_prob_at_th = exp(-lambda);  % P(no outbreak)
             [row, col] = find(unifrnd_draw > cum_prob_at_th);
             lin_idx = sub2ind(size(unifrnd_draw), row, col);
-            u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ (exp(-lambda(row)));
+            u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ (1 - cum_prob_at_th(row));
 
             if strcmp(obj.trunc_method, "sharp")
                 y_sample(lin_idx) = gpinv(u_raw, xi(row), sigma(row), mu(row));
@@ -82,11 +82,12 @@ classdef ArrivalDistSampler
 
             % Adjust arrival probability for false positive rate
             lambda = lambda_raw ./ (1 - obj.false_positive_rate);
-            cum_prob_at_th = 1 - exp(-lambda);
+            % Atom at threshold (no outbreak) has mass p0 = exp(-lambda)
+            cum_prob_at_th = exp(-lambda);
 
             % Case 1: at or below the threshold
             idx_th = y_sample <= mu;
-            rank(idx_th) = cum_prob_at_th;
+            rank(idx_th) = cum_prob_at_th(idx_th);
 
             % Case 2: between threshold and max_y_sample
             idx_mid = y_sample > mu & y_sample < max_val;
@@ -96,14 +97,18 @@ classdef ArrivalDistSampler
             if strcmp(obj.trunc_method, "sharp")
                 if any(idx_mid(:))
                     F_y = gpcdf(y_sample(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + exp(-lambda(row_mid)) .* F_y;
+                    % F_mix(y) = p0 + (1 - p0) * F_GPD(y)
+                    tail_weight = 1 - cum_prob_at_th(row_mid);
+                    rank(idx_mid) = cum_prob_at_th(row_mid) + tail_weight .* F_y;
                     rank(idx_top) = 1.0;
                 end
             elseif strcmp(obj.trunc_method, "smooth")
                 if any(idx_mid(:))
-                    F_y = gpcdf(severity(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
+                    F_y = gpcdf(y_sample(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
                     F_max = gpcdf(max_val(row_mid), xi(row_mid), sigma(row_mid), mu(row_mid)); 
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + exp(-lambda(row_mid)) .* (F_y ./ F_max);
+                    tail_weight = 1 - cum_prob_at_th(row_mid);
+                    rank(idx_mid) = cum_prob_at_th(row_mid) + tail_weight .* (F_y ./ F_max);
+                    rank(idx_top) = 1.0;
                 end
             end
 
