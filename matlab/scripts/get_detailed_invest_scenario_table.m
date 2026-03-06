@@ -30,28 +30,32 @@ end
 
 function scenarios = get_scenario_order(available)
     % Return scenario names in display order. Only scenarios in available are included.
-    % Early warning: low threshold only. Universal flu: both only. Others: Moderate then Expansive. Combined last.
+    % Excludes moderate programs (9-month, single pathogen, BCR-accepting combined).
     order = ["improved_early_warning_low_threshold", ...
              "universal_flu_rd_invest_both", ...
-             "advance_capacity_9_month", "advance_capacity_6_month", ...
-             "neglected_pathogen_rd_single", "neglected_pathogen_rd_all", ...
-             "combined_invest_bcr_acc", "combined_invest_surplus_acc"];
+             "advance_capacity_6_month", ...
+             "neglected_pathogen_rd_all", ...
+             "combined_invest_surplus_acc"];
     scenarios = order(ismember(order, available));
 end
 
 function summary_table = load_scenario_means(processed_dir, scenarios)
-    % Load each scenario's relative_sums.mat and return a table of (Category, Variation, means).
-    % Includes a leading baseline row when baseline_annual_sums.mat is available (means taken here).
+    % Load scenario means with regime: baseline = vaccine benefits vs response costs;
+    % preparedness rows = (vaccine benefits - baseline response costs) vs advance investment cost.
+    %
+    % Baseline: Benefits = benefits_vaccine, Costs = inp costs (admin, surge, R&D, tailoring).
+    % Preparedness: Benefits = benefits_vaccine_scenario - baseline_inp_costs, Costs = advance investment only.
 
     n = length(scenarios);
 
-    % Optional baseline row from aggregated baseline_sums table (take means here)
+    baseline_net = NaN;
     baseline_row = {};
     baseline_file = fullfile(processed_dir, 'baseline_annual_sums.mat');
     if exist(baseline_file, 'file')
         r = load(baseline_file).all_baseline_sums;
-        benefit0 = mean(r.tot_benefits_pv_full);
-        cost0 = mean(r.costs_adv_invest_pv_full);
+        % Baseline: benefits = vaccine benefits, costs = response costs (inp)
+        benefit0 = mean(r.benefits_vaccine_full);
+        cost0 = mean(r.costs_inp_pv_full);
         npv0 = benefit0 - cost0;
         bcr0 = 0;
         if abs(cost0) >= 1e-7 || abs(benefit0) >= 1e-7
@@ -98,44 +102,22 @@ function summary_table = load_scenario_means(processed_dir, scenarios)
 end
 
 function [category_name, variation] = parse_scenario_name(scenario_name)
-    % Returns category and variation (Moderate/Expansive for multi-row categories, or description for single-row).
+    % Returns category and variation for display (single row per program).
     if startsWith(scenario_name, "combined_invest")
         category_name = "Combined";
-        if contains(scenario_name, "bcr_acc")
-            variation = "Moderate";
-        elseif contains(scenario_name, "surplus_acc")
-            variation = "Expansive";
-        else
-            variation = "";
-        end
+        variation = "";
     elseif startsWith(scenario_name, "advance_capacity")
         category_name = "Advance capacity";
-        if contains(scenario_name, "9_month")
-            variation = "Moderate";
-        elseif contains(scenario_name, "6_month")
-            variation = "Expansive";
-        else
-            variation = "";
-        end
+        variation = "";
     elseif startsWith(scenario_name, "universal_flu_rd")
         category_name = "Universal flu vaccine R&D";
-        if contains(scenario_name, "both")
-            variation = "Both platform response R&D";
-        else
-            variation = "";
-        end
+        variation = "";
     elseif startsWith(scenario_name, "neglected_pathogen_rd")
         category_name = "Neglected pathogen R&D";
-        if contains(scenario_name, "single")
-            variation = "Moderate";
-        elseif contains(scenario_name, "all")
-            variation = "Expansive";
-        else
-            variation = "";
-        end
+        variation = "";
     elseif startsWith(scenario_name, "improved_early_warning")
         category_name = "Improved early warning";
-        variation = "";  % Single scenario (low threshold only)
+        variation = "";
     else
         category_name = scenario_name;
         variation = "";
@@ -143,7 +125,7 @@ function [category_name, variation] = parse_scenario_name(scenario_name)
 end
 
 function write_advance_investment_table_latex(summary_data, outpath, varargin)
-    % Write LaTeX table: multi-row categories get a header line then indented Moderate/Expansive rows.
+    % Write LaTeX table: one row per scenario (category name only, no indentation).
     p = inputParser;
 
     % Parse optional arguments
@@ -198,8 +180,6 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     lives_30yr_str = round_and_comma(summary_data.Lives30yr);
     lives_all_str = round_and_comma(summary_data.LivesAll);
 
-    [unique_cats, ~, cat_idx] = unique(summary_data.Category, 'stable');
-
     % Open LaTeX file for writing
     fileID = fopen(outpath, 'w');
 
@@ -226,30 +206,16 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     end
     fprintf(fileID, '\\hline\n');
 
-    % Print data: for multi-row categories, category name on its own line then indented Moderate/Expansive with numbers
-    n_data_col = 5 + 3 * include_ten_thirty;  % 5 or 8
-    empty_cells = repmat(' &', 1, n_data_col);
-    for c = 1:numel(unique_cats)
-        idx = find(cat_idx == c);
-        if numel(idx) > 1
-            % Header row: category name only, empty data cells
-            fprintf(fileID, '%s%s \\\\\n', char(summary_data.Category{idx(1)}), empty_cells);
-        end
-        for ii = 1:numel(idx)
-            i = idx(ii);
-            if numel(idx) > 1
-                label_str = ['\hspace{3mm} ' char(summary_data.Variation(i))];
-            else
-                label_str = char(summary_data.Category{i});
-            end
-            if include_ten_thirty
-                fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
-                    label_str, cost_str(i), benefit_str(i), npv_str(i), bcr_str(i), ...
-                    lives_10yr_str(i), lives_30yr_str(i), lives_all_str(i));
-            else
-                fprintf(fileID, '%s & %s & %s & %s & %s & %s \\\\\n', ...
-                    label_str, cost_str(i), benefit_str(i), npv_str(i), bcr_str(i), lives_all_str(i));
-            end
+    % Print data: one row per scenario (category name, no indentation)
+    for i = 1:height(summary_data)
+        label_str = char(summary_data.Category{i});
+        if include_ten_thirty
+            fprintf(fileID, '%s & %s & %s & %s & %s & %s & %s & %s \\\\\n', ...
+                label_str, cost_str(i), benefit_str(i), npv_str(i), bcr_str(i), ...
+                lives_10yr_str(i), lives_30yr_str(i), lives_all_str(i));
+        else
+            fprintf(fileID, '%s & %s & %s & %s & %s & %s \\\\\n', ...
+                label_str, cost_str(i), benefit_str(i), npv_str(i), bcr_str(i), lives_all_str(i));
         end
     end
     fprintf(fileID, '\\hline\n\\end{tabular*}\n');

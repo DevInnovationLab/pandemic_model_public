@@ -20,20 +20,20 @@ classdef ArrivalDistSampler
                 false_positive_rate (1,1) {mustBeNumeric, mustBeInRange(false_positive_rate, 0, 1)} = 0
                 measure (1,1) string = "undefined"
             end
-
-            obj.param_samples = param_samples;
             obj.false_positive_rate = false_positive_rate;
+            obj.param_samples = param_samples;
             obj.trunc_method = trunc_method;
             obj.measure = measure;
         end
 
         % ---------------------------------------------------------------------
         function y_sample = get_y_sample(obj, unifrnd_draw)
-            % Draw severities from a GPD tail mixed with a Poisson arrival process.
+            % Draw severities from a GPD tail that is
+            %  – left-truncated  at  min_y_sample  (threshold)
+            %  – right-truncated at  max_y_sample
             %
-            % We model annual severity as:
-            %   - an atom at the threshold (no outbreak) with probability exp(-lambda)
-            %   - a GPD tail over (mu, max_val] with probability 1 - exp(-lambda)
+            % The mass (1-p) sits at the threshold, the remaining p is spread
+            % over (min_y_sample , max_y_sample].
             assert(height(unifrnd_draw) == height(obj.param_samples), 'First dimension of draws must match number of parameter samples');
 
             xi = obj.param_samples.xi;
@@ -41,28 +41,13 @@ classdef ArrivalDistSampler
             lambda_raw = obj.param_samples.lambda;
             mu = obj.param_samples.mu;
             max_val = obj.param_samples.max_value;
-            y_sample = zeros(size(unifrnd_draw));
 
             % Adjust arrival probability for false positive rate
             lambda = lambda_raw ./ (1 - obj.false_positive_rate);
 
-            % --- rescale uniforms to (0,1) conditional on being in the tail --------
-            % Atom at threshold has mass p0 = exp(-lambda); tail mass is 1 - p0.
-            cum_prob_at_th = exp(-lambda);  % P(no outbreak)
-            [row, col] = find(unifrnd_draw > cum_prob_at_th);
-            lin_idx = sub2ind(size(unifrnd_draw), row, col);
-            u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ (1 - cum_prob_at_th(row));
-
-            if strcmp(obj.trunc_method, "sharp")
-                y_sample(lin_idx) = gpinv(u_raw, xi(row), sigma(row), mu(row));
-                [row_over, col_over] = find(y_sample > max_val);
-                y_sample(sub2ind([height(y_sample), width(y_sample)], row_over, col_over)) = max_val(row_over);
-            elseif strcmp(obj.trunc_method, "smooth")
-                F_max = gpcdf(max_val(row), xi(row), sigma(row), mu(row));
-                u_trunc = u_raw .* F_max;
-                y_sample(lin_idx) = gpinv(u_trunc, xi(row), sigma(row), mu(row));
-                assert(all(y_sample <= max_val, 'all'));
-            end
+            % Get sample
+            y_sample = PoissonGPD(lambda, xi, sigma, mu, max_val).icdf(unifrnd_draw);
+            y_sample(y_sample <= mu) = 0; % Hacky but must be done somewhere.
         end
 
         function rank = get_rank(obj, y_sample)
@@ -78,41 +63,12 @@ classdef ArrivalDistSampler
             lambda_raw = obj.param_samples.lambda;
             mu = obj.param_samples.mu;
             max_val = obj.param_samples.max_value;
-            rank = zeros(size(y_sample));
 
             % Adjust arrival probability for false positive rate
             lambda = lambda_raw ./ (1 - obj.false_positive_rate);
-            % Atom at threshold (no outbreak) has mass p0 = exp(-lambda)
-            cum_prob_at_th = exp(-lambda);
 
-            % Case 1: at or below the threshold
-            idx_th = y_sample <= mu;
-            rank(idx_th) = cum_prob_at_th(idx_th);
-
-            % Case 2: between threshold and max_y_sample
-            idx_mid = y_sample > mu & y_sample < max_val;
-            [row_mid, ~] = find(idx_mid);
-            idx_top = y_sample >= max_val;
-
-            if strcmp(obj.trunc_method, "sharp")
-                if any(idx_mid(:))
-                    F_y = gpcdf(y_sample(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
-                    % F_mix(y) = p0 + (1 - p0) * F_GPD(y)
-                    tail_weight = 1 - cum_prob_at_th(row_mid);
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + tail_weight .* F_y;
-                    rank(idx_top) = 1.0;
-                end
-            elseif strcmp(obj.trunc_method, "smooth")
-                if any(idx_mid(:))
-                    F_y = gpcdf(y_sample(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
-                    F_max = gpcdf(max_val(row_mid), xi(row_mid), sigma(row_mid), mu(row_mid)); 
-                    tail_weight = 1 - cum_prob_at_th(row_mid);
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + tail_weight .* (F_y ./ F_max);
-                    rank(idx_top) = 1.0;
-                end
-            end
-
-            assert(all(isbetween(rank, 0, 1), 'all'));
+            % Get rank
+            rank = PoissonGPD(lambda, xi, sigma, mu, max_val).cdf(y_sample);
         end
 
         function y_sample = ppf(obj, unifrnd_draw)
