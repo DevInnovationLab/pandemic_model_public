@@ -54,9 +54,6 @@ function compare_exceedances(sensitivity_dir)
 
         % Base table (same for both runs)
         base_path = fullfile(chunk_b, 'base_simulation_table.mat');
-        if ~isfile(base_path)
-            continue;
-        end
         S = load(base_path, 'base_simulation_table');
         base_t = S.base_simulation_table(:, base_vars);
         base_t = base_t(~base_t.is_false & ~isnan(base_t.yr_start), :);
@@ -91,6 +88,10 @@ function compare_exceedances(sensitivity_dir)
     pandemic_baseline = vertcat(all_pandemic_baseline{1:n_pan_b});
     pandemic_value1   = vertcat(all_pandemic_value1{1:n_pan_v1});
     clear all_base all_pandemic_baseline all_pandemic_value1 S base_t pan_t;
+
+    disp(class(base_merged));
+    disp(class(pandemic_baseline));
+    disp(class(pandemic_value1));
 
     % Severity matrices: (sim_num, yr_start) -> severity
     no_mitigation_matrix = zeros(num_simulations, sim_periods);
