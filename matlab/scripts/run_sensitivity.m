@@ -189,6 +189,7 @@ function run_single_scenario(run_config, run_type, num_chunks, array_task_id)
     %   array_task_id (numeric): SLURM array task ID (nan if not array task)
     
     temp_config_path = tempname;
+    disp(temp_config_path);
     yaml.dumpFile(temp_config_path, run_config);
 
     % Handle run_type argument: either 'response' or 'unmitigated'
@@ -203,6 +204,7 @@ function run_single_scenario(run_config, run_type, num_chunks, array_task_id)
     % For run_job, results are saved in a subfolder named after the temp config file
     [~, temp_name, ~] = fileparts(temp_config_path);
     temp_results = fullfile(run_config.outdir, temp_name);
+    disp(dir(temp_results));
     if exist(temp_results, 'dir')
         movefile(fullfile(temp_results, '*'), run_config.outdir);
         rmdir(temp_results);
