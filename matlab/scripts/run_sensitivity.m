@@ -61,7 +61,7 @@ function run_multiparameter_sensitivity(sensitivity_config, run_type, overwrite,
         end
     end
 
-    base_dir = setup_sensitivity_dirs(sensitivity_config);
+    base_dir = setup_sensitivity_dirs(sensitivity_config, overwrite);
     run_baseline(base_config, base_dir, run_type, overwrite, num_chunks, array_task_id);
 
     % Run variations
@@ -112,7 +112,7 @@ function run_oneparameter_sensitivity(sensitivity_config, run_type, overwrite, n
         end
     end
 
-    base_dir = setup_sensitivity_dirs(sensitivity_config);
+    base_dir = setup_sensitivity_dirs(sensitivity_config, overwrite);
     run_baseline(base_config, base_dir, run_type, overwrite, num_chunks, array_task_id);
 
     % Run variations
@@ -153,8 +153,13 @@ function base_config = get_base_config(sensitivity_config)
 end
 
 
-function base_dir = setup_sensitivity_dirs(sensitivity_config)
+function base_dir = setup_sensitivity_dirs(sensitivity_config, overwrite)
     base_dir = fullfile(sensitivity_config.outdir, sensitivity_config.run_name);
+
+    if overwrite && exist(base_dir, 'dir')
+        rmdir(base_dir, 's');
+    end
+    
     create_folders_recursively(base_dir);
     
     % Save sensitivity config
