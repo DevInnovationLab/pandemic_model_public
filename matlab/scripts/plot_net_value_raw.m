@@ -143,27 +143,17 @@ function plot_net_value_raw(out_dir)
         ax.XTick = x_lo:1:x_hi;
     end
 
-    % Legend: customize only the median to appear clearly as a vertical line.
-    % (MATLAB's legend engine represents each entry with its own internal
-    % graphics objects, so we adjust the line-type icons after legend creation.)
+    % Legend: four entries; median keeps its label but icon is invisible (user can draw symbol in Figma).
     if ~isempty(h_whisker)
-        [~, iconObjs, ~, ~] = legend(ax, [h_whisker, h_box, h_median, h_mean], ...
+        lgd = legend(ax, [h_whisker, h_box, h_median, h_mean], ...
             {'10/90 percentiles', 'Interquartile range', 'Median', 'Mean'}, ...
             'Location', 'northeast', 'FontSize', 9, 'Interpreter', 'none');
-
-        % Work only with line-type icons to avoid touching text objects
-        isLineIcon = arrayfun(@(h) isa(h, 'matlab.graphics.primitive.Line'), iconObjs);
-        lineIcons = iconObjs(isLineIcon);
-
-        % Identify the median icon by color (same as box edge, no marker)
-        if ~isempty(lineIcons)
-            isMedianIcon = arrayfun(@(h) isequal(h.Color, edge_color) && strcmp(h.Marker, 'none'), lineIcons);
-            medIdx = find(isMedianIcon, 1);
-            if ~isempty(medIdx)
-                med_icon = lineIcons(medIdx);
-                med_icon.XData = [0.5 0.5];
-                med_icon.YData = [0.1 0.9];
-            end
+        % Find the median icon (line with box edge color, no marker) and make it white so only the text shows.
+        lineIcons = findobj(lgd, 'Type', 'Line');
+        isMedianIcon = arrayfun(@(h) isequal(h.Color, edge_color) && strcmp(h.Marker, 'none'), lineIcons);
+        medIdx = find(isMedianIcon, 1);
+        if ~isempty(medIdx)
+            lineIcons(medIdx).Color = [1 1 1];
         end
     end
     print(fig, fullfile(figure_path, 'net_value_boxplot'), '-djpeg', '-r600');
