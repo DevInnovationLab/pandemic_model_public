@@ -9,9 +9,11 @@ proto_effect <- readr::read_csv("output/ptrs/prototype_effect_preds.csv", show_c
 # Clean up platform names for plotting
 proto_effect <- proto_effect %>%
   mutate(
-    platform = recode_factor(platform,
-                            mrna_only = "mRNA",
-                            traditional_only = "Traditional"),
+    platform = recode_factor(
+      platform,
+      mrna_only = "mRNA",
+      traditional_only = "Traditional"
+    ),
     platform = factor(platform, levels = c("Traditional", "mRNA"))
   )
 
@@ -20,11 +22,11 @@ platform_colors <- c("mRNA" = "#0072B2", "Traditional" = "#D55E00")
 
 # Plot the effect of prototype R&D investment by platform
 proto_effect_plot <- ggplot(proto_effect, aes(
-    x = effect_mean,
-    y = platform,
-    color = platform,
-    shape = platform
-  )) +
+  x = effect_mean,
+  y = platform,
+  color = platform,
+  shape = platform
+)) +
   geom_point(size = 4, position = position_dodge(width = 0.6)) +
   geom_errorbarh(
     aes(xmin = effect_lo95, xmax = effect_hi95),
@@ -35,26 +37,28 @@ proto_effect_plot <- ggplot(proto_effect, aes(
   ) +
   scale_color_manual(
     values = platform_colors,
-    name = "Platform",
-    breaks = c("mRNA", "Traditional")
+    name = NULL,
+    breaks = c("Traditional", "mRNA")
   ) +
   scale_shape_manual(
     values = c("mRNA" = 16, "Traditional" = 17),
-    name = "Platform",
-    breaks = c("mRNA", "Traditional")
+    name = NULL,
+    breaks = c("Traditional", "mRNA")
   ) +
   scale_x_continuous(
+    limits = c(0, 1),
+    breaks = seq(0, 1, by = 0.1),
     labels = scales::percent_format(accuracy = 1, suffix = "")
   ) +
   labs(
-    x = "Percentage point increase in\nprobability of technical and regulatory success",
+    x = "Increase in probability of vaccine success",
     y = NULL
   ) +
   theme_classic(base_size = 8) +
   theme(
     plot.title = element_text(size = 22, face = "bold", hjust = 0),
-    axis.text.y = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black"),
+    axis.text.y = element_text(size = 14),
+    axis.text.x = element_text(size = 12),
     axis.title.x = element_text(size = 16, margin = margin(t = 10)),
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
@@ -65,8 +69,10 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
     plot.margin = margin(10, 0, 10, 10),
-    legend.position = "right",
-    legend.title = element_text(size = 14),
+    legend.position = c(0.98, 0.02),
+    legend.justification = c("right", "bottom"),
+    legend.background = element_rect(fill = "white", colour = "white"),
+    legend.title = element_blank(),
     legend.text = element_text(size = 12)
   )
 

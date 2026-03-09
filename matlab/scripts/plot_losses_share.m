@@ -103,9 +103,8 @@ function plot_losses_share(job_dir)
     hold on
     % Plot Lorenz curve
     plot([0; cum_event_share], [0; cum_loss_share], 'b-', 'LineWidth', 2)
-    title('Lorenz curve for pandemic losses', 'FontSize', 16, 'FontWeight', 'normal')
-    xlabel('Cumulative share of events', 'FontSize', 14)
-    ylabel('Cumulative share of losses', 'FontSize', 14)
+    xlabel('Cumulative share of pandemics', 'FontSize', 14)
+    ylabel('Cumulative share of social losses', 'FontSize', 14)
     ylim([0 1])
     box off
     grid on

@@ -59,11 +59,18 @@ if __name__ == "__main__":
     # ------ Plot poisson model -----------------------------------
     
     # Set colors
-    col_poisson = '#2ca02c'
+    col_poisson = 'blue'
 
     # Plot data 
     fig, ax = plt.subplots(figsize=(10, 8))
-    ax.scatter(econ_loss_clean['intensity'], econ_loss_clean['annual_pct_gdp_loss'], color="steelblue", s=80, alpha=0.7, label="Data Points")
+    ax.scatter(
+        econ_loss_clean['intensity'],
+        econ_loss_clean['annual_pct_gdp_loss'],
+        color="black",
+        s=80,
+        alpha=0.7,
+        label="Data points",
+    )
 
     # Annotate each point with the disease name
     for i, disease in enumerate(econ_loss_clean['disease']):
@@ -73,14 +80,14 @@ if __name__ == "__main__":
                 fontsize=12,
                 ha='left',
                 va='top',
-                color='darkblue')
+                color='black')
 
-    # Labels and title
-    ax.set_title(r"Pandemic intensity vs percent annual GDP loss")
-    ax.set_xlabel("Intensity (deaths per 10,000 / year)")
+    # Labels
+    ax.set_xlabel("Intensity (deaths per 10,000 per year)")
     ax.set_ylabel("Annual GDP loss (%)")
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
+    ax.grid(True, color="0.8", alpha=0.3)
     
     # Log scale and tight layout 
     ax.set_xscale('log')
@@ -109,8 +116,8 @@ if __name__ == "__main__":
     poisson_dict = {
         'family': 'poisson',
         'params': {
-            'intercept': float(pm_results.params[0]),
-            'coefs': [float(pm_results.params[1])]
+            'intercept': float(pm_results.params.iloc[0]),
+            'coefs': [float(pm_results.params.iloc[1])]
         }
     }
 
@@ -123,22 +130,26 @@ if __name__ == "__main__":
     std_errors = pm_results.bse
     z_scores = pm_results.tvalues
     p_values = pm_results.pvalues
+    n_obs = len(econ_loss_clean)
     # Create and save LaTeX table in PTRS style (single row per parameter, SE in parentheses below)
     latex_table = (
         "\\begin{table}[h]\n"
         "\\centering\n"
-        "\\caption{Economic loss model (Poisson regression)}\n"
+        "\\caption{Economic loss model (Poisson regression of annual GDP loss share on pandemic intensity."
+        "Log intensity is used as the independent variable so as to give estimated coefficient an elasticity interpretation."
+        "See Equation~\\ref{eq:econ-loss-power-law} for the regression specification.).}\n"
         "\\label{tab:econ_loss_model}\n"
         "\\begin{tabular}{lc}\n"
         "\\hline \\hline\n"
         "Parameter & Coefficient \\\\\n"
         "\\hline\n"
-        f"Intercept & {pm_results.params[0]:.3f} \\\\\n"
-        f" & ({std_errors[0]:.3f}) \\\\\n"
-        f"log(Severity) & {pm_results.params[1]:.3f} \\\\\n"
-        f" & ({std_errors[1]:.3f}) \\\\\n"
+        f"Intercept & {pm_results.params.iloc[0]:.3f} \\\\\n"
+        f" & ({std_errors.iloc[0]:.3f}) \\\\\n"
+        f"ln(Severity) & {pm_results.params.iloc[1]:.3f} \\\\\n"
+        f" & ({std_errors.iloc[1]:.3f}) \\\\\n"
         "\\hline\n"
         f"Deviance & {model_deviance:.3f} \\\\\n"
+        f"Number of observations & {n_obs} \\\\\n"
         "\\hline\n"
         "\\multicolumn{2}{l}{\\footnotesize HC0 robust standard errors reported in parentheses.} \\\\\n"
         "\\end{tabular}\n"
@@ -187,8 +198,9 @@ if __name__ == "__main__":
         np.log(econ_loss_clean['intensity'].min() / 2),
         np.log(econ_loss_clean['intensity'].max()), 100
     ).reshape(-1, 1)
+    log_xrange_df = pd.DataFrame(log_xrange, columns=["intensity"])
 
-    y_pred_loglog = np.exp(llreg.predict(log_xrange)) * 100  # Scale to percentage
+    y_pred_loglog = np.exp(llreg.predict(log_xrange_df)) * 100  # Scale to percentage
 
     # Plot log-log curve
     ax.plot(np.exp(log_xrange), y_pred_loglog, linewidth=2.5, color=col_loglog, label='Log-Log')
@@ -230,7 +242,8 @@ if __name__ == "__main__":
     # Generate predictions
     log_xrange_extended_sm = sm.add_constant(log_xrange_extended)
     y_pred_poisson_ext = pm_results.predict(log_xrange_extended_sm) * 100
-    y_pred_loglog_ext = np.exp(llreg.predict(log_xrange_extended)) * 100
+    log_xrange_extended_df = pd.DataFrame(log_xrange_extended, columns=["intensity"])
+    y_pred_loglog_ext = np.exp(llreg.predict(log_xrange_extended_df)) * 100
 
     # Plot data points
     ax.scatter(econ_loss_clean['intensity'], econ_loss_clean['annual_share_gdp_loss'] * 100,

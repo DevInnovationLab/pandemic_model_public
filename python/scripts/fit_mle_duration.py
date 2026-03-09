@@ -9,6 +9,24 @@ from pandemic_statistics.utils import parse_filtered_ds_fp
 from scipy.optimize import minimize
 from scipy.stats import lognorm
 
+
+def survival_gradient_theta(t, mu, sigma, floc, eps=1e-8):
+    """
+    Gradient of the lognormal survival function S(t; mu, sigma) w.r.t. (mu, sigma).
+
+    Returns a (2,) array [dS/dmu, dS/dsigma] at the given t (or at each t if t is an array).
+    Uses central finite differences.
+    """
+    scale = np.exp(mu)
+    S0 = lognorm.sf(t, s=sigma, scale=scale, loc=floc)
+    S_mu_plus = lognorm.sf(t, s=sigma, scale=np.exp(mu + eps), loc=floc)
+    S_mu_minus = lognorm.sf(t, s=sigma, scale=np.exp(mu - eps), loc=floc)
+    dS_dmu = (S_mu_plus - S_mu_minus) / (2 * eps)
+    S_sigma_plus = lognorm.sf(t, s=sigma + eps, scale=scale, loc=floc)
+    S_sigma_minus = lognorm.sf(t, s=sigma - eps, scale=scale, loc=floc)
+    dS_dsigma = (S_sigma_plus - S_sigma_minus) / (2 * eps)
+    return np.array([dS_dmu, dS_dsigma])
+
 # Parameter transformations to fit in unconstrained space.
 
 def nll_phi(phi, data, loc=0.5, transform=None):
@@ -145,25 +163,32 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
         # Time points for survival function evaluation
         t = np.linspace(0, trunc_years, 1000)
 
-        # Calculate survival functions for each sampled mu, sigma pair
-        t_mat = np.tile(t, (n_samples, 1))  # Shape: (1000, n_samples)
-        survivals = lognorm.sf(t_mat, s=sigma_sample, scale=np.exp(mu_sample), loc=floc)
+        # MLE exceedance curve: S(t; mu_hat, sigma_hat)
+        mle_survival = lognorm.sf(t, s=best_sigma, scale=np.exp(best_mu), loc=floc)
 
-        # Calculate percentiles across samples at each time point
-        percentiles = np.percentile(survivals, [5, 50, 95], axis=0)
+        # Delta method CI: Cov(theta_hat) in (mu, sigma) space from phi-space covariance
+        best_phi = best_fit.opt.x
+        J = transform.jacobian_backward(best_phi)
+        cov_theta = J @ best_fit.hess_inv @ J.T
 
-        # Plot the survival functions
+        # Gradient of S(t; mu, sigma) w.r.t. (mu, sigma) at MLE, for each t
+        grad = survival_gradient_theta(t, best_mu, best_sigma, floc)  # (2, n_t)
+        # Variance of S_hat(t): grad' @ Cov(theta_hat) @ grad, vectorized over t
+        var_st = np.einsum("it,ij,jt->t", grad, cov_theta, grad)
+        se = np.sqrt(np.maximum(var_st, 0.0))
+        z = 1.96
+        lo = np.clip(mle_survival - z * se, 0.0, 1.0)
+        hi = np.clip(mle_survival + z * se, 0.0, 1.0)
+
+        # Plot MLE exceedance and 95% CI as shaded area
         plt.figure(figsize=(10, 6))
-        plt.plot(t, percentiles[1], label='Median', color='blue')
-        plt.plot(t, percentiles[0], label='5th percentile', color='blue', linestyle=':')
-        plt.plot(t, percentiles[2], label='95th percentile', color='blue', linestyle=':')
+        plt.fill_between(t, lo, hi, color="blue", alpha=0.2)
+        plt.plot(t, mle_survival, color="blue")
 
-        plt.xlabel('Years')
-        plt.ylabel('Exceedance function')
-        plt.title('Pandemic duration exceedance function')
-        plt.legend()
+        plt.xlabel("Years")
+        plt.ylabel("Exceedance function")
         plt.grid(True, alpha=0.2)
-        plt.gca().spines[['top', 'right']].set_visible(False)
+        plt.gca().spines[["top", "right"]].set_visible(False)
 
         fig_fn = outdir / f"{outstring}.png"
         plt.savefig(fig_fn, dpi=600)
