@@ -431,6 +431,6 @@ function plot_baseline_npv_ts(job_dir)
     r = config.r;
     periods = config.sim_periods;
 
-    % Compute annualization factor (same as in get_sensitivity_loss_summary.m)
+    % Compute annualization factor (same as in build_sensitivity_loss_tables.m)
     annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
 end

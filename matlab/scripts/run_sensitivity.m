@@ -201,7 +201,7 @@ function run_single_scenario(run_config, run_type, num_chunks, array_task_id)
     if strcmp(run_type, "response")
         run_job(temp_config_path, 'num_chunks', num_chunks, 'array_task_id', array_task_id);
     elseif strcmp(run_type, "unmitigated")
-        estimate_unmitigated_losses(temp_config_path);
+        estimate_unmitigated_losses(temp_config_path, 'num_chunks', num_chunks, 'array_task_id', array_task_id);
     else
         error('Unknown run_type: %s. Must be "response" or "unmitigated".', run_type);
     end
