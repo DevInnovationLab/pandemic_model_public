@@ -89,10 +89,6 @@ function compare_exceedances(sensitivity_dir)
     pandemic_value1   = vertcat(all_pandemic_value1{1:n_pan_v1});
     clear all_base all_pandemic_baseline all_pandemic_value1 S base_t pan_t;
 
-    disp(class(base_merged));
-    disp(class(pandemic_baseline));
-    disp(class(pandemic_value1));
-
     % Severity matrices: (sim_num, yr_start) -> severity
     no_mitigation_matrix = zeros(num_simulations, sim_periods);
     realized_matrix      = zeros(num_simulations, sim_periods);
@@ -151,27 +147,47 @@ function compare_exceedances(sensitivity_dir)
     madhav_severity_plot = madhav_severity_central(mad_valid);
     madhav_exceedance_plot = madhav_exceedance_central(mad_valid) / 100;
 
-    % Plot
-    fig = figure('Position', [100 100 900 650]);
-    hold on;
-    plot(x_plot, exceed_no,  'LineWidth', 2, 'Color', [0 0.4470 0.7410], 'DisplayName', 'No mitigation');
-    plot(x_plot, exceed_rel, 'LineWidth', 2, 'Color', [0.8500 0.3250 0.0980], 'DisplayName', 'Realized mitigation (vaccines can fail)');
-    plot(x_plot, exceed_alw, 'LineWidth', 2, 'Color', [0.4660 0.6740 0.1880], 'DisplayName', 'Vaccines always work');
-    plot(madhav_severity_plot, madhav_exceedance_plot, 'LineWidth', 2, 'Color', [0.4940 0.1840 0.5560], 'DisplayName', 'Madhav et al. (2023)');
+    % Plot: sequential blue grade for our estimates (no mitigation → realized → vaccines work), darker red for Madhav.
+    color_no   = [0.20 0.40 0.72];
+    color_rel  = [0.35 0.52 0.78];
+    color_alw  = [0.45 0.68 0.88];
+    color_mad  = [0.62 0.08 0.08];
 
-    set(gca, 'XScale', 'log', 'YScale', 'log');
-    grid on;
-    box off;
-    xlabel('Severity (deaths per 10,000)', 'FontSize', 14);
-    ylabel('Exceedance probability', 'FontSize', 14);
-    title('Exceedance probability curves', 'FontSize', 15);
-    legend('Location', 'best');
+    fig = figure('Position', [100 100 900 650]);
+    ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
+    set(ax, 'FontName', 'Arial', 'FontSize', 11);
+    hold(ax, 'on');
+
+    plot(ax, x_plot, exceed_no,  'LineWidth', 2, 'Color', color_no);
+    plot(ax, x_plot, exceed_rel, 'LineWidth', 2, 'Color', color_rel);
+    plot(ax, x_plot, exceed_alw, 'LineWidth', 2, 'Color', color_alw);
+    plot(ax, madhav_severity_plot, madhav_exceedance_plot, 'LineWidth', 2, 'Color', color_mad);
+
+    set(ax, 'XScale', 'log', 'YScale', 'log');
+    grid(ax, 'on');
+    box(ax, 'off');
+    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', 'Arial', 'FontSize', 12);
+    ylabel(ax, 'Annual exceedance risk', 'FontName', 'Arial', 'FontSize', 12);
 
     min_x = max(min(x_plot), min(madhav_severity_plot));
     max_x = min(max(x_plot), max(madhav_severity_plot));
-    xlim([min_x, max_x]);
-    xt = get(gca, 'XTick');
-    set(gca, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
+    xlim(ax, [min_x, max_x]);
+    xt = get(ax, 'XTick');
+    set(ax, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
+
+    % Labels near curves at fixed severity (x) positions.
+    x_no  = max(min_x, min(max_x, 30));
+    x_mad = max(min_x, min(max_x, 20));
+    x_rel = max(min_x, min(max_x, 130));
+    x_alw = max(min_x, min(max_x, 150));
+    y_no  = interp1(x_plot, exceed_no, x_no, 'linear', 'extrap');
+    y_mad = interp1(madhav_severity_plot, madhav_exceedance_plot, x_mad, 'linear', 'extrap');
+    y_rel = interp1(x_plot, exceed_rel, x_rel, 'linear', 'extrap');
+    y_alw = interp1(x_plot, exceed_alw, x_alw, 'linear', 'extrap');
+    text(ax, x_no, y_no, ' No mitigation', 'Color', color_no, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'bottom');
+    text(ax, x_mad, y_mad, ' Madhav et al. (2023)', 'Color', color_mad, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'bottom');
+    text(ax, x_rel, y_rel, 'Realized mitigation (vaccines can fail) ', 'Color', color_rel, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
+    text(ax, x_alw, y_alw, ' Vaccines always work', 'Color', color_alw, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
 
     fig_dir = fullfile(sensitivity_dir, 'figures');
     if ~isfolder(fig_dir)
