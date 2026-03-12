@@ -194,7 +194,6 @@ function run_single_scenario(run_config, run_type, num_chunks, array_task_id)
     %   array_task_id (numeric): SLURM array task ID (nan if not array task)
     
     temp_config_path = tempname;
-    disp(temp_config_path);
     yaml.dumpFile(temp_config_path, run_config);
 
     % Handle run_type argument: either 'response' or 'unmitigated'

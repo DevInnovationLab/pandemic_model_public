@@ -31,16 +31,19 @@ function fig = plot_empirical_intensity_exceedance(intensity_matrix, condition_m
     xlim([min(unique_intensities), max(unique_intensities)]);
     ylim([min(exceedance), max(exceedance)]);
 
-    % Add threshold point and lines
-    threshold_x = params.response_threshold;
-    threshold_y = interp1(unique_intensities, exceedance, threshold_x);
+    % Add threshold point and lines when threshold is defined in intensity units
+    if isfield(params, 'response_threshold') && ...
+            (~isfield(params, 'response_threshold_type') || strcmp(params.response_threshold_type, 'intensity'))
+        threshold_x = params.response_threshold;
+        threshold_y = interp1(unique_intensities, exceedance, threshold_x);
 
-    hold on;
-    plot(threshold_x, threshold_y, 'rs', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
-    plot([threshold_x threshold_x], [0 threshold_y], 'r--');
-    plot([lower_bound, threshold_x], [threshold_y threshold_y], 'r--');
+        hold on;
+        plot(threshold_x, threshold_y, 'rs', 'MarkerFaceColor', 'r', 'MarkerSize', 6);
+        plot([threshold_x threshold_x], [0 threshold_y], 'r--');
+        plot([lower_bound, threshold_x], [threshold_y threshold_y], 'r--');
 
-    text(threshold_x * 0.95, threshold_y * 0.95, sprintf('Pandemic response\nthreshold: %.2f', threshold_x), ...
-        'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 8);
-    hold off;
+        text(threshold_x * 0.95, threshold_y * 0.95, sprintf('Pandemic response\nthreshold: %.2f', threshold_x), ...
+            'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 8);
+        hold off;
+    end
 end

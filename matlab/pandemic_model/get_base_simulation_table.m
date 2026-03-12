@@ -83,8 +83,14 @@ function [simulation_table, total_removed, total_trimmed] = get_base_simulation_
 	% Combine simulation table and advance R&D success table
 	simulation_table = [simulation_table, advance_rd_success_table];
 
-	% Now determine response outbreaks
-	response_outbreak_idx = find(simulation_table.intensity > params.response_threshold);
+	% Now determine response outbreaks (threshold can be in intensity or severity units)
+	if strcmp(params.response_threshold_type, 'intensity')
+		response_outbreak_idx = find(simulation_table.intensity > params.response_threshold);
+	elseif strcmp(params.response_threshold_type, 'severity')
+		response_outbreak_idx = find(simulation_table.severity > params.response_threshold);
+	else
+		error("Unknown response_threshold_type: %s", params.response_threshold_type);
+	end
 	simulation_table.response_outbreak = false(height(simulation_table), 1);
 	simulation_table.response_outbreak(response_outbreak_idx) = true;
 end

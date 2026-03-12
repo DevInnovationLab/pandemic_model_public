@@ -60,6 +60,7 @@ function estimate_unmitigated_losses(job_config_path, varargin)
     elseif ~isfield(job_config, 'response_threshold') && isfield(job_config, 'response_threshold_path')
         response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
         job_config.response_threshold = response_threshold_dict.response_threshold;
+        job_config.response_threshold_type = response_threshold_dict.response_threshold_type;
     end
 
     % Chunk boundaries (same logic as run_job.m)

@@ -137,6 +137,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
 
     response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
     job_config.response_threshold = response_threshold_dict.response_threshold;
+    job_config.response_threshold_type = response_threshold_dict.response_threshold_type;
 
     % Generate base simulation table for this chunk (sim_num is 1:num_simulations within chunk)
     [base_simulation_table, total_removed, total_trimmed] = ...

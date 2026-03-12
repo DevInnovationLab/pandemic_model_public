@@ -133,7 +133,35 @@ function compare_exceedances(sensitivity_dir)
     exceed_rel = (n_rel - histcounts(vec_rel, direct_edges, 'Normalization', 'cumcount')) ./ (n_rel + 1);
     exceed_alw = (n_alw - histcounts(vec_alw, direct_edges, 'Normalization', 'cumcount')) ./ (n_alw + 1);
 
-    x_plot = direct_edges(2:end)';
+    % Use column vectors so table variables have matching row counts
+    x_plot   = direct_edges(2:end);
+    recur_no = 1 ./ exceed_no(:);
+    recur_rel = 1 ./ exceed_rel(:);
+    recur_alw = 1 ./ exceed_alw(:);
+
+    T = table(x_plot, recur_no, recur_rel, recur_alw, ...
+        'VariableNames', {'severity', 'mean_no_mitigation_recurrence', ...
+                          'mean_realized_recurrence', 'mean_always_work_recurrence'});
+
+    writetable(T, fullfile(sensitivity_dir, 'mean_annual_recurrence_rates.csv'));
+
+    % Smaller table with interpolated values at specific severities
+    target_severities = [min(x_plot); 4.46; 9.17; 10; 44.6; 50; 100; 150; 171];
+
+    severity = T.severity;
+    mean_no_mitigation_recurrence = T.mean_no_mitigation_recurrence;
+    mean_realized_recurrence = T.mean_realized_recurrence;
+    mean_always_work_recurrence = T.mean_always_work_recurrence;
+
+    interp_no  = interp1(severity, mean_no_mitigation_recurrence, target_severities, 'linear', 'extrap');
+    interp_rel = interp1(severity, mean_realized_recurrence,       target_severities, 'linear', 'extrap');
+    interp_alw = interp1(severity, mean_always_work_recurrence,    target_severities, 'linear', 'extrap');
+
+    small_T = table(target_severities(:), interp_no(:), interp_rel(:), interp_alw(:), ...
+        'VariableNames', {'severity', 'mean_no_mitigation_recurrence', ...
+                          'mean_realized_recurrence', 'mean_always_work_recurrence'});
+
+    writetable(small_T, fullfile(sensitivity_dir, 'mean_annual_recurrence_rates_selected.csv'));
 
     % Madhav et al. reference
     madhav_path = fullfile('data', 'clean', 'madhav_et_al_severity_exceedance.csv');

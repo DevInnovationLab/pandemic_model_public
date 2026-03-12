@@ -16,77 +16,69 @@ function agg_sensitivity_results(sensitivity_dir)
     
     % First, process baseline results
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
-    if exist(baseline_dir, 'dir')
-        raw_dir = fullfile(baseline_dir, 'raw');
-        
-        % Get all chunk directories
-        chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
-        chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-        
-        if ~isempty(chunk_dirs)
-            % Extract chunk numbers and sort
-            chunk_numbers = zeros(length(chunk_dirs), 1);
-            for k = 1:length(chunk_dirs)
-                tokens = regexp(chunk_dirs(k).name, 'chunk_(\d+)', 'tokens');
-                chunk_numbers(k) = str2double(tokens{1}{1});
-            end
-            [chunk_numbers, sort_idx] = sort(chunk_numbers);
-            chunk_dirs = chunk_dirs(sort_idx);
-            
-            % Check that chunk numbers are contiguous
-            expected_chunks = 1:length(chunk_dirs);
-            if ~isequal(chunk_numbers', expected_chunks)
-                error('Chunk numbers are not contiguous in %s. Found: %s, Expected: %s', ...
-                      raw_dir, mat2str(chunk_numbers'), mat2str(expected_chunks));
-            end
-            
-            % Load first chunk to get dimensions
-            first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
-            S_first = load(first_chunk_path, 'annual_results_baseline');
-            [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value_pv);
-            n_chunks = length(chunk_dirs);
-            
-            % Load job_config from baseline
-            job_config_path = fullfile(baseline_dir, 'job_config.yaml');
-            job_config = yaml.loadFile(job_config_path);
-            
-            % Preallocate array for sum of net values per simulation
-            sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
-            % Preallocate arrays for net values over time
-            net_value_pv_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
-            net_value_nom_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
-            
-            % Load net_value from all chunks and calculate sums
-            for k = 1:n_chunks
-                chunk_path = fullfile(raw_dir, chunk_dirs(k).name, 'baseline_annual.mat');
-                S = load(chunk_path, 'annual_results_baseline');
-                start_idx = (k-1) * n_sims_per_chunk + 1;
-                end_idx = k * n_sims_per_chunk;
-                sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
-                net_value_pv_all(start_idx:end_idx, :) = S.annual_results_baseline.net_value_pv;
-                net_value_nom_all(start_idx:end_idx, :) = S.annual_results_baseline.net_value_nom;
-            end
-            
-            % Calculate mean of sums
-            mean_benefits = mean(sum_net_values);
-            
-            % Calculate mean net values over time
-            mean_net_value_pv_over_time = mean(net_value_pv_all, 1);
-            mean_net_value_nom_over_time = mean(net_value_nom_all, 1);
-            
-            % Save baseline results to top-level processed directory
-            output_filename = 'baseline_benefits_summary.mat';
-            output_path = fullfile(top_processed_dir, output_filename);
-            save(output_path, 'mean_benefits', 'sum_net_values', 'job_config', ...
-                 'mean_net_value_pv_over_time', 'mean_net_value_nom_over_time');
-            
-            fprintf('Processed baseline: mean benefits = %.2f\n', mean_benefits);
-        else
-            warning('No chunk directories found in baseline %s', raw_dir);
-        end
-    else
-        warning('No baseline directory found at %s', baseline_dir);
+    raw_dir = fullfile(baseline_dir, 'raw');
+    
+    % Get all chunk directories
+    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
+    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
+    
+    % Extract chunk numbers and sort
+    chunk_numbers = zeros(length(chunk_dirs), 1);
+    for k = 1:length(chunk_dirs)
+        tokens = regexp(chunk_dirs(k).name, 'chunk_(\d+)', 'tokens');
+        chunk_numbers(k) = str2double(tokens{1}{1});
     end
+    [chunk_numbers, sort_idx] = sort(chunk_numbers);
+    chunk_dirs = chunk_dirs(sort_idx);
+    
+    % Check that chunk numbers are contiguous
+    expected_chunks = 1:length(chunk_dirs);
+    if ~isequal(chunk_numbers', expected_chunks)
+        error('Chunk numbers are not contiguous in %s. Found: %s, Expected: %s', ...
+                raw_dir, mat2str(chunk_numbers'), mat2str(expected_chunks));
+    end
+    
+    % Load first chunk to get dimensions
+    first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
+    S_first = load(first_chunk_path, 'annual_results_baseline');
+    [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value_pv);
+    n_chunks = length(chunk_dirs);
+    
+    % Load job_config from baseline
+    job_config_path = fullfile(baseline_dir, 'job_config.yaml');
+    job_config = yaml.loadFile(job_config_path);
+    
+    % Preallocate array for sum of net values per simulation
+    sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
+    % Preallocate arrays for net values over time
+    net_value_pv_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
+    net_value_nom_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
+    
+    % Load net_value from all chunks and calculate sums
+    for k = 1:n_chunks
+        chunk_path = fullfile(raw_dir, chunk_dirs(k).name, 'baseline_annual.mat');
+        S = load(chunk_path, 'annual_results_baseline');
+        start_idx = (k-1) * n_sims_per_chunk + 1;
+        end_idx = k * n_sims_per_chunk;
+        sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
+        net_value_pv_all(start_idx:end_idx, :) = S.annual_results_baseline.net_value_pv;
+        net_value_nom_all(start_idx:end_idx, :) = S.annual_results_baseline.net_value_nom;
+    end
+    
+    % Calculate mean of sums
+    mean_benefits = mean(sum_net_values);
+    
+    % Calculate mean net values over time
+    mean_net_value_pv_over_time = mean(net_value_pv_all, 1);
+    mean_net_value_nom_over_time = mean(net_value_nom_all, 1);
+    
+    % Save baseline results to top-level processed directory
+    output_filename = 'baseline_benefits_summary.mat';
+    output_path = fullfile(top_processed_dir, output_filename);
+    save(output_path, 'mean_benefits', 'sum_net_values', 'job_config', ...
+            'mean_net_value_pv_over_time', 'mean_net_value_nom_over_time');
+    
+    fprintf('Processed baseline: mean benefits = %.2f\n', mean_benefits);
     
     % Loop through each sensitivity directory
     for i = 1:length(param_dirs)
@@ -110,11 +102,6 @@ function agg_sensitivity_results(sensitivity_dir)
             % Get all chunk directories
             chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
             chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-            
-            if isempty(chunk_dirs)
-                warning('No chunk directories found in %s', raw_dir);
-                continue;
-            end
             
             % Extract chunk numbers and sort
             chunk_numbers = zeros(length(chunk_dirs), 1);
