@@ -1,4 +1,4 @@
-function get_pairwise_program_table(job_dir)
+function write_pairwise_program_table(job_dir)
     % Load data from processed results directory
     processed_dir = fullfile(job_dir, "processed");
 

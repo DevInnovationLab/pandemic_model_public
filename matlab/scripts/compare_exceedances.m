@@ -146,7 +146,7 @@ function compare_exceedances(sensitivity_dir)
     writetable(T, fullfile(sensitivity_dir, 'mean_annual_recurrence_rates.csv'));
 
     % Smaller table with interpolated values at specific severities
-    target_severities = [min(x_plot); 4.46; 9.17; 10; 44.6; 50; 100; 150; 171];
+    target_severities = [min(x_plot); 22.3; 44.6; 50; 100; 150; 171];
 
     severity = T.severity;
     mean_no_mitigation_recurrence = T.mean_no_mitigation_recurrence;

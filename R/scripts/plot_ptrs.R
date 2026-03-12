@@ -3,6 +3,7 @@ library(ggplot2)
 library(snakecase)
 library(tidyverse)
 library(patchwork)
+library(cowplot)
 
 ptrs_preds <- readr::read_csv("output/ptrs/marginal_ptrs_preds.csv")
 
@@ -85,7 +86,11 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
     panel.grid.minor.y = element_blank(),
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
-    plot.margin = margin(0, 0, 0, 0)
+    plot.margin = margin(0, 0, 0, 0),
+    legend.position = "bottom",
+    legend.direction = "horizontal",
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12)
   )
 
 # Prototype R&D investment effect plot (second panel)
@@ -168,23 +173,36 @@ combined_plot <- (
     legend.text = element_text(size = 12)
   )
 
-# Save separate figures sized for vertical stacking in LaTeX (65/35 height split)
-total_height <- 14
+# Save figures with perfectly aligned panels.
+# We construct a single two-panel figure with embedded "(a)" and "(b)" labels,
+# so LaTeX only needs to include one image and alignment is handled in R.
+total_height <- 12
 top_height <- 0.65 * total_height
 bottom_height <- 0.35 * total_height
 
-ggsave(
-  "output/ptrs/marginal_ptrs_by_pathogen.png",
+aligned_plots <- align_plots(
   ptrs_plot,
-  width = 8,
-  height = top_height,
-  dpi = 600
+  proto_effect_plot,
+  align = "hv",
+  axis = "tblr"
+)
+
+combined_ptrs_plot <- plot_grid(
+  aligned_plots[[1]],
+  aligned_plots[[2]],
+  ncol = 1,
+  rel_heights = c(0.65, 0.35),
+  labels = c("(a)", "(b)"),
+  label_x = 0.01,
+  label_y = 0.98,
+  hjust = 0,
+  vjust = 1
 )
 
 ggsave(
-  "output/ptrs/prototype_invest_effect.png",
-  proto_effect_plot,
+  "output/ptrs/ptrs_combined.png",
+  combined_ptrs_plot,
   width = 8,
-  height = bottom_height,
+  height = total_height,
   dpi = 600
 )
