@@ -9,7 +9,7 @@ def create_response_threshold():
     covid_severity = sev_dict["ex_ante_severity"]
     covid_intensity = covid_severity  / 5 # Need to undo hard coding here
 
-    with open("./output/response_threshold_intensity.yaml", "w") as f:
+    with open("./output/response_threshol_intensity.yaml", "w") as f:
         yaml.dump(
             {
                 "response_threshold": covid_intensity / 2,

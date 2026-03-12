@@ -23,7 +23,7 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-response_threshold_path: "./output/response_threshold.yaml"
+response_threshold_path: "./output/response_threshold_severity.yaml"
 severity_dist_config: "./output/arrival_distributions/all_risk.yaml"
 duration_dist_config: "./output/duration_distributions/all_risk.yaml"
 econ_loss_model_config: "./output/econ_loss_models/poisson_model_total_severity.yaml"
