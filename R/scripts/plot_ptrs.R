@@ -85,7 +85,7 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
     panel.grid.minor.y = element_blank(),
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
-    plot.margin = margin(10, 0, 10, 10)
+    plot.margin = margin(0, 0, 0, 0)
   )
 
 # Prototype R&D investment effect plot (second panel)
@@ -131,7 +131,7 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     labels = scales::percent_format(accuracy = 1, suffix = "")
   ) +
   labs(
-    x = "Increase in probability of vaccine success from prototype",
+    x = "Increase in probability of success",
     y = NULL
   ) +
   theme_classic(base_size = 8) +
@@ -148,7 +148,8 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     panel.grid.minor.y = element_blank(),
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
-    plot.margin = margin(10, 0, 10, 10)
+    plot.margin = margin(0, 0, 0, 0),
+    legend.position = "none"
   )
 
 # Arrange two panels with shared legend on the left, 70/30 vertical split
@@ -157,7 +158,7 @@ combined_plot <- (
     proto_effect_plot
 ) +
   plot_layout(
-    heights = c(0.7, 0.3),
+    heights = c(0.6, 0.4),
     guides = "collect"
   ) &
   theme(
@@ -167,5 +168,23 @@ combined_plot <- (
     legend.text = element_text(size = 12)
   )
 
-# Save the two-panel figure with extra vertical space
-ggsave("output/ptrs/marginal_ptrs_by_pathogen.png", combined_plot, width = 8, height = 9, dpi = 600)
+# Save separate figures sized for vertical stacking in LaTeX (65/35 height split)
+total_height <- 14
+top_height <- 0.65 * total_height
+bottom_height <- 0.35 * total_height
+
+ggsave(
+  "output/ptrs/marginal_ptrs_by_pathogen.png",
+  ptrs_plot,
+  width = 8,
+  height = top_height,
+  dpi = 600
+)
+
+ggsave(
+  "output/ptrs/prototype_invest_effect.png",
+  proto_effect_plot,
+  width = 8,
+  height = bottom_height,
+  dpi = 600
+)

@@ -66,7 +66,7 @@ p <- ggplot(arrival_risk_plot, aes(
     legend.text = element_text(size = 12),
     legend.key.size = unit(1.1, "lines"),
     legend.box.margin = margin(0, 0, 0, 0),
-    plot.margin = margin(10, 0, 10, 10)
+    plot.margin = margin(10, 0, 0, 10)
   )
 
 # Save main plot (slightly taller for more vertical space)

@@ -143,11 +143,10 @@ function plot_net_value_raw(out_dir)
         ax.XTick = x_lo:1:x_hi;
     end
 
-    % Legend: four entries; median label only (no visible symbol) via a hidden line for that entry.
+    % Legend: four entries; median label only with no symbol, using a dummy handle.
     if ~isempty(h_whisker)
-        x_lo_ax = ax.XLim(1);
-        h_median_legend = plot(ax, [x_lo_ax x_lo_ax], [1 1], '-', 'Color', edge_color, 'LineWidth', 2.2);
-        h_median_legend.Visible = 'off';
+        h_median_legend = plot(ax, NaN, NaN, '-', ...
+            'LineStyle', 'none', 'Marker', 'none');
         legend(ax, [h_whisker, h_box, h_median_legend, h_mean], ...
             {'10/90 percentiles', 'Interquartile range', 'Median', 'Mean'}, ...
             'Location', 'northeast', 'FontSize', 9, 'Interpreter', 'none');
