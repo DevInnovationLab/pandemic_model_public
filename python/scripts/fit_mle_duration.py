@@ -186,7 +186,7 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
         plt.plot(t, mle_survival, color="blue")
 
         plt.xlabel("Years")
-        plt.ylabel("Exceedance function")
+        plt.ylabel("Exceedance probability")
         plt.grid(True, alpha=0.2)
         plt.gca().spines[["top", "right"]].set_visible(False)
 

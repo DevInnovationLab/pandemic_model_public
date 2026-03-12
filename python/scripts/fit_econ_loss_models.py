@@ -33,12 +33,41 @@ if __name__ == "__main__":
     econ_loss_raw = pd.read_excel("./data/raw/Economic damages source review.xlsx", sheet_name="Updated numbers")
 
     # Rename and preprocess columns
-    econ_loss = econ_loss_raw.rename(columns={'Annual fraction GPD losses': 'annual_share_gdp_loss',
-                                              'Intensity (SMU)': 'intensity',
-                                              'Disease': 'disease'})
+    econ_loss = econ_loss_raw.rename(
+        columns={
+            'Annual fraction GPD losses': 'annual_share_gdp_loss',
+            'Fraction output loss over total horizon': 'total_share_gdp_loss',
+            'Intensity (SMU)': 'intensity',
+            'Mortality (SMU)': 'severity',
+            'Disease': 'disease',
+        }
+    )
     econ_loss['annual_pct_gdp_loss'] = econ_loss['annual_share_gdp_loss'] * 100
-    econ_loss = econ_loss[['annual_share_gdp_loss', 'annual_pct_gdp_loss', 'intensity', 'disease']]
-    econ_loss_clean = econ_loss.dropna(axis=0) # Drop rows with missing values
+    if 'total_share_gdp_loss' in econ_loss.columns:
+        econ_loss['total_pct_gdp_loss'] = econ_loss['total_share_gdp_loss'] * 100
+        econ_loss = econ_loss[
+            [
+                'annual_share_gdp_loss',
+                'annual_pct_gdp_loss',
+                'total_share_gdp_loss',
+                'total_pct_gdp_loss',
+                'intensity',
+                'severity',
+                'disease',
+            ]
+        ]
+    else:
+        econ_loss = econ_loss[
+            [
+                'annual_share_gdp_loss',
+                'annual_pct_gdp_loss',
+                'intensity',
+                'disease',
+            ]
+        ]
+    econ_loss_clean = econ_loss.dropna(axis=0)  # Drop rows with missing values
+
+    econ_loss_clean.to_csv("./output/econ_loss_models/econ_loss_clean.csv", index=False)
 
     # ------ Fit poisson model --------------------------------
 
@@ -93,10 +122,11 @@ if __name__ == "__main__":
     ax.set_xscale('log')
     plt.tight_layout()
 
-    # Fitted lines for linear scale
+    # Fitted lines for linear scale (extend to 10^4)
     log_xrange = np.linspace(
-        np.log(econ_loss_clean['intensity'].min() / 2),
-        np.log(econ_loss_clean['intensity'].max()), 100
+        np.log(1e-5),
+        np.log(1e4),
+        1000
     ).reshape(-1, 1)
 
     # Add constant to prediction range
@@ -117,8 +147,14 @@ if __name__ == "__main__":
         'family': 'poisson',
         'params': {
             'intercept': float(pm_results.params.iloc[0]),
-            'coefs': [float(pm_results.params.iloc[1])]
-        }
+            'coefs': [float(pm_results.params.iloc[1])],
+        },
+        'meta': {
+            'input_variable': 'intensity',
+            'input_units': 'SMU (deaths per 10,000 people per year)',
+            'output_variable': 'annual_share_gdp_loss',
+            'output_units': 'share_of_gdp',
+        },
     }
 
     outpath = outdir / "poisson_model.yaml"
@@ -159,6 +195,84 @@ if __name__ == "__main__":
     with open(outdir / "poisson_model_summary.tex", "w") as f:
         f.write(latex_table)
 
+    # ------ Fit poisson model: total GDP vs severity (if available) ---------------
+
+    if {'total_share_gdp_loss', 'severity'}.issubset(econ_loss_clean.columns):
+
+        X_sev = np.log(econ_loss_clean[['severity']])
+        y_total = econ_loss_clean['total_share_gdp_loss']
+
+        X_sev_sm = sm.add_constant(X_sev)
+        pm_sev = sm.GLM(y_total, X_sev_sm, family=sm.families.Poisson())
+        pm_sev_results = pm_sev.fit(cov_type='HC0')
+
+        # Prediction grid over severity up to 10^4
+        log_sev_range_poiss = np.linspace(
+            np.log(1e-5),
+            np.log(1e4),
+            1000,
+        ).reshape(-1, 1)
+        log_sev_range_poiss_sm = sm.add_constant(log_sev_range_poiss)
+        y_pred_poiss_sev = pm_sev_results.predict(log_sev_range_poiss_sm) * 100
+
+        # Plot poisson model: total GDP vs severity
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.scatter(
+            econ_loss_clean['severity'],
+            econ_loss_clean['total_pct_gdp_loss'],
+            color="black",
+            s=80,
+            alpha=0.7,
+            label="Data points",
+        )
+
+        for i, disease in enumerate(econ_loss_clean['disease']):
+            ax.text(
+                econ_loss_clean['severity'].iloc[i] * 1.22,
+                econ_loss_clean['total_pct_gdp_loss'].iloc[i] * 0.98,
+                disease,
+                fontsize=12,
+                ha='left',
+                va='top',
+                color='black',
+            )
+
+        ax.set_xlabel("Severity (deaths per 10,000 people)")
+        ax.set_ylabel("Total GDP loss (%)")
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.grid(True, color="0.8", alpha=0.3)
+        ax.set_xscale('log')
+
+        ax.plot(
+            np.exp(log_sev_range_poiss),
+            y_pred_poiss_sev,
+            linewidth=2.5,
+            color=col_poisson,
+            label='Poisson',
+        )
+        ax.legend()
+        plt.tight_layout()
+
+        figpath = outdir / "poisson_model_total_severity.png"
+        plt.savefig(figpath, dpi=600)
+
+        poisson_sev_dict = {
+            'family': 'poisson',
+            'params': {
+                'intercept': float(pm_sev_results.params.iloc[0]),
+                'coefs': [float(pm_sev_results.params.iloc[1])],
+            },
+            'meta': {
+                'input_variable': 'severity',
+                'input_units': 'SMU (deaths per 10,000 people, total over pandemic)',
+                'output_variable': 'total_share_gdp_loss',
+                'output_units': 'share_of_gdp',
+            },
+        }
+        outpath = outdir / "poisson_model_total_severity.yaml"
+        with open(outpath, "w") as f:
+            yaml.dump(poisson_sev_dict, f)
 
     # ------ Fit log log regression --------------------------------
     
@@ -193,10 +307,11 @@ if __name__ == "__main__":
     ax.set_xscale('log')
     plt.tight_layout()
 
-    # Fitted line for log-log regression
+    # Fitted line for log-log regression (extend to 10^4)
     log_xrange = np.linspace(
-        np.log(econ_loss_clean['intensity'].min() / 2),
-        np.log(econ_loss_clean['intensity'].max()), 100
+        np.log(1e-5),
+        np.log(1e4),
+        1000
     ).reshape(-1, 1)
     log_xrange_df = pd.DataFrame(log_xrange, columns=["intensity"])
 
@@ -225,13 +340,178 @@ if __name__ == "__main__":
         'family': 'loglogreg',
         'params': {
             'intercept': float(llreg.intercept_),
-            'coefs': [float(beta) for beta in llreg.coef_]
-        }
+            'coefs': [float(beta) for beta in llreg.coef_],
+        },
+        'meta': {
+            'input_variable': 'intensity',
+            'input_units': 'SMU (deaths per 10,000 people per year)',
+            'output_variable': 'annual_share_gdp_loss',
+            'output_units': 'share_of_gdp',
+        },
     }
 
     outpath = outdir / "loglog_model.yaml"
     with open(outpath, "w") as f:
         yaml.dump(loglog_dict, f)
+
+    # ------ Fit cloglog fractional regression: annual GDP vs intensity --------------------
+
+    X_frac_annual = np.log(econ_loss_clean[['intensity']])
+    X_frac_annual_sm = sm.add_constant(X_frac_annual)
+    y_frac_annual = econ_loss_clean['annual_share_gdp_loss']
+
+    cloglog_link = sm.families.links.cloglog()
+    frac_annual_model = sm.GLM(
+        y_frac_annual,
+        X_frac_annual_sm,
+        family=sm.families.Binomial(link=cloglog_link),
+    )
+    frac_annual_results = frac_annual_model.fit(cov_type='HC0')
+
+    # Prediction grid up to 10^4 in intensity
+    log_xrange_frac = np.linspace(np.log(1e-5), np.log(1e4), 1000).reshape(-1, 1)
+    log_xrange_frac_sm = sm.add_constant(log_xrange_frac)
+    y_pred_frac_annual = frac_annual_results.predict(log_xrange_frac_sm) * 100
+
+    # Plot cloglog fractional model for annual GDP loss vs intensity
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.scatter(
+        econ_loss_clean['intensity'],
+        econ_loss_clean['annual_pct_gdp_loss'],
+        color='black',
+        s=80,
+        alpha=0.7,
+        label='Data points',
+    )
+
+    for i, disease in enumerate(econ_loss_clean['disease']):
+        ax.text(
+            econ_loss_clean['intensity'].iloc[i] * 1.22,
+            econ_loss_clean['annual_pct_gdp_loss'].iloc[i] * 0.98,
+            disease,
+            fontsize=12,
+            ha='left',
+            va='top',
+            color='black',
+        )
+
+    ax.set_xlabel('Intensity (deaths per 10,000 per year)')
+    ax.set_ylabel('Annual GDP loss (%)')
+    ax.spines['top'].set_visible(False)
+    ax.spines['right'].set_visible(False)
+    ax.grid(True, color='0.8', alpha=0.3)
+    ax.set_xscale('log')
+
+    ax.plot(
+        np.exp(log_xrange_frac),
+        y_pred_frac_annual,
+        linewidth=2.5,
+        color='#2ecc71',
+        label='Cloglog fractional',
+    )
+    ax.legend()
+    plt.tight_layout()
+
+    figpath = outdir / 'cloglog_fractional_annual_intensity.png'
+    plt.savefig(figpath, dpi=600)
+
+    cloglog_annual_dict = {
+        'family': 'binomial_cloglog_fractional',
+        'params': {
+            'intercept': float(frac_annual_results.params.iloc[0]),
+            'coefs': [float(frac_annual_results.params.iloc[1])],
+        },
+        'meta': {
+            'input_variable': 'intensity',
+            'input_units': 'SMU (deaths per 10,000 people per year)',
+            'output_variable': 'annual_share_gdp_loss',
+            'output_units': 'share_of_gdp',
+        },
+    }
+    outpath = outdir / 'cloglog_fractional_annual_intensity.yaml'
+    with open(outpath, 'w') as f:
+        yaml.dump(cloglog_annual_dict, f)
+
+    # ------ Fit cloglog fractional regression: total GDP vs severity ----------------------
+
+    if {'total_share_gdp_loss', 'severity'}.issubset(econ_loss_clean.columns):
+        X_frac_total = np.log(econ_loss_clean[['severity']])
+        X_frac_total_sm = sm.add_constant(X_frac_total)
+        y_frac_total = econ_loss_clean['total_share_gdp_loss']
+
+        frac_total_model = sm.GLM(
+            y_frac_total,
+            X_frac_total_sm,
+            family=sm.families.Binomial(link=cloglog_link),
+        )
+        frac_total_results = frac_total_model.fit(cov_type='HC0')
+
+        # Prediction grid over severity up to 10^4
+        log_sev_range = np.linspace(
+            np.log(1e-5),
+            np.log(1e4),
+            1000,
+        ).reshape(-1, 1)
+        log_sev_range_sm = sm.add_constant(log_sev_range)
+        y_pred_frac_total = frac_total_results.predict(log_sev_range_sm) * 100
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+        ax.scatter(
+            econ_loss_clean['severity'],
+            econ_loss_clean['total_share_gdp_loss'] * 100,
+            color='black',
+            s=80,
+            alpha=0.7,
+            label='Data points',
+        )
+
+        for i, disease in enumerate(econ_loss_clean['disease']):
+            ax.text(
+                econ_loss_clean['severity'].iloc[i] * 1.05,
+                econ_loss_clean['total_share_gdp_loss'].iloc[i] * 100 * 0.98,
+                disease,
+                fontsize=12,
+                ha='left',
+                va='top',
+                color='black',
+            )
+
+        ax.set_xlabel('Severity (deaths per 10,000 people)')
+        ax.set_ylabel('Total GDP loss (%)')
+        ax.spines['top'].set_visible(False)
+        ax.spines['right'].set_visible(False)
+        ax.grid(True, color='0.8', alpha=0.3)
+        ax.set_xscale('log')
+
+        ax.plot(
+            np.exp(log_sev_range),
+            y_pred_frac_total,
+            linewidth=2.5,
+            color='#1abc9c',
+            label='Cloglog fractional',
+        )
+        ax.legend()
+        plt.tight_layout()
+
+        figpath = outdir / 'cloglog_fractional_total_severity.png'
+        plt.savefig(figpath, dpi=600)
+
+        cloglog_total_dict = {
+            'family': 'binomial_cloglog_fractional',
+            'params': {
+                'intercept': float(frac_total_results.params.iloc[0]),
+                'coefs': [float(frac_total_results.params.iloc[1])],
+            },
+            'meta': {
+                'input_variable': 'severity',
+                'input_units': 'SMU (deaths per 10,000 people, total over pandemic)',
+                'output_variable': 'total_share_gdp_loss',
+                'output_units': 'share_of_gdp',
+            },
+        }
+        outpath = outdir / 'cloglog_fractional_total_severity.yaml'
+        with open(outpath, 'w') as f:
+            yaml.dump(cloglog_total_dict, f)
 
     # ------ Plot both models together -----------------------------------
     fig, ax = plt.subplots(figsize=(8, 6))

@@ -290,6 +290,7 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     year_start = group_data.yr_start;
     year_dur = group_data.actual_dur;
     annual_intensity = group_data.intensity;
+    severity = group_data.eff_severity;
     is_false = group_data.is_false;
     rd_state = group_data.rd_state;
     ufv_protection = group_data.ufv_protection;
@@ -395,11 +396,11 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     % Pandemic losses
     monthly_intensity = (annual_intensity ./ 12) .* active_idx; % E x M
     monthly_deaths_unmitigated = (params.P0 / 10000) .* monthly_intensity; % E x M
-    unmitigated_output_losses = (econ_loss_model.predict(annual_intensity) ./12) .* active_idx;
+    unmitigated_perc_output_loss = (econ_loss_model.predict(severity, "severity")) .* active_idx;
     monthly_deaths_mitigated = monthly_deaths_unmitigated .* (1 - h_arr);
 
     mortality_losses_nom = monthly_deaths_mitigated .* params.value_of_death .* growth_factors_monthly;
-    output_losses_nom = unmitigated_output_losses .* (params.Y0 .* params.P0) .* (1 - h_arr) .* growth_factors_monthly; % Should be E x 1
+    output_losses_nom = unmitigated_perc_output_loss .* (params.Y0 .* params.P0 ./ 12) .* (1 - h_arr) .* growth_factors_monthly; % Should be E x 1
     learning_losses_nom = output_losses_nom .* (10 / 13.8);
     total_losses_nom = mortality_losses_nom + output_losses_nom + learning_losses_nom;
     vax_benefits_nom =  (total_losses_nom ./ (1 - h_arr)) - total_losses_nom;

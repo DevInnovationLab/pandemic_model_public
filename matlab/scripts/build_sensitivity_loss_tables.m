@@ -1,10 +1,10 @@
 function [annualized_summary_table, total_summary_table] = build_sensitivity_loss_tables(sensitivity_dir)
     % Build annualized and total loss summary tables from sensitivity run directories.
     %
-    % Loads unmitigated loss outputs for baseline and each sensitivity value, computes
-    % mean and 10/90 percentiles, and writes the summary CSVs. Loads from
-    % sensitivity_dir/processed/*_unmitigated_losses_summary.mat when present (after
-    % agg_sensitivity_unmitigated_losses), otherwise from value_dir/unmitigated_losses.mat.
+    % Loads unmitigated loss outputs for baseline and each sensitivity value (from
+    % value_dir/unmitigated_losses.mat), annualizes, computes mean and 10/90 percentiles,
+    % and writes the summary CSVs. Run aggregate_unmitigated_losses per scenario first
+    % if results were chunked.
     %
     % Args:
     %   sensitivity_dir (char or string): Path to sensitivity output directory
@@ -31,7 +31,7 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
 
     [baseline_deaths, baseline_mortality, baseline_economic, baseline_learning, baseline_total] = ...
-        get_unmitigated_losses_for_dir(baseline_dir, baseline_r, baseline_periods, sensitivity_dir, 'baseline');
+        get_unmitigated_losses_for_dir(baseline_dir, baseline_r, baseline_periods);
 
     annualized_summary_table = table('Size', [1 7], ...
         'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell', 'cell'});
@@ -72,9 +72,8 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
             run_config = yaml.loadFile(fullfile(value_dir, "job_config.yaml"));
             r = run_config.r;
             periods = run_config.sim_periods;
-            scenario_id = sprintf('%s_value_%d', var_name, j);
             [annual_deaths, mortality_loss, economic_loss, learning_loss, total_loss] = ...
-                get_unmitigated_losses_for_dir(value_dir, r, periods, sensitivity_dir, scenario_id);
+                get_unmitigated_losses_for_dir(value_dir, r, periods);
             [formatted_name, formatted_value] = format_names(var_name, var_values{j}, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
 
             annualized_summary_table(row_idx,:) = {...
@@ -125,30 +124,18 @@ function csv_table = summary_table_to_csv(summary_table)
 end
 
 function [annual_deaths, mortality_losses, economic_losses, learning_losses, total_losses] = ...
-    get_unmitigated_losses_for_dir(value_dir, r, periods, sensitivity_dir, scenario_id)
-    % Load unmitigated loss vectors from processed/ (if present) or value_dir/unmitigated_losses.mat.
-    if nargin >= 5 && ~isempty(sensitivity_dir) && ~isempty(scenario_id)
-        processed_path = fullfile(sensitivity_dir, 'processed', [scenario_id '_unmitigated_losses_summary.mat']);
-        if isfile(processed_path)
-            S = load(processed_path, 'annual_deaths', 'mortality_losses', 'economic_losses', ...
-                'learning_losses', 'total_losses');
-            annual_deaths = S.annual_deaths;
-            mortality_losses = S.mortality_losses;
-            economic_losses = S.economic_losses;
-            learning_losses = S.learning_losses;
-            total_losses = S.total_losses;
-            return;
-        end
-    end
-    annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
+    get_unmitigated_losses_for_dir(value_dir, r, periods)
+    % Load value_dir/unmitigated_losses.mat (total_* vectors) and return annualized loss vectors.
     mat_file = fullfile(value_dir, 'unmitigated_losses.mat');
-    assert(isfile(mat_file), 'No unmitigated losses MAT file found in %s (and no processed summary)', value_dir);
-    S = load(mat_file, 'deaths', 'mortality_losses', 'output_losses', 'learning_losses', 'total_losses');
-    annual_deaths = sum(S.deaths, 2) ./ periods;
-    mortality_losses = sum(S.mortality_losses, 2) .* annualization_factor;
-    economic_losses = sum(S.output_losses, 2) .* annualization_factor;
-    learning_losses = sum(S.learning_losses, 2) .* annualization_factor;
-    total_losses = sum(S.total_losses, 2) .* annualization_factor;
+    assert(isfile(mat_file), 'No unmitigated_losses.mat in %s. Run estimate_unmitigated_losses then aggregate_unmitigated_losses if chunked.', value_dir);
+    S = load(mat_file, 'total_deaths', 'total_mortality_losses', 'total_output_losses', ...
+        'total_learning_losses', 'total_total_losses');
+    ann = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
+    annual_deaths = S.total_deaths ./ periods;
+    mortality_losses = S.total_mortality_losses .* ann;
+    economic_losses = S.total_output_losses .* ann;
+    learning_losses = S.total_learning_losses .* ann;
+    total_losses = S.total_total_losses .* ann;
 end
 
 function stats = get_mean_and_percentiles(sample)
@@ -166,7 +153,7 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
     b_meta = parse_arrival_dist_fp(baseline_arrival_dist);
     switch var_name
         case "value_of_death"
-            formatted_name = "Value of statistical life (VSL)";
+            formatted_name = "Value of statistical life ($v$)";
             if var_value < baseline_vsl
                 formatted_value = sprintf("Reduce to \\$%g million", var_value/1e6);
             elseif var_value > baseline_vsl
@@ -180,23 +167,40 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             airborne = strcmp(s_meta.scope, "airborne");
             incl_unid = s_meta.has_unid_token && s_meta.incl_unid;
             if trunc_diff
-                formatted_name = "Severity upper bound ($\overline{s}$)";
-                formatted_value = sprintf("%g SU", s_meta.trunc_value);
+                % Severity ceiling in deaths per 10,000
+                formatted_name = "Severity ceiling ($\overline{s}$)";
+                if s_meta.trunc_value == 1000
+                    formatted_value = "Increase to 1,000 deaths per 10,000";
+                elseif s_meta.trunc_value == 10000
+                    formatted_value = "Increase to 10,000 deaths per 10,000";
+                else
+                    formatted_value = sprintf("Increase to %g deaths per 10,000", s_meta.trunc_value);
+                end
             elseif threshold_diff
-                formatted_name = "Lower severity threshold ($\underline{s}$)";
-                formatted_value = sprintf("%g SU", s_meta.lower_threshold);
+                % Intensity floor in deaths per 10,000 per year
+                formatted_name = "Intensity floor ($\underline{x}$)";
+                if s_meta.lower_threshold == 1
+                    formatted_value = "Increase to 1 death per 10,000 per year";
+                else
+                    formatted_value = sprintf("Increase to %g deaths per 10,000 per year", s_meta.lower_threshold);
+                end
             elseif year_min_diff
-                formatted_name = "Sample period";
-                formatted_value = sprintf("Outbreaks after %g only", s_meta.year_min);
+                % Pathogen data: sample period (e.g. outbreaks since 1950)
+                formatted_name = "Pathogen data";
+                if s_meta.year_min == 1950
+                    formatted_value = "Outbreaks since 1950";
+                else
+                    formatted_value = sprintf("Outbreaks since %g", s_meta.year_min);
+                end
             elseif airborne
-                formatted_name = "Pathogen types";
-                formatted_value = "Airborne pathogens only";
+                formatted_name = "Pathogen data";
+                formatted_value = "Airborne novel viral oubreaks";
             elseif s_meta.year_thresh_only
-                formatted_name = "Pathogen types";
+                formatted_name = "Pathogen data";
                 formatted_value = "All outbreaks since 1900";
             elseif incl_unid
-                formatted_name = "Pathogen types";
-                formatted_value = "Include unidentified pathogens";
+                formatted_name = "Pathogen data";
+                formatted_value = "Noval + unidentified viral";
             end
         case "duration_dist_config"
             formatted_name = "Duration upper bound ($\overline{d}$)";
@@ -212,7 +216,7 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 formatted_value = sprintf("Increase to %.1f\\%%", var_value * 100);
             end
         case "r"
-            formatted_name = "Social discount rate $r_s$";
+            formatted_name = "Social discount rate ($r_s$)";
             if var_value < baseline_r
                 formatted_value = sprintf("Reduce to %.1f\\%%", var_value * 100);
             elseif var_value > baseline_r

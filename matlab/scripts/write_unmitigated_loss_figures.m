@@ -51,58 +51,51 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     colors = [0.45 0.25 0.55; 0.85 0.45 0.25; 0.25 0.55 0.45];
     nrows = size(loss_data_ordered, 1);
 
-    % Equal-sized panels. Margins on all sides; use print so they export. Left margin 80% of original (toned down 20%).
-    marginLeft = 0.22;
-    marginRight = 0.07;
-    marginBottom = 0.06;
-    marginTop = 0.05;
-    panelW = 1 - marginLeft - marginRight;
-    gap = 0.04;
-    % Panel height so both panels fill the vertical space (figure is 25% taller; plots inhabit that area).
-    panelH = (1 - marginTop - marginBottom - gap) / 2;
-    bottomPanelBottom = marginBottom;
-    topPanelBottom = marginBottom + panelH + gap;
-
-    fig = figure('Visible', 'off', 'Position', [100 100 920 1025]);
-    fig.PaperPositionMode = 'auto';
-    % Top panel: annualized losses (stacked)
-    ax1 = axes(fig, 'Position', [marginLeft topPanelBottom panelW panelH]);
-    b = barh(ax1, loss_data_ordered, 'stacked', 'FaceColor', 'flat');
+    % Combined two-panel figure (for reference)
+    % Figure: social losses only
+    fig_loss = figure('Visible', 'off', 'Position', [100 100 780 540]);
+    fig_loss.PaperPositionMode = 'auto';
+    ax_loss = axes(fig_loss);
+    b_loss = barh(ax_loss, loss_data_ordered, 'stacked', 'FaceColor', 'flat');
     for k = 1:3
-        b(k).CData = repmat(colors(k,:), nrows, 1);
+        b_loss(k).CData = repmat(colors(k,:), nrows, 1);
     end
-    ax1.YDir = 'reverse';
-    ax1.YTick = 1:nrows;
-    ax1.YTickLabel = labels;
-    ax1.TickLabelInterpreter = 'none';
-    ax1.FontSize = 9;
-    ax1.Box = 'off';
-    ax1.XGrid = 'on';
-    ax1.Title = [];
-    xlabel(ax1, 'Expected annualized pandemic loss ($ trillion)', 'FontSize', 10);
-    legend(ax1, {'Mortality', 'Economic', 'Learning'}, 'Location', 'northeast', ...
+    ax_loss.YDir = 'reverse';
+    ax_loss.YTick = 1:nrows;
+    ax_loss.YTickLabel = labels;
+    ax_loss.TickLabelInterpreter = 'none';
+    ax_loss.FontSize = 9;
+    ax_loss.Box = 'off';
+    ax_loss.XGrid = 'on';
+    ax_loss.Title = [];
+    xlabel(ax_loss, 'Expected annualized social loss ($ trillion)', 'FontSize', 10);
+    legend(ax_loss, {'Mortality', 'Economic', 'Learning'}, 'Location', 'northeast', ...
         'Orientation', 'horizontal', 'FontSize', 9);
-    set(ax1, 'Layer', 'top');
+    set(ax_loss, 'Layer', 'top');
+    outpath_loss = fullfile(fig_dir, 'sensitivity_stacked_losses_social.png');
+    print(fig_loss, outpath_loss, '-dpng', '-r600');
+    close(fig_loss);
+    fprintf('Social loss panel saved to %s\n', outpath_loss);
 
-    % Bottom panel: expected annual deaths (millions), same size as top
-    ax2 = axes(fig, 'Position', [marginLeft bottomPanelBottom panelW panelH]);
-    barh(ax2, deaths_ordered, 'FaceColor', [0.45 0.25 0.55]);
-    ax2.YDir = 'reverse';
-    ax2.YTick = 1:nrows;
-    ax2.YTickLabel = labels;
-    ax2.TickLabelInterpreter = 'none';
-    ax2.FontSize = 9;
-    ax2.Box = 'off';
-    ax2.XGrid = 'on';
-    ax2.Title = [];
-    xlabel(ax2, 'Expected annual deaths (millions)', 'FontSize', 10);
-    set(ax2, 'Layer', 'top');
-
-    outpath = fullfile(fig_dir, 'sensitivity_stacked_losses.png');
-    % Use print so the full figure (including margins) is exported; exportgraphics crops tightly to content.
-    print(fig, outpath, '-dpng', '-r300');
-    close(fig);
-    fprintf('Stacked loss and deaths panel saved to %s\n', outpath);
+    % Figure: annual deaths only
+    fig_deaths = figure('Visible', 'off', 'Position', [100 100 780 540]);
+    fig_deaths.PaperPositionMode = 'auto';
+    ax_deaths = axes(fig_deaths);
+    barh(ax_deaths, deaths_ordered, 'FaceColor', [0.45 0.25 0.55]);
+    ax_deaths.YDir = 'reverse';
+    ax_deaths.YTick = 1:nrows;
+    ax_deaths.YTickLabel = labels;
+    ax_deaths.TickLabelInterpreter = 'none';
+    ax_deaths.FontSize = 9;
+    ax_deaths.Box = 'off';
+    ax_deaths.XGrid = 'on';
+    ax_deaths.Title = [];
+    xlabel(ax_deaths, 'Expected annual deaths (millions)', 'FontSize', 10);
+    set(ax_deaths, 'Layer', 'top');
+    outpath_deaths = fullfile(fig_dir, 'sensitivity_stacked_losses_deaths.png');
+    print(fig_deaths, outpath_deaths, '-dpng', '-r600');
+    close(fig_deaths);
+    fprintf('Annual deaths panel saved to %s\n', outpath_deaths);
 end
 
 function plot_total_stacked_bars(total_summary_table, fig_dir)
@@ -146,46 +139,58 @@ function plot_total_stacked_bars(total_summary_table, fig_dir)
 end
 
 function [data_ordered, labels, order_idx] = order_rows_and_labels(summary_table, data)
-    % Order rows: baseline first, then by variable order. Return ordered data, value labels, and row indices.
-    variableOrder = [
-        "Lower severity threshold ($\underline{s}$)"
-        "Pathogen types"
-        "Sample period"
-        "Severity upper bound ($\overline{s}$)"
-        "Per capita GDP growth rate ($y$)"
-        "Value of statistical life (VSL)"
-        "Social discount rate $r$"
+    % Order rows into canonical groups and within-group ordering used in both
+    % tables and figures. Uses the formatted Variable names coming from
+    % build_sensitivity_loss_tables so headings/ordering are driven
+    % entirely by those upstream labels.
+
+    n = height(summary_table);
+
+    % Desired group ordering using the formatted names
+    groupOrder = [
+        "Baseline"
+        "Severity ceiling ($\overline{s}$)"
+        "Intensity floor ($\underline{x}$)"
+        "Per capita GDP growth rate ($r_g$)"
+        "Value of statistical life ($v$)"
+        "Social discount rate ($r_s$)"
+        "Pathogen data"
     ];
-    uniqueVars = unique(summary_table.Variable, 'stable');
-    baselineIdx = strcmp(uniqueVars, 'Baseline');
-    orderedVars = uniqueVars(baselineIdx);
-    for k = 1:length(variableOrder)
-        idx = find(strcmp(uniqueVars, variableOrder(k)), 1);
-        if ~isempty(idx)
-            orderedVars = [orderedVars; uniqueVars(idx)];
-        end
-    end
-    remaining = ~ismember(uniqueVars, orderedVars);
-    if any(remaining)
-        orderedVars = [orderedVars; uniqueVars(remaining)];
-    end
 
     order_idx = [];
-    for v = 1:length(orderedVars)
-        order_idx = [order_idx; find(strcmp(summary_table.Variable, orderedVars(v)))];
+    for g = 1:length(groupOrder)
+        thisGroup = groupOrder(g);
+        % Rows whose formatted Variable name matches this group exactly
+        inGroup = find(summary_table.Variable == thisGroup);
+        if isempty(inGroup)
+            continue;
+        end
+
+        % Custom within-group ordering for pathogen data
+        if thisGroup == "Pathogen data"
+            scores = zeros(numel(inGroup), 1);
+            for j = 1:numel(inGroup)
+                scores(j) = pathogen_row_score(summary_table.Value(inGroup(j)));
+            end
+            [~, ordWithin] = sort(scores);
+            inGroup = inGroup(ordWithin);
+        end
+
+        order_idx = [order_idx; inGroup(:)]; %#ok<AGROW>
     end
+
     data_ordered = data(order_idx, :);
-    % Use intuitive chart labels (same order as table)
+
+    % Human-readable scenario labels in the same order
     n_ordered = length(order_idx);
     labels = strings(n_ordered, 1);
     for i = 1:n_ordered
         row = order_idx(i);
-        var = string(summary_table.Variable(row));
         val = string(summary_table.Value(row));
         if ismissing(val)
             val = "";
         end
-        labels(i) = scenario_label_for_chart(var, val);
+        labels(i) = scenario_label_for_chart(summary_table.Variable(row), val);
     end
 end
 
@@ -193,75 +198,85 @@ function label = scenario_label_for_chart(variable, value)
     % Map (Variable, Value) from the summary table to intuitive chart tick labels.
     variable = char(variable);
     value = char(value);
+
     if strcmp(variable, 'Baseline') || isempty(value) || strlength(value) == 0
         label = "Baseline";
         return;
     end
-    if contains(variable, 'Lower severity') && contains(value, '1 SU')
-        label = "Lower threshold 1 SU";
+
+    % Custom labels for specific groups in the bar plot
+    if contains(variable, 'Severity ceiling')
+        % Expect values like "Increase to 10,000 deaths per 10,000".
+        % Strip the verb, then replace the deaths-per-10,000 unit with SMU.
+        cleaned = regexprep(value, '^Increase to\s*', '');
+        cleaned = regexprep(cleaned, '\s*deaths per 10,000.*$', ' SMU');
+        label = "Severity ceiling = " + string(strtrim(cleaned));
         return;
     end
-    if contains(variable, 'Pathogen types')
-        if contains(value, 'Airborne')
-            label = "Airborne pathogens only";
-        elseif contains(value, 'unidentified and bacterial')
-            label = "All outbreaks since 1900";
-        elseif contains(value, 'unidentified')
-            label = "Including unidentified pathogens";
-        else
-            label = value;
-        end
+
+    if contains(variable, 'Intensity floor')
+        % Expect values like "Increase to 1 death per 10,000 per year".
+        cleaned = regexprep(value, '^Increase to\s*', '');
+        % Replace the deaths-per-10,000-per-year unit with SMU per year.
+        cleaned = regexprep(cleaned, '\s*death? per 10,000 per year.*$', ' SMU per year');
+        label = "Intensity floor = " + string(strtrim(cleaned));
         return;
     end
-    if contains(variable, 'Sample period') && contains(value, '1950')
-        label = "Outbreaks since 1950";
+
+    if contains(variable, 'Per capita GDP growth rate')
+        % Values like "Reduce to 1.4\%" or "Increase to 1.8\%"
+        v = strrep(value, 'Reduce to ', '');
+        v = strrep(v, 'Increase to ', '');
+        v = strrep(v, '\%', '%');
+        v = strtrim(v);
+        label = "Per capita GDP growth rate = " + string(v);
         return;
     end
-    if contains(variable, 'Severity upper')
-        if contains(value, '10000') || contains(value, '10,000')
-            label = "Severity ceiling 10,000";
-        elseif contains(value, '1000') || contains(value, '1,000')
-            label = "Severity ceiling 1,000";
-        else
-            label = value;
-        end
+
+    if contains(variable, 'Value of statistical life')
+        % Values like "Reduce to \$1.0 million" or "Increase to \$1.6 million"
+        v = strrep(value, 'Reduce to ', '');
+        v = strrep(v, 'Increase to ', '');
+        v = strrep(v, '\$', '$');
+        v = strtrim(v);
+        label = "Value of statistical life = " + string(v);
         return;
     end
-    if contains(variable, 'VSL') || contains(variable, 'statistical life')
-        if contains(value, '1.6')
-            label = "VSL $1.6 million";
-        elseif contains(value, '1 million')
-            label = "VSL $1 million";
-        else
-            label = value;
-        end
+
+    if contains(variable, 'Social discount rate')
+        % Values like "Reduce to 2.0\%" or "Increase to 6.0\%"
+        v = strrep(value, 'Reduce to ', '');
+        v = strrep(v, 'Increase to ', '');
+        v = strrep(v, '\%', '%');
+        v = strtrim(v);
+        label = "Social discount rate = " + string(v);
         return;
     end
-    if contains(variable, 'growth rate') || contains(variable, 'GDP growth')
-        if contains(value, '1.4')
-            label = "Growth rate 1.4%";
-        elseif contains(value, '1.8')
-            label = "Growth rate 1.8%";
-        else
-            label = value;
-        end
-        return;
-    end
-    if contains(variable, 'discount rate')
-        if contains(value, '2') && ~contains(value, '6')
-            label = "Discount rate 2%";
-        elseif contains(value, '6')
-            label = "Discount rate 6%";
-        else
-            label = value;
-        end
-        return;
-    end
-    % Fallback: use value or variable
-    if isempty(value)
-        label = variable;
-    else
-        label = value;
+
+    % All other cases: use the formatted value directly
+    label = string(value);
+end
+
+function score = pathogen_row_score(value)
+    % Scoring for pathogen-related rows so they appear in the desired order
+    % within the Pathogen data group, based only on the Value text.
+    v = lower(char(value));
+
+    % Default score (later in the ordering)
+    score = 5;
+
+    if contains(v, 'airborne')
+        % Airborne novel viral outbreaks
+        score = 1;
+    elseif contains(v, 'since 1950')
+        % Novel viral outbreaks since 1950
+        score = 2;
+    elseif contains(v, 'unidentified')
+        % Novel + unidentified viral
+        score = 3;
+    elseif contains(v, 'all outbreaks since 1900')
+        % All outbreaks since 1900
+        score = 4;
     end
 end
 
@@ -272,7 +287,7 @@ function write_to_latex(summary_data, outpath)
     end
     fileID = fopen(outpath, 'w');
     fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
-    fprintf(fileID, '\\caption{\\textbf{Expected global pandemic deaths and losses in the absence of mitigations.} Monetized losses are discounted. Each cell presents the mean estimates in the center with the 10--90 percentiles in square brackets below.}\n');
+    fprintf(fileID, '\\caption{\\textbf{Expected global pandemic deaths and losses in the absence of mitigations.} Monetized losses are discounted. Each cell presents the mean estimate.}\n');
     fprintf(fileID, '\\vskip 3pt');
     fprintf(fileID, '\\small\n\\renewcommand{\\arraystretch}{0.9}\n');
     fprintf(fileID, '\\begin{tabular}{l c c c c c}\n');
@@ -283,56 +298,41 @@ function write_to_latex(summary_data, outpath)
     fprintf(fileID, ' & & Mortality & Economic & Learning & Total \\\\\n');
     fprintf(fileID, ' & $\\overline{D}$ & $AV\\!\\left(\\overline{ML}\\right)$ & $AV\\!\\left(\\overline{OL}\\right)$ & $AV\\!\\left(\\overline{LL}\\right)$ & $AV\\!\\left(\\overline{TL}\\right)$\\\\\n');
     fprintf(fileID, '\\hline\n');
-    variableOrder = [
-        "Lower severity threshold ($\underline{s}$)"
-        "Pathogen types"
-        "Sample period"
-        "Severity upper bound ($\overline{s}$)"
-        "Per capita GDP growth rate ($y$)"
-        "Value of statistical life (VSL)"
-        "Social discount rate $r$"
-    ];
-    uniqueVars = unique(summary_data.Variable, 'stable');
-    baselineIdx = strcmp(uniqueVars, 'Baseline');
-    ordered = uniqueVars(baselineIdx);
-    for k = 1:length(variableOrder)
-        idx = find(strcmp(uniqueVars, variableOrder(k)), 1);
-        if ~isempty(idx)
-            ordered = [ordered; uniqueVars(idx)];
+    % Use the same ordering logic as the figures
+    dummyData = zeros(height(summary_data), 1);
+    [~, ~, order_idx] = order_rows_and_labels(summary_data, dummyData);
+
+    lastGroup = "";
+    for ii = 1:length(order_idx)
+        rowIdx = order_idx(ii);
+        varName = summary_data.Variable(rowIdx);
+        value = summary_data.Value{rowIdx};
+        groupName = string(varName);
+
+        % Print group heading the first time we see a group
+        if groupName ~= lastGroup
+            if groupName == "Baseline"
+                fprintf(fileID, '%s ', 'Baseline');
+            else
+                fprintf(fileID, '%s \\\\ \n', groupName);
+            end
+            lastGroup = groupName;
         end
-    end
-    remaining = ~ismember(uniqueVars, ordered);
-    if any(remaining)
-        ordered = [ordered; uniqueVars(remaining)];
-    end
-    uniqueVars = ordered;
-    for i = 1:length(uniqueVars)
-        varRows = strcmp(summary_data.Variable, uniqueVars{i});
-        varData = summary_data(varRows, :);
-        if strcmp(uniqueVars{i}, 'Baseline')
-            fprintf(fileID, '%s ', uniqueVars{i});
-        else
-            fprintf(fileID, '%s \\\\\n', uniqueVars{i});
-        end
-        for j = 1:height(varData)
-            fprintf(fileID, '\\hspace{3mm} %s & ', varData.Value{j});
-            for k = 1:5
-                stat = varData{j, 2+k}{1};
-                if k == 1
-                    top = stat.mean .* 1e6;
-                    lo  = stat.p10  .* 1e6;
-                    hi  = stat.p90  .* 1e6;
-                else
-                    top = stat.mean;
-                    lo  = stat.p10;
-                    hi  = stat.p90;
-                end
-                cellstr = sprintf('\\begin{tabular}[c]{@{}c@{}}%.1f \\\\[-0.7em] \\footnotesize [%.1f, %.1f]\\end{tabular}', top, lo, hi);
-                if k < 5
-                    fprintf(fileID, '%s & ', cellstr);
-                else
-                    fprintf(fileID, '%s \\\\\n', cellstr);
-                end
+
+        % Print the scenario row
+        fprintf(fileID, '\\hspace{3mm} %s & ', value);
+        for k = 1:5
+            stat = summary_data{rowIdx, 2+k}{1};
+            if k == 1
+                top = stat.mean .* 1e6;
+            else
+                top = stat.mean;
+            end
+            cellstr = sprintf('%.1f', top);
+            if k < 5
+                fprintf(fileID, '%s & ', cellstr);
+            else
+                fprintf(fileID, '%s \\\\\n', cellstr);
             end
         end
     end

@@ -1,10 +1,11 @@
 function aggregate_unmitigated_losses(sim_results_path)
-    % Combine chunk unmitigated loss MAT files into a single unmitigated_losses.mat.
+    % Combine chunk simulation-wide sum vectors into a single unmitigated_losses.mat.
     %
     %   aggregate_unmitigated_losses(sim_results_path)
     %
     %   Call this after all SLURM array tasks have finished for a scenario to
-    %   merge raw/chunk_*/unmitigated_losses.mat into sim_results_path/unmitigated_losses.mat.
+    %   merge raw/chunk_*/unmitigated_losses.mat (total_* vectors) into
+    %   sim_results_path/unmitigated_losses.mat.
     %
     %   Parameters
     %   ----------
@@ -25,36 +26,32 @@ function aggregate_unmitigated_losses(sim_results_path)
     [~, order] = sort(cellfun(@(name) str2double(regexp(char(name), '\d+', 'match', 'once')), {chunk_dirs.name}));
     chunk_dirs = chunk_dirs(order);
 
-    all_deaths = [];
-    all_mortality_losses = [];
-    all_output_losses = [];
-    all_learning_losses = [];
-    all_total_losses = [];
+    total_deaths = [];
+    total_mortality_losses = [];
+    total_output_losses = [];
+    total_learning_losses = [];
+    total_total_losses = [];
 
-    for k = 1:length(chunk_dirs)
+    for k = 1:numel(chunk_dirs)
         chunk_mat = fullfile(chunk_dirs(k).folder, chunk_dirs(k).name, 'unmitigated_losses.mat');
         if ~isfile(chunk_mat)
             error('aggregate_unmitigated_losses:MissingChunk', 'Missing %s', chunk_mat);
         end
-        data = load(chunk_mat);
-        all_deaths = [all_deaths; data.deaths];
-        all_mortality_losses = [all_mortality_losses; data.mortality_losses];
-        all_output_losses = [all_output_losses; data.output_losses];
-        all_learning_losses = [all_learning_losses; data.learning_losses];
-        all_total_losses = [all_total_losses; data.total_losses];
+        data = load(chunk_mat, 'total_deaths', 'total_mortality_losses', 'total_output_losses', ...
+            'total_learning_losses', 'total_total_losses');
+        total_deaths = [total_deaths; data.total_deaths];
+        total_mortality_losses = [total_mortality_losses; data.total_mortality_losses];
+        total_output_losses = [total_output_losses; data.total_output_losses];
+        total_learning_losses = [total_learning_losses; data.total_learning_losses];
+        total_total_losses = [total_total_losses; data.total_total_losses];
     end
 
-    deaths = all_deaths;
-    mortality_losses = all_mortality_losses;
-    output_losses = all_output_losses;
-    learning_losses = all_learning_losses;
-    total_losses = all_total_losses;
     save(fullfile(sim_results_path, 'unmitigated_losses.mat'), ...
-        'deaths', ...
-        'mortality_losses', ...
-        'output_losses', ...
-        'learning_losses', ...
-        'total_losses', ...
+        'total_deaths', ...
+        'total_mortality_losses', ...
+        'total_output_losses', ...
+        'total_learning_losses', ...
+        'total_total_losses', ...
         '-v7.3');
     fprintf('Aggregated unmitigated losses to %s\n', fullfile(sim_results_path, 'unmitigated_losses.mat'));
 end

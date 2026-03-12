@@ -25,7 +25,7 @@ response_threshold_path: "./output/response_threshold.yaml" # Response threshold
 arrival_dist_config: "output/arrival_distributions/modified/gpd_all_excl_unid_filt_intensity_fit_severity_0d01_1950_poisson_sharp_upper_200_n_100000_seed_42"
 duration_dist_config: "./output/duration_distributions/clean_filt_all_int_0d01_1950_mod_trunc_10_n_100000_seed_42.csv"
 arrival_rates: "./data/clean/arrival_rates_all.csv"
-econ_loss_model_config: "./output/econ_loss_models/poisson_model.yaml"
+econ_loss_model_config: "./output/econ_loss_models/poisson_model_total_severity.yaml"
 
 # Capacity
 theta: 0.25 # Max surge capacity displacement due to advance capacity
