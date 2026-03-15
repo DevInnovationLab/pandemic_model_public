@@ -20,7 +20,7 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
 
     sensitivity_dir = char(sensitivity_dir);
     sensitivity_config = yaml.loadFile(fullfile(sensitivity_dir, 'sensitivity_config.yaml'));
-    sensitivity_varData = fieldnames(sensitivity_config.sensitivities);
+    [scenario_ids, scenario_paths] = get_sensitivity_scenarios(sensitivity_dir);
 
     baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'job_config.yaml'));
     baseline_arrival_dist = baseline_config.arrival_dist_config;
@@ -63,39 +63,51 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     };
 
     row_idx = 2;
-    for i = 1:length(sensitivity_varData)
-        var_name = sensitivity_varData{i};
-        var_values = sensitivity_config.sensitivities.(var_name);
-        var_dir = fullfile(sensitivity_dir, var_name);
-        for j = 1:length(var_values)
-            value_dir = fullfile(var_dir, sprintf('value_%d', j));
-            run_config = yaml.loadFile(fullfile(value_dir, "job_config.yaml"));
-            r = run_config.r;
-            periods = run_config.sim_periods;
-            [annual_deaths, mortality_loss, economic_loss, learning_loss, total_loss] = ...
-                get_unmitigated_losses_for_dir(value_dir, r, periods);
-            [formatted_name, formatted_value] = format_names(var_name, var_values{j}, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
+    for idx = 1:length(scenario_ids)
+        scenario_id = scenario_ids{idx};
+        value_dir = scenario_paths{idx};
+        run_config = yaml.loadFile(fullfile(value_dir, "job_config.yaml"));
+        r = run_config.r;
+        periods = run_config.sim_periods;
+        [annual_deaths, mortality_loss, economic_loss, learning_loss, total_loss] = ...
+            get_unmitigated_losses_for_dir(value_dir, r, periods);
 
-            annualized_summary_table(row_idx,:) = {...
-                formatted_name, formatted_value, ...
-                {get_mean_and_percentiles(annual_deaths)}, ...
-                {get_mean_and_percentiles(mortality_loss)}, ...
-                {get_mean_and_percentiles(economic_loss)}, ...
-                {get_mean_and_percentiles(learning_loss)}, ...
-                {get_mean_and_percentiles(total_loss)}, ...
-            };
-
-            annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
-            total_summary_table(row_idx,:) = {...
-                formatted_name, formatted_value, ...
-                {get_mean_and_percentiles(annual_deaths * periods)}, ...
-                {get_mean_and_percentiles(mortality_loss / annualization_factor)}, ...
-                {get_mean_and_percentiles(economic_loss / annualization_factor)}, ...
-                {get_mean_and_percentiles(learning_loss / annualization_factor)}, ...
-                {get_mean_and_percentiles(total_loss / annualization_factor)}, ...
-            };
-            row_idx = row_idx + 1;
+        % Resolve (var_name, var_value) for format_names: one-parameter has param_value_N, multi-parameter uses scenario_id only.
+        tok = regexp(scenario_id, '^(.+)_value_(\d+)$', 'tokens');
+        if ~isempty(tok)
+            var_name = tok{1}{1};
+            j = str2double(tok{1}{2});
+            var_values = sensitivity_config.sensitivities.(var_name);
+            if isnumeric(var_values)
+                var_value = var_values(j);
+            else
+                var_value = var_values{j};
+            end
+        else
+            var_name = scenario_id;
+            var_value = '';
         end
+        [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
+
+        annualized_summary_table(row_idx,:) = {...
+            formatted_name, formatted_value, ...
+            {get_mean_and_percentiles(annual_deaths)}, ...
+            {get_mean_and_percentiles(mortality_loss)}, ...
+            {get_mean_and_percentiles(economic_loss)}, ...
+            {get_mean_and_percentiles(learning_loss)}, ...
+            {get_mean_and_percentiles(total_loss)}, ...
+        };
+
+        annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
+        total_summary_table(row_idx,:) = {...
+            formatted_name, formatted_value, ...
+            {get_mean_and_percentiles(annual_deaths * periods)}, ...
+            {get_mean_and_percentiles(mortality_loss / annualization_factor)}, ...
+            {get_mean_and_percentiles(economic_loss / annualization_factor)}, ...
+            {get_mean_and_percentiles(learning_loss / annualization_factor)}, ...
+            {get_mean_and_percentiles(total_loss / annualization_factor)}, ...
+        };
+        row_idx = row_idx + 1;
     end
 
     % Write CSVs (means only) so write_unmitigated_loss_figures and others can use them.
@@ -177,8 +189,8 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                     formatted_value = sprintf("Increase to %g deaths per 10,000", s_meta.trunc_value);
                 end
             elseif threshold_diff
-                % Intensity floor in deaths per 10,000 per year
-                formatted_name = "Intensity floor ($\underline{x}$)";
+                % Severity floor in deaths per 10,000 per year
+                formatted_name = "Severity floor ($\underline{x}$)";
                 if s_meta.lower_threshold == 1
                     formatted_value = "Increase to 1 death per 10,000 per year";
                 else
@@ -222,6 +234,9 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
             elseif var_value > baseline_r
                 formatted_value = sprintf("Increase to %.1f\\%%", var_value * 100);
             end
+        case "ptrs_pathogen_gamma1"
+            formatted_name = "Vaccines always succeed, $\\gamma = 1$";
+            formatted_value = "";
         case "baseline"
             formatted_name = "Baseline";
             formatted_value = "";

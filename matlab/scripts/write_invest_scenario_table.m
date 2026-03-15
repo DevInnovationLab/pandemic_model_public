@@ -199,10 +199,10 @@ function write_advance_investment_table_latex(summary_data, outpath, varargin)
     fprintf(fileID, '\\hline\n');
     if include_ten_thirty
         fprintf(fileID, ['Scenario & Costs & Benefits & Net value & BCR & \\multicolumn{3}{c}{Lives saved} \\\\\n']);
-        fprintf(fileID, ['& (\\$~bn) & (\\$~bn) & (\\$~bn) & & 10 yr & 30 yr & 50 yr \\\\\n']);
+        fprintf(fileID, ['& (billion \\$) & (billion \\$) & (billion \\$) & & 10 yr & 30 yr & 50 yr \\\\\n']);
     else
         fprintf(fileID, ['Scenario & Costs & Benefits & Net value & BCR & Lives saved \\\\\n']);
-        fprintf(fileID, ['& (\\$~bn) & (\\$~bn) & (\\$~bn) & & (thousands) \\\\\n']);
+        fprintf(fileID, ['& (billion \\$) & (billion \\$) & (billion \\$) & & (thousands) \\\\\n']);
     end
     fprintf(fileID, '\\hline\n');
 

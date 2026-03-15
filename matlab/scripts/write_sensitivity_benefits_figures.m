@@ -2,10 +2,11 @@ function write_sensitivity_benefits_figures(sensitivity_dir)
     % Writes LaTeX table and bar figure from aggregated benefits (processed/*.mat).
     %
     % Uses the output of agg_sensitivity_benefits: reads sensitivity_dir/processed/
-    % (baseline_benefits_summary.mat and <param>_<value>_benefits_summary.mat),
+    % (baseline_benefits_summary.mat and <scenario_id>_benefits_summary.mat for each scenario),
     % builds a summary table of mean net present value (and 10/90 percentiles),
     % then writes LaTeX and a horizontal bar figure. Run agg_sensitivity_benefits
-    % (sensitivity_dir) first to create the processed files.
+    % (sensitivity_dir) first to create the processed files. Supports both one-parameter
+    % (param_value_N) and multi-parameter (e.g. ptrs_pathogen_gamma1) scenario IDs.
     %
     % Args:
     %   sensitivity_dir (char or string): Path to sensitivity run directory
@@ -38,18 +39,22 @@ function write_sensitivity_benefits_figures(sensitivity_dir)
     summary_table = table("Baseline", "", mean_b, pct(1), pct(2), ...
         'VariableNames', var_names);
 
-    % Collect param/value summaries (same layout as agg_sensitivity_benefits output)
+    % Collect all scenario summaries (param_value_N or multi-parameter scenario_id)
     mat_files = dir(fullfile(processed_dir, '*_benefits_summary.mat'));
     mat_files = mat_files(~strcmp({mat_files.name}, 'baseline_benefits_summary.mat'));
     for k = 1:length(mat_files)
         [~, stem, ~] = fileparts(mat_files(k).name);
-        % stem is like "c_m_value_2" -> param = c_m, value = value_2
+        % stem is like "c_m_value_2" (one-parameter) or "ptrs_pathogen_gamma1" (multi-parameter)
         tok = regexp(stem, '^(.+)_(value_\d+)$', 'tokens');
-        if isempty(tok)
-            continue;
+        if ~isempty(tok)
+            param_name = string(tok{1}{1});
+            value_name = string(tok{1}{2});
+        else
+            param_name = string(stem);
+            value_name = "";
         end
-        param_name = string(tok{1}{1});
-        value_name = string(tok{1}{2});
+        % Use display name for known multi-parameter scenarios (sentence case)
+        param_name = scenario_display_name(param_name);
         path_k = fullfile(processed_dir, mat_files(k).name);
         S = load(path_k, 'mean_benefits', 'sum_net_values');
         mean_b = S.mean_benefits / scale;
@@ -80,7 +85,11 @@ function write_benefits_to_latex(summary_table, outpath)
         v = summary_table.Variable(i);
         val = summary_table.Value(i);
         if strlength(val) == 0
-            val = "Baseline";
+            if v == "Baseline"
+                val = "Baseline";
+            else
+                val = "--";
+            end
         end
         m = summary_table.MeanBenefits(i);
         lo = summary_table.P10(i);
@@ -101,7 +110,11 @@ function plot_benefits_bars(summary_table, fig_dir)
     labels = arrayfun(@(i) sprintf('%s %s', summary_table.Variable(i), summary_table.Value(i)), (1:n)', 'UniformOutput', false);
     for i = 1:n
         if strlength(summary_table.Value(i)) == 0
-            labels{i} = 'Baseline';
+            if i == 1
+                labels{i} = 'Baseline';
+            else
+                labels{i} = char(summary_table.Variable(i));
+            end
         end
     end
 
@@ -122,4 +135,13 @@ function plot_benefits_bars(summary_table, fig_dir)
     exportgraphics(fig, outpath, 'Resolution', 300);
     close(fig);
     fprintf('Benefits bar chart saved to %s\n', outpath);
+end
+
+function display_name = scenario_display_name(scenario_id)
+    % Return human-readable display name for known multi-parameter scenario IDs (sentence case).
+    if scenario_id == "ptrs_pathogen_gamma1"
+        display_name = "Vaccines always succeed, gamma = 1";
+    else
+        display_name = scenario_id;
+    end
 end

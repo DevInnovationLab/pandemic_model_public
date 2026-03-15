@@ -4,22 +4,28 @@ function compare_exceedances(sensitivity_dir)
 % Uses output from run_sensitivity(..., 'response') with
 % config/sensitivity_configs/baseline_vaccine_program_airborne.yaml:
 %   - sensitivity_dir/baseline/  : baseline run (vaccines can fail)
-%   - sensitivity_dir/ptrs_pathogen/value_1/ : run with vaccines-always-succeed PTRs
+%   - sensitivity_dir/ptrs_pathogen_gamma1/ : run with vaccines-always-succeed PTRs and gamma=1 (multi-parameter config)
+%   - or sensitivity_dir/ptrs_pathogen/value_1/ : same run from one-parameter config
 %
 % Plots three curves: no mitigation (eff_severity), realized mitigation (baseline ex_post),
-% vaccines always work (value_1 ex_post), plus Madhav et al. reference.
+% vaccines always work (variant ex_post), plus Madhav et al. reference.
 %
 % Args:
 %   sensitivity_dir (char): Path to sensitivity run root (e.g. output/sensitivity/baseline_vaccine_program_airborne)
 
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
-    value1_dir   = fullfile(sensitivity_dir, 'ptrs_pathogen', 'value_1');
+    % Support both multi-parameter (ptrs_pathogen_gamma1) and one-parameter (ptrs_pathogen/value_1) layouts.
+    value1_dir = fullfile(sensitivity_dir, 'ptrs_pathogen_gamma1');
+    if ~isfolder(value1_dir)
+        value1_dir = fullfile(sensitivity_dir, 'ptrs_pathogen', 'value_1');
+    end
 
     if ~isfolder(baseline_dir)
         error('compare_exceedances:NoBaseline', 'Baseline directory not found: %s', baseline_dir);
     end
     if ~isfolder(value1_dir)
-        error('compare_exceedances:NoValue1', 'ptrs_pathogen/value_1 not found: %s', value1_dir);
+        error('compare_exceedances:NoVariant', ...
+            'Vaccines-always-work scenario not found. Looked for ptrs_pathogen_gamma1 and ptrs_pathogen/value_1 under: %s', sensitivity_dir);
     end
 
     % Load job config from baseline (chunk layout and sizes)
@@ -175,11 +181,11 @@ function compare_exceedances(sensitivity_dir)
     madhav_severity_plot = madhav_severity_central(mad_valid);
     madhav_exceedance_plot = madhav_exceedance_central(mad_valid) / 100;
 
-    % Plot: sequential blue grade for our estimates (no mitigation → realized → vaccines work), darker red for Madhav.
-    color_no   = [0.20 0.40 0.72];
-    color_rel  = [0.35 0.52 0.78];
-    color_alw  = [0.45 0.68 0.88];
-    color_mad  = [0.62 0.08 0.08];
+    % Coherent palette: distinct colors for scenario progression (no mitigation → realized → vaccines work), red for Madhav et al.
+    color_no   = [0.12 0.20 0.48];   % dark navy – no mitigation
+    color_rel  = [0.35 0.55 0.88];   % sky blue – vaccines can fail (clearly lighter and distinct from navy)
+    color_alw  = [0.18 0.72 0.48];   % green–teal – vaccines always work
+    color_mad  = [0.72 0.12 0.12];   % red – Madhav et al. (reference)
 
     fig = figure('Position', [100 100 900 650]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
@@ -204,18 +210,32 @@ function compare_exceedances(sensitivity_dir)
     set(ax, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
 
     % Labels near curves at fixed severity (x) positions.
-    x_no  = max(min_x, min(max_x, 30));
-    x_mad = max(min_x, min(max_x, 20));
-    x_rel = max(min_x, min(max_x, 130));
-    x_alw = max(min_x, min(max_x, 150));
+    x_no  = max(min_x, min(max_x, 20));
+    x_mad = max(min_x, min(max_x, 10));
+    x_rel = max(min_x, min(max_x, 90));
+    x_alw = max(min_x, min(max_x, 120));
     y_no  = interp1(x_plot, exceed_no, x_no, 'linear', 'extrap');
     y_mad = interp1(madhav_severity_plot, madhav_exceedance_plot, x_mad, 'linear', 'extrap');
     y_rel = interp1(x_plot, exceed_rel, x_rel, 'linear', 'extrap');
     y_alw = interp1(x_plot, exceed_alw, x_alw, 'linear', 'extrap');
-    text(ax, x_no, y_no, ' No mitigation', 'Color', color_no, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'bottom');
-    text(ax, x_mad, y_mad, ' Madhav et al. (2023)', 'Color', color_mad, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'bottom');
-    text(ax, x_rel, y_rel, 'Realized mitigation (vaccines can fail) ', 'Color', color_rel, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
-    text(ax, x_alw, y_alw, ' Vaccines always work', 'Color', color_alw, 'FontName', 'Arial', 'FontSize', 10, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
+
+    % Add line labels
+    text(ax, x_no, y_no, ' No mitigation', ...
+        'Color', color_no, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'bottom');
+
+    text(ax, x_mad, y_mad, ' Madhav et al. (2023)', ...
+        'Color', color_mad, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'bottom');
+
+    text(ax, x_rel, y_rel, {'Vaccines', 'can fail'}, ...
+        'Color', color_rel, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
+
+    text(ax, x_alw, y_alw, {'Vaccines', 'always work'}, ...
+        'Color', color_alw, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
+
 
     fig_dir = fullfile(sensitivity_dir, 'figures');
     if ~isfolder(fig_dir)

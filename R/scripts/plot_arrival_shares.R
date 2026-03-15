@@ -52,18 +52,18 @@ p <- ggplot(arrival_risk_plot, aes(
     axis.title.x = element_text(size = 16,  margin = margin(t = 10)),
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
-    panel.grid.major.x = element_line(color = "gray85", linewidth = 0.5),
+    panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
-    legend.position = c(0.98, 0.5), # inside, center-right
+    legend.position = c(0.96, 0.5), # inside, center-right
     legend.justification = c("right", "center"),
     legend.direction = "vertical",
     legend.background = element_rect(fill = alpha("white", 0.9), color = NA),
     legend.title = element_blank(),
-    legend.text = element_text(size = 12),
+    legend.text = element_text(size = 14),
     legend.key.size = unit(1.1, "lines"),
     legend.box.margin = margin(0, 0, 0, 0),
     plot.margin = margin(10, 0, 0, 10)

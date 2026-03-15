@@ -9,55 +9,31 @@ function agg_sensitivity_results(sensitivity_dir)
     top_processed_dir = fullfile(sensitivity_dir, 'processed');
     create_folders_recursively(top_processed_dir);
     
-    % Get the list of sensitivity directories
-    param_dirs = dir(fullfile(sensitivity_dir));
-    param_dirs = param_dirs([param_dirs.isdir]);
-    param_dirs = param_dirs(~ismember({param_dirs.name}, {'.', '..', 'processed'}));
-    
     % First, process baseline results
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
     raw_dir = fullfile(baseline_dir, 'raw');
-    
-    % Get all chunk directories
-    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
-    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-    
-    % Extract chunk numbers and sort
-    chunk_numbers = zeros(length(chunk_dirs), 1);
-    for k = 1:length(chunk_dirs)
-        tokens = regexp(chunk_dirs(k).name, 'chunk_(\d+)', 'tokens');
-        chunk_numbers(k) = str2double(tokens{1}{1});
+
+    if ~isfolder(raw_dir)
+        error('agg_sensitivity_benefits:NoRaw', ...
+            'Baseline raw directory not found: %s. Run sensitivity response first.', raw_dir);
     end
-    [chunk_numbers, sort_idx] = sort(chunk_numbers);
-    chunk_dirs = chunk_dirs(sort_idx);
-    
-    % Check that chunk numbers are contiguous
-    expected_chunks = 1:length(chunk_dirs);
-    if ~isequal(chunk_numbers', expected_chunks)
-        error('Chunk numbers are not contiguous in %s. Found: %s, Expected: %s', ...
-                raw_dir, mat2str(chunk_numbers'), mat2str(expected_chunks));
-    end
-    
-    % Load first chunk to get dimensions
-    first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
-    S_first = load(first_chunk_path, 'annual_results_baseline');
-    [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value_pv);
-    n_chunks = length(chunk_dirs);
-    
+
+    [chunk_mat_paths, n_sims_per_chunk, n_periods] = resolve_baseline_annual_chunks(raw_dir);
+    n_chunks = length(chunk_mat_paths);
+
     % Load job_config from baseline
     job_config_path = fullfile(baseline_dir, 'job_config.yaml');
     job_config = yaml.loadFile(job_config_path);
-    
+
     % Preallocate array for sum of net values per simulation
     sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
     % Preallocate arrays for net values over time
     net_value_pv_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
     net_value_nom_all = zeros(n_sims_per_chunk * n_chunks, n_periods);
-    
+
     % Load net_value from all chunks and calculate sums
     for k = 1:n_chunks
-        chunk_path = fullfile(raw_dir, chunk_dirs(k).name, 'baseline_annual.mat');
-        S = load(chunk_path, 'annual_results_baseline');
+        S = load(chunk_mat_paths{k}, 'annual_results_baseline');
         start_idx = (k-1) * n_sims_per_chunk + 1;
         end_idx = k * n_sims_per_chunk;
         sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
@@ -80,79 +56,92 @@ function agg_sensitivity_results(sensitivity_dir)
     
     fprintf('Processed baseline: mean benefits = %.2f\n', mean_benefits);
     
-    % Loop through each sensitivity directory
-    for i = 1:length(param_dirs)
-        param_name = param_dirs(i).name;
+    % Get scenario list from config (supports both one-parameter and multi-parameter layouts).
+    [scenario_ids, scenario_paths] = get_sensitivity_scenarios(sensitivity_dir);
+    
+    for idx = 1:length(scenario_ids)
+        scenario_id = scenario_ids{idx};
+        value_dir = scenario_paths{idx};
+        raw_dir = fullfile(value_dir, 'raw');
         
-        % Skip baseline directory (already processed)
-        if strcmp(param_name, 'baseline')
+        if ~isfolder(raw_dir)
+            warning('agg_sensitivity_results:NoRaw', 'Skipping %s: no raw dir at %s', scenario_id, raw_dir);
             continue;
         end
-        
-        param_dir = fullfile(sensitivity_dir, param_name);
-        value_dirs = dir(fullfile(param_dir, 'value_*'));
-        value_dirs = value_dirs([value_dirs.isdir]);
-        
-        % Loop through each value directory
-        for j = 1:length(value_dirs)
-            value_name = value_dirs(j).name;
-            value_dir = fullfile(param_dir, value_name);
-            raw_dir = fullfile(value_dir, 'raw');
-            
-            % Get all chunk directories
-            chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
-            chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-            
-            % Extract chunk numbers and sort
-            chunk_numbers = zeros(length(chunk_dirs), 1);
-            for k = 1:length(chunk_dirs)
-                tokens = regexp(chunk_dirs(k).name, 'chunk_(\d+)', 'tokens');
-                chunk_numbers(k) = str2double(tokens{1}{1});
-            end
-            [chunk_numbers, sort_idx] = sort(chunk_numbers);
-            chunk_dirs = chunk_dirs(sort_idx);
-            
-            % Check that chunk numbers are contiguous
-            expected_chunks = 1:length(chunk_dirs);
-            if ~isequal(chunk_numbers', expected_chunks)
-                error('Chunk numbers are not contiguous in %s. Found: %s, Expected: %s', ...
-                      raw_dir, mat2str(chunk_numbers'), mat2str(expected_chunks));
-            end
-            
-            % Load first chunk to get dimensions
-            first_chunk_path = fullfile(raw_dir, chunk_dirs(1).name, 'baseline_annual.mat');
-            disp(first_chunk_path)
-            S_first = load(first_chunk_path, 'annual_results_baseline');
-            [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value_pv);
-            n_chunks = length(chunk_dirs);
-            
-            % Load job_config from value directory
-            job_config_path = fullfile(value_dir, 'job_config.yaml');
-            job_config = yaml.loadFile(job_config_path);
-            
-            % Preallocate array for sum of net values per simulation
-            sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
-            
-            % Load net_value from all chunks and calculate sums
-            for k = 1:n_chunks
-                chunk_path = fullfile(raw_dir, chunk_dirs(k).name, 'baseline_annual.mat');
-                S = load(chunk_path, 'annual_results_baseline');
-                start_idx = (k-1) * n_sims_per_chunk + 1;
-                end_idx = k * n_sims_per_chunk;
-                sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
-            end
-            
-            % Calculate mean of sums
-            mean_benefits = mean(sum_net_values);
-            
-            % Save to top-level processed directory with param and value in filename
-            output_filename = sprintf('%s_%s_benefits_summary.mat', param_name, value_name);
-            output_path = fullfile(top_processed_dir, output_filename);
-            save(output_path, 'mean_benefits', 'sum_net_values', 'param_name', 'value_name', 'job_config');
-            
-            fprintf('Processed %s/%s: mean benefits = %.2f\n', param_name, value_name, mean_benefits);
+
+        try
+            [chunk_mat_paths, n_sims_per_chunk, ~] = resolve_baseline_annual_chunks(raw_dir);
+        catch me
+            warning('agg_sensitivity_results:ChunkResolve', 'Skipping %s: %s', scenario_id, me.message);
+            continue;
         end
+        n_chunks = length(chunk_mat_paths);
+
+        % Load job_config from scenario directory
+        job_config_path = fullfile(value_dir, 'job_config.yaml');
+        job_config = yaml.loadFile(job_config_path);
+
+        % Preallocate array for sum of net values per simulation
+        sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
+
+        % Load net_value from all chunks and calculate sums
+        for k = 1:n_chunks
+            S = load(chunk_mat_paths{k}, 'annual_results_baseline');
+            start_idx = (k-1) * n_sims_per_chunk + 1;
+            end_idx = k * n_sims_per_chunk;
+            sum_net_values(start_idx:end_idx) = sum(S.annual_results_baseline.net_value_pv, 2);
+        end
+        
+        % Calculate mean of sums
+        mean_benefits = mean(sum_net_values);
+        
+        % Save to top-level processed directory with scenario_id in filename
+        output_filename = sprintf('%s_benefits_summary.mat', scenario_id);
+        output_path = fullfile(top_processed_dir, output_filename);
+        save(output_path, 'mean_benefits', 'sum_net_values', 'scenario_id', 'job_config');
+        
+        fprintf('Processed %s: mean benefits = %.2f\n', scenario_id, mean_benefits);
     end
     
     fprintf('All sensitivity results aggregated and saved to %s\n', top_processed_dir);
+end
+
+
+function [chunk_mat_paths, n_sims_per_chunk, n_periods] = resolve_baseline_annual_chunks(raw_dir)
+    % Resolve baseline_annual.mat locations: either raw/chunk_1, chunk_2, ... or raw/baseline_annual.mat.
+    %
+    % Returns:
+    %   chunk_mat_paths (cell of char): Full paths to each baseline_annual.mat.
+    %   n_sims_per_chunk (numeric): Sims in first chunk (used for prealloc).
+    %   n_periods (numeric): Number of periods from first chunk.
+
+    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
+    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
+
+    if ~isempty(chunk_dirs)
+        chunk_numbers = zeros(length(chunk_dirs), 1);
+        for k = 1:length(chunk_dirs)
+            tokens = regexp(chunk_dirs(k).name, 'chunk_(\d+)', 'tokens');
+            chunk_numbers(k) = str2double(tokens{1}{1});
+        end
+        [chunk_numbers, sort_idx] = sort(chunk_numbers);
+        chunk_dirs = chunk_dirs(sort_idx);
+        expected = 1:length(chunk_dirs);
+        if ~isequal(chunk_numbers', expected)
+            error('agg_sensitivity_benefits:ChunksNotContiguous', ...
+                'Chunk numbers are not contiguous in %s. Found: %s.', raw_dir, mat2str(chunk_numbers'));
+        end
+        chunk_mat_paths = arrayfun(@(c) fullfile(raw_dir, c.name, 'baseline_annual.mat'), chunk_dirs, 'UniformOutput', false);
+    else
+        single_path = fullfile(raw_dir, 'baseline_annual.mat');
+        if isfile(single_path)
+            chunk_mat_paths = {single_path};
+        else
+            error('agg_sensitivity_benefits:NoChunks', ...
+                'No chunk_* directories and no baseline_annual.mat in %s. Run sensitivity response first.', raw_dir);
+        end
+    end
+
+    S_first = load(chunk_mat_paths{1}, 'annual_results_baseline');
+    [n_sims_per_chunk, n_periods] = size(S_first.annual_results_baseline.net_value_pv);
 end

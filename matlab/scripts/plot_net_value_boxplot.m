@@ -1,4 +1,4 @@
-function plot_net_value_raw(out_dir)
+function plot_net_value_boxplot(out_dir)
     % Plot net value (PV) from raw results as a manual boxplot per scenario.
     % The box shows the interquartile range, the vertical line shows the median,
     % the whiskers show the 10th and 90th percentiles, and the dot shows the mean.
@@ -92,21 +92,22 @@ function plot_net_value_raw(out_dir)
     h_whisker = [];
     h_box = [];
     h_median = [];
+    % Draw in overlay order: 10/90 percentiles (back), IQR box, median line, then mean (on top).
     for k = 1:n
         if isnan(q1(k))
             plot(ax, mean_val(k), y_pos(k), 'ko', 'MarkerFaceColor', 'k', 'MarkerSize', 5);
             continue;
         end
         y = y_pos(k);
-        % Whisker: 10th to 90th with caps
+        % 1. Whisker: 10th to 90th with caps (drawn first, at back)
         hw = plot(ax, [perc_10_90(k, 1), perc_10_90(k, 2)], [y, y], '-', 'Color', whisker_color, 'LineWidth', 1.6);
         plot(ax, [perc_10_90(k, 1), perc_10_90(k, 1)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
         plot(ax, [perc_10_90(k, 2), perc_10_90(k, 2)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
-        % Box: Q1 to Q3
+        % 2. Box: interquartile range (Q1 to Q3)
         xb = [q1(k), q3(k), q3(k), q1(k)];
         yb = [y - box_hw, y - box_hw, y + box_hw, y + box_hw];
         hb = patch(ax, xb, yb, face_color, 'EdgeColor', edge_color, 'LineWidth', 1.0);
-        % Median line at x = median
+        % 3. Median line at x = median
         hm = plot(ax, [med(k), med(k)], [y - box_hw, y + box_hw], '-', 'Color', edge_color, 'LineWidth', 2.2);
         if isempty(h_whisker)
             h_whisker = hw;
@@ -115,6 +116,7 @@ function plot_net_value_raw(out_dir)
         end
     end
 
+    % 4. Mean (on top)
     h_mean = plot(ax, mean_val, y_pos, 'o', ...
         'MarkerFaceColor', 'k', 'MarkerEdgeColor', [0.05 0.07 0.13], 'MarkerSize', 6.5);
 
@@ -127,6 +129,7 @@ function plot_net_value_raw(out_dir)
     ax.TickDir = 'out';
     ax.Box = 'off';
     ax.YAxisLocation = 'left';
+    ax.XGrid = 'on';
     xlabel(ax, 'Net present value (trillion $)', 'FontSize', 11);
 
     % X-axis limits and ticks at every trillion dollars, based on whisker endpoints
@@ -143,12 +146,12 @@ function plot_net_value_raw(out_dir)
         ax.XTick = x_lo:1:x_hi;
     end
 
-    % Legend: four entries; median label only with no symbol, using a dummy handle.
+    % Legend: four entries (reversed order); median label only with no symbol, using a dummy handle.
     if ~isempty(h_whisker)
         h_median_legend = plot(ax, NaN, NaN, '-', ...
             'LineStyle', 'none', 'Marker', 'none');
-        legend(ax, [h_whisker, h_box, h_median_legend, h_mean], ...
-            {'10/90 percentiles', 'Interquartile range', 'Median', 'Mean'}, ...
+        legend(ax, [h_mean, h_median_legend, h_whisker, h_box], ...
+            {'Mean', 'Median', '10/90 percentiles', 'Interquartile range'}, ...
             'Location', 'northeast', 'FontSize', 9, 'Interpreter', 'none');
     end
     print(fig, fullfile(figure_path, 'net_value_boxplot'), '-djpeg', '-r600');
