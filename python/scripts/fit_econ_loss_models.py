@@ -223,25 +223,53 @@ if __name__ == "__main__":
             color="black",
             s=80,
             alpha=0.7,
-            label="Data points",
         )
 
+        # One label per point: use if/elif/else so each disease gets exactly one branch
         for i, disease in enumerate(econ_loss_clean['disease']):
-            ax.text(
-                econ_loss_clean['severity'].iloc[i] * 1.22,
-                econ_loss_clean['total_pct_gdp_loss'].iloc[i] * 0.98,
-                disease,
-                fontsize=12,
-                ha='left',
-                va='top',
-                color='black',
-            )
+            x_pos = econ_loss_clean['severity'].iloc[i]
+            y_pos = econ_loss_clean['total_pct_gdp_loss'].iloc[i]
+            d = str(disease).strip()
+            d_lower = d.lower()
+            if d_lower == 'covid-19':
+                # Mirrored: text above and left of dot, end of word at dot
+                ax.text(
+                    x_pos * 0.88,
+                    y_pos * 1.06,
+                    disease,
+                    fontsize=12,
+                    ha='right',
+                    va='bottom',
+                    color='black',
+                )
+            elif d_lower == 'hong kong flu' or d_lower == '1918 flu':
+                # Hong kong flu, 1918 flu: smaller offset from dot
+                ax.text(
+                    x_pos * 1.08,
+                    y_pos - 0.5,
+                    disease,
+                    fontsize=12,
+                    ha='left',
+                    va='top',
+                    color='black',
+                )
+            else:
+                # Zika, SARS, Ebola: anchor bottom-right of dot, further down
+                ax.text(
+                    x_pos * 1.15,
+                    y_pos - 0.4,
+                    disease,
+                    fontsize=12,
+                    ha='left',
+                    va='top',
+                    color='black',
+                )
 
         ax.set_xlabel("Severity (deaths per 10,000 people)")
         ax.set_ylabel("Total GDP loss (%)")
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
-        ax.grid(True, color="0.8", alpha=0.3)
+        ax.grid(True, color="0.8", alpha=0.3, axis="both")
         ax.set_xscale('log')
 
         ax.plot(
@@ -249,9 +277,23 @@ if __name__ == "__main__":
             y_pred_poiss_sev,
             linewidth=2.5,
             color=col_poisson,
-            label='Poisson',
         )
-        ax.legend()
+
+        # Label the fitted line at 10^3 severity: above the line, multiline, no overlap
+        x_label = 1e3
+        x_vals = np.exp(log_sev_range_poiss.flatten())
+        y_at_1e3 = np.interp(x_label, x_vals, y_pred_poiss_sev)
+        y_lim = ax.get_ylim()
+        y_offset = (y_lim[1] - y_lim[0]) * 0.12
+        ax.text(
+            x_label - 5e2,
+            y_at_1e3 + y_offset,
+            "Fitted\nPoisson\nregression",
+            fontsize=14,
+            ha="center",
+            va="bottom",
+            color=col_poisson,
+        )
         plt.tight_layout()
 
         figpath = outdir / "poisson_model_total_severity.png"

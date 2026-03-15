@@ -181,17 +181,18 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
         hi = np.clip(mle_survival + z * se, 0.0, 1.0)
 
         # Plot MLE exceedance and 95% CI as shaded area
-        plt.figure(figsize=(10, 6))
-        plt.fill_between(t, lo, hi, color="blue", alpha=0.2)
-        plt.plot(t, mle_survival, color="blue")
+        plt.rc("font", family="Arial")
+        fig, ax = plt.subplots(figsize=(10, 6))
+        ax.fill_between(t, lo, hi, color="blue", alpha=0.2)
+        ax.plot(t, mle_survival, color="blue")
 
-        plt.xlabel("Years")
-        plt.ylabel("Exceedance probability")
-        plt.grid(True, alpha=0.2)
-        plt.gca().spines[["top", "right"]].set_visible(False)
+        ax.set_xlabel("Years", fontname="Arial", fontsize=14)
+        ax.set_ylabel("Exceedance probability", fontname="Arial", fontsize=14)
+        ax.grid(True, axis="both", alpha=0.3)
+        ax.spines[["top", "right"]].set_visible(False)
 
         fig_fn = outdir / f"{outstring}.png"
-        plt.savefig(fig_fn, dpi=600)
+        fig.savefig(fig_fn, dpi=600)
 
 
 if __name__ == "__main__":

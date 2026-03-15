@@ -200,8 +200,8 @@ function compare_exceedances(sensitivity_dir)
     set(ax, 'XScale', 'log', 'YScale', 'log');
     grid(ax, 'on');
     box(ax, 'off');
-    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', 'Arial', 'FontSize', 12);
-    ylabel(ax, 'Annual exceedance risk', 'FontName', 'Arial', 'FontSize', 12);
+    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', 'Arial', 'FontSize', 14);
+    ylabel(ax, 'Annual exceedance risk', 'FontName', 'Arial', 'FontSize', 14);
 
     min_x = max(min(x_plot), min(madhav_severity_plot));
     max_x = min(max(x_plot), max(madhav_severity_plot));
@@ -228,7 +228,7 @@ function compare_exceedances(sensitivity_dir)
         'Color', color_mad, 'FontName', 'Arial', 'FontSize', 12, ...
         'VerticalAlignment', 'bottom');
 
-    text(ax, x_rel, y_rel, {'Vaccines', 'can fail'}, ...
+    text(ax, x_rel, y_rel, {'Status quo', 'response'}, ...
         'Color', color_rel, 'FontName', 'Arial', 'FontSize', 12, ...
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
 

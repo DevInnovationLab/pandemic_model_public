@@ -122,8 +122,8 @@ function write_exceedance_table(allrisk_csv_path, airborne_csv_path, outpath)
                      '\\multicolumn{3}{c}{Novel airborne viral} \\\\\n']);
 
     % Third header row: response status (stacked using \\shortstack for compact labels).
-    fprintf(fileID, ['& \\shortstack{No\\\\mitigation} & \\shortstack{Realized\\\\mitigation} & \\shortstack{Vaccines\\\\always work} & ', ...
-                     '\\shortstack{No\\\\mitigation} & \\shortstack{Realized\\\\mitigation} & \\shortstack{Vaccines\\\\always work} \\\\\n']);
+    fprintf(fileID, ['& \\shortstack{No\\\\mitigation} & \\shortstack{Status quo\\\\response} & \\shortstack{Vaccines\\\\always work} & ', ...
+                     '\\shortstack{No\\\\mitigation} & \\shortstack{Status quo\\\\response} & \\shortstack{Vaccines\\\\always work} \\\\\n']);
     fprintf(fileID, '\\hline\n');
 
     % Data rows.

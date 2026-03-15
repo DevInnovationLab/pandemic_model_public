@@ -103,13 +103,13 @@ function plot_losses_share(job_dir)
     hold on
     % Plot Lorenz curve
     plot([0; cum_event_share], [0; cum_loss_share], 'b-', 'LineWidth', 2)
-    xlabel('Cumulative share of pandemics', 'FontSize', 14)
-    ylabel('Cumulative share of social losses', 'FontSize', 14)
+    xlabel('Cumulative share of pandemics', 'FontName', 'Arial', 'FontSize', 14)
+    ylabel('Cumulative share of social losses', 'FontName', 'Arial', 'FontSize', 14)
     ylim([0 1])
     box off
     grid on
     ax = gca;
-    ax.GridAlpha = 0.1;
+    ax.GridAlpha = 0.3;
 
     % Save high resolution figure using print instead of saveas
     print(fig2, fullfile(comparisons_dir, "losses_share_lorenz.png"), '-dpng', '-r600');

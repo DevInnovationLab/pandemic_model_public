@@ -42,14 +42,14 @@ p <- ggplot(arrival_risk_plot, aes(
     y = NULL,
     caption = NULL
   ) +
-  theme_classic(base_size = 8) +
+  theme_classic(base_size = 8, base_family = "Arial") +
   theme(
-    plot.title = element_text(size = 22, face = "bold", hjust = 0),
-    plot.subtitle = element_text(size = 14, color = "gray40", hjust = 0, margin = margin(b = 10)),
-    plot.caption = element_text(size = 10, color = "gray50", hjust = 0, margin = margin(t = 5)),
-    axis.text.y = element_text(size = 14, color = "black"),
-    axis.text.x = element_text(size = 12, color = "black"),
-    axis.title.x = element_text(size = 16,  margin = margin(t = 10)),
+    plot.title = element_text(family = "Arial", size = 22, face = "bold", hjust = 0),
+    plot.subtitle = element_text(family = "Arial", size = 14, color = "gray40", hjust = 0, margin = margin(b = 10)),
+    plot.caption = element_text(family = "Arial", size = 10, color = "gray50", hjust = 0, margin = margin(t = 5)),
+    axis.text.y = element_text(family = "Arial", size = 14, color = "black"),
+    axis.text.x = element_text(family = "Arial", size = 12, color = "black"),
+    axis.title.x = element_text(family = "Arial", size = 16,  margin = margin(t = 10)),
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
     panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
@@ -63,7 +63,7 @@ p <- ggplot(arrival_risk_plot, aes(
     legend.direction = "vertical",
     legend.background = element_rect(fill = alpha("white", 0.9), color = NA),
     legend.title = element_blank(),
-    legend.text = element_text(size = 14),
+    legend.text = element_text(family = "Arial", size = 14),
     legend.key.size = unit(1.1, "lines"),
     legend.box.margin = margin(0, 0, 0, 0),
     plot.margin = margin(10, 0, 0, 10)
