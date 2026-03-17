@@ -13,10 +13,12 @@ function plot_bootstrap_violins(out_dir)
     col_name = [result '_full'];
     n_bootstrap = 200;
 
-    investment_tags = {'improved_early_warning', 'advance_capacity', 'neglected_pathogen_rd', ...
-                       'universal_flu_rd', 'combined_invest'};
-    investment_labels = {'Improved early warning', 'Advance capacity', 'Neglected pathogen R&D', ...
-                         'Universal flu vaccine R&D', 'Combined'};
+    % Program order and labels: advance capacity, prototype vaccine R&D,
+    % universal flu vaccine R&D, improved early warning, combined.
+    investment_tags = {'advance_capacity', 'neglected_pathogen_rd', 'universal_flu_rd', ...
+                       'improved_early_warning', 'combined_invest'};
+    investment_labels = {'Advance capacity', 'Prototype vaccine R&D', 'Universal flu vaccine R&D', ...
+                         'Improved early warning', 'Combined'};
     col_accents = {'BCR', 'Surplus'};
 
     processed_dir = fullfile(out_dir, 'processed');

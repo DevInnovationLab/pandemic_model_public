@@ -31,10 +31,12 @@ end
 function scenarios = get_scenario_order(available)
     % Return scenario names in display order. Only scenarios in available are included.
     % Excludes moderate programs (9-month, single pathogen, BCR-accepting combined).
-    order = ["improved_early_warning_low_threshold", ...
-             "universal_flu_rd_invest_both", ...
-             "advance_capacity_6_month", ...
+    % Program order: Advance capacity, Prototype vaccine R&D,
+    % Universal flu vaccine R&D, Improved early warning, Combined.
+    order = ["advance_capacity_6_month", ...
              "neglected_pathogen_rd_all", ...
+             "universal_flu_rd_invest_both", ...
+             "improved_early_warning_low_threshold", ...
              "combined_invest_surplus_acc"];
     scenarios = order(ismember(order, available));
 end
@@ -113,7 +115,7 @@ function [category_name, variation] = parse_scenario_name(scenario_name)
         category_name = "Universal flu vaccine R&D";
         variation = "";
     elseif startsWith(scenario_name, "neglected_pathogen_rd")
-        category_name = "Neglected pathogen R&D";
+        category_name = "Prototype vaccine R&D";
         variation = "";
     elseif startsWith(scenario_name, "improved_early_warning")
         category_name = "Improved early warning";

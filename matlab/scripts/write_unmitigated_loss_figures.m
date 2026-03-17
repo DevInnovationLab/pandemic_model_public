@@ -47,12 +47,15 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     [loss_data_ordered, labels, order_idx, group_names] = order_rows_and_labels(summary_table, loss_data);
     deaths_ordered = annual_deaths(order_idx);
 
-    colors = [0.45 0.25 0.55; 0.85 0.45 0.25; 0.25 0.55 0.45];
+    % Use blue for mortality, red for economic, green for learning
+    colors = [0.2 0.4 0.8;    % nice blue for mortality
+              0.85 0.33 0.1;  % pleasant red for economic
+              0.25 0.65 0.32];% nice green for learning
     nrows = size(loss_data_ordered, 1);
 
     % Combined two-panel figure (for reference)
     % Figure: social losses only
-    fig_loss = figure('Visible', 'off', 'Position', [100 100 780 540]);
+    fig_loss = figure('Visible', 'off', 'Position', [100 100 780 640]);
     fig_loss.PaperPositionMode = 'auto';
     ax_loss = axes(fig_loss);
     % Grouped y-axis layout with group headers and spacing
@@ -65,16 +68,18 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     ax_loss.YDir = 'reverse';
     ax_loss.YTick = y_ticks_loss;
     ax_loss.YTickLabel = y_ticklabels_loss;
-    ax_loss.TickLabelInterpreter = 'latex';
+    ax_loss.TickLabelInterpreter = 'tex';
+
     apply_axis_style(ax_loss);
     draw_group_headers(ax_loss, header_y_loss, header_labels_loss);
-    xlabel(ax_loss, 'Expected annualized social loss (trillion \$)', 'FontName', 'Arial', ...
-        'FontSize', 13, 'Interpreter', 'latex', 'Color', [0.2 0.2 0.2]);
+    xlabel(ax_loss, 'Expected annualized social loss (trillion $)', 'FontName', 'Arial', ...
+        'FontSize', 13, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     legend(ax_loss, {'Mortality', 'Economic', 'Learning'}, 'Location', 'southeast', ...
         'Orientation', 'vertical', 'FontName', 'Arial', 'FontSize', 12, ...
-        'Interpreter', 'latex', 'TextColor', [0.2 0.2 0.2]);
+        'Interpreter', 'tex', 'TextColor', [0.2 0.2 0.2]);
     set(ax_loss, 'Layer', 'bottom');
     format_axis_ticks(ax_loss);
+
     % Bar totals at bar ends
     total_loss = sum(loss_data_ordered, 2);
     for i = 1:nrows
@@ -82,8 +87,12 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
         y_val = y_bar_loss(i);
         text(ax_loss, x_val + 0.3, y_val, format_number_for_display(x_val), ...
             'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle', ...
-            'FontName', 'Arial', 'FontSize', 10, 'Interpreter', 'latex', 'Color', [0.2 0.2 0.2]);
+            'FontName', 'Arial', 'FontSize', 10, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     end
+    % Save axis limits to match styling on second panel
+    xlims_loss = [0, ceil(max(total_loss)) + 1];
+    xlim(ax_loss, xlims_loss);
+
     outpath_loss = fullfile(fig_dir, 'sensitivity_stacked_losses_social.pdf');
     exportgraphics(fig_loss, outpath_loss, ...
         'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
@@ -91,31 +100,44 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     fprintf('Social loss panel saved to %s\n', outpath_loss);
 
     % Figure: annual deaths only
-    fig_deaths = figure('Visible', 'off', 'Position', [100 100 780 540]);
+    fig_deaths = figure('Visible', 'off', 'Position', [100 100 780 640]);
     fig_deaths.PaperPositionMode = 'auto';
     ax_deaths = axes(fig_deaths);
     % Reuse grouped y-axis layout for deaths
     [y_bar_deaths, y_ticks_deaths, y_ticklabels_deaths, header_y_deaths, header_labels_deaths] = ...
         grouped_y_layout(group_names, labels);
-    barh(ax_deaths, y_bar_deaths, deaths_ordered, 'FaceColor', [0.45 0.25 0.55]);
+
+    % Match the coloring style -> we manually color each bar like the first panel
+    h_bar = barh(ax_deaths, y_bar_deaths, deaths_ordered, 'FaceColor', 'flat');
+    % For single bar vector, apply "mortality" color from colors
+    if ~isempty(h_bar)
+        h_bar.CData = repmat(colors(1,:), nrows, 1);
+    end
+
     ax_deaths.YDir = 'reverse';
     ax_deaths.YTick = y_ticks_deaths;
     ax_deaths.YTickLabel = y_ticklabels_deaths;
-    ax_deaths.TickLabelInterpreter = 'latex';
+    ax_deaths.TickLabelInterpreter = 'tex';
     apply_axis_style(ax_deaths);
     draw_group_headers(ax_deaths, header_y_deaths, header_labels_deaths, 0.2);
     xlabel(ax_deaths, 'Expected annual deaths (millions)', 'FontName', 'Arial', ...
-        'FontSize', 13, 'Interpreter', 'latex', 'Color', [0.2 0.2 0.2]);
+        'FontSize', 13, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     set(ax_deaths, 'Layer', 'bottom');
     format_axis_ticks(ax_deaths);
+
     % Bar totals at bar ends (annual deaths)
     for i = 1:nrows
         x_val = deaths_ordered(i);
         y_val = y_bar_deaths(i);
         text(ax_deaths, x_val + 0.1, y_val, format_number_for_display(x_val), ...
             'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle', ...
-            'FontName', 'Arial', 'FontSize', 10, 'Interpreter', 'latex', 'Color', [0.2 0.2 0.2]);
+            'FontName', 'Arial', 'FontSize', 10, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     end
+
+    % Match xlim style to first panel for visual consistency
+    xlims_deaths = [0, ceil(max(deaths_ordered)) + 1];
+    xlim(ax_deaths, xlims_deaths);
+
     outpath_deaths = fullfile(fig_dir, 'sensitivity_stacked_losses_deaths.pdf');
     exportgraphics(fig_deaths, outpath_deaths, ...
         'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
@@ -184,33 +206,32 @@ function label = scenario_label_for_chart(variable, value)
     variable = char(variable);
     value = char(value);
 
+    % Bullet to prepend (LaTeX math mode)
+    bullet = "\bullet ";
+
     if strcmp(variable, 'Baseline') || isempty(value) || strlength(value) == 0
-        label = "Baseline";
+        label = bullet + "Baseline";
         return;
     end
 
     % Custom labels for specific groups in the bar plot
     if contains(variable, 'Severity ceiling')
         % Expect values like "Increase to 10,000 deaths per 10,000".
-        cleaned = regexprep(value, '^Increase to\s*', '');
-        cleaned = regexprep(cleaned, '\s*deaths per 10,000.*$', ' deaths per 10,000');
-        label = string(strtrim(cleaned));
+        cleaned = regexprep(value, '\s*deaths per 10,000.*$', ' deaths per 10,000');
+        label = bullet + string(strtrim(cleaned));
         return;
     end
 
     if contains(variable, 'Severity floor')
         % Expect values like "Increase to 1 death per 10,000 per year".
-        cleaned = regexprep(value, '^Increase to\s*', '');
-        cleaned = regexprep(cleaned, '\s*death? per 10,000 per year.*$', ' deaths per 10,000 per year');
-        label = string(strtrim(cleaned));
+        cleaned = regexprep(value, '\s*death? per 10,000 per year.*$', ' deaths per 10,000 per year');
+        label = bullet + string(strtrim(cleaned));
         return;
     end
 
     if contains(variable, 'Per capita GDP growth rate')
         % Values like "Reduce to 1.4\%" or "Increase to 1.8\%"
-        v = strrep(value, 'Reduce to ', '');
-        v = strrep(v, 'Increase to ', '');
-        v = strrep(v, '\%', '%');
+        v = strrep(value, '\%', '%');
         v = strtrim(v);
         % Drop trailing .0 on whole-number percentages
         if endsWith(v, '%')
@@ -220,15 +241,14 @@ function label = scenario_label_for_chart(variable, value)
                 v = sprintf('%.0f%%', numVal);
             end
         end
-        label = string(v);
+        label = bullet + string(v);
         return;
     end
 
     if contains(variable, 'Value of statistical life')
         % Values like "Reduce to \$1.0 million" or "Increase to \$1.6 million"
-        v = strrep(value, 'Reduce to ', '');
-        v = strrep(v, 'Increase to ', '');
-        v = strrep(v, '\$', '$');
+
+        v = strrep(value, '\$', '$');
         v = strtrim(v);
         % Drop trailing .0 in the numeric part before " million" if present
         tokens = regexp(v, '^(\$?)([\d\.]+)(.*)$', 'tokens', 'once');
@@ -242,15 +262,13 @@ function label = scenario_label_for_chart(variable, value)
             end
             v = [prefix numStr suffix];
         end
-        label = string(v);
+        label = bullet + string(v);
         return;
     end
 
     if contains(variable, 'Social discount rate')
         % Values like "Reduce to 2.0\%" or "Increase to 6.0\%"
-        v = strrep(value, 'Reduce to ', '');
-        v = strrep(v, 'Increase to ', '');
-        v = strrep(v, '\%', '%');
+        v = strrep(value, '\%', '%');
         v = strtrim(v);
         % Drop trailing .0 on whole-number percentages
         if endsWith(v, '%')
@@ -260,12 +278,12 @@ function label = scenario_label_for_chart(variable, value)
                 v = sprintf('%.0f%%', numVal);
             end
         end
-        label = string(v);
+        label = bullet + string(v);
         return;
     end
 
-    % All other cases: use the formatted value directly
-    label = string(value);
+    % All other cases: use the formatted value directly with bullet
+    label = bullet + string(value);
 end
 
 function score = pathogen_row_score(value)
@@ -375,7 +393,7 @@ function [y_bar, y_ticks, y_ticklabels, header_y, header_labels] = grouped_y_lay
                 row_idx = in_group(j);
                 y_bar(row_idx) = current_y;
                 y_ticks(end+1, 1) = current_y; %#ok<AGROW>
-                y_ticklabels(end+1, 1) = latex_escape_label(scenario_labels(row_idx)); %#ok<AGROW>
+                y_ticklabels(end+1, 1) = scenario_labels(row_idx); %#ok<AGROW>
                 current_y = current_y + 1;
             end
             current_y = current_y + 0.9;
@@ -388,7 +406,7 @@ function [y_bar, y_ticks, y_ticklabels, header_y, header_labels] = grouped_y_lay
                 row_idx = in_group(j);
                 y_bar(row_idx) = current_y;
                 y_ticks(end+1, 1) = current_y; %#ok<AGROW>
-                y_ticklabels(end+1, 1) = "   " + latex_escape_label(scenario_labels(row_idx)); %#ok<AGROW>
+                y_ticklabels(end+1, 1) = "   " + scenario_labels(row_idx); %#ok<AGROW>
                 current_y = current_y + 1;
             end
             current_y = current_y + 0.9;
@@ -422,7 +440,7 @@ function draw_group_headers(ax, header_y, header_labels, gap)
     for k = 1:numel(header_y)
         text(ax, x_pos, header_y(k), header_labels(k), ...
             'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', ...
-            'FontName', 'Arial', 'FontSize', 11, 'Interpreter', 'latex', 'Color', [0.2 0.2 0.2]);
+            'FontName', 'Arial', 'FontWeight', 'bold', 'FontSize', 11, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     end
 end
 
@@ -452,16 +470,16 @@ function label = group_header_latex(group_name)
 % LaTeX-rendered group headers (italic with symbols).
     g = char(group_name);
     if contains(g, 'Severity ceiling')
-        label = '\textit{Severity ceiling ($\overline{s}$)}';
+        label = 'Severity ceiling (   )';
     elseif contains(g, 'Severity floor')
-        label = '\textit{Severity floor ($\underline{x}$)}';
+        label = 'Severity floor (   )';
     elseif contains(g, 'Per capita GDP growth rate')
-        label = '\textit{Per capita GDP growth ($r_g$)}';
+        label = 'Per capita GDP growth (   )';
     elseif contains(g, 'Value of statistical life')
-        label = '\textit{Value of statistical life ($v$)}';
+        label = 'Value of statistical life (   )';
     elseif contains(g, 'Social discount rate')
-        label = '\textit{Social discount rate ($r_s$)}';
-    else
-        label = ['\textit{' g '}'];
+        label = 'Social discount rate (   )';
+    else    
+        label = ['' g ''];
     end
 end

@@ -547,7 +547,7 @@ end
 function formatted = format_investment_name(investment)
     % Format investment name for display
     clean_map = dictionary(["advance_capacity", "early_warning", "neglected_pathogen", "universal_flu"], ...
-        ["Advance capacity", "Early warning", "Neglected pathogen R&D", "Universal flu vaccine R&D"]);
+        ["Advance capacity", "Improved early warning", "Prototype vaccine R&D", "Universal flu vaccine R&D"]);
     
     if isKey(clean_map, investment)
         formatted = clean_map(investment);

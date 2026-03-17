@@ -173,7 +173,7 @@ function plot_net_value_boxplot(out_dir)
 
             % Make the baseline figure a bit less tall than the advance
             % investment figure so it is visually shorter in panels.
-            fig_b = figure('Visible', 'off', 'Position', [100 100 750 240]);
+            fig_b = figure('Visible', 'off', 'Position', [100 100 750 300]);
             ax_b = axes();
             hold(ax_b, 'on');
 
@@ -205,7 +205,7 @@ function plot_net_value_boxplot(out_dir)
             ax_b.YLim = [0.5, 1.5];
             ax_b.YTick = 1;
             % Two-line y-tick label using TeX interpreter and newline
-            ax_b.YTickLabel = {'Status quo response    '};
+            ax_b.YTickLabel = {'Status quo response'};
             ax_b.FontSize = 10;
             ax_b.TickDir = 'out';
             ax_b.Box = 'off';
@@ -230,17 +230,15 @@ function plot_net_value_boxplot(out_dir)
             h_median_legend_b = plot(ax_b, NaN, NaN, '-', 'LineStyle', 'none', 'Marker', 'none');
             h_legend = legend(ax_b, [hmean_b, h_median_legend_b, hb_b, hw_b], ...
                 {'Mean', 'Median', 'Interquartile range', '10/90 percentiles'}, ...
-                'FontSize', 9, 'Interpreter', 'none');
-            % Place legend using normalized coordinates (x=0.6, y=0.9)
-            set(h_legend, 'Units', 'normalized');
-            leg_pos = get(h_legend, 'Position');
-            leg_pos(1) = 0.6;
-            leg_pos(2) = 0.6;
-            set(h_legend, 'Position', leg_pos);
+                'FontSize', 9, 'Interpreter', 'none', ...
+                'Location', 'northoutside', 'Orientation', 'horizontal', ...
+                'Box', 'on');
 
-            % Export baseline net value boxplot as vector PDF
+            % Export baseline net value boxplot as PNG
             exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'), ...
                 'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+            exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.png'), ...
+                'ContentType', 'image', 'Resolution', 600);
             close(fig_b);
         else
             warning('plot_net_value_boxplot:MissingBaselineNetValue', ...

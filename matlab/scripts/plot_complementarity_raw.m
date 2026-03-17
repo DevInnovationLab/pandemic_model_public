@@ -10,9 +10,9 @@ function plot_complementarity_raw(complementarity_data, metric_label, accent_lab
     %   figure_path: Path to save figures
     %   sample_size: Number of simulations (for reference)
     
-    investments = {'early_warning', 'advance_capacity', 'neglected_pathogen', 'universal_flu'};
+    investments = {'advance_capacity', 'neglected_pathogen', 'universal_flu', 'early_warning'};
     investment_types = containers.Map({'early_warning', 'advance_capacity', 'neglected_pathogen', 'universal_flu'}, ...
-        {'Early warning', 'Advance capacity', 'Neglected pathogen R&D', 'Universal flu vaccine'});
+        {'Improved early warning', 'Advance capacity', 'Prototype vaccine R&D', 'Universal flu vaccine'});
     
     % Count valid investment types (those with data)
     valid_investments = {};

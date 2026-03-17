@@ -190,7 +190,7 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 end
             elseif threshold_diff
                 % Severity floor in deaths per 10,000 per year
-                formatted_name = "Severity floor ($\underline{x}$)";
+                formatted_name = "Severity floor ($\underline{s}$)";
                 if s_meta.lower_threshold == 1
                     formatted_value = "Increase to 1 death per 10,000 per year";
                 else
@@ -212,7 +212,7 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 formatted_value = "All outbreaks since 1900";
             elseif incl_unid
                 formatted_name = "Pathogen data";
-                formatted_value = "Noval + unidentified viral";
+                formatted_value = "Novel + unidentified viral";
             end
         case "duration_dist_config"
             formatted_name = "Duration upper bound ($\overline{d}$)";

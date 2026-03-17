@@ -81,9 +81,9 @@ end
 function [scenario_info, investment_types] = parse_all_scenarios(scenarios, job_config)
     % Parse all scenarios to extract intervention flags and accents
     
-    investments = {'early_warning', 'advance_capacity', 'neglected_pathogen', 'universal_flu'};
+    investments = {'advance_capacity', 'neglected_pathogen', 'universal_flu', 'early_warning'};
     investment_types = containers.Map({'early_warning', 'advance_capacity', 'neglected_pathogen', 'universal_flu'}, ...
-        {'Early warning', 'Advance capacity', 'Neglected pathogen R&D', 'Universal flu vaccine'});
+        {'Improved early warning', 'Advance capacity', 'Prototype vaccine R&D', 'Universal flu vaccine'});
     
     % Initialize table
     n_scen = length(scenarios);
@@ -139,7 +139,7 @@ function complementarity_data = calculate_complementarities(scenario_info, proce
     % Calculate complementarities for all investment combinations
     % Loads data from aggregated relative sums
     
-    investments = {'early_warning', 'advance_capacity', 'neglected_pathogen', 'universal_flu'};
+    investments = {'advance_capacity', 'neglected_pathogen', 'universal_flu', 'early_warning'};
     complementarity_data = struct();
     
     % Load data for all scenarios from aggregated files
