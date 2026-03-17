@@ -73,8 +73,9 @@ xlabel('Year');
 ylabel('Deaths per 10,000');
 grid on;
 
-% Save the figure to output
-print(gcf, './output/covid19_deaths_per_10k_economist_plot', '-dpng', '-r600');
+% Save the figure to output as vector PDF
+exportgraphics(gcf, './output/covid19_deaths_per_10k_economist_plot.pdf', ...
+    'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
 
 % Save the cleaned and merged data
 writetable(merged_data, './data/clean/covid19_deaths_per_10k_economist.csv');

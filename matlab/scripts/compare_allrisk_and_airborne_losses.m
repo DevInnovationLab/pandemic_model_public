@@ -89,11 +89,12 @@ function compare_allrisk_and_airborne_losses()
     set(gca, 'FontSize', 9)
     xtickangle(45)
 
-    % Save figure
+    % Save figure as vector PDF
     figures_dir = fullfile(allrisk_dir, "figures");
     if ~exist(figures_dir, 'dir')
         mkdir(figures_dir);
     end
-    print(fig, fullfile(figures_dir, "allrisk_vs_airborne_losses"), '-dpng', '-r600');
+    exportgraphics(fig, fullfile(figures_dir, "allrisk_vs_airborne_losses.pdf"), ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(fig);
 end

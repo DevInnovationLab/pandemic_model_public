@@ -191,7 +191,7 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
         ax.grid(True, axis="both", alpha=0.3)
         ax.spines[["top", "right"]].set_visible(False)
 
-        fig_fn = outdir / f"{outstring}.png"
+        fig_fn = outdir / f"{outstring}.pdf"
         fig.savefig(fig_fn, dpi=600)
 
 

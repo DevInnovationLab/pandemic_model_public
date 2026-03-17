@@ -2,8 +2,6 @@ library(forcats)
 library(ggplot2)
 library(snakecase)
 library(tidyverse)
-library(patchwork)
-library(cowplot)
 
 ptrs_preds <- readr::read_csv("output/ptrs/marginal_ptrs_preds.csv")
 
@@ -63,32 +61,37 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
     name = NULL,
     breaks = c("Traditional", "mRNA")
   ) +
+  scale_y_discrete(
+    labels = function(x) if_else(tolower(x) == "cchf", "CCHF", tools::toTitleCase(tolower(x)))
+  ) +
   scale_x_continuous(
     limits = c(0, 1),
     labels = scales::percent_format(accuracy = 1, suffix = ""),
     breaks = seq(0, 1, by = 0.1)
   ) +
   labs(
-    x = "Probability of vaccine success",
-    y = NULL
+    x = "Probability of vaccine success (PTRS)",
+    y = "Pathogen"
   ) +
-  theme_classic(base_size = 8) +
+  theme_classic(base_size = 10, base_family = "Arial") +
   theme(
-    plot.title = element_text(size = 22, face = "bold", hjust = 0),
-    axis.text.y = element_text(size = 14, colour = "black"),
-    axis.text.x = element_text(size = 12, colour = "black"),
+    axis.text = element_text(size = 13, colour = "black"),
+    axis.title = element_text(size = 15),
     axis.title.x = element_text(size = 15, margin = margin(t = 10)),
+    axis.title.y = element_text(size = 15, angle = 0, hjust = 0, vjust = 1),
+    axis.title.y.position = "top",
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
-    panel.grid.major.x = element_line(color = "gray85", linewidth = 0.5),
+    panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
-    plot.margin = margin(0, 0, 0, 0),
-    legend.position = "bottom",
-    legend.direction = "horizontal",
+    plot.margin = margin(12, 14, 10, 10),
+    legend.position = c(0.85, 0.1),
+    legend.justification = c(0.5, 0.5),
+    legend.background = element_rect(fill = "white", colour = NA),
     legend.title = element_blank(),
     legend.text = element_text(size = 12)
   )
@@ -136,73 +139,45 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     labels = scales::percent_format(accuracy = 1, suffix = "")
   ) +
   labs(
-    x = "Increase in probability of success",
-    y = NULL
+    x = "Increase in probability of success (ΔPTRS)",
+    y = "Technology\nplatform"
   ) +
-  theme_classic(base_size = 8) +
+  theme_classic(base_size = 10, base_family = "Arial") +
   theme(
-    plot.title = element_text(size = 22, face = "bold", hjust = 0),
-    axis.text.y = element_text(size = 14, colour = "black"),
-    axis.text.x = element_text(size = 12, colour = "black"),
+    axis.text = element_text(size = 13, colour = "black"),
+    axis.title = element_text(size = 15),
     axis.title.x = element_text(size = 15, margin = margin(t = 10)),
+    axis.title.y = element_text(size = 15, angle = 0, hjust = 0, vjust = 1),
+    axis.title.y.position = "top",
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
-    panel.grid.major.x = element_line(color = "gray85", linewidth = 0.5),
+    panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
     panel.grid.minor.x = element_blank(),
     panel.grid.major.y = element_blank(),
     panel.grid.minor.y = element_blank(),
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
-    plot.margin = margin(0, 0, 0, 0),
+    plot.margin = margin(12, 14, 10, 10),
     legend.position = "none"
   )
 
-# Arrange two panels with shared legend on the left, 70/30 vertical split
-combined_plot <- (
-  ptrs_plot /
-    proto_effect_plot
-) +
-  plot_layout(
-    heights = c(0.6, 0.4),
-    guides = "collect"
-  ) &
-  theme(
-    legend.position = "right",
-    legend.direction = "vertical",
-    legend.title = element_blank(),
-    legend.text = element_text(size = 12)
-  )
-
-# Save figures with perfectly aligned panels.
-# We construct a single two-panel figure with embedded "(a)" and "(b)" labels,
-# so LaTeX only needs to include one image and alignment is handled in R.
-total_height <- 12
-top_height <- 0.65 * total_height
-bottom_height <- 0.35 * total_height
-
-aligned_plots <- align_plots(
+# Save two separate figures
+ggsave(
+  "output/ptrs/ptrs_plot.pdf",
   ptrs_plot,
-  proto_effect_plot,
-  align = "hv",
-  axis = "tblr"
-)
-
-combined_ptrs_plot <- plot_grid(
-  aligned_plots[[1]],
-  aligned_plots[[2]],
-  ncol = 1,
-  rel_heights = c(0.65, 0.35),
-  labels = c("(a)", "(b)"),
-  label_x = 0.01,
-  label_y = 0.98,
-  hjust = 0,
-  vjust = 1
+  width = 7,
+  height = 4.5,
+  units = "in",
+  dpi = 600,
+  device = cairo_pdf
 )
 
 ggsave(
-  "output/ptrs/ptrs_combined.png",
-  combined_ptrs_plot,
-  width = 8,
-  height = total_height,
-  dpi = 600
+  "output/ptrs/proto_effect_plot.pdf",
+  proto_effect_plot,
+  width = 7,
+  height = 3.5,
+  units = "in",
+  dpi = 600,
+  device = cairo_pdf
 )

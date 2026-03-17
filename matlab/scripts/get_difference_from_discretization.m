@@ -32,7 +32,8 @@ function get_difference_from_discretization(job_config_path)
     ylabel('Probability');
     title(['Distribution of expected number of outbreaks' 'lost from discretization']);
 
-    print(gcf, fullfile(outdir, 'lambda_and_exp_outbreak_loss'), '-dpng', '-r600');
+    exportgraphics(gcf, fullfile(outdir, 'lambda_and_exp_outbreak_loss.pdf'), ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(gcf);
 
 end

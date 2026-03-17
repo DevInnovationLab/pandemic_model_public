@@ -84,8 +84,9 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
             'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle', ...
             'FontName', 'Arial', 'FontSize', 10, 'Interpreter', 'latex', 'Color', [0.2 0.2 0.2]);
     end
-    outpath_loss = fullfile(fig_dir, 'sensitivity_stacked_losses_social.png');
-    print(fig_loss, outpath_loss, '-dpng', '-r600');
+    outpath_loss = fullfile(fig_dir, 'sensitivity_stacked_losses_social.pdf');
+    exportgraphics(fig_loss, outpath_loss, ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(fig_loss);
     fprintf('Social loss panel saved to %s\n', outpath_loss);
 
@@ -115,8 +116,9 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
             'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle', ...
             'FontName', 'Arial', 'FontSize', 10, 'Interpreter', 'latex', 'Color', [0.2 0.2 0.2]);
     end
-    outpath_deaths = fullfile(fig_dir, 'sensitivity_stacked_losses_deaths.png');
-    print(fig_deaths, outpath_deaths, '-dpng', '-r600');
+    outpath_deaths = fullfile(fig_dir, 'sensitivity_stacked_losses_deaths.pdf');
+    exportgraphics(fig_deaths, outpath_deaths, ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(fig_deaths);
     fprintf('Annual deaths panel saved to %s\n', outpath_deaths);
 end

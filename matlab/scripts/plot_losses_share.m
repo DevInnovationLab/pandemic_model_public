@@ -18,13 +18,13 @@ function plot_losses_share(job_dir)
         
         S = load(baseline_file);
         valid_chunks = valid_chunks + 1;
+
         pandemic_tables{valid_chunks} = S.pandemic_table;
     end
     
     % Concatenate all tables
     pandemic_tables = pandemic_tables(1:valid_chunks);
-    pandemic_table = vertcat(pandemic_tables{:});
-    
+    pandemic_table = vertcat(pandemic_tables{:});    
     pandemic_table = pandemic_table(~pandemic_table.is_false, :); % Remove false positives
 
     % Load intensity threshold
@@ -83,11 +83,11 @@ function plot_losses_share(job_dir)
     ax = gca;
     ax.GridAlpha = 0.1;
 
-    % Save bar plots figure
+    % Save bar plots figure as a tight vector PDF
     comparisons_dir = fullfile(job_dir, "figures", "comparison");
     create_folders_recursively(comparisons_dir);
-    % Save high resolution figure using print instead of saveas
-    print(fig1, fullfile(comparisons_dir, "losses_share_bars.png"), '-dpng', '-r600');
+    exportgraphics(fig1, fullfile(comparisons_dir, "losses_share_bars.pdf"), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
     close(fig1);
 
     %% Create separate figure for Lorenz curve
@@ -111,7 +111,8 @@ function plot_losses_share(job_dir)
     ax = gca;
     ax.GridAlpha = 0.3;
 
-    % Save high resolution figure using print instead of saveas
-    print(fig2, fullfile(comparisons_dir, "losses_share_lorenz.png"), '-dpng', '-r600');
+    % Save high resolution figure as a tight vector PDF
+    exportgraphics(fig2, fullfile(comparisons_dir, "losses_share_lorenz.pdf"), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
     close(fig2);
 end

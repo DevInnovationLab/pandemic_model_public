@@ -39,17 +39,15 @@ p <- ggplot(arrival_risk_plot, aes(
   ) +
   labs(
     x = "Share of expected pandemic outbreaks",
-    y = NULL,
+    y = "Pathogen",
     caption = NULL
   ) +
   theme_classic(base_size = 8, base_family = "Arial") +
   theme(
-    plot.title = element_text(family = "Arial", size = 22, face = "bold", hjust = 0),
-    plot.subtitle = element_text(family = "Arial", size = 14, color = "gray40", hjust = 0, margin = margin(b = 10)),
-    plot.caption = element_text(family = "Arial", size = 10, color = "gray50", hjust = 0, margin = margin(t = 5)),
-    axis.text.y = element_text(family = "Arial", size = 14, color = "black"),
-    axis.text.x = element_text(family = "Arial", size = 12, color = "black"),
-    axis.title.x = element_text(family = "Arial", size = 16,  margin = margin(t = 10)),
+    axis.text.y = element_text(family = "Arial", size = 13, color = "black"),
+    axis.text.x = element_text(family = "Arial", size = 13, color = "black"),
+    axis.title.x = element_text(family = "Arial", size = 15,  margin = margin(t = 10)),
+    axis.title.y = element_text(size = 15, angle = 0, hjust = 0, vjust = 1),
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
     panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
@@ -70,4 +68,12 @@ p <- ggplot(arrival_risk_plot, aes(
   )
 
 # Save main plot (slightly taller for more vertical space)
-ggsave("./output/pathogen_pandemic_share_all.png", plot = p, width = 10, height = 7.5, dpi = 600)
+ggsave(
+  "./output/pathogen_pandemic_share_all.pdf",
+  plot = p,
+  width = 10,
+  height = 7.5,
+  units = "in",
+  dpi = 600,
+  device = cairo_pdf
+)

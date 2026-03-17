@@ -55,6 +55,7 @@ function plot_duration_distributions(base_simulation_table, figure_path, clipped
     end
 
     fn = strcat("duration_distributions", suffix);
-    print(fig, fullfile(figure_path, fn), '-djpeg', '-r600');
+    exportgraphics(fig, fullfile(figure_path, fn + ".pdf"), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
     close(fig);
 end

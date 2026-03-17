@@ -36,8 +36,9 @@ ylabel('Deaths per 10,000');
 grid on;
 hold off;
 
-% Save the figure to output
-print(gcf, './output/hiv_deaths_per_10k_plot', '-dpng', '-r600');
+% Save the figure to output as vector PDF
+exportgraphics(gcf, './output/hiv_deaths_per_10k_plot.pdf', ...
+    'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
 
 % Save the cleaned and merged data
 writetable(merged_data, './data/clean/hiv_deaths_per_10k.csv');

@@ -344,14 +344,17 @@ function plot_complementarity_raw(complementarity_data, metric_label, accent_lab
         end
     end
 
-    % Save figures
+    % Save figures as vector PDFs
     filename_base = sprintf('complementarity_%s_%s', ...
         lower(strrep(metric_short, ' ', '_')), ...
         lower(accent_short));
     
-    print(fig_raw, fullfile(figure_path, [filename_base '_raw']), '-djpeg', '-r600');
-    print(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct_deviation_from_mean']), '-djpeg', '-r600');
-    print(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined']), '-djpeg', '-r600');
+    exportgraphics(fig_raw, fullfile(figure_path, [filename_base '_raw.pdf']), ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    exportgraphics(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct_deviation_from_mean.pdf']), ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    exportgraphics(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.pdf']), ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(fig_raw);
     close(fig_raw_pct);
     close(fig_relative);

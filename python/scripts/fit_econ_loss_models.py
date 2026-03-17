@@ -112,8 +112,8 @@ if __name__ == "__main__":
                 color='black')
 
     # Labels
-    ax.set_xlabel("Intensity (deaths per 10,000 per year)")
-    ax.set_ylabel("Annual GDP loss (%)")
+    ax.set_xlabel("Intensity (deaths per 10,000 per year)", fontsize=14)
+    ax.set_ylabel("Annual GDP loss (%)", fontsize=14)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.grid(True, color="0.8", alpha=0.3)
@@ -140,7 +140,7 @@ if __name__ == "__main__":
     outdir = Path("./output/econ_loss_models").resolve()
     outdir.mkdir(parents=True, exist_ok=True)
 
-    figpath = outdir / "poisson_model.png"
+    figpath = outdir / "poisson_model.pdf"
     plt.savefig(figpath, dpi=600)
 
     poisson_dict = {
@@ -265,8 +265,8 @@ if __name__ == "__main__":
                     color='black',
                 )
 
-        ax.set_xlabel("Severity (deaths per 10,000 people)")
-        ax.set_ylabel("Total GDP loss (%)")
+        ax.set_xlabel("Severity (deaths per 10,000 people)", fontsize=14)
+        ax.set_ylabel("Total GDP loss (%)", fontsize=14)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.grid(True, color="0.8", alpha=0.3, axis="both")
@@ -296,7 +296,7 @@ if __name__ == "__main__":
         )
         plt.tight_layout()
 
-        figpath = outdir / "poisson_model_total_severity.png"
+        figpath = outdir / "poisson_model_total_severity.pdf"
         plt.savefig(figpath, dpi=600)
 
         poisson_sev_dict = {
@@ -374,7 +374,7 @@ if __name__ == "__main__":
             transform=ax.transAxes, verticalalignment='top', color=col_loglog)
 
     # Save figure
-    figpath = outdir / "loglog_model.png"
+    figpath = outdir / "loglog_model.pdf"
     plt.savefig(figpath, dpi=600)
 
     # Save model parameters
@@ -437,8 +437,8 @@ if __name__ == "__main__":
             color='black',
         )
 
-    ax.set_xlabel('Intensity (deaths per 10,000 per year)')
-    ax.set_ylabel('Annual GDP loss (%)')
+    ax.set_xlabel('Intensity (deaths per 10,000 per year)', fontsize=14)
+    ax.set_ylabel('Annual GDP loss (%)', fontsize=14)
     ax.spines['top'].set_visible(False)
     ax.spines['right'].set_visible(False)
     ax.grid(True, color='0.8', alpha=0.3)
@@ -454,7 +454,7 @@ if __name__ == "__main__":
     ax.legend()
     plt.tight_layout()
 
-    figpath = outdir / 'cloglog_fractional_annual_intensity.png'
+    figpath = outdir / 'cloglog_fractional_annual_intensity.pdf'
     plt.savefig(figpath, dpi=600)
 
     cloglog_annual_dict = {
@@ -518,8 +518,8 @@ if __name__ == "__main__":
                 color='black',
             )
 
-        ax.set_xlabel('Severity (deaths per 10,000 people)')
-        ax.set_ylabel('Total GDP loss (%)')
+        ax.set_xlabel('Severity (deaths per 10,000 people)', fontsize=14)
+        ax.set_ylabel('Total GDP loss (%)', fontsize=14)
         ax.spines['top'].set_visible(False)
         ax.spines['right'].set_visible(False)
         ax.grid(True, color='0.8', alpha=0.3)
@@ -535,7 +535,7 @@ if __name__ == "__main__":
         ax.legend()
         plt.tight_layout()
 
-        figpath = outdir / 'cloglog_fractional_total_severity.png'
+        figpath = outdir / 'cloglog_fractional_total_severity.pdf'
         plt.savefig(figpath, dpi=600)
 
         cloglog_total_dict = {
@@ -578,8 +578,8 @@ if __name__ == "__main__":
             linewidth=2.5, color=col_loglog, label='Log-Log')
 
     # Add labels and title
-    ax.set_xlabel('Deaths per 10,000 / year')
-    ax.set_ylabel('Annual GDP loss (%)')
+    ax.set_xlabel('Deaths per 10,000 / year', fontsize=14)
+    ax.set_ylabel('Annual GDP loss (%)', fontsize=14)
     ax.set_title('Economic loss models comparison')
 
     # Remove top and right spines
@@ -592,5 +592,5 @@ if __name__ == "__main__":
     plt.tight_layout()
 
     # Save comparison figure
-    figpath = outdir / "model_comparison.png"
+    figpath = outdir / "model_comparison.pdf"
     plt.savefig(figpath, dpi=600)

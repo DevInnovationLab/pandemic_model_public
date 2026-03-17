@@ -9,7 +9,8 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     xlabel("Effective severity");
     ylabel("Average number of pandemics per simulation (200 years)");
     title("Histogram of pandemic severities for average simulation");
-    print(average_simulation_hist, fullfile(figure_path, "average_simulation_hist"), '-djpeg', '-r600');
+    exportgraphics(average_simulation_hist, fullfile(figure_path, "average_simulation_hist.pdf"), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
 
     % Ex post severity exceedance function
     ex_post_severity_fig = figure('Visible', 'off');
@@ -29,8 +30,9 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     % Customize plot appearance
     set(gca, 'XScale', 'log');
     set(gca, 'FontSize', 11); % Set axis font size
-
-    print(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance"), '-djpeg', '-r600')
+    
+    exportgraphics(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.pdf"), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
 
     % Plot duration distribution
     plot_duration_distributions(base_simulation_table, figure_path, false); % No clipped durations
@@ -44,7 +46,8 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     title('Effective severity vs pandemic duration');
     grid on;
     
-    print(dur_severity_scatterhist, fullfile(figure_path, "dur_severity_scatterhist"), '-djpeg', '-r600')
+    exportgraphics(dur_severity_scatterhist, fullfile(figure_path, "dur_severity_scatterhist.pdf"), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
 
     % 3d histogram of effective duration and severity
     severity_dur_hist = figure('Visible', 'off');
@@ -55,5 +58,6 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     ylabel("Actual duration (years)");
     zlabel("Probability");
     title("Realized pandemic severity and duration histogram");
-    print(severity_dur_hist, fullfile(figure_path, 'dur_severity_histogram'), '-djpeg', '-r600');
+    exportgraphics(severity_dur_hist, fullfile(figure_path, 'dur_severity_histogram.pdf'), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
 end

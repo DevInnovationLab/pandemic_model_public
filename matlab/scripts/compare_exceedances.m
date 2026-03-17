@@ -212,7 +212,7 @@ function compare_exceedances(sensitivity_dir)
     % Labels near curves at fixed severity (x) positions.
     x_no  = max(min_x, min(max_x, 20));
     x_mad = max(min_x, min(max_x, 10));
-    x_rel = max(min_x, min(max_x, 90));
+    x_rel = max(min_x, min(max_x, 110));
     x_alw = max(min_x, min(max_x, 120));
     y_no  = interp1(x_plot, exceed_no, x_no, 'linear', 'extrap');
     y_mad = interp1(madhav_severity_plot, madhav_exceedance_plot, x_mad, 'linear', 'extrap');
@@ -242,6 +242,7 @@ function compare_exceedances(sensitivity_dir)
         mkdir(fig_dir);
     end
     [~, dirname] = fileparts(sensitivity_dir);
-    print(fig, fullfile(fig_dir, sprintf('%s_exceedance_curves.png', dirname)), '-dpng', '-r600');
-    fprintf('Exceedance figure saved to %s\n', fullfile(fig_dir, sprintf('%s_exceedance_curves.png', dirname)));
+    exportgraphics(fig, fullfile(fig_dir, sprintf('%s_exceedance_curves.pdf', dirname)), ...
+        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+    fprintf('Exceedance figure saved to %s\n', fullfile(fig_dir, sprintf('%s_exceedance_curves.pdf', dirname)));
 end

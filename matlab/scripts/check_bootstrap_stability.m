@@ -195,7 +195,8 @@ function check_bootstrap_stability(sim_results_path, varargin)
             formatted_variable = format_variable_name(var_name);
             sgtitle(sprintf('%s - %s', formatted_scenario, formatted_variable));
             
-            print(gcf, fullfile(figures_dir, sprintf('%s_%s_stability', scenario_name, var_name)), '-dpng', '-r600');
+            exportgraphics(gcf, fullfile(figures_dir, sprintf('%s_%s_stability.pdf', scenario_name, var_name)), ...
+                'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
             close(gcf);
             fprintf('  Plotting for %s: %.2f seconds\n', var_name, toc);
         end
@@ -513,8 +514,9 @@ function analyze_complementarity_variable(with_data, alone_data, other_alone_dat
     sgtitle(sprintf('%s with %s - %s Complementarity', ...
         format_investment_name(investment), format_investment_name(other_investment), var_name));
     
-    print(gcf, fullfile(figures_dir, sprintf('comp_%s_with_%s_%s_stability', ...
-        investment, other_investment, var_name)), '-dpng', '-r600');
+    exportgraphics(gcf, fullfile(figures_dir, sprintf('comp_%s_with_%s_%s_stability.pdf', ...
+        investment, other_investment, var_name)), ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(gcf);
     fprintf('      Plotting for %s complementarity: %.2f seconds\n', var_name, toc);
 end

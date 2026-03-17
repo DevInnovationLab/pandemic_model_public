@@ -245,8 +245,8 @@ function plot_exceedance_curves(job_dir, results)
             'String', sprintf('%s exceedance curves across simulations', result_title), ...
             'EdgeColor', 'none', ...
             'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 14);
-
-        print(fig_normal, fullfile(figure_path, sprintf('%s_exceed_grid_normal', result)), '-djpeg', '-r600');
+        exportgraphics(fig_normal, fullfile(figure_path, sprintf('%s_exceed_grid_normal.pdf', result)), ...
+            'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
         close(fig_normal);
 
         % ---- Log-y scale figure ----
@@ -362,8 +362,8 @@ function plot_exceedance_curves(job_dir, results)
             'String', sprintf('%s exceedance curves across simulations', result_title), ...
             'EdgeColor', 'none', ...
             'HorizontalAlignment', 'center', 'FontWeight', 'bold', 'FontSize', 14);
-
-        print(fig_log, fullfile(figure_path, sprintf('%s_exceed_grid_logy', result)), '-djpeg', '-r600');
+        exportgraphics(fig_log, fullfile(figure_path, sprintf('%s_exceed_grid_logy.pdf', result)), ...
+            'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
         close(fig_log);
     end
 end

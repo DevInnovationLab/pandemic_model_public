@@ -43,6 +43,7 @@ text(0.15, 0.40, '(0.13, 0.395)', 'FontSize', 11)
 text(0.53, 0.816, '(0.5, 0.816)', 'FontSize', 11)
 text(0.7, 0.97, '(0.7, 1)', 'FontSize', 11)
 
-% Save figure
-print(fig, './output/h_function.png', '-dpng', '-r600');
+% Save figure as a vector PDF
+exportgraphics(fig, './output/h_function.pdf', ...
+    "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
 close(fig)

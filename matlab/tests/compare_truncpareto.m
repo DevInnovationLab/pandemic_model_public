@@ -21,8 +21,9 @@ set(gcf, 'Position', get(gcf, 'Position') .* [1 1 1 1.2]); % Make figure 20% tal
 title('Comparison of Truncated Pareto CDFs: MATLAB vs Python Implementation', 'Units', 'normalized', 'Position', [0.5, 1.02, 0]);
 legend('show');
 
-% Save the linear scale figure
-print(gcf, './output/truncpareto_cdf_comparison_linear', '-dpng', '-r600');
+% Save the linear scale figure as vector PDF
+exportgraphics(gcf, './output/truncpareto_cdf_comparison_linear.pdf', ...
+    'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
 
 % Create figure and plot both CDFs - log scale
 figure();
@@ -39,5 +40,6 @@ set(gcf, 'Position', get(gcf, 'Position') .* [1 1 1 1.2]); % Make figure 20% tal
 title('Comparison of Truncated Pareto CDFs: MATLAB vs Python Implementation', 'Units', 'normalized', 'Position', [0.5, 1.02, 0]);
 legend('show');
 
-% Save the log scale figure
-print(gcf, './output/truncpareto_cdf_comparison_log', '-dpng', '-r600');
+% Save the log scale figure as vector PDF
+exportgraphics(gcf, './output/truncpareto_cdf_comparison_log.pdf', ...
+    'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');

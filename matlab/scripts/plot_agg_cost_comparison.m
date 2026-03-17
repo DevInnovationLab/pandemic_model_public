@@ -55,11 +55,12 @@ function plot_agg_cost_comparison(job_dir, recalculate_costs)
     % Add legend
     legend('Location', 'northwest', 'FontSize', 10, 'Box', 'off');
     
-    % Save figure
+    % Save figure as vector PDF
     comparisons_dir = fullfile(job_dir, "figures", "comparison");
     create_folders_recursively(comparisons_dir);
-    figpath = fullfile(comparisons_dir, "total_costs_relative_comparison");
-    print(fig, figpath, '-dpng', '-r600');
+    figpath = fullfile(comparisons_dir, "total_costs_relative_comparison.pdf");
+    exportgraphics(fig, figpath, ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(fig);
 
 end

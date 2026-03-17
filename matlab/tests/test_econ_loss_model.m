@@ -32,5 +32,6 @@ end
 
 legend('Model Prediction', 'Historical Data', 'Location', 'northwest');
 
-% Save the figure
-print(gcf, './output/tests/econ_loss_model_predictions', '-dpng', '-r600');
+% Save the figure as vector PDF
+exportgraphics(gcf, './output/tests/econ_loss_model_predictions.pdf', ...
+    'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
