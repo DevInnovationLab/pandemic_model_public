@@ -4,6 +4,7 @@ fix_params:
   gamma: 0
   scenario_configs: "./config/scenario_configs/baseline"
   response_threshold: 0
+  response_threshold_type: "severity"
 sensitivities:
   arrival_dist_config:
     - "output/arrival_distributions/modified/gpd_all_excl_unid_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_1000_n_1000000_seed_42"

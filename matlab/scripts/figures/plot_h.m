@@ -13,7 +13,7 @@ fig = figure('Position', [100 100 800 600], 'Visible', 'off');
 x = 0:0.001:1;
 
 % Calculate h(x) values
-y = h(x);
+y = vax_mitigation_factor(x);
 
 % Plot the function
 plot(x, y, 'LineWidth', 2, 'Color', [0, 0.4470, 0.7410])

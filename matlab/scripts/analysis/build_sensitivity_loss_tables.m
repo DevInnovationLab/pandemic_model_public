@@ -6,13 +6,17 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     % and writes the summary CSVs. Run aggregate_unmitigated_losses per scenario first
     % if results were chunked.
     %
+    % total_summary_table lists discounted horizon totals in Total* loss columns; the
+    % last column is total unmitigated loss with no discounting (clearly named).
+    %
     % Args:
     %   sensitivity_dir (char or string): Path to sensitivity output directory
     %     (e.g. output/sensitivity/no_mitigation_all).
     %
     % Returns:
     %   annualized_summary_table (table): Table with Variable, Value, and loss columns (cell of structs).
-    %   total_summary_table (table): Table with Variable, Value, and total loss columns (cell of structs).
+    %   total_summary_table (table): Horizon totals; loss columns through TotalLoss are discounted;
+    %     TotalUnmitigatedLossUndiscounted is undiscounted (see estimate_unmitigated_losses).
     %
     % Also writes:
     %   sensitivity_dir/sensitivity_annualized_loss_summary.csv
@@ -30,51 +34,34 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     baseline_periods = baseline_config.sim_periods;
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
 
-    [baseline_deaths, baseline_mortality, baseline_economic, baseline_learning, baseline_total] = ...
-        get_unmitigated_losses_for_dir(baseline_dir, baseline_r, baseline_periods);
-
-    annualized_summary_table = table('Size', [1 7], ...
+    n_rows = 1 + length(scenario_ids);
+    annualized_summary_table = table('Size', [n_rows, 7], ...
         'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell', 'cell'});
     annualized_summary_table.Properties.VariableNames = ...
         {'Variable', 'Value', 'AnnualDeaths', 'MortalityLoss', 'EconomicLoss', 'LearningLoss', 'TotalLoss'};
-    [formatted_name, formatted_value] = format_names('baseline', 'baseline', baseline_arrival_dist, ...
-                                                     baseline_vsl, baseline_r, baseline_y);
-    annualized_summary_table(1,:) = {...
-        formatted_name, formatted_value, ...
-        {get_mean_and_percentiles(baseline_deaths)}, ...
-        {get_mean_and_percentiles(baseline_mortality)}, ...
-        {get_mean_and_percentiles(baseline_economic)}, ...
-        {get_mean_and_percentiles(baseline_learning)}, ...
-        {get_mean_and_percentiles(baseline_total)}, ...
-    };
-
-    total_summary_table = table('Size', [1 7], ...
-        'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell', 'cell'});
+    total_summary_table = table('Size', [n_rows, 8], ...
+        'VariableTypes', {'string', 'string', 'cell', 'cell', 'cell', 'cell', 'cell', 'cell'});
     total_summary_table.Properties.VariableNames = ...
-        {'Variable', 'Value', 'TotalDeaths', 'TotalMortalityLoss', 'TotalEconomicLoss', 'TotalLearningLoss', 'TotalLoss'};
-    baseline_annualization_factor = (baseline_r * (1 + baseline_r)^baseline_periods) / ((1 + baseline_r)^baseline_periods - 1);
-    total_summary_table(1,:) = {...
-        formatted_name, formatted_value, ...
-        {get_mean_and_percentiles(baseline_deaths * baseline_periods)}, ...
-        {get_mean_and_percentiles(baseline_mortality / baseline_annualization_factor)}, ...
-        {get_mean_and_percentiles(baseline_economic / baseline_annualization_factor)}, ...
-        {get_mean_and_percentiles(baseline_learning / baseline_annualization_factor)}, ...
-        {get_mean_and_percentiles(baseline_total / baseline_annualization_factor)}, ...
-    };
+        {'Variable', 'Value', 'TotalDeaths', 'TotalMortalityLoss', 'TotalEconomicLoss', 'TotalLearningLoss', ...
+        'TotalLoss', 'TotalUnmitigatedLossUndiscounted'};
 
-    row_idx = 2;
-    for idx = 1:length(scenario_ids)
-        scenario_id = scenario_ids{idx};
-        value_dir = scenario_paths{idx};
+    [vname, vval] = format_names('baseline', 'baseline', baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
+    mat_file = fullfile(baseline_dir, 'unmitigated_losses.mat');
+    S = load(mat_file, 'sim_total_deaths', 'sim_mortality_loss', 'sim_output_loss', ...
+        'sim_learning_loss', 'sim_total_loss', 'sim_total_loss_undiscounted');
+    [ann_row, tot_row] = build_table_rows_from_sim(S, baseline_r, baseline_periods, vname, vval);
+    annualized_summary_table(1, :) = ann_row;
+    total_summary_table(1, :) = tot_row;
+
+    for k = 1:length(scenario_ids)
+        scenario_id = scenario_ids{k};
+        value_dir = scenario_paths{k};
         run_config = yaml.loadFile(fullfile(value_dir, "job_config.yaml"));
-        r = run_config.r;
-        periods = run_config.sim_periods;
-        [annual_deaths, mortality_loss, economic_loss, learning_loss, total_loss] = ...
-            get_unmitigated_losses_for_dir(value_dir, r, periods);
-
-        % Resolve (var_name, var_value) for format_names: one-parameter has param_value_N, multi-parameter uses scenario_id only.
         tok = regexp(scenario_id, '^(.+)_value_(\d+)$', 'tokens');
-        if ~isempty(tok)
+        if isempty(tok)
+            var_name = scenario_id;
+            var_value = '';
+        else
             var_name = tok{1}{1};
             j = str2double(tok{1}{2});
             var_values = sensitivity_config.sensitivities.(var_name);
@@ -83,34 +70,16 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
             else
                 var_value = var_values{j};
             end
-        else
-            var_name = scenario_id;
-            var_value = '';
         end
-        [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
-
-        annualized_summary_table(row_idx,:) = {...
-            formatted_name, formatted_value, ...
-            {get_mean_and_percentiles(annual_deaths)}, ...
-            {get_mean_and_percentiles(mortality_loss)}, ...
-            {get_mean_and_percentiles(economic_loss)}, ...
-            {get_mean_and_percentiles(learning_loss)}, ...
-            {get_mean_and_percentiles(total_loss)}, ...
-        };
-
-        annualization_factor = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
-        total_summary_table(row_idx,:) = {...
-            formatted_name, formatted_value, ...
-            {get_mean_and_percentiles(annual_deaths * periods)}, ...
-            {get_mean_and_percentiles(mortality_loss / annualization_factor)}, ...
-            {get_mean_and_percentiles(economic_loss / annualization_factor)}, ...
-            {get_mean_and_percentiles(learning_loss / annualization_factor)}, ...
-            {get_mean_and_percentiles(total_loss / annualization_factor)}, ...
-        };
-        row_idx = row_idx + 1;
+        [vname, vval] = format_names(var_name, var_value, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
+        mat_file = fullfile(value_dir, 'unmitigated_losses.mat');
+        S = load(mat_file, 'sim_total_deaths', 'sim_mortality_loss', 'sim_output_loss', ...
+            'sim_learning_loss', 'sim_total_loss', 'sim_total_loss_undiscounted');
+        [ann_row, tot_row] = build_table_rows_from_sim(S, run_config.r, run_config.sim_periods, vname, vval);
+        annualized_summary_table(k + 1, :) = ann_row;
+        total_summary_table(k + 1, :) = tot_row;
     end
 
-    % Write CSVs (means only) so write_unmitigated_loss_figures and others can use them.
     annualized_csv = summary_table_to_csv(annualized_summary_table);
     total_csv = summary_table_to_csv(total_summary_table);
     writetable(annualized_csv, fullfile(sensitivity_dir, 'sensitivity_annualized_loss_summary.csv'));
@@ -118,36 +87,49 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     fprintf('Sensitivity loss tables and CSVs written to %s\n', sensitivity_dir);
 end
 
+function [annualized_row, total_row] = build_table_rows_from_sim(S, r, periods, variable, value)
+    % One scenario: build the two table rows from loaded unmitigated_losses.mat fields.
+    % Annualized losses use the same annuity factor as estimate_unmitigated_losses (sim_* .* ann).
+    % Horizon loss columns are raw discounted sums over periods; last column is undiscounted total.
+    ann = annualization_factor(r, periods);
+    annualized_row = {...
+        variable, value, ...
+        {get_mean_and_percentiles(S.sim_total_deaths ./ periods)}, ...
+        {get_mean_and_percentiles(S.sim_mortality_loss .* ann)}, ...
+        {get_mean_and_percentiles(S.sim_output_loss .* ann)}, ...
+        {get_mean_and_percentiles(S.sim_learning_loss .* ann)}, ...
+        {get_mean_and_percentiles(S.sim_total_loss .* ann)}, ...
+    };
+    total_row = {...
+        variable, value, ...
+        {get_mean_and_percentiles(S.sim_total_deaths)}, ...
+        {get_mean_and_percentiles(S.sim_mortality_loss)}, ...
+        {get_mean_and_percentiles(S.sim_output_loss)}, ...
+        {get_mean_and_percentiles(S.sim_learning_loss)}, ...
+        {get_mean_and_percentiles(S.sim_total_loss)}, ...
+        {get_mean_and_percentiles(S.sim_total_loss_undiscounted)}, ...
+    };
+end
+
+function ann = annualization_factor(r, periods)
+    % Converts horizon discounted loss sums to annualized equivalents (matches estimate_unmitigated_losses).
+    ann = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
+end
+
 function csv_table = summary_table_to_csv(summary_table)
     function m = get_mean(cellval)
         m = cellval{1}.mean;
     end
-    csv_data = cell(size(summary_table));
+    ncols = width(summary_table);
+    csv_data = cell(height(summary_table), ncols);
     for row = 1:height(summary_table)
-        csv_data{row,1} = summary_table{row,1};
-        csv_data{row,2} = summary_table{row,2};
-        csv_data{row,3} = get_mean(summary_table{row,3});
-        csv_data{row,4} = get_mean(summary_table{row,4});
-        csv_data{row,5} = get_mean(summary_table{row,5});
-        csv_data{row,6} = get_mean(summary_table{row,6});
-        csv_data{row,7} = get_mean(summary_table{row,7});
+        csv_data{row, 1} = summary_table{row, 1};
+        csv_data{row, 2} = summary_table{row, 2};
+        for col = 3:ncols
+            csv_data{row, col} = get_mean(summary_table{row, col});
+        end
     end
     csv_table = cell2table(csv_data, 'VariableNames', summary_table.Properties.VariableNames);
-end
-
-function [annual_deaths, mortality_losses, economic_losses, learning_losses, total_losses] = ...
-    get_unmitigated_losses_for_dir(value_dir, r, periods)
-    % Load value_dir/unmitigated_losses.mat (total_* vectors) and return annualized loss vectors.
-    mat_file = fullfile(value_dir, 'unmitigated_losses.mat');
-    assert(isfile(mat_file), 'No unmitigated_losses.mat in %s. Run estimate_unmitigated_losses then aggregate_unmitigated_losses if chunked.', value_dir);
-    S = load(mat_file, 'total_deaths', 'total_mortality_losses', 'total_output_losses', ...
-        'total_learning_losses', 'total_total_losses');
-    ann = (r * (1 + r)^periods) / ((1 + r)^periods - 1);
-    annual_deaths = S.total_deaths ./ periods;
-    mortality_losses = S.total_mortality_losses .* ann;
-    economic_losses = S.total_output_losses .* ann;
-    learning_losses = S.total_learning_losses .* ann;
-    total_losses = S.total_total_losses .* ann;
 end
 
 function stats = get_mean_and_percentiles(sample)
@@ -206,7 +188,7 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 end
             elseif airborne
                 formatted_name = "Pathogen data";
-                formatted_value = "Airborne novel viral oubreaks";
+                formatted_value = "Airborne novel viral outbreaks";
             elseif s_meta.year_thresh_only
                 formatted_name = "Pathogen data";
                 formatted_value = "All outbreaks since 1900";

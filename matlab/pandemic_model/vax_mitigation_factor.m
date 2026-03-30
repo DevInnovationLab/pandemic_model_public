@@ -1,11 +1,11 @@
-function y = h(vax_fractions)
-	% Piecewise linear function for vaccination damage mitigati
-    % per footnote 17 of IMF paper, the h function is specified as a
-    % piecewise linear function pinned down by
-    % h(0    ) = 0
-    % h(0.13 ) = .395
-    % h(0.5  ) = .816
-    % h(>=0.7) = 1
+function y = vax_mitigation_factor(vax_fractions)
+    % Piecewise linear vaccination damage mitigation factor (the "h" function).
+    % Maps vaccination coverage fraction to the fraction of harm mitigated.
+    % Per footnote 17 of IMF paper, the function is pinned at:
+    %   h(0    ) = 0
+    %   h(0.13 ) = 0.395
+    %   h(0.5  ) = 0.816
+    %   h(>=0.7) = 1
 	
 	% Validate inputs 
 	assert(all(vax_fractions >= 0 | vax_fractions <= 1, 'all'))

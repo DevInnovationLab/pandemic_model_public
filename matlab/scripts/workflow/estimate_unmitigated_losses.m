@@ -33,8 +33,9 @@ function estimate_unmitigated_losses(job_config_path, varargin)
     array_task_id = p.Results.array_task_id;
     is_array_task = ~isnan(array_task_id);
 
-    % Load job config and set seed
+    % Load and validate job config
     job_config = yaml.loadFile(job_config_path);
+    validate_job_config(job_config, 'estimate_unmitigated_losses');
 
     % Create output dir
     [~, job_config_name, ~] = fileparts(job_config_path);
@@ -133,12 +134,44 @@ function estimate_unmitigated_losses(job_config_path, varargin)
         learning_losses = output_losses .* (10 / 13.8);
         total_losses = mortality_losses + output_losses + learning_losses;
 
+        % Undiscounted social losses (no discount factor applied)
+        growth_factor = (1 + job_config.y) .^ (1:job_config.sim_periods);
+        mortality_losses_undiscounted = deaths .* job_config.value_of_death .* growth_factor;
+        output_losses_undiscounted = zeros(size(severity_mat));
+        output_losses_undiscounted(ind) = econ_loss_model.predict(val, "severity") .* (job_config.Y0 .* job_config.P0);
+        output_losses_undiscounted = output_losses_undiscounted .* growth_factor;
+        learning_losses_undiscounted = output_losses_undiscounted .* (10 / 13.8);
+        total_losses_undiscounted = mortality_losses_undiscounted + output_losses_undiscounted + learning_losses_undiscounted;
+
+        % Outbreak-level total losses (for Lorenz curve etc.)
+        outbreak_is_false_positive = simulation_table.is_false;
+        outbreak_yr_start = simulation_table.yr_start;
+        outbreak_yr_end = simulation_table.yr_end;
+        outbreak_actual_dur = outbreak_yr_end - outbreak_yr_start + 1;
+
+        % Vectorized discount-factor sums over each outbreak's active years
+        disc_cum = [0, cumsum(discount_factor)];
+        disc_sum = disc_cum(outbreak_yr_end)' - disc_cum(outbreak_yr_start - 1)';
+
+        % Mortality component: matches annual matrix logic aggregated over years
+        mortality_total_per_outbreak = (job_config.P0 / 10000) .* severity .* job_config.value_of_death .* (disc_sum ./ outbreak_actual_dur);
+
+        % Output component: per-year loss from econ_loss_model, summed over years
+        output_per_year = econ_loss_model.predict(severity, "severity") .* (job_config.Y0 .* job_config.P0);
+        output_total_per_outbreak = output_per_year .* disc_sum;
+
+        % Learning component: proportional to output losses
+        learning_total_per_outbreak = output_total_per_outbreak .* (10 / 13.8);
+
+        outbreak_total_loss = mortality_total_per_outbreak + output_total_per_outbreak + learning_total_per_outbreak;
+
         % Simulation-wide sums (sum over years) for aggregation and downstream; avoids storing full annual matrices.
-        total_deaths = sum(deaths, 2);
-        total_mortality_losses = sum(mortality_losses, 2);
-        total_output_losses = sum(output_losses, 2);
-        total_learning_losses = sum(learning_losses, 2);
-        total_total_losses = sum(total_losses, 2);
+        sim_total_deaths = sum(deaths, 2);
+        sim_mortality_loss = sum(mortality_losses, 2);
+        sim_output_loss = sum(output_losses, 2);
+        sim_learning_loss = sum(learning_losses, 2);
+        sim_total_loss = sum(total_losses, 2);
+        sim_total_loss_undiscounted = sum(total_losses_undiscounted, 2);
 
         if num_chunks == 1
             % Single chunk: write directly to job output dir
@@ -149,23 +182,28 @@ function estimate_unmitigated_losses(job_config_path, varargin)
             create_folders_recursively(chunk_outdir);
         end
 
+        mat_filename = fullfile(chunk_outdir, 'unmitigated_losses.mat');
         if num_chunks == 1
-            mat_filename = fullfile(chunk_outdir, 'unmitigated_losses.mat');
             save(mat_filename, ...
-                'total_deaths', ...
-                'total_mortality_losses', ...
-                'total_output_losses', ...
-                'total_learning_losses', ...
-                'total_total_losses', ...
+                'sim_total_deaths', ...
+                'sim_mortality_loss', ...
+                'sim_output_loss', ...
+                'sim_learning_loss', ...
+                'sim_total_loss', ...
+                'sim_total_loss_undiscounted', ...
+                'outbreak_is_false_positive', ...
+                'outbreak_total_loss', ...
                 '-v7.3');
         else
-            mat_filename = fullfile(chunk_outdir, 'unmitigated_losses.mat');
             save(mat_filename, ...
-                'total_deaths', ...
-                'total_mortality_losses', ...
-                'total_output_losses', ...
-                'total_learning_losses', ...
-                'total_total_losses', ...
+                'sim_total_deaths', ...
+                'sim_mortality_loss', ...
+                'sim_output_loss', ...
+                'sim_learning_loss', ...
+                'sim_total_loss', ...
+                'sim_total_loss_undiscounted', ...
+                'outbreak_is_false_positive', ...
+                'outbreak_total_loss', ...
                 'chunk_idx', ...
                 'chunk_start', ...
                 'chunk_end', ...
@@ -191,38 +229,3 @@ function estimate_unmitigated_losses(job_config_path, varargin)
     end
 end
 
-
-function tbl = convert_logical_columns(tbl)
-    %CONVERT_LOGICAL_COLUMNS Converts 'TRUE'/'FALSE'/NA columns to numeric 1/0/NaN.
-    %
-    %   tbl = CONVERT_LOGICAL_COLUMNS(tbl) converts any columns in the table tbl
-    %   that contain 'TRUE'/'FALSE'/NA values (as strings or logicals) to numeric
-    %   columns with 1 for TRUE, 0 for FALSE, and NaN for NA/missing.
-    %
-    %   This is useful for harmonizing imported CSV data where logical columns
-    %   may be read as strings.
-    %
-    %   Parameters
-    %   ----------
-    %   tbl : table
-    %       Input table with possible logical columns as strings.
-    %
-    %   Returns
-    %   -------
-    %   tbl : table
-    %       Table with logical columns converted to numeric.
-    
-    logical_colnames = {'has_prototype', 'airborne'};
-    for i = 1:length(logical_colnames)
-        col = logical_colnames{i};
-        if ismember(col, tbl.Properties.VariableNames)
-            col_data = tbl.(col);
-            col_str = string(col_data);
-            col_numeric = nan(height(tbl), 1);
-            col_numeric(strcmpi(col_str, "TRUE")) = 1;
-            col_numeric(strcmpi(col_str, "FALSE")) = 0;
-            col_numeric(strcmpi(col_str, "NA")) = 0;
-            tbl.(col) = col_numeric;
-        end
-    end
-end

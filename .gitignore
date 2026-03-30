@@ -1,8 +1,28 @@
 output/*
 logs/*
 
+# Compiled / generated
 *.log
 *.out
 *.pyc
+a.out
 
+# Environment
 .env
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Python
+**/__pycache__/
+**/.pytest_cache/
+python/.venv/
+python/.python-version
+
+# MATLAB auto-save
+*.asv
+
+# R
+renv/library/
+renv/staging/

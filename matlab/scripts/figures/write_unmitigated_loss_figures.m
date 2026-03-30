@@ -310,22 +310,41 @@ function score = pathogen_row_score(value)
 end
 
 function write_to_latex(summary_data, outpath)
+    % Writes LaTeX for annualized (5 numeric columns) or total-horizon (6 numeric columns) tables.
     arguments
         summary_data (:,:) table
         outpath (1,1) string
     end
+    n_data = width(summary_data) - 2;
+    assert(n_data == 5 || n_data == 6, ...
+        'write_to_latex: expected 5 (annualized) or 6 (total) numeric columns, got %d', n_data);
+
     fileID = fopen(outpath, 'w');
     fprintf(fileID, '\\begin{table}[htbp]\n\\centering\n');
-    fprintf(fileID, '\\caption{\\textbf{Expected global pandemic deaths and losses in the absence of mitigations.} Monetized losses are discounted. Each cell presents the mean estimate.}\n');
+    if n_data == 5
+        fprintf(fileID, '\\caption{\\textbf{Expected global pandemic deaths and losses in the absence of mitigations.} Monetized losses are discounted. Each cell presents the mean estimate.}\n');
+    else
+        fprintf(fileID, '\\caption{\\textbf{Expected global pandemic deaths and losses in the absence of mitigations (totals over the simulation horizon).} Mortality, economic, learning, and total columns use discounted monetized losses; the last column is total unmitigated loss with no discounting. Each cell presents the mean estimate.}\n');
+    end
     fprintf(fileID, '\\vskip 3pt');
     fprintf(fileID, '\\small\n\\renewcommand{\\arraystretch}{0.9}\n');
-    fprintf(fileID, '\\begin{tabular}{l c c c c c}\n');
+    if n_data == 5
+        fprintf(fileID, '\\begin{tabular}{l c c c c c}\n');
+    else
+        fprintf(fileID, '\\begin{tabular}{l c c c c c c}\n');
+    end
     fprintf(fileID, '\\hline\\hline\n');
     fprintf(fileID, '\\noalign{\\vskip 3pt}\n');
-    fprintf(fileID, 'Scenario & \\shortstack[c]{Expected annual deaths\\\\(millions)} & \\multicolumn{4}{c}{\\shortstack[c]{Expected annualized pandemic losses \\\\ (trillion \\$)}}\\\\\n');
-    fprintf(fileID, '\\hline\n');
-    fprintf(fileID, ' & & Mortality & Economic & Learning & Total \\\\\n');
-    fprintf(fileID, ' & $\\overline{D}$ & $AV\\!\\left(\\overline{ML}\\right)$ & $AV\\!\\left(\\overline{OL}\\right)$ & $AV\\!\\left(\\overline{LL}\\right)$ & $AV\\!\\left(\\overline{TL}\\right)$\\\\\n');
+    if n_data == 5
+        fprintf(fileID, 'Scenario & \\shortstack[c]{Expected annual deaths\\\\(millions)} & \\multicolumn{4}{c}{\\shortstack[c]{Expected annualized pandemic losses \\\\ (trillion \\$)}}\\\\\n');
+        fprintf(fileID, '\\hline\n');
+        fprintf(fileID, ' & & Mortality & Economic & Learning & Total \\\\\n');
+        fprintf(fileID, ' & $\\overline{D}$ & $AV\\!\\left(\\overline{ML}\\right)$ & $AV\\!\\left(\\overline{OL}\\right)$ & $AV\\!\\left(\\overline{LL}\\right)$ & $AV\\!\\left(\\overline{TL}\\right)$\\\\\n');
+    else
+        fprintf(fileID, 'Scenario & \\shortstack[c]{Total deaths\\\\(millions)} & \\multicolumn{4}{c}{\\shortstack[c]{Discounted losses \\\\ (trillion \\$)}} & \\shortstack[c]{Total undiscounted\\\\(trillion \\$)}\\\\\n');
+        fprintf(fileID, '\\hline\n');
+        fprintf(fileID, ' & & Mortality & Economic & Learning & Total & (no discounting) \\\\\n');
+    end
     fprintf(fileID, '\\hline\n');
     % Use the same ordering logic as the figures
     dummyData = zeros(height(summary_data), 1);
@@ -350,7 +369,7 @@ function write_to_latex(summary_data, outpath)
 
         % Print the scenario row
         fprintf(fileID, '\\hspace{3mm} %s & ', value);
-        for k = 1:5
+        for k = 1:n_data
             stat = summary_data{rowIdx, 2+k}{1};
             if k == 1
                 top = stat.mean .* 1e6;
@@ -358,7 +377,7 @@ function write_to_latex(summary_data, outpath)
                 top = stat.mean;
             end
             cellstr = format_number_for_display(top);
-            if k < 5
+            if k < n_data
                 fprintf(fileID, '%s & ', cellstr);
             else
                 fprintf(fileID, '%s \\\\\n', cellstr);

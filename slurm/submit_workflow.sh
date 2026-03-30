@@ -1,6 +1,9 @@
 #!/bin/bash
 # Submit complete workflow with proper dependencies
 # Usage: ./submit_full_workflow.sh <job_config> <num_chunks> [n_bootstrap]
+#
+# Step 0 (runs here, locally): fit arrival distributions via pandemic-statistics
+# Steps 1-3 (SLURM): model array -> aggregation -> bootstrap
 
 JOB_CONFIG=$1
 NUM_CHUNKS=$2
@@ -11,6 +14,17 @@ CONFIG_NAME=$(basename ${JOB_CONFIG} .yaml)
 echo "Submitting workflow for ${JOB_CONFIG}"
 echo "  Chunks: ${NUM_CHUNKS}"
 echo "  Bootstrap samples: ${N_BOOTSTRAP}"
+
+# Step 0: Fit arrival distributions (prerequisite for the simulation)
+echo ""
+echo "=== Step 0: Fitting arrival distributions ==="
+(cd python && poetry run python scripts/fit_arrival_distributions.py)
+if [ $? -ne 0 ]; then
+  echo "Error: arrival distribution fitting failed. Aborting workflow submission."
+  exit 1
+fi
+echo "Arrival distributions ready."
+echo ""
 
 # Clear job outdir before submitting so array order does not matter (matches run_job.m path)
 OUTDIR=$(grep -E '^outdir:' "$JOB_CONFIG" | sed -E 's/^outdir:[[:space:]]*["'\'']?(.*)["'\'']?/\1/' | sed 's|^\./||')

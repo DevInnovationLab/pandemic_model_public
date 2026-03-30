@@ -17,8 +17,9 @@ function run_job(job_config_path, varargin)
     
     is_array_task = ~isnan(array_task_id);
     
-    % Load job config
+    % Load and validate job config
     job_config = yaml.loadFile(job_config_path);
+    validate_job_config(job_config, 'run_job');
     [~, job_config_name, ~] = fileparts(job_config_path);
     
     % Determine output directory
@@ -273,7 +274,8 @@ function save_pandemic_table(pandemic_table, scenario_name, outdir, outstyle)
     elseif strcmp(outstyle, "full")
         % Do nothing
     else
-        warning("Invalid pandemic_table_out option: %s. Must be 'none', 'skinny', or 'full'.", outstyle);
+        error('run_job:InvalidPandemicTableOut', ...
+            "Invalid pandemic_table_out option: '%s'. Must be 'none', 'skinny', or 'full'.", outstyle);
     end
 
     fp = fullfile(outdir, sprintf('%s_pandemic_table.mat', scenario_name));
@@ -357,38 +359,3 @@ function updated_params = update_params(job_config, scenario_config, arrival_rat
     updated_params.universal_flu_rd = scenario_config.universal_flu_rd;
 end
 
-
-function tbl = convert_logical_columns(tbl)
-    %CONVERT_LOGICAL_COLUMNS Converts 'TRUE'/'FALSE'/NA columns to numeric 1/0/NaN.
-    %
-    %   tbl = CONVERT_LOGICAL_COLUMNS(tbl) converts any columns in the table tbl
-    %   that contain 'TRUE'/'FALSE'/NA values (as strings or logicals) to numeric
-    %   columns with 1 for TRUE, 0 for FALSE, and NaN for NA/missing.
-    %
-    %   This is useful for harmonizing imported CSV data where logical columns
-    %   may be read as strings.
-    %
-    %   Parameters
-    %   ----------
-    %   tbl : table
-    %       Input table with possible logical columns as strings.
-    %
-    %   Returns
-    %   -------
-    %   tbl : table
-    %       Table with logical columns converted to numeric.
-    
-    logical_colnames = {'has_prototype', 'airborne'};
-    for i = 1:length(logical_colnames)
-        col = logical_colnames{i};
-        if ismember(col, tbl.Properties.VariableNames)
-            col_data = tbl.(col);
-            col_str = string(col_data);
-            col_numeric = nan(height(tbl), 1);
-            col_numeric(strcmpi(col_str, "TRUE")) = 1;
-            col_numeric(strcmpi(col_str, "FALSE")) = 0;
-            col_numeric(strcmpi(col_str, "NA")) = 0;
-            tbl.(col) = col_numeric;
-        end
-    end
-end

@@ -186,16 +186,22 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
         
         % Only add units to first and last values in range
         if any(strcmp(raw_param, percentage_params))
-            fprintf(fileID, '%s & %s & %.0f--%.0f\\%% & %.0f--%.0f \\\\\n', ...
+            fprintf(fileID, '%s & %s & %.0f--%.0f\\%% & %.1f--%.1f \\\\\n', ...
                 param, baseline_val, low_val*100, high_val*100, low_benefit, high_benefit);
         elseif contains(raw_param, 'tau')
-            fprintf(fileID, '%s & %s & %.0f--%.0f months & %.0f--%.0f \\\\\n', ...
+            fprintf(fileID, '%s & %s & %.0f--%.0f months & %.1f--%.1f \\\\\n', ...
                 param, baseline_val, low_val, high_val, low_benefit, high_benefit);
         elseif startsWith(raw_param, 'k_') || startsWith(raw_param, 'c_')
-            fprintf(fileID, '%s & %s & \\$%.0f--%.0f & %.0f--%.0f \\\\\n', ...
-                param, baseline_val, low_val, high_val, low_benefit, high_benefit);
+            % Print dollars with up to 2 decimals, but display as integer if possible
+            if mod(low_val,1)==0 && mod(high_val,1)==0
+                fmt = '%s & %s & \\$%d--%d & %.1f--%.1f \\\\\n';
+                fprintf(fileID, fmt, param, baseline_val, round(low_val), round(high_val), low_benefit, high_benefit);
+            else
+                fmt = '%s & %s & \\$%.2f--%.2f & %.1f--%.1f \\\\\n';
+                fprintf(fileID, fmt, param, baseline_val, low_val, high_val, low_benefit, high_benefit);
+            end
         else
-            fprintf(fileID, '%s & %s & %g--%g & %.0f--%.0f \\\\\n', ...
+            fprintf(fileID, '%s & %s & %g--%g & %.1f--%.1f \\\\\n', ...
                 param, baseline_val, low_val, high_val, low_benefit, high_benefit);
         end
     end

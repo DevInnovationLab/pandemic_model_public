@@ -42,9 +42,7 @@ function aggregate_results(sim_results_path)
         chunk_dir = fullfile(raw_results_path, chunk_dirs(j).name);
         sums_file = fullfile(chunk_dir, 'baseline_sums.mat');
         if ~exist(sums_file, 'file')
-            warning('aggregate_results:MissingBaseline', 'Missing %s. Skipping baseline.', sums_file);
-            baseline_tables = {};
-            break;
+            error('aggregate_results:MissingBaseline', 'Missing %s. All chunk baseline_sums.mat files must exist before aggregation.', sums_file);
         end
         baseline_tables{j} = load(sums_file).baseline_sums;
     end

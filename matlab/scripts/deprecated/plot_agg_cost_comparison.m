@@ -1,3 +1,8 @@
+% DEPRECATED: process_total_costs() is undefined and *_nominal_costs.csv files
+% are not produced by any workflow script. This script cannot be run as-is.
+% The canonical workflow outputs are {scenario}_relative_sums.mat in processed/.
+% Restore and rewrite against those files if this plot is needed.
+
 function plot_agg_cost_comparison(job_dir, recalculate_costs)
     % Plots aggregate cost comparison figures showing total costs relative to baseline for each scenario
     % Args:

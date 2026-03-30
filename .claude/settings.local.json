@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -l \"relative_sums\\\\|baseline_annual\" matlab/scripts/*.m)",
+      "Bash(grep \"\\\\.m$\")",
+      "Bash(grep -E \"^./matlab/pandemic_model/[^/]+\\\\.m$\")",
+      "Bash(grep -E \"\\\\.mlx$\")"
+    ]
+  }
+}

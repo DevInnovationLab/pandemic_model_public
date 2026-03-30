@@ -1,5 +1,38 @@
 function load_project()
-    % Opens the project from anywhere, assuming .prj is defined one folder up.
+    % Load the MATLAB project and add all source directories to the path.
+    %
+    % Call this before any other project script:
+    %   run('./matlab/load_project')
+    %
+    % The .prj file is intentionally minimal. All path management is done
+    % here so the project can be used from any working directory.
+
     project_path = fileparts(fileparts(mfilename('fullpath')));
-    matlab.project.loadProject(project_path);
+    matlab_path = fullfile(project_path, 'matlab');
+
+    % Core simulation engine and helpers
+    addpath(fullfile(matlab_path, 'pandemic_model'));
+    addpath(fullfile(matlab_path, 'pandemic_model', 'helpers'));
+    addpath(fullfile(matlab_path, 'pandemic_model', 'arrival_distributions'));
+    addpath(fullfile(matlab_path, 'pandemic_model', 'duration_distributions'));
+    addpath(fullfile(matlab_path, 'pandemic_model', 'econ_loss'));
+
+    % Scripts: workflow, analysis, and figures
+    addpath(fullfile(matlab_path, 'scripts', 'workflow'));
+    addpath(fullfile(matlab_path, 'scripts', 'analysis'));
+    addpath(fullfile(matlab_path, 'scripts', 'figures'));
+    addpath(fullfile(matlab_path, 'scripts', 'clean_data'));
+
+    % External YAML library
+    addpath(fullfile(matlab_path, 'yaml'));
+
+    % Tests (add for runtests calls)
+    addpath(fullfile(matlab_path, 'tests'));
+
+    % Load the project file for IDE integration
+    try
+        matlab.project.loadProject(project_path);
+    catch
+        % Project file is intentionally minimal; path setup above is sufficient.
+    end
 end

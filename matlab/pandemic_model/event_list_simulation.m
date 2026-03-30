@@ -377,7 +377,7 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     ufv_share(total_protected == 0) = 0;
     eff_multiplier = 1 - ufv_share .* (1 - params.univ_flu_vax_eff_multiplier);
 
-    h_arr = params.gamma .* h(total_protected .* eff_multiplier);
+    h_arr = params.gamma .* vax_mitigation_factor(total_protected .* eff_multiplier);
 
     % Vaccinate at rate of capacity until all vaccinated, then annual
     % vaccination to maintain immunity.

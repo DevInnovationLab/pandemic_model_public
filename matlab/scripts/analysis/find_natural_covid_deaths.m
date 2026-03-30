@@ -13,7 +13,7 @@ function find_natural_covid_deaths(config_path)
     monthly_cum_vax = [zeros(params.tau_a, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
 
     target_ex_post_severity = 9.17; % From Li et al. 2025
-    fy_mortality_reduction = 0.63; % First year mortality reduction from vaccines. 
+    target_total_lives_saved = 2.53e6;
     gamma_init = 0.2;
     ex_ante_severity_init = 10;
     
@@ -23,7 +23,7 @@ function find_natural_covid_deaths(config_path)
     % Define function handle for fsolve
     fit_func = @(x) fit_ex_ante_severity(x(1), x(2), ...
                                          target_ex_post_severity, years, ...
-                                         fy_mortality_reduction, monthly_cum_vax, params);
+                                         target_total_lives_saved, monthly_cum_vax, params);
     
     % Initial guess for [ex_ante_severity, gamma]
     x0 = [ex_ante_severity_init, gamma_init];
@@ -53,7 +53,7 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
                                   gamma, ...
                                   target_ex_post_severity, ...
                                   years, ...
-                                  fy_mortality_reduction, ...
+                                  target_total_lives_saved, ...
                                   monthly_cum_vax, ...
                                   params)
     % Get vaccinations over time
@@ -67,21 +67,20 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     end
     
     % Get ex post severity and share deaths mitigated
-    h_arr = h(vax_fractions_cum);
+    h_arr = vax_mitigation_factor(vax_fractions_cum);
 
     monthly_intensity = (ex_ante_severity ./ months);
     u_deaths = (params.P0 / 10000) .* monthly_intensity .* ones(size(h_arr));
-    m_deaths = u_deaths .* (1 - h_arr) .* gamma;
+    m_deaths = u_deaths .* (1 - h_arr .* gamma);
     ex_post_severity = sum(m_deaths ./ (params.P0 / 10000), 1);
     
     vaccine_start_month = params.tau_a;
     year_available_month = vaccine_start_month + 12 - 1;
-    fy_idx = vaccine_start_month:year_available_month;
-    share_deaths_mitigated = sum(u_deaths(fy_idx) - m_deaths(fy_idx)) / sum(u_deaths(fy_idx));
+    total_lives_saved = sum(u_deaths - m_deaths);
 
     % Check closeness to targets.
     severity_diff = ex_post_severity - target_ex_post_severity;
-    m_reduction_diff = share_deaths_mitigated - fy_mortality_reduction;
+    m_reduction_diff = total_lives_saved - target_total_lives_saved;
 
     F = [severity_diff; m_reduction_diff];
     

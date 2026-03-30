@@ -5,6 +5,10 @@ function plot_net_value_boxplot(out_dir)
     % Y-axis: surplus-only investment programs in a single layer of labels.
     % Uses only raw sample data (no bootstrap).
     %
+    % Writes `processed/net_value_boxplot_moments_surplus.csv` and
+    % `processed/net_value_boxplot_moments_baseline.csv` with the same
+    % moments as the plots (mean, median, 10th--90th percentiles; units in headers).
+    %
     % Args:
     %   out_dir (string): Job output directory containing 'processed' and 'figures'.
 
@@ -152,102 +156,104 @@ function plot_net_value_boxplot(out_dir)
         'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
     close(fig);
 
-    % --- Baseline vaccine scenario: standalone net value boxplot (absolute, not relative) ---
+    % Distribution moments matching the figure (trillions $), for tables / paper
+    moment_names = {'Scenario', 'Investment program', 'Mean (trillion $)', 'Median (trillion $)', ...
+                    '10th percentile (trillion $)', '25th percentile (trillion $)', ...
+                    '75th percentile (trillion $)', '90th percentile (trillion $)'};
+    out_table = table(string(scenarios_ordered'), string(y_labels'), mean_val, med, ...
+        perc_10_90(:, 1), q1, q3, perc_10_90(:, 2), 'VariableNames', moment_names);
+    writetable(out_table, fullfile(processed_dir, "net_value_boxplot_moments_surplus.csv"));
+
+    %% --- Baseline vaccine scenario: standalone net value boxplot (absolute, not relative) ---
     baseline_file = fullfile(processed_dir, 'baseline_annual_sums.mat');
-    if exist(baseline_file, 'file')
-        S_base = load(baseline_file, 'all_baseline_sums');
-        baseline_tbl = S_base.all_baseline_sums;
+    S_base = load(baseline_file, 'all_baseline_sums');
+    baseline_tbl = S_base.all_baseline_sums;
 
-        if ismember('net_value_pv_full', baseline_tbl.Properties.VariableNames)
-            data_base = baseline_tbl.net_value_pv_full(:) / 1e12; % Convert to trillions
+    data_base = baseline_tbl.net_value_pv_full(:) / 1e12; % Convert to trillions
 
-            % Compute distribution statistics
-            p = prctile(data_base, [10, 25, 50, 75, 90]);
-            perc_10_90_b = p([1, 5]);
-            q1_b = p(2);
-            med_b = p(3);
-            q3_b = p(4);
+    % Compute distribution statistics
+    p = prctile(data_base, [10, 25, 50, 75, 90]);
+    perc_10_90_b = p([1, 5]);
+    q1_b = p(2);
+    med_b = p(3);
+    q3_b = p(4);
 
-            % Baseline plot: single box at y = 1.
-            y_base = 1;
+    % Baseline plot: single box at y = 1.
+    y_base = 1;
 
-            % Make the baseline figure a bit less tall than the advance
-            % investment figure so it is visually shorter in panels.
-            fig_b = figure('Visible', 'off', 'Position', [100 100 750 300]);
-            ax_b = axes();
-            hold(ax_b, 'on');
+    % Make the baseline figure a bit less tall than the advance
+    % investment figure so it is visually shorter in panels.
+    fig_b = figure('Visible', 'off', 'Position', [100 100 750 300]);
+    ax_b = axes();
+    hold(ax_b, 'on');
 
-            % Whisker: 10th to 90th with caps
-            hw_b = plot(ax_b, [perc_10_90_b(1), perc_10_90_b(2)], [y_base, y_base], '-', ...
-                'Color', whisker_color, 'LineWidth', 1.6);
-            plot(ax_b, [perc_10_90_b(1), perc_10_90_b(1)], [y_base - 0.08, y_base + 0.08], '-', ...
-                'Color', whisker_color, 'LineWidth', 1.2);
-            plot(ax_b, [perc_10_90_b(2), perc_10_90_b(2)], [y_base - 0.08, y_base + 0.08], '-', ...
-                'Color', whisker_color, 'LineWidth', 1.2);
+    % Whisker: 10th to 90th with caps
+    hw_b = plot(ax_b, [perc_10_90_b(1), perc_10_90_b(2)], [y_base, y_base], '-', ...
+        'Color', whisker_color, 'LineWidth', 1.6);
+    plot(ax_b, [perc_10_90_b(1), perc_10_90_b(1)], [y_base - 0.08, y_base + 0.08], '-', ...
+        'Color', whisker_color, 'LineWidth', 1.2);
+    plot(ax_b, [perc_10_90_b(2), perc_10_90_b(2)], [y_base - 0.08, y_base + 0.08], '-', ...
+        'Color', whisker_color, 'LineWidth', 1.2);
 
-            % Box: interquartile range
-            single_box_hw = box_hw * 0.5;
-            xb_b = [q1_b, q3_b, q3_b, q1_b];
-            yb_b = [y_base - single_box_hw, y_base - single_box_hw, y_base + single_box_hw, y_base + single_box_hw];
-            hb_b = patch(ax_b, xb_b, yb_b, face_color, 'EdgeColor', edge_color, 'LineWidth', 1.0);
+    % Box: interquartile range
+    single_box_hw = box_hw * 0.5;
+    xb_b = [q1_b, q3_b, q3_b, q1_b];
+    yb_b = [y_base - single_box_hw, y_base - single_box_hw, y_base + single_box_hw, y_base + single_box_hw];
+    hb_b = patch(ax_b, xb_b, yb_b, face_color, 'EdgeColor', edge_color, 'LineWidth', 1.0);
 
-            % Median line
-            hm_b = plot(ax_b, [med_b, med_b], [y_base - single_box_hw, y_base + single_box_hw], '-', ...
-                'Color', edge_color, 'LineWidth', 2.2);
+    % Median line
+    hm_b = plot(ax_b, [med_b, med_b], [y_base - single_box_hw, y_base + single_box_hw], '-', ...
+        'Color', edge_color, 'LineWidth', 2.2);
 
-            % Mean point
-            mean_base = mean(data_base);
-            hmean_b = plot(ax_b, mean_base, y_base, 'o', ...
-                'MarkerFaceColor', 'k', 'MarkerEdgeColor', [0.05 0.07 0.13], 'MarkerSize', 6.5);
+    % Mean point
+    mean_base = mean(data_base);
+    hmean_b = plot(ax_b, mean_base, y_base, 'o', ...
+        'MarkerFaceColor', 'k', 'MarkerEdgeColor', [0.05 0.07 0.13], 'MarkerSize', 6.5);
 
-            % Axis styling
-            ax_b.YDir = 'reverse';
-            ax_b.YLim = [0.5, 1.5];
-            ax_b.YTick = 1;
-            % Two-line y-tick label using TeX interpreter and newline
-            ax_b.YTickLabel = {'Status quo response'};
-            ax_b.FontSize = 10;
-            ax_b.TickDir = 'out';
-            ax_b.Box = 'off';
-            ax_b.YAxisLocation = 'left';
-            ax_b.XGrid = 'on';
-            xlabel(ax_b, 'Net present value (trillion $)', 'FontSize', 11);
+    % Axis styling
+    ax_b.YDir = 'reverse';
+    ax_b.YLim = [0.5, 1.5];
+    ax_b.YTick = 1;
+    % Two-line y-tick label using TeX interpreter and newline
+    ax_b.YTickLabel = {'Status quo response'};
+    ax_b.FontSize = 10;
+    ax_b.TickDir = 'out';
+    ax_b.Box = 'off';
+    ax_b.YAxisLocation = 'left';
+    ax_b.XGrid = 'on';
+    xlabel(ax_b, 'Net present value (trillion $)', 'FontSize', 11);
 
-
-            % X-axis limits and ticks every 5 trillion dollars
-            global_min_b = perc_10_90_b(1);
-            global_max_b = perc_10_90_b(2);
-            % Round limits to nearest 5
-            x_lo_b = floor(global_min_b / 5) * 5;
-            x_hi_b = ceil(global_max_b / 5) * 5;
-            if x_lo_b == x_hi_b
-                x_hi_b = x_lo_b + 5;
-            end
-            ax_b.XLim = [x_lo_b, x_hi_b];
-            ax_b.XTick = x_lo_b:5:x_hi_b;
-
-            % Legend: mean, median, IQR, 10/90 percentiles (baseline panel only)
-            h_median_legend_b = plot(ax_b, NaN, NaN, '-', 'LineStyle', 'none', 'Marker', 'none');
-            h_legend = legend(ax_b, [hmean_b, h_median_legend_b, hb_b, hw_b], ...
-                {'Mean', 'Median', 'Interquartile range', '10/90 percentiles'}, ...
-                'FontSize', 9, 'Interpreter', 'none', ...
-                'Location', 'northoutside', 'Orientation', 'horizontal', ...
-                'Box', 'on');
-
-            % Export baseline net value boxplot as PNG
-            exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'), ...
-                'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
-            exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.png'), ...
-                'ContentType', 'image', 'Resolution', 600);
-            close(fig_b);
-        else
-            warning('plot_net_value_boxplot:MissingBaselineNetValue', ...
-                'Variable net_value_pv_full not found in baseline_annual_sums.mat.');
-        end
-    else
-        warning('plot_net_value_boxplot:BaselineFileMissing', ...
-            'baseline_annual_sums.mat not found in %s. Skipping baseline boxplot.', processed_dir);
+    % X-axis limits and ticks every 5 trillion dollars
+    global_min_b = perc_10_90_b(1);
+    global_max_b = perc_10_90_b(2);
+    % Round limits to nearest 5
+    x_lo_b = floor(global_min_b / 5) * 5;
+    x_hi_b = ceil(global_max_b / 5) * 5;
+    if x_lo_b == x_hi_b
+        x_hi_b = x_lo_b + 5;
     end
+    ax_b.XLim = [x_lo_b, x_hi_b];
+    ax_b.XTick = x_lo_b:5:x_hi_b;
+
+    % Legend: mean, median, IQR, 10/90 percentiles (baseline panel only)
+    h_median_legend_b = plot(ax_b, NaN, NaN, '-', 'LineStyle', 'none', 'Marker', 'none');
+    h_legend = legend(ax_b, [hmean_b, h_median_legend_b, hb_b, hw_b], ...
+        {'Mean', 'Median', 'Interquartile range', '10/90 percentiles'}, ...
+        'FontSize', 9, 'Interpreter', 'none', ...
+        'Location', 'northoutside', 'Orientation', 'horizontal', ...
+        'Box', 'on');
+
+    % Export baseline net value boxplot as PNG
+    exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'), ...
+        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.png'), ...
+        'ContentType', 'image', 'Resolution', 600);
+    close(fig_b);
+
+    baseline_table = table("baseline", "Status quo response", mean_base, med_b, ...
+        perc_10_90_b(1), q1_b, q3_b, perc_10_90_b(2), 'VariableNames', moment_names);
+    writetable(baseline_table, fullfile(processed_dir, "net_value_boxplot_moments_baseline.csv"));
+
 end
 
 function [row_tag, accent] = parse_grid_scenario_tag(scen_name)

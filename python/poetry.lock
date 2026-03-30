@@ -1615,7 +1615,7 @@ optional = false
 python-versions = ">=3.11,<=3.13"
 groups = ["main"]
 files = []
-develop = false
+develop = true
 
 [package.dependencies]
 click = ">=8.2.1,<9.0.0"
@@ -1627,10 +1627,8 @@ plotly = ">=6.2.0,<7.0.0"
 scipy = ">=1.16.0,<2.0.0"
 
 [package.source]
-type = "git"
-url = "https://github.com/ganqili/pandemic-statistics.git"
-reference = "prep-for-integration"
-resolved_reference = "295431b28c773fc6e7db5d0503abbcd4a0b3ac8f"
+type = "directory"
+url = "vendor/pandemic-statistics"
 
 [[package]]
 name = "parso"
@@ -2924,4 +2922,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "3.11.9"
-content-hash = "0588d82b1a46f0e7bc93c74819312c89f2d2833cd8e4c814aa641163b95725fd"
+content-hash = "d6636bf1c07d378df14e5a557b139fa3bbe6e3c8ccf7541344613fdbda4bc3bc"
