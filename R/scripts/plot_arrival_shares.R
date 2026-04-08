@@ -33,7 +33,7 @@ p <- ggplot(arrival_risk_plot, aes(
     values = prototype_colors
   ) +
   scale_x_continuous(
-    limits = c(0, 0.5),
+    limits = c(-.01, 0.5),
     labels = scales::percent_format(accuracy = 1),
     breaks = seq(0, 0.5, by = 0.10)
   ) +
