@@ -45,7 +45,7 @@ function find_natural_covid_deaths(config_path)
     results.ex_ante_severity = ex_ante_severity;
     results.gamma = gamma;
     
-    yaml.dumpFile("./data/clean/inverted_covid_severity.yaml", results, "block");
+    yaml.dumpFile("./output/inverted_covid_severity.yaml", results, "block");
 end
 
 
@@ -74,8 +74,6 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     m_deaths = u_deaths .* (1 - h_arr .* gamma);
     ex_post_severity = sum(m_deaths ./ (params.P0 / 10000), 1);
     
-    vaccine_start_month = params.tau_a;
-    year_available_month = vaccine_start_month + 12 - 1;
     total_lives_saved = sum(u_deaths - m_deaths);
 
     % Check closeness to targets.

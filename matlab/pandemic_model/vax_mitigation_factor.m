@@ -1,32 +1,39 @@
 function y = vax_mitigation_factor(vax_fractions)
     % Piecewise linear vaccination damage mitigation factor (the "h" function).
-    % Maps vaccination coverage fraction to the fraction of harm mitigated.
-    % Per footnote 17 of IMF paper, the function is pinned at:
-    %   h(0    ) = 0
-    %   h(0.13 ) = 0.395
-    %   h(0.5  ) = 0.816
-    %   h(>=0.7) = 1
-	
-	% Validate inputs 
-	assert(all(vax_fractions >= 0 | vax_fractions <= 1, 'all'))
+    %
+    % Parameterisation:
+    %   theta  – steepness multiplier for the first segment
+    %   lp     – first kink  (lambda_prime, 0.11)
+    %   ld     – second kink (lambda_double, 0.40)
+    %   lt     – third kink  (lambda_triple, 0.70)
+    %
+    % The base slope s is chosen so that f(lt) = 1 exactly.
 
-	% Initialize constants and output container
-	slope_1 = 3.038462;
-    slope_2 = 1.137838;
-    slope_3 = 0.92;
-	intercept_2 = 0.395;
-    intercept_3 = 0.816;
-	y = zeros(size(vax_fractions));
-	
-	% Segment masks
-	mask1 = vax_fractions <= 0.13;
-	mask2 = vax_fractions > 0.13 & vax_fractions <= 0.5;
-	mask3 = vax_fractions > 0.5 & vax_fractions <= 0.7;
-	mask4 = vax_fractions > 0.7;
+	theta = 5.23;
+	lp = 0.11;
+	ld = 0.40;
+	lt = 0.70;
 
-	% Apply piecewise linear function
-	y(mask1) = slope_1 * vax_fractions(mask1);
-	y(mask2) = intercept_2 + slope_2 * (vax_fractions(mask2) - 0.13);
-	y(mask3) = intercept_3 + slope_3 * (vax_fractions(mask3) - 0.5);
-	y(mask4) = 1;
+    % Validate inputs
+    assert(all(vax_fractions >= 0 & vax_fractions <= 1, 'all'))
+
+    % Solve for the base slope so that the function reaches 1 at lt
+    s = 1 / (theta * lp + (ld - lp) + 0.5 * (lt - ld));
+
+    % Cumulative values at kink points
+    fd_at_lp = theta * s * lp;
+    fd_at_ld = fd_at_lp + s * (ld - lp);
+
+    % Segment masks
+    mask1 = vax_fractions <= lp;
+    mask2 = vax_fractions > lp  & vax_fractions <= ld;
+    mask3 = vax_fractions > ld  & vax_fractions <= lt;
+    mask4 = vax_fractions > lt;
+
+    % Apply piecewise linear function
+    y = zeros(size(vax_fractions));
+    y(mask1) = theta * s * vax_fractions(mask1);
+    y(mask2) = fd_at_lp + s * (vax_fractions(mask2) - lp);
+    y(mask3) = fd_at_ld + (s / 2) * (vax_fractions(mask3) - ld);
+    y(mask4) = 1;
 end
