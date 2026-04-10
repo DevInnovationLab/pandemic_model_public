@@ -182,9 +182,9 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 % Pathogen data: sample period (e.g. outbreaks since 1950)
                 formatted_name = "Pathogen data";
                 if s_meta.year_min == 1950
-                    formatted_value = "Outbreaks since 1950";
+                    formatted_value = "Novel viral since 1950";
                 else
-                    formatted_value = sprintf("Outbreaks since %g", s_meta.year_min);
+                    formatted_value = sprintf("Novel viral since %g", s_meta.year_min);
                 end
             elseif airborne
                 formatted_name = "Pathogen data";

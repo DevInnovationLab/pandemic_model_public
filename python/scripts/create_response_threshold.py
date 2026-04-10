@@ -1,3 +1,5 @@
+import os
+
 import click
 import yaml
 
@@ -7,25 +9,24 @@ def create_response_threshold():
         sev_dict = yaml.safe_load(f)
 
     covid_severity = sev_dict["ex_ante_severity"]
-    covid_intensity = covid_severity  / 5 # Need to undo hard coding here
+    covid_intensity = covid_severity / 5 
 
-    with open("./output/response_threshol_intensity.yaml", "w") as f:
-        yaml.dump(
-            {
-                "response_threshold": covid_intensity / 2,
-                "response_threshold_type": "intensity"
-            },
-            f
-        )
-
-    with open("./output/response_threshold_severity.yaml", "w") as f:
-        yaml.dump(
-            {
-                "response_threshold": covid_severity / 2,
-                "response_threshold_type": "severity"
-            },
-            f
-        )
+    for typ, val in [("intensity", covid_intensity), ("severity", covid_severity)]:
+        for name, factor in [("half", 0.5), ("quarter", 0.25), ("", 1)]:
+            if factor == 1:
+                outpath = f"./output/response_thresholds/response_threshold_covid_{typ}.yaml"
+            else:
+                outpath = f"./output/response_thresholds/response_threshold_{name}_covid_{typ}.yaml"
+       
+            os.makedirs(os.path.dirname(outpath), exist_ok=True)
+            with open(outpath, "w") as f:
+                yaml.dump(
+                    {
+                        "response_threshold": val * factor,
+                        "response_threshold_type": typ,
+                    },
+                    f
+                )
 
 if __name__ == "__main__":
     create_response_threshold()

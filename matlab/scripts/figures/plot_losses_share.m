@@ -9,7 +9,6 @@ function plot_losses_share(job_dir)
     %   - Only outbreaks that are not false positives are included
     %     (filters by outbreak_is_false from unmitigated_losses.mat).
     %   - The Lorenz curve is ordered from greatest harm to least harm.
-    %   - Axis ticks are shown every 0.2.
 
     losses_file = fullfile(job_dir, "unmitigated_losses.mat");
     if ~isfile(losses_file)

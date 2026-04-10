@@ -23,15 +23,14 @@ import pandas as pd
 
 from pandemic_statistics.pareto import ArrivalGPD
 
-DEFAULT_SEVERITIES = (9.17, 44.4, 171.0)
+DEFAULT_SEVERITIES = (12.3, 44.4, 171.0)
 DEFAULT_SEED = 42
 
 
 def build_moment_table(
     model: ArrivalGPD,
     severities: tuple[float, ...],
-    n_samples: int,
-    seed: int,
+    param_samples: np.ndarray,
 ) -> pd.DataFrame:
     """Build a table of moments for annual exceedance probabilities.
 
@@ -53,7 +52,11 @@ def build_moment_table(
         selected quantiles of annual exceedance probability.
     """
     x = np.asarray(severities, dtype=float)
-    sample_probs = model._sf_core(x, n_samples=n_samples, seed=seed)
+    param_samples = param_samples.to_numpy(dtype=float)
+    sample_probs = model._sf_core(x, 
+                                  param_samples[:, [0]], 
+                                  param_samples[:, [1]],
+                                  param_samples[:, [2]])
 
     summary = pd.DataFrame(
         {
@@ -89,46 +92,17 @@ def build_moment_table(
     show_default=True,
     help="Severity threshold at which to evaluate arrival moments. Repeatable.",
 )
-@click.option(
-    "--n-samples",
-    type=int,
-    default=None,
-    help=(
-        "Override number of parameter draws for uncertainty propagation. "
-        "Default: parse N from folder name ..._n_<N>_seed_<seed>."
-    ),
-)
-@click.option(
-    "--seed",
-    type=int,
-    default=DEFAULT_SEED,
-    show_default=True,
-    help="Random seed for parameter sampling.",
-)
 def main(
     distribution: Path,
     severity: tuple[float, ...],
-    n_samples: int | None,
-    seed: int,
 ) -> None:
     """Load a fitted arrival model and print moment summaries."""
     distribution_path = distribution.resolve()
 
-    model = ArrivalGPD.load(distribution_path)
-
-    if n_samples is not None:
-        effective_n = n_samples
-    else:
-        m = re.search(r"_n_(\d+)_seed_", distribution_path.name)
-        if not m:
-            raise ValueError(
-                "Pass --n-samples or use a distribution folder whose name includes "
-                f"_n_<N>_seed_<seed> (got {distribution_path.name!r})."
-            )
-        effective_n = int(m.group(1))
+    model, param_samples = ArrivalGPD.load(distribution_path, include_sample=True)
+    print(param_samples.shape)
 
     click.echo(f"Loaded distribution: {distribution_path}")
-    click.echo(f"Parameter draws (n_samples): {effective_n}")
     click.echo(
         "Hyperparameters: "
         f"arrival_type={model.arrival_type}, "
@@ -140,8 +114,7 @@ def main(
     result = build_moment_table(
         model=model,
         severities=severity,
-        n_samples=effective_n,
-        seed=seed,
+        param_samples=param_samples,
     )
     with pd.option_context("display.float_format", lambda v: f"{v:0.6g}"):
         click.echo(result.to_string(index=False))

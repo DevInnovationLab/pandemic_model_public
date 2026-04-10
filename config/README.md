@@ -65,6 +65,11 @@ See `allrisk_base.yaml` for the full list of capacity parameters (`theta`, `max_
 `delta`, `mRNA_share`, etc.), vaccine parameters (`tau_m`, `tau_o`, `inp_RD_spend`, etc.),
 and surveillance parameters (`surveil_annual_installation_spend`, etc.).
 
+**Reference vs deployable capacity:** `max_capacity` is the **reference** total (annual courses)
+for the advance manufacturing **gap**. The simulation deployable ceiling is `max_capacity`, or
+`max_capacity * share` when **`advance_capacity.share_target_advance_capacity` > 1**. Optionally set
+**`deployable_max_capacity`** to override that ceiling (absolute value).
+
 ---
 
 ## Tier 2: Scenario Configs (`scenario_configs/`)
@@ -78,6 +83,7 @@ parameters:
 - `universal_flu_rd`: Universal flu vaccine parameters
 - `advance_capacity`: Advance manufacturing capacity targets
 - `improved_early_warning`: Surveillance precision/recall configuration
+- `deployable_max_capacity` (optional): Override the simulation capacity ceiling; see Tier 1 capacity note
 
 A scenario named `baseline.yaml` is required in every scenario configs directory.
 

@@ -343,6 +343,19 @@ function updated_params = update_params(job_config, scenario_config, arrival_rat
     updated_params.prototype_RD_spend = updated_params.advance_RD_cost_per_pathogen .* updated_params.num_pathogens_researched;
     updated_params.ufv_spend = updated_params.advance_RD_cost_per_pathogen .* updated_params.univ_flu_cost_multiplier;
 
+    % Reference max_capacity defines the advance gap (get_adv_capacity). Deployable ceiling
+    % matches reference unless share > 1 (then max_capacity * share) or deployable_max_capacity is set.
+    ref_max = updated_params.max_capacity;
+    share = updated_params.advance_capacity.share_target_advance_capacity;
+    deployable = ref_max;
+    if share > 1
+        deployable = ref_max * share;
+    end
+    if isfield(updated_params, 'deployable_max_capacity')
+        deployable = updated_params.deployable_max_capacity;
+    end
+    updated_params.deployable_max_capacity = deployable;
+
     % Set advance capacity
     if updated_params.advance_capacity.share_target_advance_capacity == 0
         updated_params.theta = 0;
