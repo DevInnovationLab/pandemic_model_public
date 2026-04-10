@@ -6,8 +6,8 @@ fix_params: # Parameters to update and fix in the base config
   scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:
   response_threshold_path:
-    - "./output/response_thresholds/response_threshold_quarter_covid_intensity.yaml"
-    - "./output/response_thresholds/response_threshold_covid_intensity.yaml"
+    - "./output/response_thresholds/response_thresholds/response_threshold_quarter_covid_intensity.yaml"
+    - "./output/response_thresholds/response_thresholds/response_threshold_covid_intensity.yaml"
     
   gamma:  # Fraction remaining harm mitigated by vaccine
     - 0.3    # 30%

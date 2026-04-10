@@ -105,7 +105,7 @@ All scripts should be run from the repository root. The model expects:
 - Economic loss models: `output/econ_loss_models/`
 - PTRS tables: `output/ptrs/`
 - R&D timelines: `output/rd_timelines/`
-- Response thresholds: `output/response_threshold_half_covid_severity.yaml`
+- Response thresholds: `output/response_thresholds/response_threshold_half_covid_severity.yaml`
 
 ## MATLAB Project Setup
 

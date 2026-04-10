@@ -14,9 +14,9 @@ def create_response_threshold():
     for typ, val in [("intensity", covid_intensity), ("severity", covid_severity)]:
         for name, factor in [("half", 0.5), ("quarter", 0.25), ("", 1)]:
             if factor == 1:
-                outpath = f"./output/response_thresholds/response_threshold_covid_{typ}.yaml"
+                outpath = f"./output/response_thresholds/response_thresholds/response_threshold_covid_{typ}.yaml"
             else:
-                outpath = f"./output/response_thresholds/response_threshold_{name}_covid_{typ}.yaml"
+                outpath = f"./output/response_thresholds/response_thresholds/response_threshold_{name}_covid_{typ}.yaml"
        
             os.makedirs(os.path.dirname(outpath), exist_ok=True)
             with open(outpath, "w") as f:
