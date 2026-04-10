@@ -87,7 +87,7 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
     panel.grid.minor.y = element_blank(),
     panel.background = element_rect(fill = "white"),
     plot.background = element_rect(fill = "white"),
-    plot.margin = margin(12, 14, 10, 10),
+    plot.margin = margin(0, 0, 0, 0),
     legend.position = c(0.8, 0.1),
     legend.justification = c(0.5, 0.5),
     legend.background = element_rect(fill = "white", colour = NA),

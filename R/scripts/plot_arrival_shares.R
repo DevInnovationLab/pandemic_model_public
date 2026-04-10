@@ -47,7 +47,7 @@ p <- ggplot(arrival_risk_plot, aes(
     axis.text.y = element_text(family = "Arial", size = 13, color = "black"),
     axis.text.x = element_text(family = "Arial", size = 13, color = "black"),
     axis.title.x = element_text(family = "Arial", size = 15,  margin = margin(t = 10)),
-    axis.title.y = element_text(size = 15, angle = 0, hjust = 0, vjust = 1),
+    axis.title.y = element_text(size = 15, color = "black", face = "bold"),
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
     panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
@@ -64,7 +64,7 @@ p <- ggplot(arrival_risk_plot, aes(
     legend.text = element_text(family = "Arial", size = 14),
     legend.key.size = unit(1.1, "lines"),
     legend.box.margin = margin(0, 0, 0, 0),
-    plot.margin = margin(10, 0, 0, 10)
+    plot.margin = margin(0, 0, 0, 0)
   )
 
 # Save main plot (slightly taller for more vertical space)
