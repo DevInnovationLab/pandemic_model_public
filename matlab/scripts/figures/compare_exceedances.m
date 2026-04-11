@@ -1,4 +1,4 @@
-function compare_exceedances(sensitivity_dir)
+function compare_exceedances(sensitivity_dir, figure_export)
 % Compare exceedance curves from airborne sensitivity run (no mitigation, realized mitigation, vaccines always work).
 %
 % Uses output from run_sensitivity(..., 'response') with
@@ -7,12 +7,24 @@ function compare_exceedances(sensitivity_dir)
 %   - sensitivity_dir/ptrs_pathogen_gamma1/ : run with vaccines-always-succeed PTRs and gamma=1 (multi-parameter config)
 %   - or sensitivity_dir/ptrs_pathogen/value_1/ : same run from one-parameter config
 %
-% Plots three curves: no mitigation (eff_severity), realized mitigation (baseline ex_post),
-% vaccines always work (variant ex_post), plus Madhav et al. reference.
+% Figure export options (second argument):
+%   'both' (default): write two PDFs — (1) three simulation curves only (no Madhav et al.),
+%     (2) baseline vaccine response (realized mitigation) and Madhav et al. only.
+%   'simulations_only': PDF (1) only.
+%   'baseline_madhav': PDF (2) only.
 %
 % Args:
 %   sensitivity_dir (char): Path to sensitivity run root (e.g. output/sensitivity/baseline_vaccine_program_airborne)
+%   figure_export (char, optional): 'both' | 'simulations_only' | 'baseline_madhav'. Default 'both'.
 
+    if nargin < 2 || isempty(figure_export)
+        figure_export = 'both';
+    end
+    valid_export = {'both', 'simulations_only', 'baseline_madhav'};
+    if ~any(strcmp(figure_export, valid_export))
+        error('compare_exceedances:BadFigureExport', ...
+            'figure_export must be one of: %s', strjoin(valid_export, ', '));
+    end
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
     % Support both multi-parameter (ptrs_pathogen_gamma1) and one-parameter (ptrs_pathogen/value_1) layouts.
     value1_dir = fullfile(sensitivity_dir, 'ptrs_pathogen_gamma1');
@@ -169,23 +181,59 @@ function compare_exceedances(sensitivity_dir)
 
     writetable(small_T, fullfile(sensitivity_dir, 'mean_annual_recurrence_rates_selected.csv'));
 
-    % Madhav et al. reference
-    madhav_path = fullfile('data', 'clean', 'madhav_et_al_severity_exceedance.csv');
-    if ~isfile(madhav_path)
-        madhav_path = fullfile(fileparts(mfilename('fullpath')), '..', '..', 'data', 'clean', 'madhav_et_al_severity_exceedance.csv');
-    end
-    madhav_exceedances = readtable(madhav_path);
-    [madhav_severity_central, central_idx] = sort(madhav_exceedances.severity_central);
-    madhav_exceedance_central = madhav_exceedances.exceedance_central(central_idx);
-    mad_valid = madhav_severity_central > 0;
-    madhav_severity_plot = madhav_severity_central(mad_valid);
-    madhav_exceedance_plot = madhav_exceedance_central(mad_valid) / 100;
-
     % Coherent palette: distinct colors for scenario progression (no mitigation → realized → vaccines work), red for Madhav et al.
     color_no   = [0.12 0.20 0.48];   % dark navy – no mitigation
     color_rel  = [0.35 0.55 0.88];   % sky blue – vaccines can fail (clearly lighter and distinct from navy)
     color_alw  = [0.18 0.72 0.48];   % green–teal – vaccines always work
     color_mad  = [0.72 0.12 0.12];   % red – Madhav et al. (reference)
+
+    fig_dir = fullfile(sensitivity_dir, 'figures');
+    if ~isfolder(fig_dir)
+        mkdir(fig_dir);
+    end
+    [~, dirname] = fileparts(sensitivity_dir);
+
+    if strcmp(figure_export, 'both') || strcmp(figure_export, 'simulations_only')
+        fig1 = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, ...
+            color_no, color_rel, color_alw);
+        out1 = fullfile(fig_dir, sprintf('%s_exceedance_curves_simulations_only.pdf', dirname));
+        exportgraphics(fig1, out1, "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+        close(fig1);
+        fprintf('Exceedance figure (simulations only) saved to %s\n', out1);
+    end
+
+    if strcmp(figure_export, 'both') || strcmp(figure_export, 'baseline_madhav')
+        madhav_path = fullfile('data', 'clean', 'madhav_et_al_severity_exceedance.csv');
+        if ~isfile(madhav_path)
+            madhav_path = fullfile(fileparts(mfilename('fullpath')), '..', '..', 'data', 'clean', 'madhav_et_al_severity_exceedance.csv');
+        end
+        madhav_exceedances = readtable(madhav_path);
+        [madhav_severity_central, central_idx] = sort(madhav_exceedances.severity_central);
+        madhav_exceedance_central = madhav_exceedances.exceedance_central(central_idx);
+        mad_valid = madhav_severity_central > 0;
+        madhav_severity_plot = madhav_severity_central(mad_valid);
+        madhav_exceedance_plot = madhav_exceedance_central(mad_valid) / 100;
+
+        fig2 = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madhav_severity_plot, madhav_exceedance_plot, ...
+            color_rel, color_mad);
+        out2 = fullfile(fig_dir, sprintf('%s_exceedance_curves_baseline_response_madhav.pdf', dirname));
+        exportgraphics(fig2, out2, "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+        close(fig2);
+        fprintf('Exceedance figure (baseline response and Madhav et al.) saved to %s\n', out2);
+    end
+end
+
+function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, ...
+        color_no, color_rel, color_alw)
+% Build figure with three simulation exceedance curves (no Madhav et al.).
+%
+% Args:
+%   x_plot (double): Severity grid (column vector).
+%   exceed_no, exceed_rel, exceed_alw (double): Annual exceedance risk per scenario, same length as x_plot.
+%   color_no, color_rel, color_alw (double): RGB row vectors for the three lines.
+%
+% Returns:
+%   fig: Figure handle.
 
     fig = figure('Position', [100 100 900 650]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
@@ -195,6 +243,58 @@ function compare_exceedances(sensitivity_dir)
     plot(ax, x_plot, exceed_no,  'LineWidth', 2, 'Color', color_no);
     plot(ax, x_plot, exceed_rel, 'LineWidth', 2, 'Color', color_rel);
     plot(ax, x_plot, exceed_alw, 'LineWidth', 2, 'Color', color_alw);
+
+    set(ax, 'XScale', 'log', 'YScale', 'log');
+    grid(ax, 'on');
+    box(ax, 'off');
+    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', 'Arial', 'FontSize', 14);
+    ylabel(ax, 'Annual exceedance risk', 'FontName', 'Arial', 'FontSize', 14);
+
+    min_x = min(x_plot);
+    max_x = max(x_plot);
+    xlim(ax, [min_x, max_x]);
+    xt = get(ax, 'XTick');
+    set(ax, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
+
+    x_no  = max(min_x, min(max_x, 20));
+    x_rel = max(min_x, min(max_x, 110));
+    x_alw = max(min_x, min(max_x, 120));
+    y_no  = interp1(x_plot, exceed_no, x_no, 'linear', 'extrap');
+    y_rel = interp1(x_plot, exceed_rel, x_rel, 'linear', 'extrap');
+    y_alw = interp1(x_plot, exceed_alw, x_alw, 'linear', 'extrap');
+
+    text(ax, x_no, y_no, ' No mitigation', ...
+        'Color', color_no, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'bottom');
+
+    text(ax, x_rel, y_rel, {'Status quo', 'response'}, ...
+        'Color', color_rel, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
+
+    text(ax, x_alw, y_alw, {'Vaccines', 'always work'}, ...
+        'Color', color_alw, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
+end
+
+function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madhav_severity_plot, madhav_exceedance_plot, ...
+        color_rel, color_mad)
+% Build figure with baseline vaccine response (realized mitigation) and Madhav et al. only.
+%
+% Args:
+%   x_plot (double): Simulation severity grid for the baseline response curve.
+%   exceed_rel (double): Annual exceedance risk for baseline response, same length as x_plot.
+%   madhav_severity_plot, madhav_exceedance_plot (double): Madhav et al. reference series.
+%   color_rel, color_mad (double): RGB row vectors for baseline response and reference lines.
+%
+% Returns:
+%   fig: Figure handle.
+
+    fig = figure('Position', [100 100 900 650]);
+    ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
+    set(ax, 'FontName', 'Arial', 'FontSize', 11);
+    hold(ax, 'on');
+
+    plot(ax, x_plot, exceed_rel, 'LineWidth', 2, 'Color', color_rel);
     plot(ax, madhav_severity_plot, madhav_exceedance_plot, 'LineWidth', 2, 'Color', color_mad);
 
     set(ax, 'XScale', 'log', 'YScale', 'log');
@@ -209,40 +309,16 @@ function compare_exceedances(sensitivity_dir)
     xt = get(ax, 'XTick');
     set(ax, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
 
-    % Labels near curves at fixed severity (x) positions.
-    x_no  = max(min_x, min(max_x, 20));
-    x_mad = max(min_x, min(max_x, 10));
     x_rel = max(min_x, min(max_x, 110));
-    x_alw = max(min_x, min(max_x, 120));
-    y_no  = interp1(x_plot, exceed_no, x_no, 'linear', 'extrap');
-    y_mad = interp1(madhav_severity_plot, madhav_exceedance_plot, x_mad, 'linear', 'extrap');
+    x_mad = max(min_x, min(max_x, 10));
     y_rel = interp1(x_plot, exceed_rel, x_rel, 'linear', 'extrap');
-    y_alw = interp1(x_plot, exceed_alw, x_alw, 'linear', 'extrap');
-
-    % Add line labels
-    text(ax, x_no, y_no, ' No mitigation', ...
-        'Color', color_no, 'FontName', 'Arial', 'FontSize', 12, ...
-        'VerticalAlignment', 'bottom');
-
-    text(ax, x_mad, y_mad, ' Madhav et al. (2023)', ...
-        'Color', color_mad, 'FontName', 'Arial', 'FontSize', 12, ...
-        'VerticalAlignment', 'bottom');
+    y_mad = interp1(madhav_severity_plot, madhav_exceedance_plot, x_mad, 'linear', 'extrap');
 
     text(ax, x_rel, y_rel, {'Status quo', 'response'}, ...
         'Color', color_rel, 'FontName', 'Arial', 'FontSize', 12, ...
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
 
-    text(ax, x_alw, y_alw, {'Vaccines', 'always work'}, ...
-        'Color', color_alw, 'FontName', 'Arial', 'FontSize', 12, ...
-        'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
-
-
-    fig_dir = fullfile(sensitivity_dir, 'figures');
-    if ~isfolder(fig_dir)
-        mkdir(fig_dir);
-    end
-    [~, dirname] = fileparts(sensitivity_dir);
-    exportgraphics(fig, fullfile(fig_dir, sprintf('%s_exceedance_curves.pdf', dirname)), ...
-        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
-    fprintf('Exceedance figure saved to %s\n', fullfile(fig_dir, sprintf('%s_exceedance_curves.pdf', dirname)));
+    text(ax, x_mad, y_mad, ' Madhav et al. (2023)', ...
+        'Color', color_mad, 'FontName', 'Arial', 'FontSize', 12, ...
+        'VerticalAlignment', 'bottom');
 end
