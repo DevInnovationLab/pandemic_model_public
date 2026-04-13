@@ -1,13 +1,17 @@
+# Standalone advance capacity: 50% of target advance capacity build rate
 neglected_pathogen_rd:
   strategy: none
   num: 0
+
 universal_flu_rd:
   active: false
   platform_response_invest: null
   initial_share_ufv: null
+
 advance_capacity:
-  share_target_advance_capacity: 1
+  share_target_advance_capacity: 0.25
+
 improved_early_warning:
-  active: true
-  precision: 1
-  recall: 0.5
+  active: false
+  precision: null
+  recall: null

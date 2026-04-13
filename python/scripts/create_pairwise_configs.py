@@ -42,10 +42,10 @@ scenario_config_updates = {
     },
     "advance_capacity": {
         "bcr": {
-            "share_target_advance_capacity": 0.75
+            "share_target_advance_capacity": 0.375
         },
         "surplus": {
-            "share_target_advance_capacity": 1
+            "share_target_advance_capacity": 0.5
         }
     }
 }

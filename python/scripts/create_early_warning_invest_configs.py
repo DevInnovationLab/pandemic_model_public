@@ -19,7 +19,7 @@ other_investments = {
         "initial_share_ufv": 0.1
     },
     "advance_capacity": {
-        "share_target_advance_capacity": 1
+        "share_target_advance_capacity": 0.5
     }
 }
 

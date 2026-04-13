@@ -132,9 +132,9 @@ function write_program_levels_table_latex(summary_data, outpath, varargin)
     summary_data.NPVDiff = summary_data.NPVDiff / 1e9;
     summary_data.BenefitDiff = summary_data.BenefitDiff / 1e9;
     summary_data.CostDiff = summary_data.CostDiff / 1e9;
-    summary_data.Lives10yr = summary_data.Lives10yr / 1e3;
-    summary_data.Lives30yr = summary_data.Lives30yr / 1e3;
-    summary_data.LivesAll = summary_data.LivesAll / 1e3;
+    summary_data.Lives10yr = summary_data.Lives10yr / 1e6;
+    summary_data.Lives30yr = summary_data.Lives30yr / 1e6;
+    summary_data.LivesAll = summary_data.LivesAll / 1e6;
 
     function s = commafy(x)
         if isnan(x)
@@ -186,7 +186,7 @@ function write_program_levels_table_latex(summary_data, outpath, varargin)
         fprintf(fileID, ['& (billion \\$) & (billion \\$) & (billion \\$) & & 10 yr & 30 yr & 50 yr \\\\\n']);
     else
         fprintf(fileID, ['Program & Costs & Benefits & Net value & BCR & Lives saved \\\\\n']);
-        fprintf(fileID, ['& (billion \\$) & (billion \\$) & (billion \\$) & & (thousands) \\\\\n']);
+        fprintf(fileID, ['& (billion \\$) & (billion \\$) & (billion \\$) & & (millions) \\\\\n']);
     end
     fprintf(fileID, '\\hline\n');
 
