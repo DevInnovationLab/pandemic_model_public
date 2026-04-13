@@ -1,4 +1,4 @@
-function get_baseline_vaccine_sensitivity_table()
+function get_baseline_vaccine_sensitivity_table(sensitivity_dir)
     %% Generate summary table for sensitivity analysis results.
     %   To be used for the all risk
     %
@@ -11,7 +11,7 @@ function get_baseline_vaccine_sensitivity_table()
     % 4. Outputs the table in CSV and LaTeX formats
     
     % Load sensitivity configuration
-    sensitivity_dir = "./output/sensitivity/baseline_vaccine_program";
+    sensitivity_dir = char(sensitivity_dir);
     sensitivity_config = yaml.loadFile(fullfile(sensitivity_dir, 'sensitivity_config.yaml'));
     
     % Load baseline vaccine benefits from aggregated results
@@ -36,8 +36,26 @@ function get_baseline_vaccine_sensitivity_table()
     % Process each parameter
     for i = 1:length(parameters)
         param_name = parameters{i};
-        param_values = sensitivity_config.sensitivities.(param_name);
+        param_entry = sensitivity_config.sensitivities.(param_name);
 
+        if sensitivity_entry_is_multiparameter(param_entry)
+            % Single scenario with multiple overridden fields (see expand_sensitivities).
+            benefits_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_benefits_summary.mat', param_name));
+            bd = load(benefits_path, 'mean_benefits');
+            variant_benefits = bd.mean_benefits;
+            low_benefits = variant_benefits;
+            high_benefits = variant_benefits;
+            low_benefit_pct_diff = 100 * (low_benefits - baseline_benefits) / baseline_benefits;
+            high_benefit_pct_diff = low_benefit_pct_diff;
+            max_abs_pct_diff = abs(low_benefit_pct_diff);
+            % Placeholders; LaTeX uses baseline_config and param_entry for display.
+            summary_table(i+1,:) = {param_name, NaN, NaN, NaN, ...
+                low_benefits, high_benefits, ...
+                low_benefit_pct_diff, high_benefit_pct_diff, max_abs_pct_diff};
+            continue
+        end
+
+        % One-parameter sweep: value_1 and value_2 runs
         % Get baseline value for this parameter
         baseline_value = baseline_config.(param_name);
 
@@ -100,7 +118,8 @@ function get_baseline_vaccine_sensitivity_table()
     writetable(summary_table, fullfile(sensitivity_dir, 'sensitivity_summary.csv'));
 
     % Generate LaTeX table
-    generate_latex_table(summary_table, fullfile(sensitivity_dir, 'sensitivity_summary.tex'), baseline_benefits);
+    generate_latex_table(summary_table, fullfile(sensitivity_dir, 'sensitivity_summary.tex'), baseline_benefits, ...
+        sensitivity_config, baseline_config);
     
     fprintf('Sensitivity summary generated and saved to %s\n', sensitivity_dir);
 end
@@ -138,6 +157,10 @@ function formatted_name = format_parameter_name(param_name)
     param_map('rental_share') = 'Advance capacity rental share';
     param_map('false_positive_rate') = 'False positive rate';
     param_map('duration_dist_config') = 'Max pandemic duration (years)';
+    param_map('max_capacity') = 'Max capacity (annual courses)';
+    param_map('delta') = 'Annual maintenance cost (\% of capital value)';
+    param_map('response_threshold_path') = 'Response threshold (deaths / 10,000)';
+    param_map('ptrs_pathogen_gamma1') = 'Vaccines always succeed and $\gamma = 1$';
     
     % Return formatted name if available, otherwise return original
     if isKey(param_map, param_name)
@@ -148,13 +171,15 @@ function formatted_name = format_parameter_name(param_name)
 end
 
 
-function generate_latex_table(summary_table, output_path, baseline_benefits)
+function generate_latex_table(summary_table, output_path, baseline_benefits, sensitivity_config, baseline_config)
     %% Generate LaTeX table from sensitivity analysis results
     %
     % Args:
     %   summary_table (table): Table with sensitivity analysis results
     %   output_path (string): Path to save the LaTeX table
     %   baseline_benefits (double): Baseline benefits value
+    %   sensitivity_config (struct): Loaded sensitivity YAML (sensitivities field used)
+    %   baseline_config (struct): Baseline job_config for default column text
     % Open file for writing
     fileID = fopen(output_path, 'w');
     
@@ -169,7 +194,7 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
     fprintf(fileID, '\\hline\n');
     
     % Write baseline row
-    fprintf(fileID, '\\textbf{Default parameters} & & & \\textbf{%.0f} \\\\\n', baseline_benefits/1e12);
+    fprintf(fileID, '\\textbf{Default parameters} & & & \\textbf{%.1f} \\\\\n', baseline_benefits/1e12);
 
     % Parameters that should be displayed as percentages
     percentage_params = {'y', 'r', 'gamma', 'theta', 'f_m', 'f_o', 'g_m', 'g_o', 'rental_share', 'capacity_kept'};
@@ -178,6 +203,21 @@ function generate_latex_table(summary_table, output_path, baseline_benefits)
     for i = 2:height(summary_table)
         raw_param = summary_table.Parameter{i};
         param = format_parameter_name(raw_param);
+        param_entry = sensitivity_config.sensitivities.(raw_param);
+
+        if sensitivity_entry_is_multiparameter(param_entry)
+            default_str = format_multiparameter_baseline_display(param_entry, baseline_config);
+            variant_str = format_multiparameter_variant_display(param_entry);
+            benefit_trillion = summary_table.LowBenefit(i) / 1e12;
+            if isnan(benefit_trillion)
+                fprintf(fileID, '%s & %s & %s & -- \\\\\n', param, default_str, variant_str);
+            else
+                fprintf(fileID, '%s & %s & %s & %.1f \\\\\n', ...
+                    param, default_str, variant_str, benefit_trillion);
+            end
+            continue
+        end
+
         baseline_val = format_value(summary_table.BaselineValue(i), raw_param);
         low_val = summary_table.LowValue(i);
         high_val = summary_table.HighValue(i);
@@ -246,5 +286,68 @@ function formatted_value = format_value(value, param_name)
         formatted_value = sprintf('%g years', value);
     else
         formatted_value = sprintf('%g', value);
+    end
+end
+
+
+function tf = sensitivity_entry_is_multiparameter(val)
+    % True if sensitivity YAML entry is a multi-parameter override (struct), per expand_sensitivities.
+    tf = isstruct(val) && ~isempty(fieldnames(val));
+end
+
+
+function s = format_multiparameter_baseline_display(override_struct, baseline_config)
+    % Build default-column text for fields touched by a multi-parameter sensitivity scenario.
+    fields = fieldnames(override_struct);
+    parts = cell(length(fields), 1);
+    for k = 1:length(fields)
+        fn = fields{k};
+        if isfield(baseline_config, fn)
+            parts{k} = format_multiparameter_field_display(fn, baseline_config.(fn));
+        else
+            parts{k} = fn;
+        end
+    end
+    s = strjoin(parts, '; ');
+end
+
+
+function s = format_multiparameter_variant_display(override_struct)
+    % Build sensitivity-column text from the override struct (scenario values).
+    fields = fieldnames(override_struct);
+    parts = cell(length(fields), 1);
+    for k = 1:length(fields)
+        fn = fields{k};
+        parts{k} = format_multiparameter_field_display(fn, override_struct.(fn));
+    end
+    s = strjoin(parts, '; ');
+end
+
+
+function s = format_multiparameter_field_display(field_name, value)
+    % Format one field for LaTeX table cells (sentence case labels).
+    if strcmp(field_name, 'ptrs_pathogen')
+        s = format_ptrs_pathogen_cell(value);
+    elseif strcmp(field_name, 'gamma') && isnumeric(value)
+        s = sprintf('Gamma %.0f\\%%', value * 100);
+    elseif isstring(value) || ischar(value)
+        s = sprintf('%s', strip(string(value)));
+    elseif isnumeric(value) && isscalar(value)
+        s = sprintf('%g', value);
+    else
+        s = char(string(value));
+    end
+end
+
+
+function s = format_ptrs_pathogen_cell(path_spec)
+    % Short PTRS table label for LaTeX (basename, underscores escaped).
+    p = char(path_spec);
+    [~, base, ~] = fileparts(p);
+    if contains(lower(base), 'always_succeed')
+        s = 'PTRs: vaccines always succeed';
+    else
+        base_tex = strrep(base, '_', '\_');
+        s = ['PTRs \texttt{' base_tex '}'];
     end
 end

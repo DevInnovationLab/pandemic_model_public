@@ -69,6 +69,14 @@ sensitivities:
     - "output/rd_timelines/optimistic_rd_timelines.csv"
     - "output/rd_timelines/optimistic_rd_timelines.csv"
 
+  max_capacity:
+    - 16.3e9 # Calibrated to 50% advance capacity program
+    - 32.1e9 # Calibrated to 200% advance capacity program
+
+  delta:
+    - 0.13
+    - 0.25
+
   # Vaccines always succeed and gamma=1 (multi-parameter scenario)
   ptrs_pathogen_gamma1:
     ptrs_pathogen: "./output/ptrs/ptrs_table_always_succeed.csv"

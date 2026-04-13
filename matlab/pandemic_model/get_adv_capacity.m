@@ -1,7 +1,11 @@
-function [adv_cap_mrna, adv_cap_trad] = get_adv_capacity(params)
+function [adv_cap_mrna, adv_cap_trad, total_gap] = get_adv_capacity(params)
     % Total target capacity per platform for the advance investment program.
     % Uses reference max (params.max_capacity): gap to this level defines the program.
-    % Simulation ceiling may differ; see params.deployable_max_capacity in event_list_simulation.
+    %
+    % Simulation ceiling (params.deployable_max_capacity in event_list_simulation) uses the
+    % same total_gap when share > 1: deployable_max_capacity = ref_max + (share - 1) * total_gap,
+    % not ref_max * share. See update_params in run_job.m.
+
     max_cap_mrna = params.mRNA_share .* params.max_capacity;
     max_cap_trad = (1 - params.mRNA_share) .* params.max_capacity;
 

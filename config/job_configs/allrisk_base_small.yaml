@@ -30,7 +30,7 @@ econ_loss_model_config: "./output/econ_loss_models/poisson_model_total_severity.
 
 # Capacity
 theta: 0.25 # Max surge capacity displacement due to advance capacity
-max_capacity: 16.3e9 # Maximum capacity in annual courses
+max_capacity: 24.23e9 # Maximum capacity in annual courses
 delta: 0.19 # Annual maintenance cost as fraction of capital value
 mRNA_share: 0.5 # Share capacity that is mRNA.
 capacity_kept: 0.5 # Share response capacity kept after a pandemic

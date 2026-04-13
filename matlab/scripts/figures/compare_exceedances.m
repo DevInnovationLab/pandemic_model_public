@@ -1,32 +1,30 @@
 function compare_exceedances(sensitivity_dir, figure_export)
-% Compare exceedance curves from airborne sensitivity run (no mitigation, realized mitigation, vaccines always work).
+% Compare exceedance curves from an airborne sensitivity run (no mitigation, realized mitigation, vaccines always work).
 %
-% Uses output from run_sensitivity(..., 'response') with
+% Uses output from run_sensitivity(..., 'response') with e.g.
 % config/sensitivity_configs/baseline_vaccine_program_airborne.yaml:
-%   - sensitivity_dir/baseline/  : baseline run (vaccines can fail)
-%   - sensitivity_dir/ptrs_pathogen_gamma1/ : run with vaccines-always-succeed PTRs and gamma=1 (multi-parameter config)
-%   - or sensitivity_dir/ptrs_pathogen/value_1/ : same run from one-parameter config
+%   sensitivity_dir/baseline/                    — baseline run (vaccines can fail)
+%   sensitivity_dir/ptrs_pathogen_gamma1/        — vaccines-always-succeed PTRs and gamma=1 (multi-parameter)
+%   or sensitivity_dir/ptrs_pathogen/value_1/   — same scenario, one-parameter layout
 %
-% Figure export options (second argument):
-%   'both' (default): write two PDFs — (1) three simulation curves only (no Madhav et al.),
-%     (2) baseline vaccine response (realized mitigation) and Madhav et al. only.
-%   'simulations_only': PDF (1) only.
-%   'baseline_madhav': PDF (2) only.
+% Figures: (1) three simulation curves without Madhav et al.; (2) baseline vaccine response + Madhav et al. only.
+%
+% figure_export — 'both' (default), 'simulations_only', or 'baseline_madhav'.
 %
 % Args:
-%   sensitivity_dir (char): Path to sensitivity run root (e.g. output/sensitivity/baseline_vaccine_program_airborne)
-%   figure_export (char, optional): 'both' | 'simulations_only' | 'baseline_madhav'. Default 'both'.
+%   sensitivity_dir — path to sensitivity run root (e.g. output/sensitivity/baseline_vaccine_program_airborne)
+%   figure_export   — optional; which PDF(s) to write
 
     if nargin < 2 || isempty(figure_export)
         figure_export = 'both';
     end
-    valid_export = {'both', 'simulations_only', 'baseline_madhav'};
-    if ~any(strcmp(figure_export, valid_export))
-        error('compare_exceedances:BadFigureExport', ...
-            'figure_export must be one of: %s', strjoin(valid_export, ', '));
+    valid = {'both', 'simulations_only', 'baseline_madhav'};
+    if ~any(strcmp(figure_export, valid))
+        error('compare_exceedances:BadFigureExport', 'figure_export must be one of: %s', strjoin(valid, ', '));
     end
+
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
-    % Support both multi-parameter (ptrs_pathogen_gamma1) and one-parameter (ptrs_pathogen/value_1) layouts.
+    % Multi-parameter folder ptrs_pathogen_gamma1, or one-parameter ptrs_pathogen/value_1.
     value1_dir = fullfile(sensitivity_dir, 'ptrs_pathogen_gamma1');
     if ~isfolder(value1_dir)
         value1_dir = fullfile(sensitivity_dir, 'ptrs_pathogen', 'value_1');
@@ -37,10 +35,10 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
     if ~isfolder(value1_dir)
         error('compare_exceedances:NoVariant', ...
-            'Vaccines-always-work scenario not found. Looked for ptrs_pathogen_gamma1 and ptrs_pathogen/value_1 under: %s', sensitivity_dir);
+            'Expected ptrs_pathogen_gamma1 or ptrs_pathogen/value_1 under %s', sensitivity_dir);
     end
 
-    % Load job config from baseline (chunk layout and sizes)
+    % Chunk layout and table sizes from baseline job config
     job_config = yaml.loadFile(fullfile(baseline_dir, 'job_config.yaml'));
     sim_periods = job_config.sim_periods;
     num_simulations = job_config.num_simulations;
@@ -70,7 +68,7 @@ function compare_exceedances(sensitivity_dir, figure_export)
         chunk_b = fullfile(raw_baseline, ch_name);
         chunk_v1 = fullfile(raw_value1, ch_name);
 
-        % Base table (same for both runs)
+        % Base table (shared across sensitivity variants)
         base_path = fullfile(chunk_b, 'base_simulation_table.mat');
         S = load(base_path, 'base_simulation_table');
         base_t = S.base_simulation_table(:, base_vars);
@@ -79,7 +77,6 @@ function compare_exceedances(sensitivity_dir, figure_export)
         n_base = n_base + 1;
         all_base{n_base} = base_t;
 
-        % Baseline pandemic table (vaccines can fail)
         pan_b_path = fullfile(chunk_b, 'baseline_pandemic_table.mat');
         if isfile(pan_b_path)
             S = load(pan_b_path, 'pandemic_table');
@@ -90,7 +87,7 @@ function compare_exceedances(sensitivity_dir, figure_export)
             all_pandemic_baseline{n_pan_b} = pan_t;
         end
 
-        % Value_1 pandemic table (vaccines always work)
+        % Variant: PTRs imply vaccines always work (same chunk index as baseline)
         pan_v1_path = fullfile(chunk_v1, 'baseline_pandemic_table.mat');
         if isfile(pan_v1_path)
             S = load(pan_v1_path, 'pandemic_table');
@@ -105,9 +102,9 @@ function compare_exceedances(sensitivity_dir, figure_export)
     base_merged = vertcat(all_base{1:n_base});
     pandemic_baseline = vertcat(all_pandemic_baseline{1:n_pan_b});
     pandemic_value1   = vertcat(all_pandemic_value1{1:n_pan_v1});
-    clear all_base all_pandemic_baseline all_pandemic_value1 S base_t pan_t;
+    clear all_base all_pandemic_baseline all_pandemic_value1 S base_t pan_t
 
-    % Severity matrices: (sim_num, yr_start) -> severity
+    % Severity per (sim_num, yr_start); empty cells stay 0
     no_mitigation_matrix = zeros(num_simulations, sim_periods);
     realized_matrix      = zeros(num_simulations, sim_periods);
     always_work_matrix   = zeros(num_simulations, sim_periods);
@@ -115,77 +112,68 @@ function compare_exceedances(sensitivity_dir, figure_export)
     idx = sub2ind([num_simulations, sim_periods], base_merged.sim_num, base_merged.yr_start);
     no_mitigation_matrix(idx) = base_merged.eff_severity;
 
+    % Realized mitigation: ex_post from pandemic table; missing rows use eff_severity
     keys_b = pandemic_baseline(:, {'sim_num', 'yr_start', 'ex_post_severity'});
     merged_b = outerjoin(base_merged, keys_b, 'Keys', {'sim_num', 'yr_start'}, 'Type', 'left', 'MergeKeys', true);
     missing_b = isnan(merged_b.ex_post_severity);
     merged_b.ex_post_severity(missing_b) = merged_b.eff_severity(missing_b);
     realized_matrix(idx) = merged_b.ex_post_severity;
 
+    % Vaccines-always-work variant
     keys_v1 = pandemic_value1(:, {'sim_num', 'yr_start', 'ex_post_severity'});
     merged_v1 = outerjoin(base_merged, keys_v1, 'Keys', {'sim_num', 'yr_start'}, 'Type', 'left', 'MergeKeys', true);
     missing_v1 = isnan(merged_v1.ex_post_severity);
     merged_v1.ex_post_severity(missing_v1) = merged_v1.eff_severity(missing_v1);
     always_work_matrix(idx) = merged_v1.ex_post_severity;
 
-    clear base_merged pandemic_baseline pandemic_value1 keys_b keys_v1 merged_b merged_v1 missing_b missing_v1;
+    clear base_merged pandemic_baseline pandemic_value1 keys_b keys_v1 merged_b merged_v1 missing_b missing_v1
 
-    % Common grid for exceedance (log-spaced, include zero for histcounts)
+    % Log-spaced severity grid; P(S>x) from direct counts over the full vector (avoids histogram-bin artifacts)
     sev_all = [no_mitigation_matrix(:); realized_matrix(:); always_work_matrix(:)];
-    sev_all = sev_all(isfinite(sev_all) & isreal(sev_all) & sev_all > 0);
+    sev_all = sev_all(isfinite(sev_all) & sev_all > 0);
     if isempty(sev_all)
         error('compare_exceedances:NoSeverity', 'No finite positive severity values found.');
     end
     min_grid = min(sev_all);
     max_grid = max(sev_all);
     num_pts  = 5000;
-    direct_edges = [0; logspace(log10(min_grid), log10(max_grid), num_pts - 1)'];
+    x_plot = logspace(log10(min_grid), log10(max_grid), num_pts)';
 
-    n_no  = numel(no_mitigation_matrix);
-    n_rel = numel(realized_matrix);
-    n_alw = numel(always_work_matrix);
     vec_no = no_mitigation_matrix(:);
     vec_rel = realized_matrix(:);
     vec_alw = always_work_matrix(:);
 
-    exceed_no  = (n_no - histcounts(vec_no, direct_edges, 'Normalization', 'cumcount')) ./ (n_no + 1);
-    exceed_rel = (n_rel - histcounts(vec_rel, direct_edges, 'Normalization', 'cumcount')) ./ (n_rel + 1);
-    exceed_alw = (n_alw - histcounts(vec_alw, direct_edges, 'Normalization', 'cumcount')) ./ (n_alw + 1);
+    exceed_no  = empirical_exceedance(vec_no, x_plot);
+    exceed_rel = empirical_exceedance(vec_rel, x_plot);
+    exceed_alw = empirical_exceedance(vec_alw, x_plot);
 
-    % Use column vectors so table variables have matching row counts
-    x_plot   = direct_edges(2:end);
-    recur_no = 1 ./ exceed_no(:);
+    recur_no  = 1 ./ exceed_no(:);
     recur_rel = 1 ./ exceed_rel(:);
     recur_alw = 1 ./ exceed_alw(:);
 
+    % Mean annual recurrence = 1 / exceedance probability
     T = table(x_plot, recur_no, recur_rel, recur_alw, ...
         'VariableNames', {'severity', 'mean_no_mitigation_recurrence', ...
                           'mean_realized_recurrence', 'mean_always_work_recurrence'});
 
     writetable(T, fullfile(sensitivity_dir, 'mean_annual_recurrence_rates.csv'));
 
-    % Smaller table with interpolated values at specific severities
-    target_severities = [min(x_plot); 22.3; 44.6; 50; 100; 150; 171];
-
-    severity = T.severity;
-    mean_no_mitigation_recurrence = T.mean_no_mitigation_recurrence;
-    mean_realized_recurrence = T.mean_realized_recurrence;
-    mean_always_work_recurrence = T.mean_always_work_recurrence;
-
-    interp_no  = interp1(severity, mean_no_mitigation_recurrence, target_severities, 'linear', 'extrap');
-    interp_rel = interp1(severity, mean_realized_recurrence,       target_severities, 'linear', 'extrap');
-    interp_alw = interp1(severity, mean_always_work_recurrence,    target_severities, 'linear', 'extrap');
+    % Interpolated recurrence at reference severities (includes grid minimum)
+    target_severities = [min(x_plot); 6.1; 12.3; 50; 100; 150; 171];
+    interp_no  = interp1(T.severity, T.mean_no_mitigation_recurrence, target_severities, 'linear', 'extrap');
+    interp_rel = interp1(T.severity, T.mean_realized_recurrence,       target_severities, 'linear', 'extrap');
+    interp_alw = interp1(T.severity, T.mean_always_work_recurrence,    target_severities, 'linear', 'extrap');
 
     small_T = table(target_severities(:), interp_no(:), interp_rel(:), interp_alw(:), ...
         'VariableNames', {'severity', 'mean_no_mitigation_recurrence', ...
                           'mean_realized_recurrence', 'mean_always_work_recurrence'});
-
     writetable(small_T, fullfile(sensitivity_dir, 'mean_annual_recurrence_rates_selected.csv'));
 
-    % Coherent palette: distinct colors for scenario progression (no mitigation → realized → vaccines work), red for Madhav et al.
-    color_no   = [0.12 0.20 0.48];   % dark navy – no mitigation
-    color_rel  = [0.35 0.55 0.88];   % sky blue – vaccines can fail (clearly lighter and distinct from navy)
-    color_alw  = [0.18 0.72 0.48];   % green–teal – vaccines always work
-    color_mad  = [0.72 0.12 0.12];   % red – Madhav et al. (reference)
+    % Navy — no mitigation; sky blue — status quo; teal — vaccines always work; red — Madhav reference
+    color_no  = [0.12 0.20 0.48];
+    color_rel = [0.35 0.55 0.88];
+    color_alw = [0.18 0.72 0.48];
+    color_mad = [0.72 0.12 0.12];
 
     fig_dir = fullfile(sensitivity_dir, 'figures');
     if ~isfolder(fig_dir)
@@ -203,6 +191,7 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
 
     if strcmp(figure_export, 'both') || strcmp(figure_export, 'baseline_madhav')
+        % Madhav et al. reference; file exceedance is in percent
         madhav_path = fullfile('data', 'clean', 'madhav_et_al_severity_exceedance.csv');
         if ~isfile(madhav_path)
             madhav_path = fullfile(fileparts(mfilename('fullpath')), '..', '..', 'data', 'clean', 'madhav_et_al_severity_exceedance.csv');
@@ -223,18 +212,15 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
 end
 
-function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, ...
-        color_no, color_rel, color_alw)
-% Build figure with three simulation exceedance curves (no Madhav et al.).
-%
-% Args:
-%   x_plot (double): Severity grid (column vector).
-%   exceed_no, exceed_rel, exceed_alw (double): Annual exceedance risk per scenario, same length as x_plot.
-%   color_no, color_rel, color_alw (double): RGB row vectors for the three lines.
-%
-% Returns:
-%   fig: Figure handle.
+function p = empirical_exceedance(sample, severity_grid)
+% Empirical P(S > x) at each x in severity_grid. Sample is the full (sim,year) vector (zeros = no event).
+% Denominator n+1 matches the plotting-position convention used elsewhere in this script.
+    n = numel(sample);
+    p = sum(sample(:) > severity_grid(:)', 1)' ./ (n + 1);
+end
 
+function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, color_no, color_rel, color_alw)
+% Three simulation curves only (no Madhav et al.).
     fig = figure('Position', [100 100 900 650]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
     set(ax, 'FontName', 'Arial', 'FontSize', 11);
@@ -253,9 +239,9 @@ function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exce
     min_x = min(x_plot);
     max_x = max(x_plot);
     xlim(ax, [min_x, max_x]);
-    xt = get(ax, 'XTick');
-    set(ax, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
+    set_log_axis_tick_labels(ax);  % avoid rounding 0.01 and 0.1 both to "0"
 
+    % Line labels at fixed severities
     x_no  = max(min_x, min(max_x, 20));
     x_rel = max(min_x, min(max_x, 110));
     x_alw = max(min_x, min(max_x, 120));
@@ -276,19 +262,8 @@ function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exce
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
 end
 
-function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madhav_severity_plot, madhav_exceedance_plot, ...
-        color_rel, color_mad)
-% Build figure with baseline vaccine response (realized mitigation) and Madhav et al. only.
-%
-% Args:
-%   x_plot (double): Simulation severity grid for the baseline response curve.
-%   exceed_rel (double): Annual exceedance risk for baseline response, same length as x_plot.
-%   madhav_severity_plot, madhav_exceedance_plot (double): Madhav et al. reference series.
-%   color_rel, color_mad (double): RGB row vectors for baseline response and reference lines.
-%
-% Returns:
-%   fig: Figure handle.
-
+function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madhav_severity_plot, madhav_exceedance_plot, color_rel, color_mad)
+% Baseline realized mitigation vs Madhav et al. reference only.
     fig = figure('Position', [100 100 900 650]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
     set(ax, 'FontName', 'Arial', 'FontSize', 11);
@@ -306,8 +281,7 @@ function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madh
     min_x = max(min(x_plot), min(madhav_severity_plot));
     max_x = min(max(x_plot), max(madhav_severity_plot));
     xlim(ax, [min_x, max_x]);
-    xt = get(ax, 'XTick');
-    set(ax, 'XTickLabel', arrayfun(@(x) num2str(round(x), '%.0f'), xt, 'UniformOutput', false));
+    set_log_axis_tick_labels(ax);
 
     x_rel = max(min_x, min(max_x, 110));
     x_mad = max(min_x, min(max_x, 10));
@@ -321,4 +295,11 @@ function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madh
     text(ax, x_mad, y_mad, ' Madhav et al. (2023)', ...
         'Color', color_mad, 'FontName', 'Arial', 'FontSize', 12, ...
         'VerticalAlignment', 'bottom');
+end
+
+function set_log_axis_tick_labels(ax)
+% Log-scale x ticks: %.0f rounds 0.01 and 0.1 to 0; use %.3g instead.
+    xt = get(ax, 'XTick');
+    labs = arrayfun(@(v) sprintf('%.3g', v), xt, 'UniformOutput', false);
+    set(ax, 'XTickLabel', labs);
 end

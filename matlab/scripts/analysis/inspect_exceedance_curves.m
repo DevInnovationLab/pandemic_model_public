@@ -108,7 +108,7 @@ disp(inspect(1:min(20, height(inspect)), :));
 % Optional: openvar('inspect');   % open in Variable Editor
 % Optional: writetable(inspect, fullfile(outdir, 'inspect_exceedance.csv'));   % export to CSV
 
-%% 5. Exceedance curves (direct, same logic as compare_exceedances)
+%% 5. Exceedance curves (same P(S>x) definition as compare_exceedances.m)
 ante_severity_matrix = zeros(num_simulations, sim_periods);
 post_severity_matrix = zeros(num_simulations, sim_periods);
 idx = sub2ind(size(ante_severity_matrix), inspect.sim_num, inspect.yr_start);
@@ -120,10 +120,11 @@ post_sev_all = post_severity_matrix(:);
 min_grid = min(ante_sev_all(ante_sev_all > 0));
 max_grid = max(ante_sev_all(isfinite(ante_sev_all)));
 num_grid_points = 1000;
-direct_edges = [0; logspace(log10(min_grid), log10(max_grid), num_grid_points - 1)'];
-ante_direct = (numel(ante_sev_all) - histcounts(ante_sev_all, direct_edges, 'Normalization', 'cumcount')) ./ (numel(ante_sev_all) + 1);
-post_direct = (numel(post_sev_all) - histcounts(post_sev_all, direct_edges, 'Normalization', 'cumcount')) ./ (numel(post_sev_all) + 1);
-x_ribbon_direct = direct_edges(2:end)';
+x_ribbon_direct = logspace(log10(min_grid), log10(max_grid), num_grid_points)';
+n_ante = numel(ante_sev_all);
+n_post = numel(post_sev_all);
+ante_direct = sum(ante_sev_all(:) > x_ribbon_direct(:)', 1)' ./ (n_ante + 1);
+post_direct = sum(post_sev_all(:) > x_ribbon_direct(:)', 1)' ./ (n_post + 1);
 
 %% 6. Plot exceedance curves
 figure('Position', [100 100 900 600]); hold on;
