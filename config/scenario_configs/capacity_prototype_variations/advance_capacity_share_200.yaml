@@ -1,4 +1,4 @@
-# Standalone advance capacity: 50% of target advance capacity build rate
+# Standalone advance capacity: 100% of target advance capacity build rate (full program)
 neglected_pathogen_rd:
   strategy: none
   num: 0
@@ -9,7 +9,7 @@ universal_flu_rd:
   initial_share_ufv: null
 
 advance_capacity:
-  share_target_advance_capacity: 0.25
+  share_target_advance_capacity: 2
 
 improved_early_warning:
   active: false

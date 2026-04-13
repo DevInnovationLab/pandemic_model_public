@@ -5,10 +5,6 @@ function clean_config = clean_scenario_config(scenario_config)
     clean_config.neglected_pathogen_rd = scenario_config.neglected_pathogen_rd;
     clean_config.advance_capacity.share_target_advance_capacity = scenario_config.advance_capacity.share_target_advance_capacity;
 
-    if isfield(scenario_config, 'deployable_max_capacity')
-        clean_config.deployable_max_capacity = scenario_config.deployable_max_capacity;
-    end
-
     % Check universal flu R&D correctly configured
     universal_flu_rd  = scenario_config.universal_flu_rd;
     if universal_flu_rd.active && (isempty(universal_flu_rd.platform_response_invest) || isempty(universal_flu_rd.initial_share_ufv))

@@ -47,7 +47,7 @@ end
 function scenarios = get_program_levels_scenario_order(available)
     % Fixed order: advance capacity shares, then neglected pathogen num (top-k).
     order = ["advance_capacity_share_050", "advance_capacity_share_100", ...
-             "advance_capacity_share_150", "advance_capacity_share_200", ...
+             "advance_capacity_share_200", ...
              "neglected_pathogen_rd_num_1", "neglected_pathogen_rd_num_2", ...
              "neglected_pathogen_rd_num_3"];
     scenarios = order(ismember(order, available));
@@ -97,8 +97,6 @@ function [category_name, variation] = program_levels_labels(scenario_name)
             variation = "50% of standard program";
         elseif rest == "100"
             variation = "100% of standard program";
-        elseif rest == "150"
-            variation = "150% of standard program";
         elseif rest == "200"
             variation = "200% of standard program";
         else

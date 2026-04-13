@@ -6,16 +6,13 @@ function [adv_cap_mrna, adv_cap_trad, total_gap] = get_adv_capacity(params)
     % same total_gap when share > 1: deployable_max_capacity = ref_max + (share - 1) * total_gap,
     % not ref_max * share. See update_params in run_job.m.
 
-    max_cap_mrna = params.mRNA_share .* params.max_capacity;
-    max_cap_trad = (1 - params.mRNA_share) .* params.max_capacity;
-
     % Capacity gap per platform (floored at zero)
-    gap_mrna = max(0, max_cap_mrna - params.base_cap_mrna);
-    gap_trad = max(0, max_cap_trad - params.base_cap_trad);
+    gap_mrna = max(0, params.mRNA_share .* params.adv_cap_reference - params.base_cap_mrna);
+    gap_trad = max(0, (1 - params.mRNA_share) .* params.adv_cap_reference - params.base_cap_trad);
     total_gap = gap_mrna + gap_trad;
 
     % Total advance capacity = share of total gap
-    total_adv_cap = params.advance_capacity.share_target_advance_capacity .* total_gap;
+    total_adv_cap = total_gap .* params.advance_capacity.share_target_advance_capacity;
 
     % Allocate in proportion to each platform's gap
     if total_gap > 0

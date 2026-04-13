@@ -31,9 +31,8 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     base_cap_o = params.base_cap_trad;
     
     % Deployable ceiling 
-    deployable_max = params.deployable_max_capacity;
-    max_cap_m = params.mRNA_share * deployable_max;
-    max_cap_o = (1 - params.mRNA_share) * deployable_max;
+    max_cap_m = params.mRNA_share * params.max_capacity;
+    max_cap_o = (1 - params.mRNA_share) * params.max_capacity;
     frac_retained = params.capacity_kept;
     
     % Advance capacity over time
