@@ -13,7 +13,7 @@ function find_natural_covid_deaths(config_path)
     monthly_cum_vax = [zeros(params.tau_a, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
 
     target_ex_post_severity = 9.17; % From Li et al. 2025
-    target_total_lives_saved = 2.53e6;
+    target_total_lives_saved = 2.53e6; % Ioannidis et al. 2025
     gamma_init = 0.2;
     ex_ante_severity_init = 10;
     
@@ -60,7 +60,7 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     months = years * 12;
     exog_vax_length = size(monthly_cum_vax, 1);
     if exog_vax_length >= months
-        vax_fractions_cum = exog_vax_length(1:months);
+        vax_fractions_cum = monthly_cum_vax(1:months);
     else
         vax_fractions_cum =  ...
             [monthly_cum_vax; monthly_cum_vax(end) .* ones(months - exog_vax_length, 1)];

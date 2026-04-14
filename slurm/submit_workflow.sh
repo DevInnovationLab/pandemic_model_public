@@ -5,19 +5,39 @@
 # Step 0 (runs here, locally): fit arrival distributions via pandemic-statistics
 # Steps 1-3 (SLURM): model array -> aggregation -> bootstrap
 
+set -euo pipefail
+
 JOB_CONFIG=$1
 NUM_CHUNKS=$2
 N_BOOTSTRAP=${3:-1000}
 BOOT_WORKERS=${4:-2}
-CONFIG_NAME=$(basename ${JOB_CONFIG} .yaml)
+CONFIG_NAME=$(basename "${JOB_CONFIG}" .yaml)
+REPO_ROOT=$(git rev-parse --show-toplevel)
+
+if [ ! -f "${JOB_CONFIG}" ]; then
+  echo "Job config not found: ${JOB_CONFIG}" >&2
+  exit 1
+fi
 
 echo "Submitting workflow for ${JOB_CONFIG}"
 echo "  Chunks: ${NUM_CHUNKS}"
 echo "  Bootstrap samples: ${N_BOOTSTRAP}"
 
 # Clear job outdir before submitting so array order does not matter (matches run_job.m path)
-OUTDIR=$(grep -E '^outdir:' "$JOB_CONFIG" | sed -E 's/^outdir:[[:space:]]*["'\'']?(.*)["'\'']?/\1/' | sed 's|^\./||')
-JOB_OUTDIR="${OUTDIR}/${CONFIG_NAME}"
+OUTDIR=$(sed -nE "s/^[[:space:]]*outdir:[[:space:]]*['\"]?([^'\"]*)['\"]?[[:space:]]*$/\1/p; q" "${JOB_CONFIG}")
+if [ -z "${OUTDIR}" ]; then
+  echo "Could not parse outdir from ${JOB_CONFIG}" >&2
+  exit 1
+fi
+
+if [[ "${OUTDIR}" = /* ]]; then
+  OUTDIR_ABS="${OUTDIR}"
+else
+  OUTDIR_CLEAN="${OUTDIR#./}"
+  OUTDIR_ABS="${REPO_ROOT}/${OUTDIR_CLEAN}"
+fi
+
+JOB_OUTDIR="${OUTDIR_ABS}/${CONFIG_NAME}"
 if [ -d "$JOB_OUTDIR" ]; then
   echo "Removing existing job outdir: ${JOB_OUTDIR}"
   rm -rf "$JOB_OUTDIR"
