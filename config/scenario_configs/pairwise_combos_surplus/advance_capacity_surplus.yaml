@@ -6,7 +6,7 @@ universal_flu_rd:
   platform_response_invest: null
   initial_share_ufv: null
 advance_capacity:
-  share_target_advance_capacity: 0.5
+  share_target_advance_capacity: 1
 improved_early_warning:
   active: false
   precision: null

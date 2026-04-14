@@ -11,7 +11,7 @@ universal_flu_rd:
 
 # Advance capacity params
 advance_capacity:
-  share_target_advance_capacity: 0.5
+  share_target_advance_capacity: 1
 
 # Enhanced surveillance
 improved_early_warning:
