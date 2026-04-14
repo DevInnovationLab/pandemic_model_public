@@ -1,9 +1,6 @@
 #!/bin/bash
-# Submit complete workflow with proper dependencies
 # Usage: ./submit_full_workflow.sh <job_config> <num_chunks> [n_bootstrap]
-#
-# Step 0 (runs here, locally): fit arrival distributions via pandemic-statistics
-# Steps 1-3 (SLURM): model array -> aggregation -> bootstrap
+
 
 set -euo pipefail
 
@@ -24,7 +21,17 @@ echo "  Chunks: ${NUM_CHUNKS}"
 echo "  Bootstrap samples: ${N_BOOTSTRAP}"
 
 # Clear job outdir before submitting so array order does not matter (matches run_job.m path)
-OUTDIR=$(sed -nE "s/^[[:space:]]*outdir:[[:space:]]*['\"]?([^'\"]*)['\"]?[[:space:]]*$/\1/p; q" "${JOB_CONFIG}")
+OUTDIR=$(awk '
+  /^[[:space:]]*outdir[[:space:]]*:/ {
+    line = $0
+    sub(/^[[:space:]]*outdir[[:space:]]*:[[:space:]]*/, "", line)
+    sub(/[[:space:]]*#.*/, "", line)
+    gsub(/^[[:space:]]+|[[:space:]]+$/, "", line)
+    gsub(/^["'"'"']|["'"'"']$/, "", line)
+    print line
+    exit
+  }
+' "${JOB_CONFIG}")
 if [ -z "${OUTDIR}" ]; then
   echo "Could not parse outdir from ${JOB_CONFIG}" >&2
   exit 1
