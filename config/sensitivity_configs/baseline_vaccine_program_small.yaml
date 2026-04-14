@@ -70,8 +70,8 @@ sensitivities:
     - "output/rd_timelines/optimistic_rd_timelines.csv"
 
   max_capacity:
-    - 16.3e9 # Calibrated to 50% advance capacity program
-    - 32.1e9 # Calibrated to 200% advance capacity program
+    - 16.28e9 # Calibrated to 50% advance capacity program
+    - 32.56e9 # Calibrated to 200% advance capacity program
 
   delta:
     - 0.13
