@@ -42,6 +42,7 @@ function compare_exceedances(sensitivity_dir, figure_export)
     job_config = yaml.loadFile(fullfile(baseline_dir, 'job_config.yaml'));
     sim_periods = job_config.sim_periods;
     num_simulations = job_config.num_simulations;
+    config_min_grid = load_arrival_y_min(job_config);
 
     raw_baseline = fullfile(baseline_dir, 'raw');
     raw_value1   = fullfile(value1_dir, 'raw');
@@ -134,7 +135,7 @@ function compare_exceedances(sensitivity_dir, figure_export)
     if isempty(sev_all)
         error('compare_exceedances:NoSeverity', 'No finite positive severity values found.');
     end
-    min_grid = min(sev_all);
+    min_grid = config_min_grid;
     max_grid = max(sev_all);
     num_pts  = 5000;
     x_plot = logspace(log10(min_grid), log10(max_grid), num_pts)';
@@ -158,11 +159,20 @@ function compare_exceedances(sensitivity_dir, figure_export)
 
     writetable(T, fullfile(sensitivity_dir, 'mean_annual_recurrence_rates.csv'));
 
-    % Interpolated recurrence at reference severities (includes grid minimum)
-    target_severities = [min(x_plot); 6.1; 12.3; 50; 100; 150; 171];
-    interp_no  = interp1(T.severity, T.mean_no_mitigation_recurrence, target_severities, 'linear', 'extrap');
-    interp_rel = interp1(T.severity, T.mean_realized_recurrence,       target_severities, 'linear', 'extrap');
-    interp_alw = interp1(T.severity, T.mean_always_work_recurrence,    target_severities, 'linear', 'extrap');
+    % Debug export: severity grid and exceedance curves for all three series.
+    debug_tbl = table( ...
+        round(x_plot(:), 4), ...
+        round(exceed_no(:), 4), ...
+        round(exceed_rel(:), 4), ...
+        round(exceed_alw(:), 4), ...
+        'VariableNames', {'x_plot', 'exceed_no', 'exceed_rel', 'exceed_alw'});
+    writetable(debug_tbl, fullfile(sensitivity_dir, 'exceedance_debug_all_curves.csv'));
+
+    % Interpolated recurrence at reference severities.
+    target_severities = [min_grid; 0.01; 6.15; 12.3; 50; 100; 150; 171];
+    interp_no  = interp1(T.severity, T.mean_no_mitigation_recurrence, target_severities, 'linear', NaN);
+    interp_rel = interp1(T.severity, T.mean_realized_recurrence,       target_severities, 'linear', NaN);
+    interp_alw = interp1(T.severity, T.mean_always_work_recurrence,    target_severities, 'linear', NaN);
 
     small_T = table(target_severities(:), interp_no(:), interp_rel(:), interp_alw(:), ...
         'VariableNames', {'severity', 'mean_no_mitigation_recurrence', ...
@@ -212,11 +222,23 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
 end
 
+function y_min = load_arrival_y_min(job_config)
+    % Load y_min from the arrival distribution hyperparams in job config.
+    arrival_dir = char(string(job_config.arrival_dist_config));
+    hyper = yaml.loadFile(fullfile(arrival_dir, 'hyperparams.yaml'));
+    y_min = double(hyper.y_min);
+end
+
 function p = empirical_exceedance(sample, severity_grid)
-% Empirical P(S > x) at each x in severity_grid. Sample is the full (sim,year) vector (zeros = no event).
-% Denominator n+1 matches the plotting-position convention used elsewhere in this script.
+    % Empirical exceedance P(S > x) evaluated on a severity grid.
+    sample = sample(:);
+    severity_grid = severity_grid(:);
     n = numel(sample);
-    p = sum(sample(:) > severity_grid(:)', 1)' ./ (n + 1);
+    edges = [-inf; severity_grid; inf];
+    N = histcounts(sample, edges);
+    tail = flip(cumsum(flip(N(:))));
+    % For threshold severity_grid(i), this gives counts strictly greater than x_i.
+    p = tail(2:end) ./ (n + 1);
 end
 
 function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, color_no, color_rel, color_alw)
