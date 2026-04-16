@@ -1,13 +1,15 @@
-library(tidyverse)
+# write_vaccine_always_succeed.R — Write PTRS sensitivity table with all vaccines succeeding.
+#
+# Reads the assembled PTRS table and sets ptrs = 1 for every
+# pathogen–platform–prototype combination. Used as the ptrs_pathogen input in
+# sensitivity configs that assume perfect vaccine development success.
+#
+# Inputs:  output/ptrs/ptrs_table.csv
+# Outputs: output/ptrs/ptrs_table_always_succeed.csv
+#
+# Run from the repository root.
 
-#' Build a PTRS table where all vaccines succeed.
-#'
-#' This script reads the PTRS table created by `create_ptrs_table.R`
-#' (`output/ptrs/ptrs_table.csv`) and writes a new table with the
-#' **same columns and ordering**, but with `ptrs` set to 1 for every
-#' pathogen–platform–prototype combination. The output is
-#' `output/ptrs/ptrs_table_always_succeed.csv`, suitable for use as
-#' `ptrs_pathogen` in sensitivity configs.
+library(tidyverse)
 
 ptrs_table <- readr::read_csv("output/ptrs/ptrs_table.csv", show_col_types = FALSE)
 

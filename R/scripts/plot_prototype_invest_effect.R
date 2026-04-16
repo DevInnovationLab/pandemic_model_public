@@ -1,9 +1,19 @@
+# plot_prototype_invest_effect.R — Plot prototype R&D investment effect on PTRS by platform.
+#
+# Produces a horizontal dot-and-errorbar chart of the estimated increase in
+# probability of vaccine success from having a prototype, by technology platform.
+#
+# Inputs:  output/ptrs/prototype_effect_preds.csv
+# Outputs: output/ptrs/prototype_invest_effect.png
+#
+# Run from the repository root.
+
 library(forcats)
 library(ggplot2)
 library(snakecase)
 library(tidyverse)
 
-# Read in prototype effect estimates
+## --- Load and prep data -------------------------------------------------------
 proto_effect <- readr::read_csv("output/ptrs/prototype_effect_preds.csv", show_col_types = FALSE)
 
 # Clean up platform names for plotting
@@ -17,10 +27,10 @@ proto_effect <- proto_effect %>%
     platform = factor(platform, levels = c("Traditional", "mRNA"))
   )
 
-# Set color palette for platforms
-platform_colors <- c("mRNA" = "#0072B2", "Traditional" = "#D55E00")
+## --- Build plot ---------------------------------------------------------------
 
-# Plot the effect of prototype R&D investment by platform
+# Platform colours are consistent across all PTRS figures in the paper.
+platform_colors <- c("mRNA" = "#0072B2", "Traditional" = "#D55E00")
 proto_effect_plot <- ggplot(proto_effect, aes(
   x = effect_mean,
   y = platform,
@@ -76,5 +86,5 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     legend.text = element_text(size = 12)
   )
 
-# Save the plot
+## --- Save output --------------------------------------------------------------
 ggsave("output/ptrs/prototype_invest_effect.png", proto_effect_plot, width = 7, height = 3.5, dpi = 600)

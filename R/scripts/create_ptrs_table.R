@@ -1,3 +1,16 @@
+# create_ptrs_table.R — Assemble final PTRS table including prototype-effect adjustments.
+#
+# Merges marginal PTRS predictions with pathogen metadata. For pathogens that lack
+# a prototype at baseline, adds a second row with PTRS adjusted upward by the
+# estimated prototype platform effect.
+#
+# Inputs:  output/ptrs/marginal_ptrs_preds.csv
+#          output/ptrs/prototype_effect_preds.csv
+#          data/raw/pathogen_info.csv
+# Outputs: output/ptrs/ptrs_table.csv
+#
+# Run from the repository root.
+
 library(tidyverse)
 
 # Read PTRS predictions

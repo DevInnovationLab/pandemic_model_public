@@ -1,8 +1,19 @@
+# write_ptrs_pub_table.R — Write publication-quality LaTeX table of PTRS estimates.
+#
+# Reads the assembled PTRS table and produces a LaTeX tabular with one block per
+# pathogen (pathogen name only in the first row of each block, blank in subsequent
+# platform rows) without requiring the multirow package.
+#
+# Inputs:  output/ptrs/ptrs_table.csv
+# Outputs: output/ptrs/ptrs_pub_table.tex
+#
+# Run from the repository root.
+
 library(readr)
 library(dplyr)
 library(stringr)
 
-# Read in PTRS table with prototype effect included
+## --- Load and format data -----------------------------------------------------
 ptrs <- read_csv("output/ptrs/ptrs_table.csv", show_col_types = FALSE)
 
 # Factors for technology display
@@ -46,7 +57,7 @@ ptrs_wide <- ptrs_wide %>%
   ) %>%
   arrange(Pathogen, Platform)
 
-# LaTeX caption: no vertical space between title and text, not centered.
+## --- Build LaTeX table --------------------------------------------------------
 latex_caption <- paste0(
   "\\textbf{Estimated probability of technical and regulatory success (PTRS) for vaccines by virus, technology platform, and prototype vaccine status.} ",
   "Central estimate for each row is the probability that a vaccine candidate will achieve technical and regulatory success. For pathogens that do not have an approved prototype vaccine, estimates are provided for both the case where a prototype is not available and where a prototype becomes available (using modeled effect). For pathogens that already have a prototype, only the 'With Prototype' column is populated. mRNA and traditional platforms are displayed for each pathogen."
@@ -63,8 +74,8 @@ table_header <- paste0(
   "\\hline"
 )
 
-# Function to build rows WITHOUT \multirow; only show pathogen name in the first row, blank in subsequent platform rows
 make_table_rows <- function(tbl) {
+  # Build LaTeX row strings: show pathogen name only in the first platform row per block.
   res <- character(0)
   for (path in pathogen_levels) {
     rows <- tbl %>% filter(Pathogen == path)

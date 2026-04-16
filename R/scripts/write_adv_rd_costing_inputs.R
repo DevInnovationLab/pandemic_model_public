@@ -1,9 +1,22 @@
+# write_adv_rd_costing_inputs.R — Compute vaccine R&D cost parameters from published literature.
+#
+# Extracts stage-level costs from Gouglas et al. (2018), WHO (2016), and Wilson (2010),
+# averages across sources, and combines with published stage transition probabilities to
+# compute expected per-candidate cost and the number of candidates needed to reach the
+# target success probability. Results are printed to stdout for use as model inputs.
+#
+# Sources: HHS report on preventive vaccine development (Table 5)
+#   https://aspe.hhs.gov/sites/default/files/documents/8617396c6b5ad0efcd5d3b8d60b04da3/preventive-vaccine-development.pdf
+# Outputs: printed to stdout
+#
+# Run from the repository root.
+
 library(tidyverse)
 
 TARGET_PROB <- 0.9
 
-# General preventive vaccine R&D inputs taken from HHS report:
-#https://aspe.hhs.gov/sites/default/files/documents/8617396c6b5ad0efcd5d3b8d60b04da3/preventive-vaccine-development.pdf
+## --- Stage costs from published literature ------------------------------------
+# All figures in 2018 USD millions; inflated to 2024 below.
 
 # Extract published estimates from Table 5 (in 2018 $ Million)
 stage_costs_tbl5 <- tribble(
@@ -16,7 +29,7 @@ stage_costs_tbl5 <- tribble(
   "Wilson (2010)",        "High",        18.52,    12.35,    12.53,    148.17,          3.70,         NA
 )
   
-# Gather by stage for averaging
+## --- Compute expected cost per candidate --------------------------------------
 stage_costs_long <- stage_costs_tbl5 %>%
   pivot_longer(
     cols = c(preclinical, phase_1, phase_2, phase_3, approval, phase_4),

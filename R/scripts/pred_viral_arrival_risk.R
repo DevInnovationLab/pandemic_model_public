@@ -1,3 +1,16 @@
+# pred_viral_arrival_risk.R — Compute pathogen arrival risk summaries from expert survey responses.
+#
+# Normalises virus arrival rate responses to relative shares (all viruses and
+# airborne-only subsets), summarises across respondents, and saves the resulting
+# tables for use in downstream PTRS and timeline analyses.
+#
+# Inputs:  data/clean/arrival_rate_responses_virus_clean.csv
+#          data/raw/pathogen_info.csv
+# Outputs: data/clean/arrival_rates_all.csv
+#          data/clean/arrival_rates_airborne.csv
+#
+# Run from the repository root.
+
 library(here)
 library(ggplot2)
 library(ggtext)

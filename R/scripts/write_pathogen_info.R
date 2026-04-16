@@ -1,10 +1,13 @@
-#' Create a dataframe of pathogen characteristics.
-#'
-#' This dataframe contains information on pathogen group, viral family, prototype vaccine status, and airborne status.
-#'  Data taken from https://docs.google.com/spreadsheets/d/1cV7VqPgQZFT5FOPe-9DIRJlVE6JrwhmXDeKjyVxn8dE/edit?gid=1778009623#gid=1778009623
-#' @return A tibble with columns: pathogen, viral_family, has_prototype, airborne.
-#' @examples
-#' pathogen_info
+# write_pathogen_info.R — Write manually curated pathogen reference table.
+#
+# Defines and exports a static lookup table of all modelled pathogens with
+# viral family, prototype vaccine status, and airborne transmission flag.
+#
+# Inputs:  none (data hardcoded in script)
+# Outputs: data/raw/pathogen_info.csv
+#
+# Run from the repository root.
+
 library(tibble)
 library(dplyr)
 
