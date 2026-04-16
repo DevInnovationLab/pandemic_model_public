@@ -8,7 +8,7 @@ library(tidyverse)
 library(statmod)
 
 ## --- Load and prep relevant data
-ptrs_raw <- read.csv("./data/clean/vaccine_ptrs.csv")
+ptrs_raw <- read.csv("./data/clean/vaccine_ptrs_responses.csv")
 
 ptrs_raw <- ptrs_raw %>%
   filter(!(is.na(value_min) | is.na(value_max))) %>%
@@ -25,7 +25,7 @@ ptrs_raw <- ptrs_raw %>%
     y = Surv(value_min, value_max, type = "interval2")
   )
 
-rd_timelines <- read.csv("./data/clean/vaccine_rd_timelines.csv")
+rd_timelines <- read.csv("./data/clean/vaccine_rd_timeline_responses.csv")
 
 rd_timelines <- rd_timelines |>
   rename(value_min = years_min, value_max = years_max) |>

@@ -3,13 +3,6 @@
 This script loads a fitted arrival distribution (ArrivalGPD folder output) and
 computes summary moments of annual exceedance probability for a set of severity
 thresholds using parameter-sample uncertainty.
-
-Run from repository root:
-    cd python && poetry run python scripts/get_arrival_distribution_moments.py \
-        --distribution output/arrival_distributions/<distribution_folder>
-
-Unless ``--n-samples`` is set, ``n`` is taken from the folder name segment
-``..._n_<N>_seed_<seed>`` (see ``fit_arrival_distributions.py``).
 """
 
 from __future__ import annotations

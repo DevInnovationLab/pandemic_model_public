@@ -11,7 +11,7 @@ function plot_agg_cost_comparison(job_dir, recalculate_costs)
         process_total_costs(job_dir); % Make sure we have calculated total nominal costs.
     end
 
-    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
     processed_dir = fullfile(job_dir, "processed");
 

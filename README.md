@@ -61,30 +61,30 @@ All commands are run from the **repository root**.
 ### Full workflow (local)
 
 ```bash
-matlab -batch "run('./matlab/load_project'); run_workflow('config/job_configs/allrisk_base.yaml')"
+matlab -batch "run('./matlab/load_project'); run_workflow('config/run_configs/allrisk_base.yaml')"
 ```
 
 ### Single job (local)
 
 ```bash
-matlab -batch "run('./matlab/load_project'); run_job('config/job_configs/allrisk_base.yaml')"
+matlab -batch "run('./matlab/load_project'); run_job('config/run_configs/allrisk_base.yaml')"
 ```
 
 ### Sensitivity analysis
 
 ```bash
-matlab -batch "run('./matlab/load_project'); run_sensitivity('config/sensitivity_configs/no_mitigation_all.yaml', 'unmitigated')"
+matlab -batch "run('./matlab/load_project'); run_sensitivity('config/sensitivity_runs_configs/no_mitigation_all.yaml', 'unmitigated')"
 ```
 
 ### HPC cluster (SLURM)
 
 ```bash
 # Full workflow (submits array + aggregation jobs automatically)
-./slurm/submit_workflow.sh config/job_configs/allrisk_base.yaml
+./slurm/submit_workflow.sh config/run_configs/allrisk_base.yaml
 
 # Manual array submission
 sbatch --array=1-10 \
-  --export=JOB_CONFIG=config/job_configs/allrisk_base.yaml,NUM_CHUNKS=10 \
+  --export=JOB_CONFIG=config/run_configs/allrisk_base.yaml,NUM_CHUNKS=10 \
   slurm/submit_model_run.sbatch
 ```
 
@@ -130,7 +130,7 @@ the full field reference, schema documentation, and sensitivity config semantics
 
 ```
 config/
-  job_configs/        # Simulation run parameters
+  run_configs/        # Simulation run parameters
   scenario_configs/   # Per-intervention parameters
   sensitivity_configs/ # Parameter sweep definitions
 data/
@@ -180,10 +180,10 @@ See `R/scripts/README.md` for R script execution order.
 
 ## Output Structure
 
-`run_workflow` writes to `{outdir}/{job_config_name}/`:
+`run_workflow` writes to `{outdir}/{run_config_name}/`:
 
 ```
-job_config.yaml
+run_config.yaml
 raw/chunk_{i}/          # Per-chunk .mat files (base table, sums, pandemic table)
 processed/              # Aggregated: baseline_annual_sums.mat, {scenario}_relative_sums.mat
 figures/                # Saved plots

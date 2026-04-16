@@ -6,7 +6,7 @@ function [scenario_ids, scenario_paths] = get_sensitivity_scenarios(sensitivity_
     %
     % Args:
     %   sensitivity_dir (char or string): Path to sensitivity run root
-    %     (e.g. output/sensitivity/baseline_vaccine_program_airborne).
+    %     (e.g. output/sensitivity_runs/baseline_vaccine_program_airborne).
     %
     % Returns:
     %   scenario_ids (cell of char): Scenario identifiers for filenames/labels.

@@ -16,9 +16,9 @@ function get_baseline_vaccine_sensitivity_table(sensitivity_dir)
     
     % Load baseline vaccine benefits from aggregated results
     baseline_results_path = fullfile(sensitivity_dir, 'processed', 'baseline_benefits_summary.mat');
-    baseline_data = load(baseline_results_path, 'mean_benefits', 'job_config');
+    baseline_data = load(baseline_results_path, 'mean_benefits', 'run_config');
     baseline_benefits = baseline_data.mean_benefits;
-    baseline_config = baseline_data.job_config;
+    baseline_config = baseline_data.run_config;
     
     % Initialize summary table
     parameters = fieldnames(sensitivity_config.sensitivities);
@@ -68,15 +68,15 @@ function get_baseline_vaccine_sensitivity_table(sensitivity_dir)
         value_1_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_1_benefits_summary.mat', param_name));
         value_2_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_2_benefits_summary.mat', param_name));
         
-        value_1_data = load(value_1_path, 'mean_benefits', 'job_config');
-        value_2_data = load(value_2_path, 'mean_benefits', 'job_config');
+        value_1_data = load(value_1_path, 'mean_benefits', 'run_config');
+        value_2_data = load(value_2_path, 'mean_benefits', 'run_config');
         
         benefits_value_1 = value_1_data.mean_benefits;
         benefits_value_2 = value_2_data.mean_benefits;
         
         % Get parameter values from job configs
-        param_value_1 = value_1_data.job_config.(param_name);
-        param_value_2 = value_2_data.job_config.(param_name);
+        param_value_1 = value_1_data.run_config.(param_name);
+        param_value_2 = value_2_data.run_config.(param_name);
         
         % Handle duration_dist_config specially
         if strcmp(param_name, 'duration_dist_config')
@@ -179,7 +179,7 @@ function generate_latex_table(summary_table, output_path, baseline_benefits, sen
     %   output_path (string): Path to save the LaTeX table
     %   baseline_benefits (double): Baseline benefits value
     %   sensitivity_config (struct): Loaded sensitivity YAML (sensitivities field used)
-    %   baseline_config (struct): Baseline job_config for default column text
+    %   baseline_config (struct): Baseline run_config for default column text
     % Open file for writing
     fileID = fopen(output_path, 'w');
     

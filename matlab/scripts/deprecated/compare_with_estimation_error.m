@@ -98,15 +98,15 @@ function compare_with_estimation_error(job_base, trunc_thresholds)
 end
 
 function [est_error_dir, mle_dir] = get_dirs(job_base, trunc_threshold)
-    est_error_dir = sprintf('./output/jobs/%s_%d_dist', job_base, trunc_threshold);
-    mle_dir = sprintf('./output/jobs/%s_%d_central', job_base, trunc_threshold);
+    est_error_dir = sprintf('./output/single_runs/%s_%d_dist', job_base, trunc_threshold);
+    mle_dir = sprintf('./output/single_runs/%s_%d_central', job_base, trunc_threshold);
 end
 
 function [annualized_est_error_npv, annualized_mle_npv]= compare_annualized_npv(job_base, trunc_threshold)
     [est_error_dir, mle_dir] = get_dirs(job_base, trunc_threshold);
-    job_config = yaml.loadFile(fullfile(est_error_dir, "job_config.yaml")); % Assume job config same other than intensity param samples
-    periods = job_config.sim_periods;
-    r = job_config.r;
+    run_config = yaml.loadFile(fullfile(est_error_dir, "run_config.yaml")); % Assume job config same other than intensity param samples
+    periods = run_config.sim_periods;
+    r = run_config.r;
 
     %% Annualized NPV comparison
     est_error_baseline_npv = readmatrix(fullfile(est_error_dir, "processed", "baseline_absolute_npv.csv"));
@@ -119,8 +119,8 @@ end
 
 function [est_error_severity_sorted, mle_severity_sorted, est_error_exceedance, mle_exceedance] = compare_exceedance_functions(job_base, trunc_threshold)
     [est_error_dir, mle_dir] = get_dirs(job_base, trunc_threshold);
-    job_config = yaml.loadFile(fullfile(est_error_dir, "job_config.yaml")); % Assume job config same other than intensity param samples
-    num_draws = job_config.sim_periods .* job_config.num_simulations;
+    run_config = yaml.loadFile(fullfile(est_error_dir, "run_config.yaml")); % Assume job config same other than intensity param samples
+    num_draws = run_config.sim_periods .* run_config.num_simulations;
     
     est_error_sim_results = readtable(fullfile(est_error_dir, "raw", "baseline_pandemic_table.csv"));
     mle_sim_results = readtable(fullfile(mle_dir, "raw", "baseline_pandemic_table.csv"));

@@ -28,7 +28,7 @@ The project uses four primary languages with distinct roles:
 - `event_list_simulation.m`: Main simulation loop that processes pandemic events and calculates outcomes
 - `get_base_simulation_table.m`: Generates base pandemic event table from distributions
 - `get_scenario_simulation_table.m`: Applies scenario-specific interventions (R&D, surveillance, etc.)
-- `vax_mitigation_factor.m`: Piecewise linear vaccination damage mitigation function (IMF paper footnote 17)
+- `h_function.m`: Piecewise linear vaccination damage mitigation function (IMF paper footnote 17)
 - `+sim_indexing/`: Package for efficient indexing of simulation results
 - `helpers/`: Utility functions — config validation, data loading, capacity calculations
 
@@ -54,9 +54,9 @@ The project uses four primary languages with distinct roles:
 The model uses a three-tier YAML configuration system. See `config/README.md` for
 the full field reference and runtime composition semantics.
 
-**Job Configs** (`config/job_configs/`): Specify run-wide settings
+**Job Configs** (`config/run_configs/`): Specify run-wide settings
 **Scenario Configs** (`config/scenario_configs/`): Intervention-specific parameters
-**Sensitivity Configs** (`config/sensitivity_configs/`): Parameter sweep definitions
+**Sensitivity Configs** (`config/sensitivity_runs_configs/`): Parameter sweep definitions
 
 ## Development Commands
 
@@ -72,12 +72,12 @@ cd ..                       # Return to root (Python scripts run from root)
 
 **Local model run**:
 ```bash
-matlab -batch "run('./matlab/load_project'); run_job('config/job_configs/airborne_base.yaml')"
+matlab -batch "run('./matlab/load_project'); run_job('config/run_configs/airborne_base.yaml')"
 ```
 
 **Full Workflow**:
 ```bash
-matlab -batch "run('./matlab/load_project'); run_workflow('config/job_configs/airborne_base.yaml')"
+matlab -batch "run('./matlab/load_project'); run_workflow('config/run_configs/airborne_base.yaml')"
 ```
 
 **MATLAB Tests**:
@@ -89,12 +89,12 @@ matlab -batch "run('./matlab/load_project'); runtests('matlab/tests')"
 
 **Submit Model Run**:
 ```bash
-sbatch --array=1-10 --export=JOB_CONFIG=config/job_configs/airborne_base.yaml,NUM_CHUNKS=10 slurm/submit_model_run.sbatch
+sbatch --array=1-10 --export=JOB_CONFIG=config/run_configs/airborne_base.yaml,NUM_CHUNKS=10 slurm/submit_model_run.sbatch
 ```
 
 **Submit Full Workflow**:
 ```bash
-./slurm/submit_workflow.sh config/job_configs/airborne_base.yaml
+./slurm/submit_workflow.sh config/run_configs/airborne_base.yaml
 ```
 
 ## Key File Paths
@@ -157,7 +157,7 @@ cd python && poetry run python scripts/fit_arrival_distributions.py && cd ..
 # 4. Run other input-preparation scripts as needed (see python/scripts/)
 
 # 5. Submit the full simulation workflow (HPC)
-./slurm/submit_workflow.sh config/job_configs/airborne_base.yaml <num_chunks>
+./slurm/submit_workflow.sh config/run_configs/airborne_base.yaml <num_chunks>
 ```
 
 Note: `submit_workflow.sh` automatically re-runs step 3 before submitting SLURM jobs.

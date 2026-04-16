@@ -8,10 +8,10 @@ function plot_raw_ts(results_dir)
     %   Parameters
     %   ----------
     %   results_dir : char
-    %       Path to the results directory containing job_config.yaml and raw MAT files.
+    %       Path to the results directory containing run_config.yaml and raw MAT files.
 
     % Load config and scenario list
-    config = yaml.loadFile(fullfile(results_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(results_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
     rawdata_dir = fullfile(results_dir, "raw");
 

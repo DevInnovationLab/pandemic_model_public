@@ -12,7 +12,7 @@ function plot_pairwise_program_matrix(job_dir)
     processed_dir = fullfile(job_dir, "processed");
 
     % Get scenarios from config
-    config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    config = yaml.loadFile(fullfile(job_dir, 'run_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
     scenarios = scenarios(~strcmp(scenarios, 'baseline') & ...
                           ~contains(scenarios, "prec1") & ...

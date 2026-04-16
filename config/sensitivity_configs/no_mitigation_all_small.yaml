@@ -1,5 +1,5 @@
-base_job_config: "./config/job_configs/allrisk_base_small.yaml"
-outdir: "./output/sensitivity"
+base_run_config: "./config/run_configs/allrisk_base_small.yaml"
+outdir: "./output/sensitivity_runs"
 fix_params:
   gamma: 0
   scenario_configs: "./config/scenario_configs/baseline"

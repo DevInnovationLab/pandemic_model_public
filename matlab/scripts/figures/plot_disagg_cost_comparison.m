@@ -4,7 +4,7 @@ function plot_disagg_cost_comparison(job_dir)
     % Args:
     %   job_dir: Directory containing job configuration and results
 
-    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
     rawdata_dir = fullfile(job_dir, "raw");
 

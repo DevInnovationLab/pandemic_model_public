@@ -6,7 +6,7 @@ function get_detailed_invest_scenario_table(job_dir, varargin)
     parse(p, varargin{:});
 
     processed_dir = fullfile(job_dir, "processed");
-    config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    config = yaml.loadFile(fullfile(job_dir, 'run_config.yaml'));
     available = string(fieldnames(config.scenarios));
     available = available(~strcmp(available, 'baseline'));
 

@@ -11,7 +11,7 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     %
     % Args:
     %   sensitivity_dir (char or string): Path to sensitivity output directory
-    %     (e.g. output/sensitivity/no_mitigation_all).
+    %     (e.g. output/sensitivity_runs/no_mitigation_all).
     %
     % Returns:
     %   annualized_summary_table (table): Table with Variable, Value, and loss columns (cell of structs).
@@ -19,14 +19,14 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     %     TotalUnmitigatedLossUndiscounted is undiscounted (see estimate_unmitigated_losses).
     %
     % Also writes:
-    %   sensitivity_dir/sensitivity_annualized_loss_summary.csv
-    %   sensitivity_dir/sensitivity_total_loss_summary.csv
+    %   sensitivity_dir/sensitivity_runs_annualized_loss_summary.csv
+    %   sensitivity_dir/sensitivity_runs_total_loss_summary.csv
 
     sensitivity_dir = char(sensitivity_dir);
     sensitivity_config = yaml.loadFile(fullfile(sensitivity_dir, 'sensitivity_config.yaml'));
     [scenario_ids, scenario_paths] = get_sensitivity_scenarios(sensitivity_dir);
 
-    baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'job_config.yaml'));
+    baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'run_config.yaml'));
     baseline_arrival_dist = baseline_config.arrival_dist_config;
     baseline_vsl = baseline_config.value_of_death;
     baseline_r = baseline_config.r;
@@ -56,7 +56,7 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     for k = 1:length(scenario_ids)
         scenario_id = scenario_ids{k};
         value_dir = scenario_paths{k};
-        run_config = yaml.loadFile(fullfile(value_dir, "job_config.yaml"));
+        run_config = yaml.loadFile(fullfile(value_dir, "run_config.yaml"));
         tok = regexp(scenario_id, '^(.+)_value_(\d+)$', 'tokens');
         if isempty(tok)
             var_name = scenario_id;

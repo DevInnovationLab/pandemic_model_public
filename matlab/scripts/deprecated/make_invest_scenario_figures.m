@@ -37,7 +37,7 @@ function make_invest_scenario_figures(job_dir, recalculate_bc)
     total_baseline_benefits = total_baseline_npv + total_baseline_costs;
     
     % Scenarios (same ordering logic; move combined_invest to end)
-    config    = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    config    = yaml.loadFile(fullfile(job_dir, 'run_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
     scenarios = scenarios(~strcmp(scenarios, 'baseline'));
     

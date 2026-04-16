@@ -19,8 +19,8 @@ function plot_dot_whisker(out_dir)
     figure_path = fullfile(out_dir, 'figures');
     if ~exist(figure_path, 'dir'), mkdir(figure_path); end
 
-    job_config = yaml.loadFile(fullfile(out_dir, 'job_config.yaml'));
-    all_scenarios = string(fieldnames(job_config.scenarios));
+    run_config = yaml.loadFile(fullfile(out_dir, 'run_config.yaml'));
+    all_scenarios = string(fieldnames(run_config.scenarios));
     all_scenarios = all_scenarios(~strcmp(all_scenarios, 'baseline'));
 
     % Build ordered list: (row, col) -> scenario name and labels

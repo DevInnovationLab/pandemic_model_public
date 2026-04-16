@@ -24,7 +24,7 @@ function bootstrap_sums(sim_results_path, varargin)
     processed_dir = fullfile(sim_results_path, "processed");
     
     % Load config to get scenario info
-    config = yaml.loadFile(fullfile(sim_results_path, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(sim_results_path, "run_config.yaml"));
     scenario_names = fieldnames(config.scenarios);
     
     % Set up random seed for reproducibility    

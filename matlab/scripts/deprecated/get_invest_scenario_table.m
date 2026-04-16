@@ -24,7 +24,7 @@ function get_invest_scenario_table(job_dir, recalculate_bc)
     total_baseline_costs = mean(sum(baseline_costs, 2));
     
     % Get scenarios from config
-    config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    config = yaml.loadFile(fullfile(job_dir, 'run_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
     scenarios = scenarios(~strcmp(scenarios, 'baseline'));
     % Move combined_invest to end

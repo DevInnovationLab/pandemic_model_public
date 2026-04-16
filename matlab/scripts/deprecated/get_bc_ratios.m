@@ -5,7 +5,7 @@ function get_bc_ratios(results_dir)
     %   results_dir (string): Path to results directory containing raw data
     
     % Load configuration and set up directories
-    config = yaml.loadFile(fullfile(results_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(results_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
     rawdata_dir = fullfile(results_dir, "raw");
     processed_dir = fullfile(results_dir, "processed");

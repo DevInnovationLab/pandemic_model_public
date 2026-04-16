@@ -1,3 +1,17 @@
+"""fit_mle_duration.py — Fit a lognormal duration distribution via MLE and sample from the limiting distribution.
+
+Fits a shifted lognormal distribution to pandemic duration data, verifies convergence consistency, and
+draws samples from the asymptotic MLE distribution in the unconstrained (phi) space.
+Optionally produces diagnostic plots of the discretized PMF with delta-method CIs.
+
+Inputs:  data/clean/<filtered_dataset>.csv (passed as CLI argument)
+Outputs: output/duration_distributions/<id_string>.csv
+         output/duration_distributions/<id_string>_pmf_rounded_years.pdf  (if --create-fig)
+         output/duration_distributions/<id_string>_pmf_rounded_years_with_ci.pdf (if --create-fig)
+
+Usage:
+    python scripts/fit_mle_duration.py <fp> [--trunc-years N] [--n-samples N] [--floc F] [--seed N] [--create-fig]
+"""
 from pathlib import Path
 
 import click
@@ -120,15 +134,17 @@ def pmf_rounded_to_years(years, mu, sigma, floc, half_width=0.5):
 @click.option("--seed", type=int, default=42, help="Seed for random sample generation.")
 @click.option("--create-fig/--no-fig", default=False)
 def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, outloc: float, seed: int, create_fig: bool):
- 
+    """Fit lognormal duration distribution and write parameter samples to disk."""
     ds = pd.read_csv(fp)
     durations = ds['duration']
     rng = np.random.default_rng(seed)
- 
-    # If not floc override in output
+
+    # If no output loc override is given, use the same loc as the fit loc.
     if outloc is None:
         outloc = floc
- 
+
+    # --- Fit model from multiple starting points ---
+
     # Create grid of starting points for mu and sigma
     duration_mean = durations.mean()
     duration_median = durations.median()
@@ -146,6 +162,8 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
     # Fit models with different starting points
     results_df, best_fit = fit_duration(durations, start_grid, floc=floc, transform=transform)
  
+    # --- Validate convergence consistency ---
+
     # Check that all successful fits converge to similar parameter values
     successful_fits = results_df[results_df.success]
     
@@ -169,7 +187,10 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
             f"Percent diff: mu={mu_diffs[divergent].iloc[0]*100:.1f}%, sigma={sigma_diffs[divergent].iloc[0]*100:.1f}%"
         )
  
-    # Draw sample based on MLE limiting distribution (in phi-space)
+    # --- Sample from asymptotic MLE distribution ---
+
+    # Draw from the multivariate normal limiting distribution in phi-space
+    # (unconstrained parameterisation), then back-transform to (mu, sigma).
     best_phi = best_fit.opt.x
     best_cov_phi = best_fit.cov_phi
  
@@ -186,6 +207,8 @@ def fit_mle_duration(fp: Path, trunc_years: int, n_samples: int, floc: float, ou
     sample_df.to_csv(outpath, index=0)
  
     if create_fig:
+        # --- Build discretized PMF for diagnostic plots ---
+
         # Integer bins for "rounded to nearest year" PMF.
         # Bin k corresponds to durations in [k - 0.5, k + 0.5).
         years = np.arange(0, trunc_years + 1, dtype=int)

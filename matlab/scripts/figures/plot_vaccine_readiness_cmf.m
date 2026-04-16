@@ -5,8 +5,8 @@ function plot_vaccine_readiness_cmf(job_dir)
     %   job_dir: Directory containing job configuration and results
 
     % Load job configuration and scenario names
-    job_config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
-    scenarios = fieldnames(job_config.scenarios);
+    run_config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
+    scenarios = fieldnames(run_config.scenarios);
     disp(scenarios)
     raw_dir = fullfile(job_dir, "raw");
 

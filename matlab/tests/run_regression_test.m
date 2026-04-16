@@ -44,7 +44,7 @@ function test_baseline_annual_sums_match_reference(testCase)
     repo_root = testCase.TestData.repo_root;
     tmp_outdir = testCase.TestData.tmp_outdir;
 
-    config_path = fullfile(repo_root, 'config', 'job_configs', 'allrisk_base_small.yaml');
+    config_path = fullfile(repo_root, 'config', 'run_configs', 'allrisk_base_small.yaml');
     run_workflow(config_path, 'sim_results_path', fullfile(tmp_outdir, 'allrisk_base_small'));
 
     new_file = fullfile(tmp_outdir, 'allrisk_base_small', 'processed', 'baseline_annual_sums.mat');

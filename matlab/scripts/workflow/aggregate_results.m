@@ -9,7 +9,7 @@ function aggregate_results(sim_results_path)
     create_folders_recursively(processed_dir);
 
     % Load config to get scenario info
-    config = yaml.loadFile(fullfile(sim_results_path, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(sim_results_path, "run_config.yaml"));
     scenario_names = fieldnames(config.scenarios);
 
     chunk_dirs = dir(fullfile(raw_results_path, 'chunk_*'));

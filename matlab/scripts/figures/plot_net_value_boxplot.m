@@ -6,8 +6,8 @@ function plot_net_value_boxplot(out_dir)
     % Uses only raw sample data (no bootstrap).
     %
     % Writes `processed/net_value_boxplot_moments_surplus.csv` and
-    % `processed/net_value_boxplot_moments_baseline.csv` with the same
-    % moments as the plots (mean, median, 10th--90th percentiles; units in headers).
+    % `processed/net_value_boxplot_moments_baseline.csv` with distribution
+    % moments (mean, median, 10th--90th percentiles, plus 15th and 20th; units in headers).
     %
     % Args:
     %   out_dir (string): Job output directory containing 'processed' and 'figures'.
@@ -27,8 +27,8 @@ function plot_net_value_boxplot(out_dir)
     figure_path = fullfile(out_dir, 'figures');
     if ~exist(figure_path, 'dir'), mkdir(figure_path); end
 
-    job_config = yaml.loadFile(fullfile(out_dir, 'job_config.yaml'));
-    all_scenarios = string(fieldnames(job_config.scenarios));
+    run_config = yaml.loadFile(fullfile(out_dir, 'run_config.yaml'));
+    all_scenarios = string(fieldnames(run_config.scenarios));
     all_scenarios = all_scenarios(~strcmp(all_scenarios, 'baseline'));
 
     % Build ordered list: one surplus scenario per investment program
@@ -73,14 +73,18 @@ function plot_net_value_boxplot(out_dir)
     med = nan(n, 1);
     q3 = nan(n, 1);
     perc_10_90 = nan(n, 2);
+    perc_15 = nan(n, 1);
+    perc_20 = nan(n, 1);
     for k = 1:n
         d = all_data{k};
         if ~isempty(d)
-            p = prctile(d, [10, 25, 50, 75, 90]);
-            perc_10_90(k, :) = p([1, 5]);
-            q1(k) = p(2);
-            med(k) = p(3);
-            q3(k) = p(4);
+            p = prctile(d, [10, 15, 20, 25, 50, 75, 90]);
+            perc_10_90(k, :) = [p(1), p(7)];
+            perc_15(k) = p(2);
+            perc_20(k) = p(3);
+            q1(k) = p(4);
+            med(k) = p(5);
+            q3(k) = p(6);
         end
     end
 
@@ -158,10 +162,11 @@ function plot_net_value_boxplot(out_dir)
 
     % Distribution moments matching the figure (trillions $), for tables / paper
     moment_names = {'Scenario', 'Investment program', 'Mean (trillion $)', 'Median (trillion $)', ...
-                    '10th percentile (trillion $)', '25th percentile (trillion $)', ...
+                    '10th percentile (trillion $)', '15th percentile (trillion $)', ...
+                    '20th percentile (trillion $)', '25th percentile (trillion $)', ...
                     '75th percentile (trillion $)', '90th percentile (trillion $)'};
     out_table = table(string(scenarios_ordered'), string(y_labels'), mean_val, med, ...
-        perc_10_90(:, 1), q1, q3, perc_10_90(:, 2), 'VariableNames', moment_names);
+        perc_10_90(:, 1), perc_15, perc_20, q1, q3, perc_10_90(:, 2), 'VariableNames', moment_names);
     writetable(out_table, fullfile(processed_dir, "net_value_boxplot_moments_surplus.csv"));
 
     %% --- Baseline vaccine scenario: standalone net value boxplot (absolute, not relative) ---
@@ -172,11 +177,13 @@ function plot_net_value_boxplot(out_dir)
     data_base = baseline_tbl.net_value_pv_full(:) / 1e12; % Convert to trillions
 
     % Compute distribution statistics
-    p = prctile(data_base, [10, 25, 50, 75, 90]);
-    perc_10_90_b = p([1, 5]);
-    q1_b = p(2);
-    med_b = p(3);
-    q3_b = p(4);
+    p = prctile(data_base, [10, 15, 20, 25, 50, 75, 90]);
+    perc_10_90_b = [p(1), p(7)];
+    perc_15_b = p(2);
+    perc_20_b = p(3);
+    q1_b = p(4);
+    med_b = p(5);
+    q3_b = p(6);
 
     % Baseline plot: single box at y = 1.
     y_base = 1;
@@ -251,7 +258,7 @@ function plot_net_value_boxplot(out_dir)
     close(fig_b);
 
     baseline_table = table("baseline", "Status quo response", mean_base, med_b, ...
-        perc_10_90_b(1), q1_b, q3_b, perc_10_90_b(2), 'VariableNames', moment_names);
+        perc_10_90_b(1), perc_15_b, perc_20_b, q1_b, q3_b, perc_10_90_b(2), 'VariableNames', moment_names);
     writetable(baseline_table, fullfile(processed_dir, "net_value_boxplot_moments_baseline.csv"));
 
 end

@@ -6,7 +6,7 @@
 #SBATCH --mem-per-cpu=15G  
 #SBATCH --account=pi-rglennerster
 
-# Usage: sbatch --dependency=afterok:JOBID slurm_bootstrap.sh <job_config> [n_bootstrap]
+# Usage: sbatch --dependency=afterok:JOBID slurm_bootstrap.sh <run_config> [n_bootstrap]
 
 JOB_CONFIG=$1
 N_BOOTSTRAP=${2:-1000}

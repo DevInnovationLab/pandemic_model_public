@@ -14,8 +14,8 @@ function get_complementarity_distributions(job_dir, raw_only)
     end
     
     % Load job config and get all scenarios
-    job_config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
-    all_scenarios = string(fieldnames(job_config.scenarios));
+    run_config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
+    all_scenarios = string(fieldnames(run_config.scenarios));
     all_scenarios = all_scenarios(~strcmp(all_scenarios, "baseline"));
     
     % Filter out prevac0 and prec1 scenarios
@@ -23,7 +23,7 @@ function get_complementarity_distributions(job_dir, raw_only)
     all_scenarios = all_scenarios(~contains(all_scenarios, "prec1"));
     
     % Parse scenarios to identify interventions and accents
-    [scenario_info, investment_types] = parse_all_scenarios(all_scenarios, job_config);
+    [scenario_info, investment_types] = parse_all_scenarios(all_scenarios, run_config);
     
     % Metrics to plot
     metrics = {'tot_benefits_pv'};
@@ -66,19 +66,19 @@ function get_complementarity_distributions(job_dir, raw_only)
             plot_complementarity_raw(complementarity_data, ...
                 metric_label, accent_label, ...
                 figure_path, ...
-                job_config.num_simulations);
+                run_config.num_simulations);
 
             if ~raw_only
                 plot_complementarity_bootstrap(complementarity_data, ...
                     metric_label, accent_label, ...
                     figure_path, ...
-                    job_config.num_simulations);
+                    run_config.num_simulations);
             end
         end
     end
 end
 
-function [scenario_info, investment_types] = parse_all_scenarios(scenarios, job_config)
+function [scenario_info, investment_types] = parse_all_scenarios(scenarios, run_config)
     % Parse all scenarios to extract intervention flags and accents
     
     investments = {'advance_capacity', 'neglected_pathogen', 'universal_flu', 'early_warning'};
@@ -111,7 +111,7 @@ function [scenario_info, investment_types] = parse_all_scenarios(scenarios, job_
         % Extract precision/recall for early warning if present
         if scenario_info.early_warning(i)
             try
-                scen_params = job_config.scenarios.(scen_name);
+                scen_params = run_config.scenarios.(scen_name);
                 if isfield(scen_params, 'improved_early_warning')
                     scenario_info.precision(i) = scen_params.improved_early_warning.precision;
                     scenario_info.recall(i) = scen_params.improved_early_warning.recall;

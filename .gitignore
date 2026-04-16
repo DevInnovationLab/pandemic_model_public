@@ -1,4 +1,3 @@
-output/*
 logs/*
 
 # Compiled / generated
@@ -26,3 +25,16 @@ python/.python-version
 # R
 renv/library/
 renv/staging/
+
+# Sensitive data
+data/clean/vaccine_ptrs_responses.csv
+data/clean/vaccine_rd_cost_responses.csv
+data/clean/vaccine_rd_timeline_responses.csv
+data/clean/arrival_rate_responses_all_clean.csv
+data/clean/arrival_rate_responses_virus_clean.csv
+
+# Outputs too large to commit
+output/arrival_distributions/*
+output/duration_distributions/*
+output/single_runs/*
+output/sensitivity_runs/*

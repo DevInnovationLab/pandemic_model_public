@@ -13,7 +13,7 @@ end
 
 function plot_npv_histograms(job_dir)
     % Plot histograms of absolute and relative NPV for each scenario
-    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
     processed_dir = fullfile(job_dir, "processed");
     figures_dir = fullfile(job_dir, "figures");
@@ -145,7 +145,7 @@ function plot_npv_timeseries(job_dir, include_ci)
     % Set up paths and load config
     processed_dir = fullfile(job_dir, "processed");
     figures_dir = fullfile(job_dir, "figures");
-    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     
     % Get scenarios and ensure baseline is identified
     scenarios = string(fieldnames(config.scenarios));
@@ -254,7 +254,7 @@ function plot_npv_boxplots(job_dir, baseline)
 
     processed_dir = fullfile(job_dir, "processed");
     figures_dir = fullfile(job_dir, "figures");
-    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
 
     % Get non-baseline scenarios
@@ -427,7 +427,7 @@ function plot_baseline_npv_ts(job_dir)
     close(fig);
 
     % Load config to get discount rate and periods for annualization
-    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     r = config.r;
     periods = config.sim_periods;
 

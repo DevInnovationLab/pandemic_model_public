@@ -21,9 +21,9 @@ function agg_sensitivity_results(sensitivity_dir)
     [chunk_mat_paths, n_sims_per_chunk, n_periods] = resolve_baseline_annual_chunks(raw_dir);
     n_chunks = length(chunk_mat_paths);
 
-    % Load job_config from baseline
-    job_config_path = fullfile(baseline_dir, 'job_config.yaml');
-    job_config = yaml.loadFile(job_config_path);
+    % Load run_config from baseline
+    run_config_path = fullfile(baseline_dir, 'run_config.yaml');
+    run_config = yaml.loadFile(run_config_path);
 
     % Preallocate array for sum of net values per simulation
     sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
@@ -51,7 +51,7 @@ function agg_sensitivity_results(sensitivity_dir)
     % Save baseline results to top-level processed directory
     output_filename = 'baseline_benefits_summary.mat';
     output_path = fullfile(top_processed_dir, output_filename);
-    save(output_path, 'mean_benefits', 'sum_net_values', 'job_config', ...
+    save(output_path, 'mean_benefits', 'sum_net_values', 'run_config', ...
             'mean_net_value_pv_over_time', 'mean_net_value_nom_over_time');
     
     fprintf('Processed baseline: mean benefits = %.2f\n', mean_benefits);
@@ -77,9 +77,9 @@ function agg_sensitivity_results(sensitivity_dir)
         end
         n_chunks = length(chunk_mat_paths);
 
-        % Load job_config from scenario directory
-        job_config_path = fullfile(value_dir, 'job_config.yaml');
-        job_config = yaml.loadFile(job_config_path);
+        % Load run_config from scenario directory
+        run_config_path = fullfile(value_dir, 'run_config.yaml');
+        run_config = yaml.loadFile(run_config_path);
 
         % Preallocate array for sum of net values per simulation
         sum_net_values = zeros(n_sims_per_chunk * n_chunks, 1);
@@ -98,7 +98,7 @@ function agg_sensitivity_results(sensitivity_dir)
         % Save to top-level processed directory with scenario_id in filename
         output_filename = sprintf('%s_benefits_summary.mat', scenario_id);
         output_path = fullfile(top_processed_dir, output_filename);
-        save(output_path, 'mean_benefits', 'sum_net_values', 'scenario_id', 'job_config');
+        save(output_path, 'mean_benefits', 'sum_net_values', 'scenario_id', 'run_config');
         
         fprintf('Processed %s: mean benefits = %.2f\n', scenario_id, mean_benefits);
     end

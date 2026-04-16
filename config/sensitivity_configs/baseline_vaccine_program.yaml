@@ -1,7 +1,7 @@
 # Config for sensitivity analysis on baseline and advance investment vaccine programs.
 # Mixed format: one-parameter sweeps plus ptrs_pathogen_gamma1 (vaccines always succeed, gamma=1).
-base_job_config: "./config/job_configs/allrisk_base.yaml"
-outdir: "./output/sensitivity"
+base_run_config: "./config/run_configs/allrisk_base.yaml"
+outdir: "./output/sensitivity_runs"
 fix_params: # Parameters to update and fix in the base config
   scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:

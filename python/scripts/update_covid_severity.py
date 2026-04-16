@@ -1,3 +1,15 @@
+"""update_covid_severity.py — Overwrite COVID-19 severity and intensity in filtered epidemic datasets.
+
+Reads the ex-ante COVID-19 severity from a YAML file and updates matching rows
+in all *_filt_*.csv files in the epidemics dataset directory, writing modified
+copies to the output directory.
+
+Inputs:  data/epidemics_ds/*_filt_*.csv, data/clean/inverted_covid_severity.yaml
+Outputs: data/epidemics_ds/modified/*_filt_*_mod.csv
+
+Usage:
+    python scripts/update_covid_severity.py [--epidemics_ds_dir PATH] [--outdir PATH] [--covid-severity-file PATH]
+"""
 from pathlib import Path
 
 import click

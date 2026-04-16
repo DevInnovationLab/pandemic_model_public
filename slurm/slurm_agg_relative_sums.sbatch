@@ -7,7 +7,7 @@
 #SBATCH --mem=16G  # Lower memory for aggregation
 #SBATCH --account=pi-rglennerster
 
-# Usage: sbatch --dependency=afterok:JOBID slurm_aggregate.sh <job_config>
+# Usage: sbatch --dependency=afterok:JOBID slurm_aggregate.sh <run_config>
 
 JOB_CONFIG=$1
 

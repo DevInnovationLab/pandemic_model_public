@@ -1,4 +1,4 @@
-function run_workflow(job_config_path, varargin)
+function run_workflow(run_config_path, varargin)
     % Complete workflow: run job, aggregate, and bootstrap
     %
     % Usage:
@@ -9,7 +9,7 @@ function run_workflow(job_config_path, varargin)
     %   run_workflow('job.yaml', 'array_task_id', 5, 'num_chunks', 10)  % Array task
     %
     % Parameters:
-    %   job_config_path: Path to job config YAML
+    %   run_config_path: Path to job config YAML
     %   
     % Optional name-value pairs:
     %   Job execution:
@@ -58,11 +58,11 @@ function run_workflow(job_config_path, varargin)
     if ~isempty(opts.sim_results_path)
         sim_results_path = opts.sim_results_path;
     else
-        % Need to construct it from job_config
-        job_config = yaml.loadFile(job_config_path);
-        [~, job_config_name, ~] = fileparts(job_config_path);
+        % Need to construct it from run_config
+        run_config = yaml.loadFile(run_config_path);
+        [~, run_config_name, ~] = fileparts(run_config_path);
         
-        sim_results_path = fullfile(job_config.outdir, job_config_name);
+        sim_results_path = fullfile(run_config.outdir, run_config_name);
     end
     
     % Run simulation (unless skipped)
@@ -73,7 +73,7 @@ function run_workflow(job_config_path, varargin)
             fprintf('Removed existing job outdir: %s\n', sim_results_path);
         end
         fprintf('=== Running job ===\n');
-        run_job(job_config_path, ...
+        run_job(run_config_path, ...
                'num_chunks', opts.num_chunks, ...
                'array_task_id', opts.array_task_id);
         

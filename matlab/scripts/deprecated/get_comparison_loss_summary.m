@@ -14,7 +14,7 @@ function get_comparison_loss_summary(sensitivity_dir)
     sensitivity_scenarios = fieldnames(sensitivity_config.sensitivities);
 
     % Load baseline config to get reference values
-    baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'job_config.yaml'));
+    baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'run_config.yaml'));
     baseline_vsl = baseline_config.value_of_death;
     baseline_r = baseline_config.r;
     baseline_y = baseline_config.y;
@@ -39,7 +39,7 @@ function get_comparison_loss_summary(sensitivity_dir)
         scenario_dir = fullfile(sensitivity_dir, scenario, 'raw');
         
         % Load scenario config
-        scenario_config = yaml.loadFile(fullfile(sensitivity_dir, scenario, 'job_config.yaml'));
+        scenario_config = yaml.loadFile(fullfile(sensitivity_dir, scenario, 'run_config.yaml'));
         
         % Get scenario losses
         [mortality_loss, economic_loss, learning_loss, total_loss] = ...

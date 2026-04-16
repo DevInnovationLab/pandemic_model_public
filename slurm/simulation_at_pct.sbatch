@@ -15,8 +15,8 @@
 #   sbatch slurm/simulation_at_pct.sbatch <job_dir> <scenario_name> <percentile>
 #
 # Examples:
-#   sbatch slurm/simulation_at_pct.sbatch output/jobs/allrisk_base baseline 50
-#   sbatch slurm/simulation_at_pct.sbatch output/jobs/airborne_base advance_capacity_6_month 90
+#   sbatch slurm/simulation_at_pct.sbatch output/single_runs/allrisk_base baseline 50
+#   sbatch slurm/simulation_at_pct.sbatch output/single_runs/airborne_base advance_capacity_6_month 90
 
 if [ "$#" -lt 3 ]; then
   echo "Usage: sbatch slurm/simulation_at_pct.sbatch <job_dir> <scenario_name> <percentile>" >&2

@@ -1,7 +1,0 @@
-location,year_start,year_end,duration,death_thousand,pop_thousand,severity_perthousand,severity,disease,type,transmission,is_vira_only,is_vira_mixed,contains_vira,is_pandemic,unidentified,airborne,contagious,recurrent,intensity,final_inclusion_node
-pandemic spanish flu,1918,1920,3,32000.0,1873300.0,17.08215448673464,170.8215448673464,influenza,viral,droplet,1,0,1,1,False,True,True,False,56.940514955782135,Novel
-pandemic of asian flu,1957,1958,2,2000.0,2873306.0,0.6960623059291283,6.960623059291283,influenza,viral,droplet,1,0,1,1,False,True,True,False,3.4803115296456415,Novel
-hong kong flu,1968,1969,2,1000.0,3551599.0,0.2815633183813826,2.815633183813826,influenza,viral,droplet,1,0,1,1,False,True,True,False,1.407816591906913,Novel
-hiv/aids pandemic,1981,2024,46,42300.0,4536996.619,9.323348362847877,93.23348362847878,hiv/aids,viral,fluid,1,0,1,1,False,False,True,False,2.026814861488669,Novel
-swine flu,2009,2009,1,284.5,6872767.0,0.0413952633633586,0.413952633633586,influenza,viral,droplet,1,0,1,1,False,True,True,False,0.413952633633586,Novel
-global covid-19,2019,2024,5,7100.0,7740000.0,0.917312661498708,44.58444191226293,covid-19,viral,airborne/droplet,1,0,1,1,False,True,True,False,8.916888382452587,Novel

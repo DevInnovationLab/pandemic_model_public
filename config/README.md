@@ -5,23 +5,23 @@ are relative to the repository root (the working directory when running scripts)
 
 ---
 
-## Tier 1: Job Configs (`job_configs/`)
+## Tier 1: Job Configs (`run_configs/`)
 
 Specify a complete simulation run: simulation parameters, social value parameters,
 file paths for inputs, and capacity/vaccine/surveillance parameters.
 
 **Usage:**
 ```matlab
-run_workflow('config/job_configs/allrisk_base.yaml')
-run_job('config/job_configs/allrisk_base.yaml')
-estimate_unmitigated_losses('config/job_configs/allrisk_base.yaml')
+run_workflow('config/run_configs/allrisk_base.yaml')
+run_job('config/run_configs/allrisk_base.yaml')
+estimate_unmitigated_losses('config/run_configs/allrisk_base.yaml')
 ```
 
 ### Required Fields (all entry points)
 
 | Field | Type | Description |
 |---|---|---|
-| `outdir` | string | Output directory root (e.g. `./output/jobs`) |
+| `outdir` | string | Output directory root (e.g. `./output/single_runs`) |
 | `num_simulations` | int | Number of Monte Carlo simulations |
 | `sim_periods` | int | Simulation horizon in years |
 | `seed` | int | Base random seed (chunk seed = seed + chunk_idx) |
@@ -101,15 +101,15 @@ Specify parameter sweeps over a base job config.
 
 **Usage:**
 ```matlab
-run_sensitivity('config/sensitivity_configs/no_mitigation_all.yaml', 'unmitigated')
-run_sensitivity('config/sensitivity_configs/baseline_vaccine_program.yaml', 'response')
+run_sensitivity('config/sensitivity_runs_configs/no_mitigation_all.yaml', 'unmitigated')
+run_sensitivity('config/sensitivity_runs_configs/baseline_vaccine_program.yaml', 'response')
 ```
 
 ### Sensitivity Config Fields
 
 | Field | Description |
 |---|---|
-| `base_job_config` | Path to the base job config YAML |
+| `base_run_config` | Path to the base job config YAML |
 | `outdir` | Output directory root for sensitivity results |
 | `fix_params` | Fields to override in the base config for ALL variants |
 | `sensitivities` | Dict mapping parameter names to lists of values to sweep |
@@ -132,5 +132,5 @@ directory if the run was chunked.
 1. Copy the closest existing config (e.g. `allrisk_base.yaml`).
 2. Change `outdir` if you want results in a separate directory.
 3. Update any parameters you want to vary.
-4. Ensure all required fields are present — `validate_job_config` will error at
+4. Ensure all required fields are present — `validate_run_config` will error at
    runtime if any are missing.

@@ -16,7 +16,7 @@ function create_early_warning_comparison_table(job_dir, recalculate_bc)
     total_baseline_costs = mean(sum(baseline_costs, 2));
 
     % Get scenarios from config.
-    config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    config = yaml.loadFile(fullfile(job_dir, 'run_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
     % Only early warning (alone & combos), keep 'baseline'
     scenarios = scenarios(strcmp(scenarios, 'baseline') | ... 

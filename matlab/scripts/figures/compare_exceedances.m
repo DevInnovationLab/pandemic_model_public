@@ -2,7 +2,7 @@ function compare_exceedances(sensitivity_dir, figure_export)
 % Compare exceedance curves from an airborne sensitivity run (no mitigation, realized mitigation, vaccines always work).
 %
 % Uses output from run_sensitivity(..., 'response') with e.g.
-% config/sensitivity_configs/baseline_vaccine_program_airborne.yaml:
+% config/sensitivity_runs_configs/baseline_vaccine_program_airborne.yaml:
 %   sensitivity_dir/baseline/                    — baseline run (vaccines can fail)
 %   sensitivity_dir/ptrs_pathogen_gamma1/        — vaccines-always-succeed PTRs and gamma=1 (multi-parameter)
 %   or sensitivity_dir/ptrs_pathogen/value_1/   — same scenario, one-parameter layout
@@ -12,7 +12,7 @@ function compare_exceedances(sensitivity_dir, figure_export)
 % figure_export — 'both' (default), 'simulations_only', or 'baseline_madhav'.
 %
 % Args:
-%   sensitivity_dir — path to sensitivity run root (e.g. output/sensitivity/baseline_vaccine_program_airborne)
+%   sensitivity_dir — path to sensitivity run root (e.g. output/sensitivity_runs/baseline_vaccine_program_airborne)
 %   figure_export   — optional; which PDF(s) to write
 
     if nargin < 2 || isempty(figure_export)
@@ -39,10 +39,10 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
 
     % Chunk layout and table sizes from baseline job config
-    job_config = yaml.loadFile(fullfile(baseline_dir, 'job_config.yaml'));
-    sim_periods = job_config.sim_periods;
-    num_simulations = job_config.num_simulations;
-    config_min_grid = load_arrival_y_min(job_config);
+    run_config = yaml.loadFile(fullfile(baseline_dir, 'run_config.yaml'));
+    sim_periods = run_config.sim_periods;
+    num_simulations = run_config.num_simulations;
+    config_min_grid = load_arrival_y_min(run_config);
 
     raw_baseline = fullfile(baseline_dir, 'raw');
     raw_value1   = fullfile(value1_dir, 'raw');
@@ -222,9 +222,9 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
 end
 
-function y_min = load_arrival_y_min(job_config)
+function y_min = load_arrival_y_min(run_config)
     % Load y_min from the arrival distribution hyperparams in job config.
-    arrival_dir = char(string(job_config.arrival_dist_config));
+    arrival_dir = char(string(run_config.arrival_dist_config));
     hyper = yaml.loadFile(fullfile(arrival_dir, 'hyperparams.yaml'));
     y_min = double(hyper.y_min);
 end

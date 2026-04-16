@@ -28,7 +28,7 @@ function check_bootstrap_stability(sim_results_path, varargin)
     create_folders_recursively(figures_dir);
     
     % Load config to get scenario info
-    config = yaml.loadFile(fullfile(sim_results_path, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(sim_results_path, "run_config.yaml"));
     scenario_names = fieldnames(config.scenarios);
     scenario_names = scenario_names(~strcmp(scenario_names, 'baseline'));
     

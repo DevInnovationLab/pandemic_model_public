@@ -67,7 +67,7 @@ function F = fit_ex_ante_severity(ex_ante_severity, ...
     end
     
     % Get ex post severity and share deaths mitigated
-    h_arr = vax_mitigation_factor(vax_fractions_cum);
+    h_arr = h_function(vax_fractions_cum);
 
     monthly_intensity = (ex_ante_severity ./ months);
     u_deaths = (params.P0 / 10000) .* monthly_intensity .* ones(size(h_arr));

@@ -1,6 +1,6 @@
 # Config for sensitivity analysis on baseline and advance investment vaccine programs.
-base_job_config: "./config/job_configs/airborne_base.yaml"
-outdir: "./output/sensitivity"
+base_run_config: "./config/run_configs/airborne_base.yaml"
+outdir: "./output/sensitivity_runs"
 fix_params: # Parameters to update and fix in the base config
   scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:

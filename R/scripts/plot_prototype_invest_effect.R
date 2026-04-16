@@ -52,7 +52,7 @@ proto_effect_plot <- ggplot(proto_effect, aes(
   ) +
   labs(
     x = "Increase in probability of vaccine success",
-    y = NULL
+    y = "Technology platform"
   ) +
   theme_classic(base_size = 8) +
   theme(

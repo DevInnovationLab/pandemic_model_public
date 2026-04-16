@@ -35,8 +35,8 @@ function get_result_distribution(job_dir, results)
     figure_path = fullfile(job_dir, "figures");
     if ~exist(figure_path, 'dir'); mkdir(figure_path); end
 
-    job_config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
-    all_scenarios = string(fieldnames(job_config.scenarios));
+    run_config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
+    all_scenarios = string(fieldnames(run_config.scenarios));
     all_scenarios = all_scenarios(~strcmp(all_scenarios, "baseline"));
 
     % -------- Map scenarios to (row,col) --------

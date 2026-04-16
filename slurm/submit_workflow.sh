@@ -1,5 +1,5 @@
 #!/bin/bash
-# Usage: ./submit_full_workflow.sh <job_config> <num_chunks> [n_bootstrap]
+# Usage: ./submit_full_workflow.sh <run_config> <num_chunks> [n_bootstrap]
 
 
 set -euo pipefail

@@ -6,7 +6,7 @@ function get_exp_lives_saved_invest(job_dir)
     %   job_dir (string): Directory containing job configuration and results
 
     % Load config and get scenarios
-    config = yaml.loadFile(fullfile(job_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
     
     % Set up paths

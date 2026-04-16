@@ -1,3 +1,17 @@
+"""Generate scenario config files for pairwise investment complementarity analysis.
+
+Reads a baseline scenario config and writes out all individual and pairwise
+combinations of the four core interventions (improved_early_warning,
+neglected_pathogen_rd, universal_flu_rd, advance_capacity). Optional flags
+include precision-1 early-warning variants and zero-initial-share flu variants.
+
+Inputs:  config/scenario_configs/standard/baseline.yaml (or --base-config-path)
+Outputs: config/scenario_configs/pairwise_combos/*.yaml (or --config-dir)
+
+Usage:
+    python scripts/create_pairwise_configs.py [config_dir] [base_config_path]
+        [--include-prevac0] [--include-prec1]
+"""
 from copy import deepcopy
 from itertools import combinations
 from pathlib import Path
@@ -7,11 +21,6 @@ import yaml
 
 scenario_config_updates = {
     "improved_early_warning": {
-        "bcr": {
-            "active": True,
-            "precision": 0.5,
-            "recall": 0.4
-        },
         "surplus": {
             "active": True,
             "precision": 0.3,
@@ -19,21 +28,12 @@ scenario_config_updates = {
         }
     },
     "neglected_pathogen_rd": {
-        "bcr": {
-            "strategy": "top",
-            "num": 1
-        },
         "surplus": {
             "strategy": "top",
             "num": 3
         }
     },
     "universal_flu_rd": {
-        "bcr": {
-            "active": True,
-            "platform_response_invest": "single",
-            "initial_share_ufv": 0.1
-        },
         "surplus" : {
             "active": True,
             "platform_response_invest": "both",
@@ -41,11 +41,8 @@ scenario_config_updates = {
         },
     },
     "advance_capacity": {
-        "bcr": {
-            "share_target_advance_capacity": 0.375
-        },
         "surplus": {
-            "share_target_advance_capacity": 0.5
+            "share_target_advance_capacity": 1
         }
     }
 }
@@ -56,8 +53,8 @@ scenario_config_updates = {
 @click.option('--include-prevac0', is_flag=True, default=False)
 @click.option('--include-prec1', is_flag=True, default=False)
 def create_pairwise_configs(config_dir, base_config_path, include_prevac0, include_prec1):
-
-    # Create scenario config outdir
+    """Write baseline, single-intervention, and pairwise scenario config files."""
+    # --- Setup ---
     outdir = Path(config_dir)
     outdir.mkdir(parents=False, exist_ok=True)
 
@@ -70,9 +67,11 @@ def create_pairwise_configs(config_dir, base_config_path, include_prevac0, inclu
     with open(baseline_output_path, 'w') as f:
         yaml.dump(baseline_config, f, sort_keys=False)
 
-    # 2. Make pairwise configs (pair each investment intervention with each other under both bcr and surplus scenarios)
+    # --- Pairwise combinations ---
+
+    # Pair each investment intervention with each other (all unordered pairs)
     scenario_keys = list(scenario_config_updates.keys())
-    scenario_types = ["bcr", "surplus"]
+    scenario_types = ["surplus"]
 
     # Create all unique unordered pairwise combinations for each scenario type (no duplicate orderings)
     pairwise_combos = list(combinations(scenario_keys, 2))
@@ -89,7 +88,7 @@ def create_pairwise_configs(config_dir, base_config_path, include_prevac0, inclu
             with open(output_path, 'w') as f:
                 yaml.dump(new_config, f, sort_keys=False)
 
-    # Add all single-intervention configs too
+    # --- Single-intervention configs ---
     for scenario_type in scenario_types:
         for scenario_key in scenario_keys:
             new_config = deepcopy(baseline_config)

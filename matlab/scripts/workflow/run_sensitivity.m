@@ -1,5 +1,5 @@
 function run_sensitivity(config_path, run_type, varargin)
-    % Run a sensivitity config, which takes a job_config and details parameter variations to run.
+    % Run a sensivitity config, which takes a run_config and details parameter variations to run.
     % The script has capacity for sens
     % 
     % Run type options:
@@ -62,9 +62,9 @@ function run_sensitivity_core(sensitivity_config, run_type, overwrite, num_chunk
         run_config.outdir = scenario_dir;
         create_folders_recursively(run_config.outdir);
 
-        job_config_path = fullfile(run_config.outdir, 'job_config.yaml');
-        if ~overwrite && exist(job_config_path, 'file')
-            fprintf('Skipping scenario "%s" (job_config.yaml exists).\n', scenario_id);
+        run_config_path = fullfile(run_config.outdir, 'run_config.yaml');
+        if ~overwrite && exist(run_config_path, 'file')
+            fprintf('Skipping scenario "%s" (run_config.yaml exists).\n', scenario_id);
             continue;
         end
 
@@ -75,7 +75,7 @@ end
 
 
 function base_config = get_base_config(sensitivity_config)
-    base_config = yaml.loadFile(sensitivity_config.base_job_config);
+    base_config = yaml.loadFile(sensitivity_config.base_run_config);
 end
 
 
@@ -99,9 +99,9 @@ function run_baseline(base_config, base_dir, run_type, overwrite, num_chunks, ar
     run_config.outdir = fullfile(base_dir, 'baseline');
     create_folders_recursively(run_config.outdir);
 
-    % Only run if job_config.yaml does not exist in outdir, indicating job was not yet run
-    job_config_path = fullfile(run_config.outdir, 'job_config.yaml');
-    if ~overwrite && exist(job_config_path, 'file')
+    % Only run if run_config.yaml does not exist in outdir, indicating job was not yet run
+    run_config_path = fullfile(run_config.outdir, 'run_config.yaml');
+    if ~overwrite && exist(run_config_path, 'file')
         fprintf('Skipping baseline as overwrite set to false.\n');
         return;
     end

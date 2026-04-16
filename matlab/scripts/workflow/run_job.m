@@ -1,4 +1,4 @@
-function run_job(job_config_path, varargin)
+function run_job(run_config_path, varargin)
     % Universal entry point for running jobs locally or on SLURM
     % 
     % Local usage:
@@ -18,24 +18,24 @@ function run_job(job_config_path, varargin)
     is_array_task = ~isnan(array_task_id);
     
     % Load and validate job config
-    job_config = yaml.loadFile(job_config_path);
-    validate_job_config(job_config, 'run_job');
-    [~, job_config_name, ~] = fileparts(job_config_path);
+    run_config = yaml.loadFile(run_config_path);
+    validate_run_config(run_config, 'run_job');
+    [~, run_config_name, ~] = fileparts(run_config_path);
     
     % Determine output directory
-    base_foldername = job_config_name;
-    sim_results_path = fullfile(job_config.outdir, base_foldername);
+    base_foldername = run_config_name;
+    sim_results_path = fullfile(run_config.outdir, base_foldername);
     raw_results_path = fullfile(sim_results_path, "raw");
     figure_path = fullfile(sim_results_path, "figures");
-    job_config.outdirpath = sim_results_path;
-    job_config.rawoutpath = raw_results_path;
+    run_config.outdirpath = sim_results_path;
+    run_config.rawoutpath = raw_results_path;
 
     create_folders_recursively(sim_results_path);
     create_folders_recursively(raw_results_path);
     create_folders_recursively(figure_path);
 
     % Load scenario configs
-    scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
+    scenario_config_paths = dir(fullfile(run_config.scenario_configs, '*.yaml'));
     scenario_configs = cell(length(scenario_config_paths), 1);
     for i = 1:length(scenario_config_paths)
         scenario_config_path = fullfile(scenario_config_paths(i).folder, scenario_config_paths(i).name);
@@ -66,12 +66,12 @@ function run_job(job_config_path, varargin)
             highest_false_positive_rate = scenario_false_positive_rate;
         end
     end
-    job_config.highest_false_positive_rate = highest_false_positive_rate;
+    run_config.highest_false_positive_rate = highest_false_positive_rate;
     
     % Calculate chunk boundaries
-    chunk_size = ceil(job_config.num_simulations / num_chunks);
-    chunk_starts = 1:chunk_size:job_config.num_simulations;
-    chunk_ends = [chunk_starts(2:end)-1, job_config.num_simulations];
+    chunk_size = ceil(run_config.num_simulations / num_chunks);
+    chunk_starts = 1:chunk_size:run_config.num_simulations;
+    chunk_ends = [chunk_starts(2:end)-1, run_config.num_simulations];
     
     % Determine which chunks to process
     if is_array_task
@@ -87,11 +87,11 @@ function run_job(job_config_path, varargin)
         if ~is_array_task
             fprintf('Processing chunk %d/%d...\n', chunk_idx, num_chunks);
         end
-        chunk_config = job_config;
-        chunk_config.seed = job_config.seed + chunk_idx;
+        chunk_config = run_config;
+        chunk_config.seed = run_config.seed + chunk_idx;
         
         run_chunk(chunk_idx, chunk_starts(chunk_idx), chunk_ends(chunk_idx), ...
-                    job_config, scenario_configs, raw_results_path);
+                    run_config, scenario_configs, raw_results_path);
         
         if ~is_array_task
             fprintf('Completed chunk %d/%d (%.1f%%)\n', chunk_idx, num_chunks, 100*chunk_idx/num_chunks);
@@ -104,15 +104,15 @@ function run_job(job_config_path, varargin)
 	    scenarios.(scenario_configs{i}.name) = scenario_configs{i};
     end
     
-    job_config.scenarios = scenarios;
-    yaml.dumpFile(fullfile(sim_results_path, 'job_config.yaml'), job_config);
+    run_config.scenarios = scenarios;
+    yaml.dumpFile(fullfile(sim_results_path, 'run_config.yaml'), run_config);
     if ~is_array_task
 	    fprintf('All chunks completed!\n');
     end
 end
 
 
-function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_configs, raw_results_path)
+function run_chunk(chunk_idx, chunk_start, chunk_end, run_config, scenario_configs, raw_results_path)
 
     % Load chunk-specific distributions from files
     chunk_dir = fullfile(raw_results_path, sprintf('chunk_%d', chunk_idx));
@@ -120,31 +120,31 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     chunk_range = chunk_start:chunk_end;
     num_simulations = length(chunk_range);
 
-    arrival_dist = load_arrival_dist(job_config.arrival_dist_config, ...
-                                job_config.highest_false_positive_rate, ...
+    arrival_dist = load_arrival_dist(run_config.arrival_dist_config, ...
+                                run_config.highest_false_positive_rate, ...
                                 [chunk_start, chunk_end]);
-    duration_dist = load_duration_dist(job_config.duration_dist_config, [chunk_start, chunk_end]);
+    duration_dist = load_duration_dist(run_config.duration_dist_config, [chunk_start, chunk_end]);
 
-    arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
-    pathogen_info = readtable(job_config.pathogen_info, "TextType", "string");
-    ptrs_pathogen = readtable(job_config.ptrs_pathogen, "TextType", "string");
-    prototype_effect_ptrs = readtable(job_config.prototype_effect_ptrs, "TextType", "string");
-    response_rd_timelines = readtable(job_config.rd_timelines, "TextType", "string"); % Currently deprecated but keeping logic in case we want to return
-    econ_loss_model = load_econ_loss_model(job_config.econ_loss_model_config);
+    arrival_rates = readtable(run_config.arrival_rates, "TextType", "string");
+    pathogen_info = readtable(run_config.pathogen_info, "TextType", "string");
+    ptrs_pathogen = readtable(run_config.ptrs_pathogen, "TextType", "string");
+    prototype_effect_ptrs = readtable(run_config.prototype_effect_ptrs, "TextType", "string");
+    response_rd_timelines = readtable(run_config.rd_timelines, "TextType", "string"); % Currently deprecated but keeping logic in case we want to return
+    econ_loss_model = load_econ_loss_model(run_config.econ_loss_model_config);
 
     % Convert logical columns in both arrival_rates and pathogen_info tables
     pathogen_info = convert_logical_columns(pathogen_info);
     arrival_rates = convert_logical_columns(arrival_rates);
 
-    response_threshold_dict = yaml.loadFile(job_config.response_threshold_path);
-    job_config.response_threshold = response_threshold_dict.response_threshold;
-    job_config.response_threshold_type = response_threshold_dict.response_threshold_type;
+    response_threshold_dict = yaml.loadFile(run_config.response_threshold_path);
+    run_config.response_threshold = response_threshold_dict.response_threshold;
+    run_config.response_threshold_type = response_threshold_dict.response_threshold_type;
 
     % Generate base simulation table for this chunk (sim_num is 1:num_simulations within chunk)
     [base_simulation_table, total_removed, total_trimmed] = ...
         get_base_simulation_table(arrival_dist, duration_dist, ...
                                   arrival_rates, pathogen_info, ...
-                                  job_config.seed, num_simulations, job_config);
+                                  run_config.seed, num_simulations, run_config);
 
     response_simulation_table = base_simulation_table(base_simulation_table.response_outbreak, :);
 
@@ -160,7 +160,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
     baseline_idx = find(strcmp(cellfun(@(x) x.name, scenario_configs, 'UniformOutput', false), 'baseline'), 1);
     if ~isempty(baseline_idx)
         % Update params for this scenario
-        simulation_params = update_params(job_config, scenario_configs{baseline_idx}, arrival_rates);
+        simulation_params = update_params(run_config, scenario_configs{baseline_idx}, arrival_rates);
         
         % Get scenario simulation table
         scenario_simulation_table = get_scenario_simulation_table(response_simulation_table, ...
@@ -180,7 +180,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         baseline_sums = get_baseline_sums_table(annual_results_baseline, num_simulations);
         save(fullfile(chunk_dir, 'baseline_sums.mat'), 'baseline_sums', '-v7.3');
         
-        save_pandemic_table(scenario_pandemic_table, 'baseline', chunk_dir, job_config.pandemic_table_out);
+        save_pandemic_table(scenario_pandemic_table, 'baseline', chunk_dir, run_config.pandemic_table_out);
         
         result_names = fieldnames(annual_results_baseline);
     else
@@ -196,7 +196,7 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         end
 
         % Run simulation
-        simulation_params = update_params(job_config, scenario_configs{i}, arrival_rates);
+        simulation_params = update_params(run_config, scenario_configs{i}, arrival_rates);
         scenario_simulation_table = get_scenario_simulation_table(response_simulation_table, ...
             ptrs_pathogen, prototype_effect_ptrs, response_rd_timelines, simulation_params);
         
@@ -207,19 +207,19 @@ function run_chunk(chunk_idx, chunk_start, chunk_end, job_config, scenario_confi
         scenario_pandemic_table.sim_num = scenario_pandemic_table.sim_num + chunk_start - 1;
 
         [scenario_sum_table, relative_annual_results] = get_relative_results(...
-            annual_results, annual_results_baseline, num_simulations, job_config.tolerance);
+            annual_results, annual_results_baseline, num_simulations, run_config.tolerance);
 
         % Save chunk results
         chunk_sum_path = fullfile(chunk_dir, ...
             sprintf('%s_relative_sums.mat', scenario_name));
         save(chunk_sum_path, 'scenario_sum_table', '-v7.3');
         
-        if ~strcmp(job_config.save_mode, "light")
+        if ~strcmp(run_config.save_mode, "light")
             annual_rel_path = fullfile(chunk_dir, ...
                 sprintf('%s_relative_annual.mat', scenario_name));
             save(annual_rel_path, '-struct', 'relative_annual_results', '-v7.3');
 
-            save_pandemic_table(scenario_pandemic_table, scenario_name, chunk_dir, job_config.pandemic_table_out);
+            save_pandemic_table(scenario_pandemic_table, scenario_name, chunk_dir, run_config.pandemic_table_out);
         end
     end
 end
@@ -316,10 +316,10 @@ function baseline_sums = get_baseline_sums_table(annual_results_baseline, num_si
 end
 
 
-function updated_params = update_params(job_config, scenario_config, arrival_rates)
+function updated_params = update_params(run_config, scenario_config, arrival_rates)
 
     % New parameters override base parameters
-    updated_params = job_config;
+    updated_params = run_config;
     if ~isempty(scenario_config)
         fns = fieldnames(scenario_config);
         for k=1:numel(fns)

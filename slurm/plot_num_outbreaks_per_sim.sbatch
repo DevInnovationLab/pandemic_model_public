@@ -10,7 +10,7 @@
 #SBATCH --account=pi-rglennerster
 
 # Usage: sbatch slurm/plot_num_outbreaks_per_sim.sbatch <job_dir>
-# Example: sbatch slurm/plot_num_outbreaks_per_sim.sbatch output/jobs/allrisk_base
+# Example: sbatch slurm/plot_num_outbreaks_per_sim.sbatch output/single_runs/allrisk_base
 
 JOB_DIR=$1
 

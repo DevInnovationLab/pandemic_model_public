@@ -1,13 +1,13 @@
-function investigate_simulation_error(job_config_path)
+function investigate_simulation_error(run_config_path)
     % This script implements a simple test to understand sample size we need to get small simulation error.
 
-    job_config = yaml.loadFile(job_config_path);
+    run_config = yaml.loadFile(run_config_path);
 
      % Handle folderpath input for scenario configs
-     if isfolder(job_config.scenario_configs)
-        scenario_config_paths = dir(fullfile(job_config.scenario_configs, '*.yaml'));
-    elseif isfile(job_config.scenario_configs)
-        scenario_config_paths = dir(fullfile(job_config.scenario_configs));
+     if isfolder(run_config.scenario_configs)
+        scenario_config_paths = dir(fullfile(run_config.scenario_configs, '*.yaml'));
+    elseif isfile(run_config.scenario_configs)
+        scenario_config_paths = dir(fullfile(run_config.scenario_configs));
     else
         print("Improper scenario config")
     end
@@ -31,13 +31,13 @@ function investigate_simulation_error(job_config_path)
             highest_false_positive_rate = scenario_false_positive_rate;
         end
     end
-    job_config.highest_false_positive_rate = highest_false_positive_rate;
+    run_config.highest_false_positive_rate = highest_false_positive_rate;
 
     % Load inputs from files
-    arrival_dist = load_arrival_dist(job_config.arrival_dist_config, highest_false_positive_rate);
-    duration_dist = load_duration_dist(job_config.duration_dist_config);
-    arrival_rates = readtable(job_config.arrival_rates, "TextType", "string");
-    prototype_effect_ptrs = readtable(job_config.prototype_effect_ptrs, "TextType", "string");
+    arrival_dist = load_arrival_dist(run_config.arrival_dist_config, highest_false_positive_rate);
+    duration_dist = load_duration_dist(run_config.duration_dist_config);
+    arrival_rates = readtable(run_config.arrival_rates, "TextType", "string");
+    prototype_effect_ptrs = readtable(run_config.prototype_effect_ptrs, "TextType", "string");
 
     % First let's check how much variation there is in draws based on parameter samples
     boot_share = 2/3;

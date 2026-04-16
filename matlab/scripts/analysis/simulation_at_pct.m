@@ -11,7 +11,7 @@ function [out_tbl, info] = simulation_at_pct(job_dir, scenario_name, percentile)
     % inferring chunk ranges from chunk counts.
     %
     % Args:
-    %   job_dir (char/string): Completed job directory (job_config.yaml, raw/, processed/).
+    %   job_dir (char/string): Completed job directory (run_config.yaml, raw/, processed/).
     %   scenario_name (char/string): "baseline" or a scenario name.
     %   percentile (double): Value in [0, 100].
     %

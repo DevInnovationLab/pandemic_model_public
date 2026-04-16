@@ -12,7 +12,7 @@ matlab -batch "run('./matlab/load_project.m');
                clean_hiv_deaths;
                clean_pathogen_data;
                clean_madhav_severity_exceedance;
-               find_natural_covid_deaths('./config/job_configs/covid_severity_search.yaml');"
+               find_natural_covid_deaths('./config/run_configs/covid_severity_search.yaml');"
 
 python ./python/scripts/clean_ptrs.py
 python ./python/scripts/clean_rd_timelines_and_cost.py

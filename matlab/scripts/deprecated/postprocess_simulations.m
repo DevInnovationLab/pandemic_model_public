@@ -1,6 +1,6 @@
 function postprocess_simulations(results_dir)
 
-    config = yaml.loadFile(fullfile(results_dir, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(results_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));
     rawdata_dir = fullfile(results_dir, "raw");
 

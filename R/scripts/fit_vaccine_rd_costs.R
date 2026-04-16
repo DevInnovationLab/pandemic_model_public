@@ -8,7 +8,7 @@ library(survival)
 library(tidyverse)
 library(statmod)
 
-rd_costs <- read_csv("./data/clean/vaccine_rd_costs.csv")
+rd_costs <- read_csv("./data/clean/vaccine_rd_cost_responses.csv")
 
 rd_costs <- rd_costs %>%
   mutate(

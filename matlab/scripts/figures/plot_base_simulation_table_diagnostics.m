@@ -1,8 +1,8 @@
-function plot_base_simulation_table_diagnostics(base_simulation_table, figure_path, job_config)
+function plot_base_simulation_table_diagnostics(base_simulation_table, figure_path, run_config)
 
     % Pandemics per simulation histogram
     h = histogram(base_simulation_table.eff_severity, 'Visible', 'off');
-    counts = h.Values / job_config.num_simulations;
+    counts = h.Values / run_config.num_simulations;
     midpoints = h.BinEdges(1:end-1) + diff(h.BinEdges) / 2;
     average_simulation_hist = figure('Visible', 'off');
     bar(midpoints, counts);
@@ -14,7 +14,7 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
 
     % Ex post severity exceedance function
     ex_post_severity_fig = figure('Visible', 'off');
-    total_draws = job_config.num_simulations * job_config.sim_periods;
+    total_draws = run_config.num_simulations * run_config.sim_periods;
     [unique_severities, ~, ic] = unique(sort(base_simulation_table.severity));
     severity_counts = histcounts(ic, 1:max(ic)+1); % Count occurrences of each unique intensity
     emp_min_severity_prob = 1 - sum(severity_counts) / total_draws;
