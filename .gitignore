@@ -21,6 +21,7 @@ python/.python-version
 
 # MATLAB auto-save
 *.asv
+matlab/notebooks/
 
 # R
 renv/library/
