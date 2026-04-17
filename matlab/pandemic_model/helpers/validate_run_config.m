@@ -12,7 +12,7 @@ function validate_run_config(config, caller)
     %
     % Example:
     %   run_config = yaml.loadFile(run_config_path);
-    %   validate_run_config(run_config, 'run_job');
+    %   validate_run_config(run_config, 'run_model');
 
     if nargin < 2
         caller = 'validate_run_config';
@@ -36,8 +36,8 @@ function validate_run_config(config, caller)
         'value_of_death', ...
     };
 
-    % Additional fields required only by run_job (full response model).
-    run_job_required = { ...
+    % Additional fields required only by run_model (full response model).
+    run_model_required = { ...
         'scenario_configs', ...
         'ptrs_pathogen', ...
         'prototype_effect_ptrs', ...
@@ -51,9 +51,9 @@ function validate_run_config(config, caller)
     check_fields(config, core_required, caller);
 
     if isfield(config, 'scenario_configs')
-        % If scenario_configs is present, treat this as a run_job config
+        % If scenario_configs is present, treat this as a run_model config
         % and validate the full set of required fields.
-        check_fields(config, run_job_required, caller);
+        check_fields(config, run_model_required, caller);
     end
 end
 

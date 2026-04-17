@@ -1,8 +1,12 @@
 function plot_disagg_cost_comparison(job_dir)
-    % Plots cost comparison figures showing costs relative to baseline for each scenario
-    % Combines tailoring costs with response capacity and ensures combined scenario is last
+    % Plot per-cost-component comparisons relative to baseline for each scenario.
+    %
+    % Produces bar charts showing how each cost category (advance capacity, R&D,
+    % surveillance, response) changes relative to baseline. Combines tailoring with
+    % response capacity and places the combined scenario last.
+    %
     % Args:
-    %   job_dir: Directory containing job configuration and results
+    %   job_dir  Path to the job output directory (contains run_config.yaml and raw/).
 
     config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
     scenarios = string(fieldnames(config.scenarios));

@@ -1,4 +1,28 @@
 function [simulation_table, total_removed, total_trimmed] = get_base_simulation_table(arrival_dist, duration_dist, arrival_rates, pathogen_info, seed, chunk_simulations, params)
+	% Sample pandemic events from arrival and duration distributions.
+	%
+	% Draws random severities/intensities and durations for each simulation and year,
+	% assembles an event table, prunes overlapping intervals, and draws advance R&D
+	% success states (prototype and universal flu vaccine) at the simulation level.
+	%
+	% Args:
+	%   arrival_dist        Arrival distribution object (.ppf, .measure, .false_positive_rate).
+	%   duration_dist       Duration distribution object (.get_duration).
+	%   arrival_rates       Table of pathogen arrival rates (columns: pathogen, estimate).
+	%   pathogen_info       Table with prototype status per pathogen (columns: pathogen, has_prototype).
+	%   seed                Random seed for reproducibility.
+	%   chunk_simulations   Number of simulations in this chunk.
+	%   params              Struct of run parameters. Key fields: sim_periods,
+	%                       response_threshold, response_threshold_type,
+	%                       ufv_success_prob, prototype_success_prob.
+	%
+	% Returns:
+	%   simulation_table    Table of sampled pandemic events with columns: sim_num,
+	%                       yr_start, yr_end, severity, intensity, actual_dur, eff_severity,
+	%                       is_false, pathogen, vax states, response_outbreak, and
+	%                       advance R&D success columns per non-baseline pathogen.
+	%   total_removed       Number of events removed due to overlap (weaker event discarded).
+	%   total_trimmed       Number of events snipped due to overlap (yr_end reduced).
 	% Set seed
 	rng(seed);
 

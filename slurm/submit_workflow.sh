@@ -20,7 +20,7 @@ echo "Submitting workflow for ${JOB_CONFIG}"
 echo "  Chunks: ${NUM_CHUNKS}"
 echo "  Bootstrap samples: ${N_BOOTSTRAP}"
 
-# Clear job outdir before submitting so array order does not matter (matches run_job.m path)
+# Clear job outdir before submitting so array order does not matter (matches run_model.m path)
 OUTDIR=$(awk '
   /^[[:space:]]*outdir[[:space:]]*:/ {
     line = $0

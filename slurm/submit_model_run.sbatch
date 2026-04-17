@@ -14,4 +14,4 @@
 
 module load matlab/2023a
 
-matlab -batch "run('./matlab/load_project.m'); run_job('${JOB_CONFIG}', 'array_task_id', ${SLURM_ARRAY_TASK_ID}, 'num_chunks', ${NUM_CHUNKS});"
+matlab -batch "run('./matlab/load_project.m'); run_model('${JOB_CONFIG}', 'array_task_id', ${SLURM_ARRAY_TASK_ID}, 'num_chunks', ${NUM_CHUNKS});"

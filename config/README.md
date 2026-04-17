@@ -13,7 +13,7 @@ file paths for inputs, and capacity/vaccine/surveillance parameters.
 **Usage:**
 ```matlab
 run_workflow('config/run_configs/allrisk_base.yaml')
-run_job('config/run_configs/allrisk_base.yaml')
+run_model('config/run_configs/allrisk_base.yaml')
 estimate_unmitigated_losses('config/run_configs/allrisk_base.yaml')
 ```
 
@@ -36,7 +36,7 @@ estimate_unmitigated_losses('config/run_configs/allrisk_base.yaml')
 | `Y0` | float | Base year world GDP per capita (USD) |
 | `value_of_death` | float | Value of statistical life (USD) |
 
-### Additional Required Fields (run_job / run_workflow only)
+### Additional Required Fields (run_model / run_workflow only)
 
 | Field | Type | Description |
 |---|---|---|

@@ -12,10 +12,7 @@ sim_periods = run_config.sim_periods;
 num_simulations = run_config.num_simulations;
 
 rawdir = fullfile(outdir, 'raw');
-chunk_dirs = dir(fullfile(rawdir, 'chunk_*'));
-chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-[~, sort_idx] = sort(cellfun(@(x) sscanf(x, 'chunk_%d'), {chunk_dirs.name}));
-chunk_dirs = chunk_dirs(sort_idx);
+chunk_dirs = list_chunk_dirs(rawdir);
 
 %% 2. Load base and pandemic tables (inspection columns)
 % Base: severity, duration, response flag. Pandemic: ex_post_severity, rd_state if present.

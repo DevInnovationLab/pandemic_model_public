@@ -67,7 +67,7 @@ matlab -batch "run('./matlab/load_project'); run_workflow('config/run_configs/al
 ### Single job (local)
 
 ```bash
-matlab -batch "run('./matlab/load_project'); run_job('config/run_configs/allrisk_base.yaml')"
+matlab -batch "run('./matlab/load_project'); run_model('config/run_configs/allrisk_base.yaml')"
 ```
 
 ### Sensitivity analysis
@@ -143,7 +143,7 @@ matlab/
     +sim_indexing/    # Simulation indexing package
     econ_loss/        # EconLossModel class
   scripts/
-    workflow/         # run_job, run_workflow, run_sensitivity, aggregate_*, bootstrap_*
+    workflow/         # run_model, run_workflow, run_sensitivity, aggregate_*, bootstrap_*
     analysis/         # get_*, check_*, compare_*, build_sensitivity_loss_tables
     figures/          # plot_*, write_* (tables and figures)
     deprecated/       # Superseded scripts (do not use)

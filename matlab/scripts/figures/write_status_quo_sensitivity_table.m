@@ -1,14 +1,14 @@
-function get_baseline_vaccine_sensitivity_table(sensitivity_dir)
-    %% Generate summary table for sensitivity analysis results.
-    %   To be used for the all risk
+function write_status_quo_sensitivity_table(sensitivity_dir)
+    % Build the status-quo vaccine benefits sensitivity table and write CSV + LaTeX.
+    %
+    % Loads aggregated benefits from all sensitivity variants and computes mean vaccine
+    % benefits for the baseline and each variant. Writes a summary table showing the
+    % baseline value and the range across sensitivity runs.
     %
     % Args:
-    %
-    % This function:
-    % 1. Loads results from all sensitivity runs
-    % 2. Calculates vaccine benefits for each scenario
-    % 3. Creates a summary table with baseline and ranges
-    % 4. Outputs the table in CSV and LaTeX formats
+    %   sensitivity_dir  Path to sensitivity output directory containing
+    %                    processed/baseline_benefits_summary.mat and
+    %                    sensitivity_config.yaml.
     
     % Load sensitivity configuration
     sensitivity_dir = char(sensitivity_dir);

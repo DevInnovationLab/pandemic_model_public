@@ -1,15 +1,11 @@
 function create_folders_recursively(path)
-    % Split the path into individual folders
-    folders = strsplit(path, filesep);
-    
-    % Initialize an empty path
-    currentPath = '';
-    
-    % Iterate over each folder and create it if it does not exist
-    for i = 1:length(folders)
-        currentPath = fullfile(currentPath, folders{i});
-        if ~exist(currentPath, 'dir')
-            mkdir(currentPath);
+% Create a directory and all necessary parent directories.
+% No-op if the directory already exists.
+    if ~exist(path, 'dir')
+        parent = fileparts(path);
+        if ~isempty(parent) && ~exist(parent, 'dir')
+            create_folders_recursively(parent);
         end
+        mkdir(path);
     end
 end

@@ -64,20 +64,9 @@ function estimate_unmitigated_losses(run_config_path, varargin)
         run_config.response_threshold_type = response_threshold_dict.response_threshold_type;
     end
 
-    % Chunk boundaries (same logic as run_job.m)
-    num_simulations_total = run_config.num_simulations;
-    chunk_size = ceil(num_simulations_total / num_chunks);
-    chunk_starts = 1:chunk_size:num_simulations_total;
-    chunk_ends = [chunk_starts(2:end) - 1, num_simulations_total];
+    [chunks_to_process, chunk_starts, chunk_ends] = get_chunk_boundaries(run_config.num_simulations, num_chunks, array_task_id);
 
-    if is_array_task
-        chunks_to_process = array_task_id;
-        fprintf('Running as SLURM array task %d/%d\n', array_task_id, num_chunks);
-    else
-        chunks_to_process = 1:num_chunks;
-    end
-
-    % Load shared inputs once (same as run_job.m)
+    % Load shared inputs once (same as run_model.m)
     arrival_rates = readtable(run_config.arrival_rates, "TextType", "string");
     pathogen_info = readtable(run_config.pathogen_info, "TextType", "string");
     econ_loss_model = load_econ_loss_model(run_config.econ_loss_model_config);

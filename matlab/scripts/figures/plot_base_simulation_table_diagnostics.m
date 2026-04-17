@@ -1,4 +1,13 @@
 function plot_base_simulation_table_diagnostics(base_simulation_table, figure_path, run_config)
+    % Generate diagnostic figures for a base simulation table.
+    %
+    % Produces and saves two PDF figures: a histogram of effective pandemic severities
+    % (average events per simulation) and an ex-post severity exceedance function.
+    %
+    % Args:
+    %   base_simulation_table  Table from get_base_simulation_table.
+    %   figure_path            Directory where PDF figures are written.
+    %   run_config             Struct with fields: num_simulations, sim_periods.
 
     % Pandemics per simulation histogram
     h = histogram(base_simulation_table.eff_severity, 'Visible', 'off');
@@ -9,8 +18,7 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     xlabel("Effective severity");
     ylabel("Average number of pandemics per simulation (200 years)");
     title("Histogram of pandemic severities for average simulation");
-    exportgraphics(average_simulation_hist, fullfile(figure_path, "average_simulation_hist.pdf"), ...
-        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+    exportgraphics(average_simulation_hist, fullfile(figure_path, "average_simulation_hist.pdf"));
 
     % Ex post severity exceedance function
     ex_post_severity_fig = figure('Visible', 'off');
@@ -31,8 +39,7 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     set(gca, 'XScale', 'log');
     set(gca, 'FontSize', 11); % Set axis font size
     
-    exportgraphics(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.pdf"), ...
-        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+    exportgraphics(ex_post_severity_fig, fullfile(figure_path, "ex_post_severity_exceedance.pdf"));
 
     % Plot duration distribution
     plot_duration_distributions(base_simulation_table, figure_path, false); % No clipped durations
@@ -46,8 +53,7 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     title('Effective severity vs pandemic duration');
     grid on;
     
-    exportgraphics(dur_severity_scatterhist, fullfile(figure_path, "dur_severity_scatterhist.pdf"), ...
-        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+    exportgraphics(dur_severity_scatterhist, fullfile(figure_path, "dur_severity_scatterhist.pdf"));
 
     % 3d histogram of effective duration and severity
     severity_dur_hist = figure('Visible', 'off');
@@ -58,6 +64,5 @@ function plot_base_simulation_table_diagnostics(base_simulation_table, figure_pa
     ylabel("Actual duration (years)");
     zlabel("Probability");
     title("Realized pandemic severity and duration histogram");
-    exportgraphics(severity_dur_hist, fullfile(figure_path, 'dur_severity_histogram.pdf'), ...
-        "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+    exportgraphics(severity_dur_hist, fullfile(figure_path, 'dur_severity_histogram.pdf'));
 end

@@ -1,8 +1,28 @@
-% Would love to clean this up later.
 function new_simulation_table = get_scenario_simulation_table(base_simulation_table, ptrs_pathogen, ...
-															  prototype_effect_ptrs, ...
-															  response_rd_timelines, ... %Deprecated but keeping logic in case we want to return
-															  params)
+															  prototype_effect_ptrs, params)
+	% Apply scenario-specific interventions to a base simulation table.
+	%
+	% Adjusts the false-positive rate for the surveillance scenario, computes R&D success
+	% outcomes (prototype vaccines across traditional and mRNA platforms, plus universal flu
+	% vaccine), determines vaccine readiness timelines, and encodes R&D states.
+	%
+	% Args:
+	%   base_simulation_table   Table from get_base_simulation_table.
+	%   ptrs_pathogen           Table of pathogen-level PTRS by platform
+	%                           (columns: pathogen, platform, ptrs).
+	%   prototype_effect_ptrs   Table of PTRS increments from having a prototype
+	%                           (columns: platform, effect_mean).
+	%   params                  Struct of run parameters. Key fields:
+	%                           improved_early_warning, highest_false_positive_rate,
+	%                           new_invested_pathogens, advance_RD_benefit_start,
+	%                           rd_months_with/no_prototype, universal_flu_rd.
+	%
+	% Returns:
+	%   new_simulation_table    Augmented table with columns: month_response_vaccine_ready,
+	%                           prep_start_month, response_initiated, has_prototype,
+	%                           has_adv_prototype, prototype_acquired_from_response,
+	%                           ufv_protection, rd_state, rd_state_desc.
+	
 	% First thing to do is to deal with the false positive outbreaks
 	% Keeping right amount for false positive rate implied by early warning
 	scenario_false_positive_rate = params.improved_early_warning.active .* (1 -  params.improved_early_warning.precision); 
@@ -104,13 +124,6 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	prototype_acquired_from_response = T.cond;
 	prototype_acquired_from_response(isnan(prototype_acquired_from_response)) = false; % Recode nans when there is no outbreak to false
 
-	% prototype_acquired_from_response = splitapply(@(rrs, hbp, hap, niv) cummax(rrs & ~hbp & ~hap & ~niv), ...
-	% 											  response_rd_success, ...
-	% 											  sorted_has_baseline_prototype, ...
-	% 											  sorted_has_adv_prototype, ...
-	% 											  non_id_virus, ...
-	% 											  grp);
-
 	% Adjust probabilities for rows that acquire prototype during simulation
 	sorted_trad_probs(prototype_acquired_from_response) = sorted_trad_probs(prototype_acquired_from_response) + trad_increment;
 	sorted_mrna_probs(prototype_acquired_from_response) = sorted_mrna_probs(prototype_acquired_from_response) + mrna_increment;
@@ -148,17 +161,10 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	end
 		
 	%% Vaccine development timelines
-	% has_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 1), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 1));
-	% no_prototype_timeline_map = dictionary(response_rd_timelines.pathogen(response_rd_timelines.has_prototype == 0), response_rd_timelines.time_to_vaccine(response_rd_timelines.has_prototype == 0));
-	% has_prototype_timeline_map("unknown_virus") = max(values(has_prototype_timeline_map));
-	% no_prototype_timeline_map("unknown_virus") = max(values(no_prototype_timeline_map));
-	% has_prototype_timeline_map(missing) = NaN;
-	% no_prototype_timeline_map(missing) = NaN;
 
 	rd_timeline = nan(height(new_simulation_table), 1);
 	rd_timeline(~has_prototype) = params.rd_months_no_prototype;
 	rd_timeline(has_prototype) = params.rd_months_with_prototype;
-	% rd_timeline(isnan(rd_timeline)) = max(values(no_prototype_timeline_map)); % Take maximum timeline for unknown pathogens
 	
 	% Ensure all have RD timeline and convert to months
 	assert(all(~isnan(rd_timeline)));
@@ -174,11 +180,12 @@ function new_simulation_table = get_scenario_simulation_table(base_simulation_ta
 	new_simulation_table.ufv_protection = ufv_protection;
 
 	% Encode non universal vaccine R&D states
-	new_simulation_table.rd_state = 4 * ones(size(trad_success)); % Initialize all to state 4 (none successful)
-	new_simulation_table.rd_state(mrna_success & trad_success) = 1; % Both successful
-	new_simulation_table.rd_state(mrna_success & ~trad_success) = 2; % Only mRNA successful  
-	new_simulation_table.rd_state(~mrna_success & trad_success) = 3; % Only traditional successful
-	new_simulation_table.rd_state(isnan(yr_start)) = nan; % Set to nan if no pandemic
+	c = rd_state_codes();
+	new_simulation_table.rd_state = c.none * ones(size(trad_success));
+	new_simulation_table.rd_state(mrna_success & trad_success) = c.both;
+	new_simulation_table.rd_state(mrna_success & ~trad_success) = c.mrna;
+	new_simulation_table.rd_state(~mrna_success & trad_success) = c.trad;
+	new_simulation_table.rd_state(isnan(yr_start)) = nan;
 
     % Define the categories in order
     rd_state_desc = strings(size(new_simulation_table, 1), 1);

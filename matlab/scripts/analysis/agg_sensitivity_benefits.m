@@ -1,9 +1,13 @@
-function agg_sensitivity_results(sensitivity_dir)
-    % Aggregate the sensitivity results from the sensitivity directory
+function agg_sensitivity_benefits(sensitivity_dir)
+    % Aggregate response-model results across all scenarios in a sensitivity run.
+    %
+    % For the baseline and each sensitivity variant, aggregates chunk results and
+    % writes processed benefits summaries to sensitivity_dir/processed/.
+    % Run after all chunks of run_sensitivity (response) complete.
+    %
     % Args:
-    %   sensitivity_dir (string): Path to sensitivity directory
-    % Returns:
-    %   None
+    %   sensitivity_dir  Path to sensitivity output directory (e.g.
+    %                    output/sensitivity_runs/no_mitigation_all).
     
     % Create top-level processed directory
     top_processed_dir = fullfile(sensitivity_dir, 'processed');
@@ -65,14 +69,14 @@ function agg_sensitivity_results(sensitivity_dir)
         raw_dir = fullfile(value_dir, 'raw');
         
         if ~isfolder(raw_dir)
-            warning('agg_sensitivity_results:NoRaw', 'Skipping %s: no raw dir at %s', scenario_id, raw_dir);
+            warning('agg_sensitivity_benefits:NoRaw', 'Skipping %s: no raw dir at %s', scenario_id, raw_dir);
             continue;
         end
 
         try
             [chunk_mat_paths, n_sims_per_chunk, ~] = resolve_baseline_annual_chunks(raw_dir);
         catch me
-            warning('agg_sensitivity_results:ChunkResolve', 'Skipping %s: %s', scenario_id, me.message);
+            warning('agg_sensitivity_benefits:ChunkResolve', 'Skipping %s: %s', scenario_id, me.message);
             continue;
         end
         n_chunks = length(chunk_mat_paths);
@@ -115,21 +119,13 @@ function [chunk_mat_paths, n_sims_per_chunk, n_periods] = resolve_baseline_annua
     %   n_sims_per_chunk (numeric): Sims in first chunk (used for prealloc).
     %   n_periods (numeric): Number of periods from first chunk.
 
-    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
-    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
+    [chunk_dirs, chunk_numbers] = list_chunk_dirs(raw_dir);
 
     if ~isempty(chunk_dirs)
-        chunk_numbers = zeros(length(chunk_dirs), 1);
-        for k = 1:length(chunk_dirs)
-            tokens = regexp(chunk_dirs(k).name, 'chunk_(\d+)', 'tokens');
-            chunk_numbers(k) = str2double(tokens{1}{1});
-        end
-        [chunk_numbers, sort_idx] = sort(chunk_numbers);
-        chunk_dirs = chunk_dirs(sort_idx);
         expected = 1:length(chunk_dirs);
-        if ~isequal(chunk_numbers', expected)
+        if ~isequal(chunk_numbers, expected)
             error('agg_sensitivity_benefits:ChunksNotContiguous', ...
-                'Chunk numbers are not contiguous in %s. Found: %s.', raw_dir, mat2str(chunk_numbers'));
+                'Chunk numbers are not contiguous in %s. Found: %s.', raw_dir, mat2str(chunk_numbers));
         end
         chunk_mat_paths = arrayfun(@(c) fullfile(raw_dir, c.name, 'baseline_annual.mat'), chunk_dirs, 'UniformOutput', false);
     else

@@ -1,6 +1,12 @@
-function get_detailed_invest_scenario_table(job_dir, varargin)
-    % Build NPV summary table for advance investment scenarios and write CSV + LaTeX.
-    % Scenario order and which scenarios to include are defined in get_scenario_order().
+function write_invest_scenario_table(job_dir, varargin)
+    % Build the advance investment NPV summary table and write CSV + LaTeX.
+    %
+    % Loads processed results for a fixed set of advance investment scenarios,
+    % computes expected benefits, costs, net value, BCR, and lives saved, then
+    % writes two LaTeX tables (with and without 10/30-year statistics) and a CSV.
+    %
+    % Args:
+    %   job_dir  Path to the job output directory (contains processed/ and run_config.yaml).
 
     p = inputParser;
     parse(p, varargin{:});
@@ -50,28 +56,21 @@ function summary_table = load_scenario_means(processed_dir, scenarios)
 
     n = length(scenarios);
 
-    baseline_net = NaN;
-    baseline_row = {};
     baseline_file = fullfile(processed_dir, 'baseline_annual_sums.mat');
-    if exist(baseline_file, 'file')
-        r = load(baseline_file).all_baseline_sums;
-        % Baseline: benefits = vaccine benefits, costs = response costs (inp)
-        benefit0 = mean(r.benefits_vaccine_full);
-        cost0 = mean(r.costs_inp_pv_full);
-        npv0 = benefit0 - cost0;
-        bcr0 = 0;
-        if abs(cost0) >= 1e-7 || abs(benefit0) >= 1e-7
-            bcr0 = benefit0 / cost0;
-        end
-        lives10_0 = mean(r.lives_saved_10_years);
-        lives30_0 = mean(r.lives_saved_30_years);
-        livesAll_0 = mean(r.lives_saved_full);
-        baseline_row = {"Status quo response", "", benefit0, cost0, npv0, bcr0, ...
-                        lives10_0, lives30_0, livesAll_0};
-    else
-        warning('get_detailed_invest_scenario_table:BaselineMissing', ...
-            'baseline_annual_sums.mat not found in %s. Baseline row will be omitted.', processed_dir);
+    r = load(baseline_file).all_baseline_sums;
+    % Baseline: benefits = vaccine benefits, costs = response costs (inp)
+    benefit0 = mean(r.benefits_vaccine_full);
+    cost0 = mean(r.costs_inp_pv_full);
+    npv0 = benefit0 - cost0;
+    bcr0 = 0;
+    if abs(cost0) >= 1e-7 || abs(benefit0) >= 1e-7
+        bcr0 = benefit0 / cost0;
     end
+    lives10_0 = mean(r.lives_saved_10_years);
+    lives30_0 = mean(r.lives_saved_30_years);
+    livesAll_0 = mean(r.lives_saved_full);
+    baseline_row = {"Status quo response", "", benefit0, cost0, npv0, bcr0, ...
+                    lives10_0, lives30_0, livesAll_0};
 
     has_baseline = ~isempty(baseline_row);
 

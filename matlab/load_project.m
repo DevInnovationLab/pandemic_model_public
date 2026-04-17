@@ -26,13 +26,9 @@ function load_project()
     % External YAML library
     addpath(fullfile(matlab_path, 'yaml'));
 
-    % Tests (add for runtests calls)
+    % Tests
     addpath(fullfile(matlab_path, 'tests'));
 
     % Load the project file for IDE integration
-    try
-        matlab.project.loadProject(project_path);
-    catch
-        % Project file is intentionally minimal; path setup above is sufficient.
-    end
+    matlab.project.loadProject(project_path);
 end

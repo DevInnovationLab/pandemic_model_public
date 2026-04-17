@@ -156,8 +156,7 @@ function plot_net_value_boxplot(out_dir)
 
     % No legend in the advance investment panel (legend only in baseline panel).
     % Export main net value boxplot as vector PDF
-    exportgraphics(fig, fullfile(figure_path, 'net_value_boxplot.pdf'), ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    exportgraphics(fig, fullfile(figure_path, 'net_value_boxplot.pdf'));
     close(fig);
 
     % Distribution moments matching the figure (trillions $), for tables / paper
@@ -251,8 +250,7 @@ function plot_net_value_boxplot(out_dir)
         'Box', 'on');
 
     % Export baseline net value boxplot as PNG
-    exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'), ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'));
     exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.png'), ...
         'ContentType', 'image', 'Resolution', 600);
     close(fig_b);

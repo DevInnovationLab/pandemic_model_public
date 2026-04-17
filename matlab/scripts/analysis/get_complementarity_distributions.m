@@ -1,10 +1,13 @@
 function get_complementarity_distributions(job_dir, raw_only)
-    % GET_COMPLEMENTARITY_DISTRIBUTIONS
-    % Generates distribution plots for complementarities between preparedness investments
-    % Complementarity = Combined program - Sum of standalone programs
+    % Generate complementarity distribution plots for pairwise program combinations.
+    %
+    % Complementarity is defined as combined-program NPV minus the sum of standalone
+    % program NPVs. Loads processed results and generates distribution figures saved
+    % to job_dir/figures/.
     %
     % Args:
-    %   job_dir (string): Directory containing job configuration and results
+    %   job_dir   Path to the job output directory (contains processed/ and run_config.yaml).
+    %   raw_only  Logical; if true, skip bootstrap-based plots and use raw distributions.
     
     % Set up paths
     processed_dir = fullfile(job_dir, "processed");

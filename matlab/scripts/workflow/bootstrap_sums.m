@@ -10,7 +10,7 @@ function bootstrap_sums(sim_results_path, varargin)
     % Parse optional arguments
     p = inputParser;
     addParameter(p, 'keep_vars', ["tot_benefits_pv_full"], @(x) isstring(x) || isempty(x));
-    addParameter(p, 'n_bootstrap', 200, @isnumeric);
+    addParameter(p, 'n_bootstrap', 1000, @isnumeric);
     addParameter(p, 'parallel', false, @islogical);
     addParameter(p, 'n_workers', 1, @isnumeric);
     addParameter(p, 'seed', 42, @isnumeric);

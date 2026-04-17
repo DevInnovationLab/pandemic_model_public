@@ -1,8 +1,13 @@
 function aggregate_results(sim_results_path)
-    % Aggregate chunk results from a completed job run into processed outputs.
+    % Aggregate per-chunk simulation results into processed output files.
     %
-    % Vertcats per-scenario relative_sums and baseline_sums tables across chunks
-    % (same pattern for both). Downstream scripts take means when needed.
+    % Vertically concatenates relative_sums and baseline_sums across all chunk
+    % directories under raw/chunk_*/. Writes one .mat file per scenario to processed/.
+    % Run after all chunks of run_model complete.
+    %
+    % Args:
+    %   sim_results_path  Path to the job output directory (contains run_config.yaml
+    %                     and a raw/ subdirectory with chunk_* directories).
 
     raw_results_path = fullfile(sim_results_path, "raw");
     processed_dir = fullfile(sim_results_path, "processed");
@@ -12,10 +17,7 @@ function aggregate_results(sim_results_path)
     config = yaml.loadFile(fullfile(sim_results_path, "run_config.yaml"));
     scenario_names = fieldnames(config.scenarios);
 
-    chunk_dirs = dir(fullfile(raw_results_path, 'chunk_*'));
-    chunk_numbers = cellfun(@(x) sscanf(x, 'chunk_%d'), {chunk_dirs.name});
-    [~, sort_idx] = sort(chunk_numbers);
-    chunk_dirs = chunk_dirs(sort_idx);
+    chunk_dirs = list_chunk_dirs(raw_results_path);
 
     for i = 1:length(scenario_names)
         scenario_name = scenario_names{i};

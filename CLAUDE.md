@@ -33,7 +33,7 @@ The project uses four primary languages with distinct roles:
 - `helpers/`: Utility functions — config validation, data loading, capacity calculations
 
 **MATLAB Scripts** (`matlab/scripts/`):
-- `workflow/`: `run_job`, `run_workflow`, `run_sensitivity`, `aggregate_results`, `bootstrap_sums`, `estimate_unmitigated_losses`, `expand_sensitivities`
+- `workflow/`: `run_model`, `run_workflow`, `run_sensitivity`, `aggregate_results`, `bootstrap_sums`, `estimate_unmitigated_losses`, `expand_sensitivities`
 - `analysis/`: `build_sensitivity_loss_tables`, `get_*`, `check_*`, `compare_*`, `agg_sensitivity_benefits`
 - `figures/`: `plot_*`, `write_*` (table and figure outputs), diagnostic plots
 - `deprecated/`: Superseded scripts (do not use)
@@ -72,7 +72,7 @@ cd ..                       # Return to root (Python scripts run from root)
 
 **Local model run**:
 ```bash
-matlab -batch "run('./matlab/load_project'); run_job('config/run_configs/airborne_base.yaml')"
+matlab -batch "run('./matlab/load_project'); run_model('config/run_configs/airborne_base.yaml')"
 ```
 
 **Full Workflow**:

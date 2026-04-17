@@ -26,4 +26,4 @@ pathogen_info <- tibble::tribble(
   "other_known_virus",                "unknown",            FALSE,            NA
 )
 
-readr::write_csv(pathogen_info, "data/raw/pathogen_info.csv")
+readr::write_csv(pathogen_info, "data/clean/pathogen_info.csv")

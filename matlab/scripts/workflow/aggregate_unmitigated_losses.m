@@ -17,14 +17,10 @@ function aggregate_unmitigated_losses(sim_results_path)
     sim_results_path = char(sim_results_path);
 
     raw_path = fullfile(sim_results_path, 'raw');
-    chunk_dirs = dir(fullfile(raw_path, 'chunk_*'));
-    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
+    chunk_dirs = list_chunk_dirs(raw_path);
     if isempty(chunk_dirs)
         error('aggregate_unmitigated_losses:NoChunks', 'No chunk_* directories found under %s', raw_path);
     end
-    % Sort by chunk index (chunk_1, chunk_2, ...)
-    [~, order] = sort(cellfun(@(name) str2double(regexp(char(name), '\d+', 'match', 'once')), {chunk_dirs.name}));
-    chunk_dirs = chunk_dirs(order);
 
     sim_total_deaths = [];
     sim_mortality_loss = [];

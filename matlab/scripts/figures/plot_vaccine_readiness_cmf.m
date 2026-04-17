@@ -1,8 +1,12 @@
 function plot_vaccine_readiness_cmf(job_dir)
-    % Plot the cumulative share of months with vaccine available during pandemics for each scenario,
-    % displaying surplus and BCR scenarios on two different subplots.
+    % Plot cumulative distribution of vaccine-available months during pandemics.
+    %
+    % Generates a two-subplot figure (surplus-accepting and BCR-accepting scenarios)
+    % showing, per scenario, the share of pandemic months in which a vaccine was
+    % already available.
+    %
     % Args:
-    %   job_dir: Directory containing job configuration and results
+    %   job_dir  Path to the job output directory (contains run_config.yaml and raw/).
 
     % Load job configuration and scenario names
     run_config = yaml.loadFile(fullfile(job_dir, "run_config.yaml"));
@@ -30,7 +34,7 @@ function plot_vaccine_readiness_cmf(job_dir)
         scenario = scenarios{i};
 
         % Load pandemic table from all chunks
-        chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
+        chunk_dirs = list_chunk_dirs(raw_dir);
         pandemic_tables = cell(length(chunk_dirs), 1);
 
         for j = 1:length(chunk_dirs)
@@ -101,7 +105,7 @@ function plot_vaccine_readiness_cmf(job_dir)
         scenario = scenarios{i};
 
         % Load pandemic table from all chunks
-        chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
+        chunk_dirs = list_chunk_dirs(raw_dir);
         pandemic_tables = cell(length(chunk_dirs), 1);
 
         for j = 1:length(chunk_dirs)
@@ -167,7 +171,6 @@ function plot_vaccine_readiness_cmf(job_dir)
     end
 
     % Save the figure as high-resolution vector PDF
-    exportgraphics(fig, fullfile(figure_dir, 'vaccine_readiness_cmf_subplots.pdf'), ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    exportgraphics(fig, fullfile(figure_dir, 'vaccine_readiness_cmf_subplots.pdf'));
     close(fig);
 end

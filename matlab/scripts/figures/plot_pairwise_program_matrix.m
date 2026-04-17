@@ -1,12 +1,12 @@
 function plot_pairwise_program_matrix(job_dir)
-%PLOT_PAIRWISE_PROGRAM_MATRIX Create complementarity matrix figure for programs.
-%   PLOT_PAIRWISE_PROGRAM_MATRIX(JOB_DIR) reads the pairwise advance
-%   investment results for the specified JOB_DIR and creates a matrix
-%   figure showing expected net value on the diagonal and pairwise
-%   complementarities on the off-diagonal elements.
-%
-%   The script reproduces the logic used in WRITE_PAIRWISE_PROGRAM_TABLE
-%   but outputs a figure instead of a LaTeX table.
+    % Plot complementarity matrix for pairwise program combinations.
+    %
+    % Produces a matrix figure with expected net value on the diagonal and pairwise
+    % complementarities on off-diagonal cells. Reads from processed/ results under
+    % job_dir. Companion to write_pairwise_program_table which outputs LaTeX.
+    %
+    % Args:
+    %   job_dir  Path to the job output directory (contains processed/ and run_config.yaml).
 
     % Load data from processed results directory
     processed_dir = fullfile(job_dir, "processed");
@@ -163,9 +163,8 @@ function plot_pairwise_program_matrix(job_dir)
     outfile_pdf = fullfile(figures_dir, "pairwise_complementarity_matrix.pdf");
     outfile_png = fullfile(figures_dir, "pairwise_complementarity_matrix.png");
 
-    exportgraphics(gcf, outfile_pdf, ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
-    exportgraphics(gcf, outfile_png, ...
+    export_figure(gcf, outfile_pdf);
+    export_figure(gcf, outfile_png, ...
         'ContentType', 'image', 'Resolution', 600);
 
 end
