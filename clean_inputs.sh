@@ -1,10 +1,23 @@
-# #!/usr/bin/env bash
-# # Regenerate model input artifacts. Run from the repository root.
-# # Python: expects a venv at python/.venv (Windows path below; on Linux use bin/activate).
+#!/usr/bin/env bash
 
-set -euo pipefail # Exit on error, undefined variable, or pipe failure
+###############################################################################
+# clean_inputs.sh
+#
+# Regenerates model input artifacts (Python, R, MATLAB) for the pandemic model.
+#
+# Usage:
+#   bash clean_inputs.sh
+#
+# Run from the repository root. Requires:
+#   - Python venv at python/.venv (Windows: Scripts/activate; Linux/macOS: bin/activate)
+#   - R renv (restored at start) and MATLAB on PATH for -batch steps
+#
+# Pipeline: Marani clean → COVID severity → filters → distribution fits →
+# supplemental cleaners → vaccine/PTRS R scripts → configs → figures and tables.
+###############################################################################
 
-step() {
+set -euo pipefail
+step() { # Helper function to print step header
   printf '\n'
   printf '%s\n' '----------------------------------------------------------------'
   printf '  %s\n' "$*"
@@ -76,6 +89,7 @@ python ./python/scripts/write_response_thresholds.py
 
 step 'Write input figures'
 python ./python/scripts/plot_limited_exceedance_panel.py
+python ./python/scripts/print_arrival_distribution_moments.py
 python ./python/scripts/write_clean_ds_table.py \
   "./data/derived/epidemics_filtered/e241210c_upcov__filt__all_int_0d01_1900.csv" \
   --measure severity

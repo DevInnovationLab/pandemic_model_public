@@ -13,7 +13,7 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     %                     month_response_vaccine_ready, intensity, eff_severity.
     %   econ_loss_model   EconLossModel -- predicts output loss fraction from severity.
     %   num_sims          Total number of simulations.
-    %   params            Struct of run parameters (see config/README.md for full field list).
+    %   params            Struct of run parameters (see repository README, Configuration).
     %                     Key fields: sim_periods, r, y, P0, Y0, value_of_death,
     %                     z_m/z_o, base_cap_mrna/trad, surge_cap_mrna/trad,
     %                     prototype_RD, universal_flu_rd, improved_early_warning.

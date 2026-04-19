@@ -15,7 +15,7 @@
 #   data/clean/arrival_distributions
 #   data/clean/duration_distributions
 #
-# To avoid multiple authentication prompts, all paths are sent in a single rsync command.
+# To avoid multiple authentication prompts, all paths are sent in a single scp command.
 #
 # Options:
 #   -d remote_dir     Override the default remote directory.
@@ -95,7 +95,7 @@ for SRC in "${FINAL_SRC_LIST[@]}"; do
     echo "  $SRC"
 done
 
-# All valid paths in a single rsync call to minimize authentication prompts
-rsync -avhP --progress "${FINAL_SRC_LIST[@]}" "${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}:${REMOTE_DIR}/"
+# All valid paths in a single scp call to minimize authentication prompts (-r recursive, -p preserve times/modes)
+scp -rp "${FINAL_SRC_LIST[@]}" "${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}:${REMOTE_DIR}/"
 
 echo "Transfer complete."

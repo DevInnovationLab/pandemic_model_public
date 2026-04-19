@@ -23,7 +23,7 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-response_threshold_path: "./output/response_thresholds/response_threshold_half_covid_severity.yaml"
+response_threshold_path: "./data/clean/response_thresholds/response_threshold_half_covid_severity.yaml"
 severity_dist_config: "./output/arrival_distributions/all_risk.yaml"
 duration_dist_config: "./output/duration_distributions/all_risk.yaml"
 econ_loss_model_config: "./data/clean/econ_loss_model_sev_poisson.yaml"
@@ -54,7 +54,7 @@ adv_cap_build_period: 30 # number of years it takes to finish building adv capac
 # Vaccine development
 pathogen_info: "./data/clean/pathogen_info.csv"
 ptrs_pathogen: "./data/clean/ptrs_table.csv" # Pathogen vaccine probability of success
-prototype_effect_ptrs: "./output/ptrs/rd_model_preds.csv"
+prototype_effect_ptrs: "./data/clean/rd_model_preds.csv"
 rd_timelines: "./output/rd_timelines/timelines_from_predictions.csv"
 tau_m: 2 # months to repurpose mRNA candidate
 tau_o: 6 # months to repurpose traditional candidate

@@ -1,197 +1,98 @@
-# Pandemic Model
+# Pandemic preparedness model
 
-A pandemic preparedness modeling framework that evaluates investments in advance
-manufacturing capacity, vaccine R&D, and enhanced surveillance through Monte Carlo
-simulation of pandemic events and their economic impacts.
+This repository contains the code behind [Estimating future pandemic harms and the gains from preparedness investments]() by Christopher Snyder *et al.* (unpublished).
+
+## Repository structure
+
+| Folder | Role |
+|--------|------|
+| [`config/`](config/) | Configs for model runs (see explanation below) |
+| [`data/raw/`](data/raw/) | Raw data that will be manipulated into model inputs |
+| [`data/derived/`](data/derived/) | Data cleaning intermediates — not final model inputs |
+| [`data/clean/`](data/clean/) | Data used as inputs into the pandemic simulation models. |
+| [`matlab/`](matlab/) | MATLAB code (mostly pandemic simulations and postprocessing) |
+| [`python/`](python/) | Python code (mostly input generation) |
+| [`R/`](R/) | | R code (mostly input generation) |
+| [`slurm/`](slurm/) | | SLURM batch files and wrappers for cluster workflows |
+| [`output/`](output/) | | Ouputs from pandemic simulations |
 
 ## Requirements
 
 | Language | Version | Manager |
-|---|---|---|
-| MATLAB | R2020a+ | — |
-| Python | 3.11.9 | Poetry |
-| R | — | renv |
+|----------|---------|---------|
+| MATLAB | R2020a+ (e.g. R2023a on RCC Midway) | — |
+| Python | 3.11.9 | [Poetry](https://python-poetry.org/) |
+| R | — | [renv](https://rstudio.github.io/renv/articles/renv.html) |
 
-**MATLAB toolboxes required**: Statistics and Machine Learning Toolbox.
-Parallel Computing Toolbox is optional (used if `bootstrap_parallel: true`).
-
----
+**MATLAB toolboxes:** Statistics and Machine Learning Toolbox (required). Parallel Computing Toolbox is optional.
 
 ## Installation
 
-### 1. Clone and initialize submodules
+### 1. Submodules
+
+We install two git submodules to obtain their helper functions: [yaml](https://github.com/MartinKoch123/yaml), a YAML parser for MATLAB, and [pandemic-statistics](https://github.com/ganqili/pandemic-statistics), a companion repository that contains reusable scripts for our pandemic risk modeling pipeline.
 
 ```bash
-git clone <repo-url>
-cd pandemic_model
 git submodule update --init --recursive
 ```
 
-### 2. Verify submodules initialized
+### 2. Python
 
-`git submodule update --init --recursive` (from step 1) fetches both
-`python/vendor/pandemic-statistics` and `matlab/yaml`.
+We use [Poetry](https://python-poetry.org/) for Python package and dependency manangement.
 
-### 3. Python environment
-
+To initialize the Python virtual environment:
 ```bash
-cd python
-poetry install   # installs all dependencies including pandemic-statistics
-cd ..
+poetry --directory python env activate
 ```
 
-Activate the environment before running any Python script:
+### 3. R
 
-```bash
-cd python && poetry shell && cd ..
-```
-
-### 4. R environment
+We use [renv](https://rstudio.github.io/renv/articles/renv.html)
 
 ```bash
 Rscript -e "renv::restore()"
 ```
 
----
+## Model configuration
 
-## Data layout
+The pandemic simulation model composes **three YAML layers** at runtime:
 
-Input and derived tables live under `data/raw/`, `data/clean/`, and `data/derived/` (see **Data directories** in [`CLAUDE.md`](CLAUDE.md)).
+1. **Run configs** ([`config/run_configs/`](config/run_configs/)) — Run-wide settings: simulations, horizons, paths to inputs, `outdir`, etc.
+2. **Scenario configs** ([`config/scenario_configs/`](config/scenario_configs/)) — Intervention parameters (referenced by job configs).
+3. **Sensitivity configs** ([`config/sensitivity_configs/`](config/sensitivity_configs/)) — Parameter sweeps for `run_sensitivity` (baseline job config plus variants).
 
-## Running the Model
+## MATLAB from the command line
 
-All commands are run from the **repository root**.
+Always load the project first so paths and packages resolve:
 
-### Full workflow (local)
+```matlab
+run('./matlab/load_project');
+```
+
+In batch mode, prefix any script or function call with that line, for example:
 
 ```bash
-matlab -batch "run('./matlab/load_project'); run_workflow('config/run_configs/allrisk_base.yaml')"
+matlab -batch "run('./matlab/load_project'); run_model('config/run_configs/<your_run_config>.yaml')"
 ```
 
-### Single job (local)
+Workflow entry points include `run_model`, `run_workflow`, `run_sensitivity`, and `estimate_unmitigated_losses` under `matlab/scripts/workflow/`. Inspect those functions and the YAML configs for arguments and behavior.
 
-```bash
-matlab -batch "run('./matlab/load_project'); run_model('config/run_configs/allrisk_base.yaml')"
-```
+## Replicating paper results
 
-### Sensitivity analysis
-
-```bash
-matlab -batch "run('./matlab/load_project'); run_sensitivity('config/sensitivity_runs_configs/no_mitigation_all.yaml', 'unmitigated')"
-```
-
-### HPC cluster (SLURM)
-
-```bash
-# Full workflow (submits array + aggregation jobs automatically)
-./slurm/submit_workflow.sh config/run_configs/allrisk_base.yaml
-
-# Manual array submission
-sbatch --array=1-10 \
-  --export=JOB_CONFIG=config/run_configs/allrisk_base.yaml,NUM_CHUNKS=10 \
-  slurm/submit_model_run.sbatch
-```
-
----
-
-## Running Tests
-
-### MATLAB tests
-
-```bash
-matlab -batch "run('./matlab/load_project'); results = runtests('matlab/tests'); disp(results)"
-```
-
-Individual test:
-```bash
-matlab -batch "run('./matlab/load_project'); runtests('matlab/tests/test_h.m')"
-```
-
-### Regression test
-
-Requires reference outputs to be generated first — see `tests/reference/README.md`.
-
-```bash
-matlab -batch "run('./matlab/load_project'); runtests('matlab/tests/run_regression_test.m')"
-```
-
-### Python tests
-
-```bash
-cd python && poetry run pytest
-```
-
----
-
-## Configuration
-
-The model uses a three-tier YAML configuration system. See `config/README.md` for
-the full field reference, schema documentation, and sensitivity config semantics.
-
----
-
-## Repository Layout
+Follow the below steps to replicate the paper results. Some steps may vary or require adjustment depending on computing setup. All scripts are designed to run as bash scripts, i.e.:
 
 ```
-config/
-  run_configs/        # Simulation run parameters
-  scenario_configs/   # Per-intervention parameters
-  sensitivity_configs/ # Parameter sweep definitions
-data/
-  clean/              # Preprocessed input data
-  raw/                # Raw source data
-matlab/
-  load_project.m      # Entry point — run this first
-  pandemic_model/     # Core simulation engine
-    helpers/          # Utility functions (config validation, data loading)
-    +sim_indexing/    # Simulation indexing package
-    econ_loss/        # EconLossModel class
-  scripts/
-    workflow/         # run_model, run_workflow, run_sensitivity, aggregate_*, bootstrap_*
-    analysis/         # get_*, check_*, compare_*, build_sensitivity_loss_tables
-    figures/          # plot_*, write_* (tables and figures)
-    deprecated/       # Superseded scripts (do not use)
-    clean_data/       # Data cleaning utilities
-  tests/              # MATLAB test suite
-  notebooks/          # Exploratory development notebooks (not part of workflow)
-python/
-  pandemic_model/     # Core Python package (stats, utils)
-  scripts/            # Data preprocessing and config generation
-  vendor/             # pandemic-statistics submodule
-  notebooks/          # Exploratory development notebooks (not part of workflow)
-R/
-  scripts/            # Input data preparation and PTRS/timeline fitting
-slurm/               # SLURM batch scripts for HPC
-tests/
-  reference/          # Committed reference outputs for regression testing
-output/              # Generated outputs (gitignored)
+bash clean_inputs.sh
 ```
 
----
+| Order | Script | What it does |
+|-------|--------|----------------|
+| 1 | [`clean_inputs.sh`](clean_inputs.sh) | Constructs all model inputs. *Note that you may need to update the command for virtual environment activation depending on your operating system.* |
+| 2 | [`transfer_to_remote.sh`](transfer_to_remote.sh) | Pushes large git-ignored inputs to a remote server on which you will run pandemic simulations. **Before running:** on the **remote** machine, `cd` to the clone and `git pull` (or equivalent) so the branch matches what you expect; otherwise you may upload data on top of an outdated tree. |
+| 3 | [`slurm/replicate_paper_results.sh`](slurm/replicate_paper_results.sh) | Submits the full paper job chain (other than the unmitigated losses scripts). **Ensure that model inputs on the cluster are up to date before running. This means making sure any data updates have been synced to the remote both via git and the [`transfer_to_remote.sh](transfer_to_remote.sh) script.** Note that some of these jobs are long-running (i.e., submit_baseline_sensitivity.sbatch).
+| 4 | [`run_unmitigated_losses.sh`](run_unmitigated_losses.sh) | Runs `run_sensitivity` in unmitigated mode locally. You can run this locally while [`slurm/replicate_paper_results.sh`](slurm/replicate_paper_results.sh) is running on the remote. Note that you may need to adjust the number of chunks upward to fit the job on your machine's memory. |
+| 5 | [`transfer_from_remote.sh`](transfer_from_remote.sh) | Transfer selected `output/` files from the remote server to your local repo. **Make sure that all jobs on the remote server were completed without error. (See [`transfer_from_remote.sh`](transfer_from_remote.sh) for notes on this.)  |
+| 6 | [`generate_outputs.sh`](generate_outputs.sh) | Generates paper-style tables and figures. |
 
-## Input Data Pipeline
-
-Before running the main simulation, generate required inputs:
-
-1. **R scripts** (`R/scripts/`) — fit PTRS, R&D timelines, arrival risk
-2. **Python scripts** (`python/scripts/`) — fit economic loss models, clean data,
-   generate scenario configs
-3. **MATLAB** — all inputs are read from `output/` at runtime
-
-See `R/scripts/README.md` for R script execution order.
-
----
-
-## Output Structure
-
-`run_workflow` writes to `{outdir}/{run_config_name}/`:
-
-```
-run_config.yaml
-raw/chunk_{i}/          # Per-chunk .mat files (base table, sums, pandemic table)
-processed/              # Aggregated: baseline_annual_sums.mat, {scenario}_relative_sums.mat
-figures/                # Saved plots
-```
-
-`run_sensitivity` (unmitigated) writes per-variant directories to
-`{sensitivity_outdir}/{run_name}/{variant}/`.
+\
+The above pipeline is also self-documenting of the expected run order of the various scripts in our repository.
