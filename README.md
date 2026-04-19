@@ -40,6 +40,11 @@ git submodule update --init --recursive
 
 We use [Poetry](https://python-poetry.org/) for Python package and dependency manangement.
 
+To install the package and virtual environment:
+```bash
+poetry --directory python install
+```
+
 To initialize the Python virtual environment:
 ```bash
 poetry --directory python env activate
@@ -49,6 +54,7 @@ poetry --directory python env activate
 
 We use [renv](https://rstudio.github.io/renv/articles/renv.html)
 
+To install the virtual environment:
 ```bash
 Rscript -e "renv::restore()"
 ```

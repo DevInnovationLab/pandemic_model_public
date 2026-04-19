@@ -27,7 +27,7 @@ step() { # Helper function to print step header
 
 step 'Initialize environment'
 source python/.venv/Scripts/activate
-python -c "import kaleido; kaleido.get_chrome_sync()"
+python -c "import kaleido; kaleido.get_chrome_sync()" # Sync Kaleido with Chrome webdriver
 Rscript -e "renv::restore();"
 LOAD_MATPROJ="run('./matlab/load_project.m');"
 LOAD_RENV="renv::activate();"
