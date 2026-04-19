@@ -13,8 +13,8 @@ This repository contains the code behind [Estimating future pandemic harms and t
 | [`matlab/`](matlab/) | MATLAB code (mostly pandemic simulations and postprocessing) |
 | [`python/`](python/) | Python code (mostly input generation) |
 | [`R/`](R/) | | R code (mostly input generation) |
-| [`slurm/`](slurm/) | | SLURM batch files and wrappers for cluster workflows |
-| [`output/`](output/) | | Ouputs from pandemic simulations |
+| [`slurm/`](slurm/) | SLURM batch files and wrappers for cluster workflows |
+| [`output/`](output/) | Ouputs from pandemic simulations |
 
 ## Requirements
 
