@@ -77,7 +77,7 @@ Gibraltar	Western Europe	High income	4.017553	3.857328	3.510849	3.099946
 Greece	Western Europe	High income	1354.988420	1058.245956	1058.245956	530.061425
 Grenada	Latin America & Caribbean	Upper middle income	12.032260	6.688607	5.350823	2.673375
 Guam	East Asia & Pacific	High income	13.322746	11.268807	10.008816	2.310149
-Guatemala	Latin America & Caribbean	Lower middle income	1454.504480	516.349090	348.194472	49.479297
+Guatemala	Latin America & Caribbean	Lower middle income	1454.504480	516.2849090	348.194472	49.479297
 Guinea	Sub-Saharan Africa	Low income	61.923079	0.000000	0.000000	0.000000
 Guinea-Bissau	Sub-Saharan Africa	Low income	7.935360	0.000000	0.000000	0.000000
 Guyana	Latin America & Caribbean	Upper middle income	23.160801	6.905053	4.696438	0.000000

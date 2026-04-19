@@ -1,0 +1,50 @@
+location,year_start,year_end,duration,death_thousand,pop_thousand,severity_perthousand,severity,disease,type,transmission,is_vira_only,is_vira_mixed,contains_vira,is_pandemic,unidentified,airborne,contagious,recurrent_1900,recurrent_1950,intensity
+south africa,1900,1904,5,40.0,1633000.0,0.024494794856093,0.2449479485609308,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0489895897121861
+uganda and tanzania,1900,1909,10,100.0,1633000.0,0.0612369871402326,0.6123698714023269,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.0612369871402326
+"russia, france, england, wales, italy, hungary, spain, belgium, portugal, egypt, germany, north america, brazil",1900,1950,51,1510.0,1633000.0,0.9246785058175138,9.24678505817514,smallpox,viral,droplet,1,0,1,1,False,True,True,True,True,0.1813095109446105
+italy,1901,1905,5,60.0,1646050.0,0.0364508976033534,0.3645089760335348,whooping cough,bacterial,droplet,0,0,0,0,False,True,True,True,True,0.0729017952067069
+fiji islands,1903,1903,1,48.0,1672150.0,0.028705558711838,0.2870555871183805,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.2870555871183805
+india,1903,1907,5,5521.0,1672150.0,3.301737284334539,33.01737284334539,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,6.603474568669078
+japan,1908,1908,1,5.8,1737400.0,0.0033383216300218,0.0333832163002187,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0333832163002187
+"china, manchuria, indonesia (java), morocco, vietnam",1910,1915,6,89.4,1763500.0,0.0506946413382478,0.5069464133824781,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.0844910688970796
+chad,1912,1940,29,700.0,1790950.0,0.3908540160250146,3.908540160250146,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.1347772469051774
+austrian invasion in serbia,1914,1914,1,195.0,1808392.857142857,0.1078305519897304,1.078305519897304,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,1.078305519897304
+american polio epidemic,1916,1916,1,7.0,1839179.0,0.0038060460672941,0.0380604606729415,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0380604606729415
+american army,1917,1917,1,3.0,1859575.0,0.0016132718497506,0.0161327184975061,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0161327184975061
+wwi and russian revolution,1917,1925,9,3000.0,1859575.0,1.613271849750615,16.13271849750615,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,1.792524277500683
+pandemic spanish flu,1918,1920,3,32000.0,1873300.0,17.08215448673464,170.8215448673464,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,56.940514955782135
+"china, manchuria",1920,1921,2,10.0,1900750.0,0.0052610811521767,0.0526108115217677,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.0263054057608838
+usa,1921,1921,1,15.5,1920600.0,0.0080703946683328,0.0807039466833281,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0807039466833281
+nigeria,1921,1921,1,45.0,1920600.0,0.0234301780693533,0.2343017806935333,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.2343017806935333
+mali,1921,1922,2,15.0,1920600.0,0.0078100593564511,0.0781005935645111,relapsing fever,bacterial,bite,0,0,0,0,False,False,False,False,True,0.0390502967822555
+chad,1922,1923,2,8.0,1940450.0,0.0041227550310494,0.0412275503104949,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0206137751552474
+"spain, ghana, madagascar, los angeles, vietnam",1923,1923,1,10.0,1960300.0,0.0051012600112227,0.0510126001122277,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.0510126001122277
+sudan,1926,1928,3,200.0,2020466.666666667,0.0989870326987164,0.9898703269871644,relapsing fever,bacterial,bite,0,0,0,0,False,False,False,False,True,0.3299567756623882
+south africa,1926,1935,10,45.0,2020466.666666667,0.0222720823572112,0.222720823572112,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0222720823572112
+"china, manchuria, mongolia, uganda, madagascar",1928,1933,6,53.0,2061400.0,0.0257106820607354,0.2571068206073542,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.0428511367678923
+united states,1931,1931,1,4.0,2123250.0,0.0018839043918521,0.0188390439185211,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0188390439185211
+china,1932,1933,2,32.0,2144166.666666667,0.014924212980956,0.1492421298095608,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0746210649047804
+ecuador,1935,1936,2,18.0,2206916.666666667,0.0081561756598572,0.0815617565985726,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.0407808782992863
+madagascar and south africa,1935,1937,3,12.0,2206916.666666667,0.0054374504399048,0.0543745043990484,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.0181248347996828
+"burkina faso, upper volta",1939,1939,1,3.0,2290583.333333333,0.0013097100447484,0.0130971004474842,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0130971004474842
+north africa typhus outbreak  + persia + southwest pacific,1942,1942,1,29.0,2356486.2036,0.0123064586398582,0.1230645863985825,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,0.1230645863985825
+"tanzania, tanganyika",1942,1942,1,7.0,2356486.2036,0.0029705244992761,0.0297052449927613,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0297052449927613
+europe,1943,1943,1,50.0,2378979.3054,0.0210174169596624,0.2101741695966247,diphtheria,bacterial,droplet/fluid,0,0,0,1,False,True,True,True,True,0.2101741695966247
+wwii typhus,1943,1945,3,17.0,2378979.3054,0.0071459217662852,0.0714592176628524,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,0.0238197392209508
+egypt,1947,1948,2,10.277,2468951.7126,0.0041624953406551,0.0416249534065512,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0208124767032756
+nigeria,1949,1950,2,16.0,2513937.9162,0.006364516759501,0.0636451675950103,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0318225837975051
+britain,1950,1951,2,50.0,2536431.018,0.0197127379554857,0.1971273795548577,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0985636897774288
+bangladesh and india,1950,1960,11,510.051,2536431.018,0.2010900341386694,2.010900341386694,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.1828091219442449
+pandemic of asian flu,1957,1958,2,2000.0,2873306.0,0.6960623059291283,6.960623059291283,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,3.480311529645641
+seventh cholera pandemic,1961,2019,59,397.702,3091844.0,0.1286293875111422,1.286293875111422,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,0.0218015911035834
+hong kong flu,1968,1969,2,1000.0,3551599.0,0.2815633183813826,2.815633183813826,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,1.407816591906913
+guatemala,1969,1970,2,12.0,3625680.965,0.0033097230881151,0.0330972308811511,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.0165486154405755
+vietnam and singapore,1973,1973,1,14.0,3927780.519,0.0035643539480572,0.0356435394805724,dengue,viral,bite,1,0,1,1,False,False,False,True,True,0.0356435394805724
+smallpox epidemic of india,1974,1974,1,26.0,4003794.0,0.0064938405921983,0.064938405921983,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.064938405921983
+india,1977,1978,2,10.0,4229505.919,0.0023643423585429,0.0236434235854299,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.0118217117927149
+india,1979,1980,2,10.0,4380506.185,0.0022828412009193,0.0228284120091934,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.0114142060045967
+india,1981,1981,1,10.0,4536996.619,0.0022041012678127,0.0220410126781273,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.0220410126781273
+hiv/aids pandemic,1981,2024,46,42300.0,4536996.619,9.323348362847875,93.23348362847878,hiv/aids,viral,fluid,1,0,1,1,False,False,True,False,False,2.026814861488669
+sudan,1983,1994,12,100.0,5145425.994,0.0194347368160786,0.1943473681607867,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.0161956140133988
+swine flu,2009,2009,1,284.5,6872767.0,0.0413952633633586,0.413952633633586,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,0.413952633633586
+global covid-19,2019,2024,6,7100.0,7740000.0,0.917312661498708,12.278108108108109,covid-19,viral,airborne/droplet,1,0,1,1,False,True,True,False,False,2.046351351351352

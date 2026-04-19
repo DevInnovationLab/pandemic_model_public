@@ -1,7 +1,17 @@
+# plot_arrival_shares.R — Plot pathogen pandemic arrival shares with 95% CIs.
+#
+# Produces a horizontal dot-and-errorbar chart of expected pathogen pandemic
+# shares, coloured by whether a prototype vaccine exists.
+#
+# Inputs:  data/clean/arrival_rates_all.csv
+# Outputs: output/pathogen_pandemic_share_all.pdf
+
 library(forcats)
 library(ggplot2)
 library(snakecase)
 library(tidyverse)
+
+## --- Load and prep data -------------------------------------------------------
 
 arrival_risk_summary_all <- readr::read_csv("./data/clean/arrival_rates_all.csv")
 
@@ -17,7 +27,8 @@ arrival_risk_plot <- arrival_risk_summary_all %>%
 prototype_colors <- c("Has prototype" = "#005185", "No prototype" = "#A50021") # blue and red
 
 
-# Reduce the vertical spacing by shrinking the plot height and point size
+## --- Build plot ---------------------------------------------------------------
+
 p <- ggplot(arrival_risk_plot, aes(
   x = estimate,
   y = reorder(pathogen, estimate),
@@ -33,7 +44,7 @@ p <- ggplot(arrival_risk_plot, aes(
     values = prototype_colors
   ) +
   scale_x_continuous(
-    limits = c(0, 0.5),
+    limits = c(-.01, 0.5),
     labels = scales::percent_format(accuracy = 1),
     breaks = seq(0, 0.5, by = 0.10)
   ) +
@@ -47,7 +58,7 @@ p <- ggplot(arrival_risk_plot, aes(
     axis.text.y = element_text(family = "Arial", size = 13, color = "black"),
     axis.text.x = element_text(family = "Arial", size = 13, color = "black"),
     axis.title.x = element_text(family = "Arial", size = 15,  margin = margin(t = 10)),
-    axis.title.y = element_text(size = 15, angle = 0, hjust = 0, vjust = 1),
+    axis.title.y = element_text(size = 15, color = "black", face = "bold"),
     axis.line = element_line(color = "black", linewidth = 0.5),
     axis.ticks = element_line(color = "black", linewidth = 0.5),
     panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
@@ -64,10 +75,10 @@ p <- ggplot(arrival_risk_plot, aes(
     legend.text = element_text(family = "Arial", size = 14),
     legend.key.size = unit(1.1, "lines"),
     legend.box.margin = margin(0, 0, 0, 0),
-    plot.margin = margin(10, 0, 0, 10)
+    plot.margin = margin(0, 0, 0, 0)
   )
 
-# Save main plot (slightly taller for more vertical space)
+## --- Save output --------------------------------------------------------------
 ggsave(
   "./output/pathogen_pandemic_share_all.pdf",
   plot = p,

@@ -1,3 +1,15 @@
+# fit_vaccine_rd_costs.R — Fit GAMLSS model for vaccine R&D costs.
+#
+# Fits an interval-censored Gamma GAMLSS model of vaccine R&D costs on
+# pathogen × prototype status (fixed) + respondent (random). Marginal means
+# are obtained via the closed-form Gamma log-RE identity, and uncertainty is
+# propagated via cluster bootstrap (B = 1000).
+#
+# Inputs:  data/derived/vaccine_rd_cost_responses.csv
+# Outputs: data/derived/marginal_rd_costs_preds.csv
+#
+# Run from the repository root.
+
 library(forcats)
 library(gamlss)
 library(gamlss.dist)
@@ -8,7 +20,9 @@ library(survival)
 library(tidyverse)
 library(statmod)
 
-rd_costs <- read_csv("./data/clean/vaccine_rd_costs.csv")
+## --- Load and prep data -------------------------------------------------------
+
+rd_costs <- read_csv("./data/derived/vaccine_rd_cost_responses.csv")
 
 rd_costs <- rd_costs %>%
   mutate(
@@ -21,8 +35,10 @@ rd_costs <- rd_costs %>%
 
 gen.cens(GA, type = "interval")
 
-## -- Helper: build prediction grid and fixed-effects model matrix
+## --- Helper functions ---------------------------------------------------------
+
 build_predict_grid_and_X <- function(data, fixed_vars, random_var) {
+  #' Build a prediction grid and fixed-effects design matrix for marginal inference.
   predict_grid <- do.call(
     expand.grid,
     c(lapply(fixed_vars, function(v) levels(data[[v]])), stringsAsFactors = FALSE)
@@ -33,15 +49,15 @@ build_predict_grid_and_X <- function(data, fixed_vars, random_var) {
   list(predict_grid = predict_grid, X = X, n_cells = nrow(predict_grid))
 }
 
-## -- Helper: relevel bootstrap sample to training levels
 relevel_like <- function(dat_b, dat_train, vars) {
+  #' Relevel factor columns in a bootstrap sample to match the training data levels.
   for (v in vars) if (is.factor(dat_train[[v]]))
     dat_b[[v]] <- factor(dat_b[[v]], levels = levels(dat_train[[v]]))
   dat_b
 }
 
-## -- helper to avoid treating resampled observations under bootstrap as same respodent
 boot_by_cluster <- function(data, cluster) {
+  #' Cluster bootstrap: resample whole respondents and relabel duplicates as independent.
   sp <- split(data, data[[cluster]])
   ids <- names(sp)
   repeat {
@@ -57,7 +73,8 @@ boot_by_cluster <- function(data, cluster) {
   out
 }
 
-## -- Gauss–Hermite nodes/weights once
+## --- Gauss-Hermite quadrature setup ------------------------------------------
+# Pre-compute nodes/weights once; reused inside each bootstrap iteration.
 Q <- 32
 gh <- gauss.quad.prob(Q, dist = "normal")
 z  <- gh$nodes
@@ -73,6 +90,8 @@ prep_C <- build_predict_grid_and_X(rd_costs, fixed_C, random_id)
 predict_grid_C <- prep_C$predict_grid
 X_C            <- prep_C$X
 nC             <- prep_C$n_cells
+
+## --- Fit model and cluster bootstrap ------------------------------------------
 
 ## Bootstrap settings
 set.seed(123)
@@ -148,4 +167,4 @@ rd_costs_marginal <- tibble(
   hi95 = apply(mu_boot_C, 1, quantile, 0.975)
 )
 
-write_csv(rd_costs_marginal, "output/rd_costs/marginal_rd_costs_preds.csv")
+write_csv(rd_costs_marginal, "data/derived/marginal_rd_costs_preds.csv")

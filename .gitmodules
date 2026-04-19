@@ -1,4 +1,8 @@
 [submodule "python/vendor/pandemic-statistics"]
 	path = python/vendor/pandemic-statistics
 	url = https://github.com/ganqili/pandemic-statistics
-	branch = prep-for-integration
+	branch = main
+
+[submodule "matlab/yaml"]
+	path = matlab/yaml
+	url = https://github.com/MartinKoch123/yaml

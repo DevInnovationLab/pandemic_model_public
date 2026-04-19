@@ -1,0 +1,543 @@
+location,year_start,year_end,duration,death_thousand,pop_thousand,severity_perthousand,severity,disease,type,transmission,is_vira_only,is_vira_mixed,contains_vira,is_pandemic,unidentified,airborne,contagious,recurrent_1900,recurrent_1950,intensity
+"china, kwangsi",1500,1500,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, shansi",1504,1504,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, hunan, hupeh, kwangtun, kwangsi, yunnan, fukien",1506,1506,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+hispaniola,1507,1541,35,300.0,463230.0,0.6476264490641799,6.476264490641799,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.1850361283040514
+"pandemic, influenza",1510,1510,1,,463230.0,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+"china, chekiang",1511,1511,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, yunnan",1514,1514,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, hupeh",1516,1516,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, fukien",1517,1517,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, hopei, shantung, chekiang",1519,1519,1,,463230.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+mexico,1519,1520,2,6500.0,463230.0,14.03190639639056,140.3190639639056,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,70.1595319819528
+ireland,1519,1525,7,,463230.0,,,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,
+european diseases in the americas,1520,1635,116,10300.0,474800.0,21.69334456613311,216.9334456613311,smallpox,viral,droplet,1,0,1,1,False,True,True,True,True,1.870115910873544
+"china, shensi",1522,1522,1,,476580.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, shantung",1525,1525,1,4.1,479250.0,0.008555033907146584,0.08555033907146584,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,0.08555033907146584
+french army in italy,1528,1528,1,21.0,481920.0,0.04357569721115538,0.4357569721115538,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.4357569721115538
+"china, shansi, hupeh, szechwan, kweichow",1528,1529,2,,481920.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"england, germany, northern europe",1529,1529,1,,482810.0,,,sweating sickness,unknown,unknown,0,0,0,0,True,False,True,False,False,
+edimburgh,1530,1530,1,,483700.0,,,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,
+"china, shensi, hupeh, chekiang, hunan, fukien ",1532,1535,4,,485480.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+ireland,1535,1536,2,,488150.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, kwangsi",1538,1538,1,,490820.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+ottoman war,1542,1542,1,30.0,494380.0,0.06068206642663539,0.6068206642663538,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.6068206642663538
+"china, shansi, honan, fukien",1543,1545,3,,495270.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"india, goa",1545,1545,1,8.0,497050.0,0.01609496026556684,0.1609496026556684,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.1609496026556684
+americas,1545,1548,4,10000.0,497050.0,20.11870033195855,201.1870033195855,cocoliztli,bacterial,feces,0,0,0,1,False,False,True,True,True,50.296750829896375
+england,1551,1551,1,,502390.0,,,sweating sickness,unknown,unknown,0,0,0,0,True,False,True,False,False,
+siege of metz,1552,1552,1,10.0,503280.0,0.01986965506278811,0.1986965506278811,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.1986965506278811
+"china, hopei",1554,1554,1,,505060.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+brazil,1555,1563,9,,505950.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+"china, fukien",1556,1556,1,,506840.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+typhus outbreak in england,1557,1559,3,300.0,507730.0,0.5908652236424871,5.908652236424871,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,1.969550745474957
+"china, kweichow",1558,1558,1,,508620.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+austrian army in hungary,1560,1560,1,30.0,510400.0,0.05877742946708464,0.5877742946708464,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.5877742946708464
+"china, hupeh, fukien, kiangsi",1561,1563,3,,511290.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+london,1563,1563,1,20.0,513070.0,0.03898103572611925,0.3898103572611925,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.3898103572611925
+lyon,1564,1564,1,,513960.0,,,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,
+"china, hope and chekiang",1565,1565,1,,514850.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+hungary - maximilian ii army,1566,1566,1,,515740.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+"china, shansi",1571,1571,1,,520190.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, hupeh",1573,1573,1,,521970.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"ireland, venice, london",1575,1577,3,58.0,524640.0,0.1105519975602318,1.105519975602318,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.36850665853410597
+paris,1576,1576,1,0.0,524640.0,0.0,0.0,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+americas,1576,1578,3,2000.0,524640.0,3.812137846904544,38.12137846904544,cocoliztli,bacterial,feces,0,0,0,1,False,False,True,True,True,12.70712615634848
+oxford,1577,1577,1,,525530.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+paris,1578,1578,1,,526420.0,,,whooping cough,bacterial,droplet,0,0,0,0,False,True,True,True,True,
+"china, shansi, hopei, szechwan, shantung",1579,1582,4,,527310.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+venezuela,1580,1580,1,20.0,528200.0,0.03786444528587656,0.3786444528587656,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.3786444528587656
+italy,1580,1580,1,,528200.0,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+spain and italy,1583,1618,36,,530870.0,,,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,
+"china, hupeh, shansi",1584,1585,2,,532650.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+edimburgh,1585,1585,1,1.0,532650.0,0.00187740542570168,0.0187740542570168,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.0187740542570168
+peru,1585,1585,1,,532650.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+exeter,1586,1586,1,0.0,533540.0,0.0,0.0,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+madrid,1587,1587,1,5.0,534430.0,0.00935576221394757,0.0935576221394757,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0935576221394757
+"china, shansi, kiangsi, shantung, shensi, chekiang, honan",1587,1588,2,,534430.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, hupeh, hunan, kwangtung",1590,1590,1,,537100.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+mexico highlands,1590,1600,11,2000.0,537100.0,3.723701359150996,37.23701359150996,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,3.3851830537736323
+philippines,1591,1591,1,,537990.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+london and malta,1592,1593,2,23.0,538880.0,0.0426811163895487,0.426811163895487,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.2134055819477435
+western new york,1592,1596,5,0.0,538880.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+"china, yunnan",1594,1594,1,,540660.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"spain and scotland and prussia, london and ireland",1596,1605,10,570.0,542440.0,1.050807462576506,10.50807462576506,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,1.050807462576506
+"china, yunnan, szechwan",1597,1598,2,,543330.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, shansi, kweichow",1601,1601,1,,545480.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, chekiang",1603,1603,1,,544440.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, chekiang",1606,1606,1,,542880.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, yunnan, fukien, shansi, shensi, chekian",1608,1613,6,,541840.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+basel,1610,1611,2,0.0,540800.0,0.0,0.0,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.0
+"china, fukien, shansi, hunan, kweichow, yunnan",1617,1618,2,,537160.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+massachusetts,1617,1619,3,0.0,537160.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+thirty years war including germany and lyon and limoges typhus epidemic,1618,1649,32,6200.0,536640.0,11.55336911150865,115.5336911150865,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,3.610427847346453
+algiers,1620,1621,2,40.0,535600.0,0.07468259895444362,0.7468259895444362,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.3734129947722181
+"china, hupeh, yunnan, kwangsi",1621,1624,4,,535080.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+london,1625,1625,1,100.0,533000.0,0.1876172607879925,1.876172607879925,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,1.876172607879925
+"china, hupeh",1627,1627,1,,531960.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+france and italy,1628,1631,4,1280.0,531440.0,2.408550353755833,24.08550353755833,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,6.021375884389583
+central new york,1630,1662,33,10.0,530400.0,0.01885369532428356,0.1885369532428356,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0057132410073586545
+protestant-catholic armies at nuremburg,1632,1632,1,18.0,529360.0,0.03400332476953302,0.3400332476953302,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.3400332476953302
+massachusetts and connecticut,1633,1634,2,,528840.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+"china, shansi",1633,1635,3,,528840.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+quebec,1634,1640,7,0.0,528320.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+london and spain,1636,1637,2,33.0,527280.0,0.0625853436504324,0.625853436504324,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.312926718252162
+"china, hopei, chekiang, honan, shantung, shansi",1640,1641,2,,525200.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+oxford and reading,1643,1643,1,,523640.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+"china, shensi, shansi, kiangsu, inner mongolia",1643,1644,2,,523640.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+tiverton,1644,1644,1,0.0,523120.0,0.0,0.0,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+barbados,1647,1647,1,0.0,521560.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+massachusetts,1648,1649,2,,521040.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+"china, inner mongolia",1653,1653,1,,525940.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"russia, rome and naples",1654,1655,2,700.0,527920.0,1.325958478557357,13.25958478557357,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,6.629792392786785
+jamaica,1655,1655,1,0.0,529900.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+"china, kansu",1656,1656,1,,531880.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"india and brazil, boston (0k) and london (0k)",1660,1669,10,108.0,539800.0,0.2000741015190811,2.000741015190811,smallpox,viral,droplet,1,0,1,1,False,True,True,True,True,0.2000741015190811
+london,1661,1665,5,16.0,541780.0,0.02953228247628189,0.2953228247628188,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.05906456495256376
+"london, germany, austria and switzerland",1663,1668,6,87.5,549700.0,0.1591777333090777,1.591777333090777,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.26529622218179616
+"china, shantung",1665,1665,1,,549700.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, kansu, hopei",1667,1668,2,,553660.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+new york,1668,1668,1,0.0,555640.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+"china, inner mongolia",1670,1670,1,,559600.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, manchuria",1673,1673,1,,565540.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+cherokee tribe,1674,1753,80,25.0,567520.0,0.04405131096701437,0.4405131096701437,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.005506413870876796
+"malta, andalusia, valencia, great vienna plague",1675,1683,9,337.0,569500.0,0.591747146619842,5.917471466198419,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.6574968295776021
+"china, kiangsu, shensi",1677,1677,1,,573460.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+boston,1677,1678,2,0.0,573460.0,0.0,0.0,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.0
+spain and prague and halle,1678,1682,5,567.0,575440.0,0.9853329626025302,9.853329626025303,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,1.9706659252050607
+"china, kiangsu, yunnan",1680,1681,2,,579400.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+london,1681,1681,1,0.0,581380.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+"china, hupeh",1683,1683,1,,585340.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+japan,1684,1684,1,7.0,587320.0,0.01191854525641899,0.1191854525641899,rubella,viral,droplet,1,0,1,0,False,True,True,True,True,0.1191854525641899
+london,1685,1686,2,0.0,589300.0,0.0,0.0,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+"londonderry, dundalk (ireland)",1689,1689,1,8.0,597220.0,0.01339539868055323,0.1339539868055323,"typhus, dysentery",bacterial; bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.1339539868055323
+baghdad,1689,1690,2,150.0,597220.0,0.2511637252603731,2.511637252603731,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,1.2558186263018656
+japan,1690,1691,2,0.0,599200.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+"china, shensi, shantung, chekiang, hainan island",1692,1694,3,,603160.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, kiangsu, shansi, kiangsi, shantung, shansi",1697,1698,2,,613060.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+charleston,1699,1699,1,0.0,617020.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+new york,1702,1702,1,0.0,624520.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+boston,1702,1703,2,0.0,624520.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+"china, kwantung, inner mongolia, shantung, hainan island, hopei, chekiang, shensi",1702,1704,3,,624520.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+augsburg (germany),1703,1704,2,0.0,627280.0,0.0,0.0,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+poland and baltic nations,1704,1713,10,425.0,630040.0,0.6745603453748968,6.745603453748968,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.6745603453748968
+charleston,1706,1706,1,0.0,635560.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+"china, hupeh, kwangsi, kwangtung, hopei, inner mongolia, kiangsi, kansu, shantung, chekiang, anhui, shensi, fukien",1706,1709,4,,635560.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+iceland,1707,1709,3,15.0,638320.0,0.02349918536157413,0.2349918536157413,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.07833061787191377
+japan,1708,1709,2,,641080.0,,,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,
+europe,1708,1709,2,0.0,641080.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+ireland,1708,1710,3,,641080.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+london and ireland,1709,1720,12,41.0,643840.0,0.06368041749502983,0.6368041749502983,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.053067014579191524
+quebec,1710,1710,1,0.0,646600.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+europe,1712,1712,1,0.0,652120.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+cape colony (south africa),1713,1713,1,10.0,654880.0,0.0152699731248473,0.152699731248473,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.152699731248473
+"china, kwangtung",1713,1714,2,,654880.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+usa civil war,1716,1716,1,7.1,663160.0,0.01070631521804693,0.1070631521804693,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.1070631521804693
+"china, chekiang",1717,1717,1,,665920.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+picardy,1718,1718,1,,668680.0,,,sweating sickness,unknown,unknown,0,0,0,0,True,False,True,False,False,
+marseille and astrakhan,1720,1730,11,100.0,674200.0,0.1483239394838327,1.483239394838327,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.13483994498530244
+london and boston,1721,1722,2,0.0,676960.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+"china, shensi, chekiang, hopei, shantung",1721,1724,4,,676960.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"china, kiangsu, shansi, kwangtung, hopei",1726,1726,1,,690760.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+london and ireland,1726,1729,4,19.0,690760.0,0.02750593549134287,0.2750593549134287,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.06876483872835717
+"china, kwantgtung, hupeh, kiangsu, chekiang, shansi, shensi, hopei, hupeh, anhui, eastern end of great wall",1727,1728,2,,693520.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+charleston,1728,1728,1,0.0,696280.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+europe,1729,1730,2,0.0,699040.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+japan,1730,1731,2,0.0,701800.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+charleston,1732,1732,1,0.0,707320.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+europe,1732,1733,2,0.0,707320.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+greenland,1733,1734,2,0.0,710080.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+germany ,1734,1734,1,0.0,712840.0,0.0,0.0,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+new england,1735,1740,6,5.0,715600.0,0.006987143655673561,0.06987143655673561,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.011645239426122602
+mexico,1736,1739,4,40.0,718360.0,0.05568238766078289,0.556823876607829,cocoliztli,bacterial,feces,0,0,0,0,False,False,True,True,True,0.13920596915195724
+romania and hungary,1738,1740,3,50.0,723880.0,0.06907222191523457,0.6907222191523457,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.23024073971744854
+france,1738,1742,5,200.0,723880.0,0.2762888876609383,2.762888876609383,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.5525777753218766
+"ecuador, guayaquil",1740,1740,1,,729400.0,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+france,1740,1740,1,0.0,729400.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+"ireland, france and london",1740,1742,3,135.0,729400.0,0.1850836303811352,1.850836303811352,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,0.616945434603784
+sweden,1740,1750,11,210.0,729400.0,0.2879078694817658,2.879078694817658,"typhus, relapsing fever, dysentery",bacterial; bacterial; bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.26173442680160525
+malaga yellow fever,1741,1741,1,8.4,732160.0,0.0114729020979021,0.114729020979021,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.114729020979021
+germany,1741,1743,3,,732160.0,,,"typhus, typhoid, dysentery",bacterial; bacterial; bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,
+siege of prague,1742,1742,1,30.0,734920.0,0.04082076960757634,0.4082076960757633,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.4082076960757633
+europe,1742,1743,2,0.0,734920.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+"ecuador - guayaquil, new york",1743,1743,1,0.0,737680.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+new york,1745,1745,1,0.0,743200.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+"china, hupeh, hopei, shantung, kiangsu, kiangsi",1746,1749,4,,745960.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"italy, cremona",1747,1748,2,0.0,748720.0,0.0,0.0,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+london,1750,1750,1,0.0,757000.0,0.0,0.0,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+england,1751,1753,3,0.0,760640.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+japan,1753,1753,1,,767920.0,,,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,
+canada and cape colony (0k),1755,1755,1,,775200.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+"china, fukien, kiangsu, anhui, chekiang, shansi, sinkiang",1756,1756,1,,778840.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+germany,1757,1763,7,18.0,782480.0,0.02300378284428995,0.2300378284428995,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.032862546920414216
+"china, shansi, chekiang, kansu",1760,1760,1,,797040.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+havana (cuba),1761,1762,2,8.0,797040.0,0.01003713740841112,0.1003713740841112,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0501856870420556
+philadelphia,1762,1762,1,,800680.0,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+europe,1762,1762,1,0.0,800680.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+boston,1763,1764,2,0.0,804320.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+naples (italy),1764,1764,1,,807960.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+"berlin, sweden, london, glasgow, vienna, ireland, germany ",1766,1796,31,210.0,815240.0,0.2575928560914577,2.575928560914577,smallpox,viral,droplet,1,0,1,1,False,True,True,True,True,0.08309446970692183
+britain,1767,1767,1,,818880.0,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+"china, chekiang",1767,1767,1,,818880.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+tahiti,1768,1769,2,0.0,822520.0,0.0,0.0,venereal disease,bacterial/viral,unknown,0,1,1,0,True,False,True,False,False,0.0
+"india, bengal",1769,1770,2,3000.0,826160.0,3.63125786772538,36.3125786772538,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,18.1562893386269
+russia (moscow) and persia (baghdad),1770,1772,3,2145.0,829800.0,2.584960231381056,25.84960231381056,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,8.61653410460352
+sweden,1770,1775,6,35.0,829800.0,0.04217883827428295,0.4217883827428295,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.07029806379047158
+western washington,1770,1780,11,11.0,829800.0,0.01325620631477465,0.1325620631477465,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.012051096649795135
+britain,1775,1775,1,,848000.0,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+"china, hopei",1775,1775,1,,848000.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+colombia and quebec (0k),1776,1776,1,6.0,851640.0,0.007045230379033394,0.07045230379033394,smallpox,viral,droplet,1,0,1,1,False,True,True,True,True,0.07045230379033394
+japan,1776,1776,1,0.0,851640.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+british army in st. louis (senegal),1778,1778,1,0.0,858920.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+mexico city,1779,1779,1,18.0,862560.0,0.02086811352253756,0.2086811352253756,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.2086811352253756
+france,1779,1779,1,175.0,862560.0,0.2028844370246708,2.028844370246708,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,2.028844370246708
+jamaica,1780,1780,1,3.5,866200.0,0.004040637266220273,0.04040637266220273,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.04040637266220273
+canada,1780,1782,3,0.0,866200.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+"pandemic, influenza",1781,1782,2,100.0,869840.0,0.1149636714798124,1.149636714798124,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,0.574818357399062
+india,1781,1783,3,,869840.0,,,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,
+"china, chekiang",1783,1783,1,,877120.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"dalmatia, tunisia, egypt",1783,1795,13,321.0,877120.0,0.3659704487413353,3.659704487413353,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.2815157298010271
+"china, kiangsu, anhui, shantung, hopei",1785,1786,2,,884400.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+australia,1788,1789,2,560.0,895320.0,0.625474690613412,6.25474690613412,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,3.12737345306706
+europe,1788,1789,2,0.0,895320.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+new england,1789,1789,1,0.0,898960.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+"china, kansu, yunnan",1790,1790,1,,902600.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+new zealand and fiji,1790,1800,11,,902600.0,,,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,
+haiti yellow fever,1790,1802,13,27.0,902600.0,0.02991358298249501,0.2991358298249501,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.02301044844807308
+france - prussian army,1792,1792,1,21.0,909880.0,0.02307996658900075,0.2307996658900075,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.2307996658900075
+"china, hopei, chekiang ",1792,1793,2,,909880.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+charleston,1792,1799,8,0.0,909880.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+philadelphia,1793,1793,1,11.0,913520.0,0.01204133461774236,0.1204133461774236,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.1204133461774236
+new england,1793,1795,3,0.0,913520.0,0.0,0.0,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+"us atlantic coast, new york",1794,1798,5,0.731,917160.0,0.000797025600767587,0.007970256007675869,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0015940512015351737
+"china, chekiang",1795,1795,1,,920800.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+west indies,1795,1795,1,31.0,920800.0,0.03366637706342311,0.3366637706342311,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.3366637706342311
+britain,1796,1796,1,38.0,924440.0,0.04110596685560988,0.4110596685560988,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.4110596685560988
+italy,1796,1800,5,20.0,924440.0,0.02163471939768941,0.2163471939768941,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.04326943879537882
+"china, chekiang, shantung",1797,1797,1,,928080.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+mexico and guatemala,1797,1797,1,20.0,928080.0,0.02154986639082838,0.2154986639082838,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.2154986639082838
+"cairo, diyarkbar, mosul, baghdad",1798,1801,4,59.0,931720.0,0.06332374533121539,0.6332374533121539,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.15830936332803847
+"china, chekiang",1800,1800,1,,939000.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+cadiz,1800,1800,1,8.0,939000.0,0.008519701810436636,0.08519701810436636,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.08519701810436636
+northeast nebraska,1802,1802,1,,949300.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+fiji,1802,1803,2,40.0,949300.0,0.04213631096597493,0.4213631096597493,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.21068155482987466
+haiti,1802,1803,2,40.0,949300.0,0.04213631096597493,0.4213631096597493,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.21068155482987466
+britain,1803,1803,1,,954450.0,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+japan,1803,1803,1,,954450.0,,,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,
+spain,1803,1805,3,27.0,954450.0,0.02828854314002829,0.2828854314002829,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0942951438000943
+livorno (italy),1804,1804,1,0.5,959600.0,0.0005210504376823677,0.005210504376823677,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.005210504376823677
+russia,1804,1810,7,827.0,959600.0,0.8618174239266361,8.618174239266361,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,1.231167748466623
+gibraltar,1804,1828,25,2.0,959600.0,0.002084201750729471,0.02084201750729471,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0008336807002917884
+austria and prussia,1805,1807,3,10.0,964750.0,0.01036537963202902,0.1036537963202902,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.034551265440096735
+"china, hopei, shensi",1806,1806,1,,969900.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+danzig,1807,1807,1,,975050.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+cadiz (spain),1810,1810,1,3.0,990500.0,0.003028773346794548,0.03028773346794548,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.03028773346794548
+"china, kansu",1811,1811,1,,995650.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+1st napoleon russian campaign: french and russian soldiers and civilians,1812,1812,1,612.0,1000800.0,0.6115107913669064,6.115107913669064,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,6.115107913669064
+" ottoman empire, malta",1812,1819,8,365.0,1005950.0,0.3628410954818828,3.628410954818828,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.4535513693523535
+2nd napoleon russian campaign,1813,1813,1,219.0,1005950.0,0.2177046572891297,2.177046572891297,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,2.177046572891297
+mexico city,1813,1813,1,20.0,1005950.0,0.01988170386202098,0.1988170386202098,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.1988170386202098
+european typhus outbreak,1813,1814,2,2000.0,1005950.0,1.988170386202098,19.88170386202098,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,9.94085193101049
+mexico,1813,1815,3,150.0,1005950.0,0.1491127789651573,1.491127789651573,cocoliztli,bacterial,feces,0,0,0,0,False,False,True,True,True,0.49704259655052435
+italy,1814,1814,1,,1011100.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+"china, hupeh, kiangsu, anhui, shantung, hopei",1814,1816,3,,1011100.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+mauritius,1815,1815,1,,1016250.0,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+albenga (italy),1815,1815,1,0.0,1016250.0,0.0,0.0,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+sierra leone,1815,1885,71,,1016250.0,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+ireland and england,1816,1819,4,700.0,1021400.0,0.6853338554924614,6.853338554924614,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,1.7133346387311534
+madagascar,1817,1818,2,,1026550.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+ireland,1817,1819,3,45.0,1026550.0,0.04383615021187472,0.4383615021187472,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.14612050070624907
+first cholera pandemic bangkok + java + india+africa,1817,1824,8,2031.0,1026550.0,1.978471579562613,19.78471579562613,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,2.4730894744532663
+"china, shantung",1818,1818,1,,1031700.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+"france, tours",1818,1821,4,0.0,1031700.0,0.0,0.0,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+"china, chekiang, shansi, hopei, shantung, yunnan, shensi, kiangsu",1820,1824,5,,1040133.333333333,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+barcelona,1821,1821,1,12.5,1048566.666666667,0.0119210350637378,0.119210350637378,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.119210350637378
+ireland,1821,1821,1,,1048566.666666667,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+france,1821,1821,1,0.0,1048566.666666667,0.0,0.0,miliary fever,bacterial,airborne/droplet,0,0,0,0,False,True,True,True,True,0.0
+japan,1823,1824,2,,1061700.074074074,,,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,
+scotland,1823,1831,9,,1061700.074074074,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+india,1824,1824,1,75.0,1068266.777777778,0.07020718191388105,0.7020718191388104,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.7020718191388104
+england,1825,1826,2,,1074833.481481481,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+"united states, caribbean",1826,1828,3,,1081400.185185185,,,dengue,viral,bite,1,0,1,0,False,False,False,True,True,
+second cholera pandemic russia + poland + london + france,1826,1837,12,960.0,1081400.185185185,0.8877379652340306,8.877379652340306,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,0.7397816376950255
+baghdad and egypt,1829,1835,7,230.0,1101100.296296296,0.2088819708555497,2.088819708555496,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.298402815507928
+"asia, europe, north america",1830,1831,2,,1107667.0,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+british india smallpox,1830,1852,23,16.0,1107667.0,0.01444477446741665,0.1444477446741665,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.00628033672496376
+"persia, britain",1833,1833,1,,1127367.111111111,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+sydney,1834,1834,1,0.0,1133933.814814815,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+new zealand,1835,1835,1,0.0,1140500.518518519,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+west washington influenza,1836,1837,2,8.0,1147067.0,0.006974309260051942,0.06974309260051942,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.03487154630025971
+"asia, europe, australia, britain, south africa",1836,1837,2,,1147067.222222222,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+ireland,1836,1840,5,,1107667.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+britain,1837,1838,2,28.0,1153633.925925926,0.02427113087674387,0.2427113087674387,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.12135565438371936
+britain ,1837,1840,4,42.0,1153633.925925926,0.03640669631511581,0.3640669631511581,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.09101674078778953
+great plains,1837,1840,4,50.0,1153633.0,0.04334133992352854,0.4334133992352854,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.10835334980882134
+"china, hopeh",1839,1839,1,,1166767.333333333,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+tahiti,1841,1841,1,0.0,1179900.740740741,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+france,1841,1842,2,,1179900.740740741,,,miliary fever,bacterial,airborne/droplet,0,0,0,0,False,True,True,True,True,
+"ecuador, guayaquil",1842,1842,1,,1186467.444444444,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+"china, kiangsu, hupeh, kiangsi, chekiang",1842,1843,2,,1186467.444444444,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+south pacific islands,1843,1843,1,0.0,1193034.148148148,0.0,0.0,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.0
+bermuda yellow fever,1843,1864,22,13.0,1193034.0,0.01089658802682908,0.1089658802682908,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0049529945576495815
+ireland - great potato famine typhus epidemic,1846,1846,1,190.0,1212734.0,0.1566707950795475,1.566707950795475,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,1.566707950795475
+faroe islands,1846,1846,1,0.0,1212734.259259259,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+canada,1846,1847,2,0.0,1212734.259259259,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+"indonesia, java",1846,1850,5,,1212734.259259259,,,typhoid,bacterial,feces,0,0,0,0,False,False,True,True,True,
+ireland,1846,1850,5,10.0,1212734.259259259,0.00824582955717605,0.0824582955717605,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.0164916591143521
+third cholera pandemic russia + mecca +england/wales + new orleans + mexico + cuba + london+ cpenhagen + chicago + spain + puerto rico + france + tunisia+germany + usa + japan,1846,1863,18,4232.0,1212734.0,3.489635814613922,34.89635814613922,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,1.938686563674401
+"us northwest, cayuse indians",1847,1847,1,0.0,1219300.962962963,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+canada and britain,1847,1848,2,20.0,1219301.0,0.01640284064394272,0.1640284064394272,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,0.0820142032197136
+europe,1847,1848,2,,1219300.962962963,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+british columbia,1847,1848,2,,1219301.0,,,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,
+"china, shensi, chekiang",1847,1849,3,,1219300.962962963,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+rio de janeiro,1848,1902,55,70.0,1225867.666666667,0.05710241154360597,0.5710241154360597,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.010382256644291994
+france,1850,1850,1,,1239000.0,,,miliary fever,bacterial,airborne/droplet,0,0,0,0,False,True,True,True,True,
+united states,1850,1851,2,,1239000.0,,,dengue,viral,bite,1,0,1,0,False,False,False,True,True,
+hawaii,1853,1853,1,4.0,1244550.0,0.003214013097103371,0.03214013097103371,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.03214013097103371
+"usa, new orleans",1853,1853,1,8.0,1244550.0,0.006428026194206742,0.06428026194206742,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.06428026194206742
+"china, honan",1853,1853,1,10.0,1244550.0,0.008035032742758427,0.08035032742758427,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,0.08035032742758427
+french polinesia and new zealand,1854,1854,1,0.0,1246400.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+crimean war,1854,1856,3,134.0,1246400.0,0.1075096277278562,1.075096277278562,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.35836542575952063
+"usa, virginia",1855,1855,1,3.0,1248250.0,0.002403364710594833,0.02403364710594833,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.02403364710594833
+europe,1855,1858,4,,1248250.0,,,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,
+guam,1856,1856,1,5.0,1250100.0,0.003999680025597952,0.03999680025597952,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.03999680025597952
+"india, calcutta",1857,1857,1,3.0,1251950.0,0.002396261831542793,0.02396261831542793,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.02396261831542793
+france,1860,1860,1,,1257500.0,,,miliary fever,bacterial,airborne/droplet,0,0,0,0,False,True,True,True,True,
+"united states, civil war armies",1860,1865,6,4.0,1257500.0,0.003180914512922465,0.03180914512922465,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.005301524188204108
+"usa, civil war armies",1860,1865,6,8.0,1257500.0,0.00636182902584493,0.0636182902584493,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.010603048376408216
+"united states, civil war armies",1860,1865,6,29.0,1257500.0,0.02306163021868787,0.2306163021868787,typhoid,bacterial,feces,0,0,0,0,False,False,True,True,True,0.038436050364479786
+"united states, civil war armies",1860,1865,6,45.0,1257500.0,0.03578528827037773,0.3578528827037774,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.059642147117296235
+"united states, civil war armies",1860,1865,6,,1257500.0,,,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,
+"china, shantung, hopei, kiangsu, chekiang, hupeh, kansu, shensi, kiangsi",1861,1864,4,,1259350.0,,,unknown,unknown,unknown,0,0,0,0,True,False,True,False,False,
+british columbia,1862,1863,2,14.0,1261200.0,0.01110053916904535,0.1110053916904535,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.05550269584522675
+bahamas,1862,1864,3,,1261200.0,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+"england, london",1862,1865,4,10.0,1261200.0,0.00792895654931811,0.07928956549318109,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.01982239137329527
+new zealand,1863,1864,2,0.0,1263050.0,0.0,0.0,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+angola,1864,1865,2,25.0,1264900.0,0.01976440825361689,0.1976440825361689,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.09882204126808446
+"india, calcutta",1865,1865,1,5.0,1266750.0,0.003947108742845865,0.03947108742845865,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.03947108742845865
+"fourth cholera pandemic russia, belgium, hungary, the netherlands, london, italy, algeria, zanzibar, new orleans, ports along mississippi, india, sweden, zanzibar, central asia, tunisia",1866,1879,14,1692.0,1268600.0,1.333753744285039,13.33753744285039,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,0.9526812459178851
+india,1868,1868,1,,1272300.0,,,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,
+"united states, new york",1868,1875,8,0.0,1272300.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+india,1868,1884,17,2898.0,1272300.0,2.277764678141948,22.77764678141948,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,1.3398615753776166
+"united states, montana - gros ventres indians",1869,1869,1,0.7,1274150.0,0.0005493858650865282,0.005493858650865283,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.005493858650865283
+england and wales,1870,1870,1,36.0,1276000.0,0.02821316614420063,0.2821316614420063,whooping cough,bacterial,droplet,0,0,0,0,False,True,True,True,True,0.2821316614420063
+"europe, franco-prussian war smallpox epidemic",1870,1875,6,500.0,1276000.0,0.3918495297805643,3.918495297805642,smallpox,viral,droplet,1,0,1,1,False,True,True,True,True,0.6530825496342737
+"brazil, rio de janeiro",1870,1880,11,,1276000.0,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+britain,1871,1872,2,52.0,1285800.0,0.04044174832788925,0.4044174832788925,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.20220874163944624
+india,1873,1873,1,,1305400.0,,,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,
+new zealand,1873,1873,1,0.0,1305400.0,0.0,0.0,whooping cough,bacterial,droplet,0,0,0,0,False,True,True,True,True,0.0
+england and wales,1874,1874,1,25.0,1315200.0,0.01900851581508516,0.1900851581508516,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.1900851581508516
+fiji measles outbreak,1875,1875,1,40.0,1325000.0,0.03018867924528302,0.3018867924528302,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.3018867924528302
+australia,1875,1876,2,5.0,1325000.0,0.003773584905660377,0.03773584905660377,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.018867924528301886
+ethiopia,1876,1876,1,5.0,1337320.0,0.003738820925432955,0.03738820925432956,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.03738820925432956
+khuzestan plagues,1876,1876,1,1800.0,1337320.0,1.345975533155864,13.45975533155864,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,13.45975533155864
+new zealand,1876,1877,2,0.0,1337320.0,0.0,0.0,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+"usa, lower mississippi valley",1878,1878,1,20.0,1361960.0,0.01468471908132397,0.1468471908132397,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.1468471908132397
+brazil,1878,1878,1,57.0,1361960.0,0.04185144938177333,0.4185144938177333,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.4185144938177333
+united states,1878,1880,3,,1361960.0,,,dengue,viral,bite,1,0,1,0,False,False,False,True,True,
+panama,1880,1900,21,,1386600.0,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+new zealand,1881,1882,2,0.0,1398920.0,0.0,0.0,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+australia,1881,1882,2,0.0,1398920.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+"fifth cholera pandemic europe, america, japan, egypt, russia, india,  philippines, korea",1881,1896,16,2363.0,1398920.0,1.689160209304321,16.8916020930432,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,1.0557251308152
+cape colony (south africa),1882,1885,4,0.0,1411240.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+"egypt, cairo and alexandria",1882,1886,5,3.5,1411240.0,0.002480088432867549,0.02480088432867549,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0049601768657350975
+montreal,1885,1885,1,3.0,1448200.0,0.002071537080513742,0.02071537080513742,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.02071537080513742
+ethiopia,1886,1898,13,0.0,1460520.0,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+france,1887,1887,1,,1472840.0,,,miliary fever,bacterial,airborne/droplet,0,0,0,0,False,True,True,True,True,
+"sweden, stockholm",1887,1887,1,0.0,1472840.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+british india,1888,1937,50,4240.0,1485160.0,2.854911255352959,28.54911255352959,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.5709822510705918
+russian flu,1889,1890,2,1310.0,1497480.0,0.8748030023773272,8.748030023773271,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,4.374015011886636
+gilbert and ellice islands,1890,1890,1,1.1,1509800.0,0.0007285733209696648,0.007285733209696648,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.007285733209696648
+"australia, sydney",1890,1891,2,0.0,1509800.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+"brazil, rio de janeiro",1891,1908,18,17.0,1522120.0,0.01116863322208499,0.1116863322208499,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.006204796234491661
+japan,1892,1897,6,39.0,1534440.0,0.02541643857042309,0.2541643857042309,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.042360730950705146
+tonga and samoa,1893,1893,1,2.0,1546760.0,0.001293025420879774,0.01293025420879774,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.01293025420879774
+"usa, vermont",1894,1894,1,0.1,1559080.0,6.414039048669729e-05,0.0006414039048669729,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0006414039048669729
+hong kong and china,1894,1894,1,160.0,1559080.0,0.1026246247787156,1.026246247787157,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,1.026246247787157
+congo,1895,1906,12,500.0,1571400.0,0.3181876034109711,3.181876034109711,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.26515633617580925
+india,1896,1897,2,300.0,1583720.0,0.1894274240396029,1.89427424039603,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.947137120198015
+japan,1897,1897,1,20.0,1596040.0,0.01253101426029423,0.1253101426029423,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.1253101426029423
+kenya,1897,1899,3,,1596040.0,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+"west africa, principe",1898,1913,16,0.0,1608360.0,0.0,0.0,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.0
+"cuba, havana",1899,1900,2,0.0,1620680.0,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+south africa - british troops,1899,1902,4,13.0,1620680.0,0.008021324382358022,0.08021324382358022,typhoid,bacterial,feces,0,0,0,0,False,False,True,True,True,0.020053310955895055
+"usa, hawaii and philippines and australia (sydney)",1899,1904,6,0.1,1620680.0,6.170249524890787e-05,0.0006170249524890787,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.00010283749208151312
+"sixth cholera pandemic india, russia, philippines",1899,1926,28,4976.0,1620680.0,3.070316163585655,30.70316163585655,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,1.0965414869948769
+"usa, yukon",1900,1900,1,0.1,1633000.0,6.123698714023271e-05,0.0006123698714023271,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0006123698714023271
+south africa,1900,1904,5,40.0,1633000.0,0.02449479485609308,0.2449479485609308,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.04898958971218616
+uganda and tanzania,1900,1909,10,100.0,1633000.0,0.06123698714023269,0.6123698714023269,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.06123698714023269
+"russia, france, england, wales, italy, hungary, spain, belgium, portugal, egypt, germany, north america, brazil",1900,1950,51,1510.0,1633000.0,0.9246785058175138,9.246785058175139,smallpox,viral,droplet,1,0,1,1,False,True,True,True,True,0.18130951094461056
+italy,1901,1905,5,60.0,1646050.0,0.03645089760335348,0.3645089760335348,whooping cough,bacterial,droplet,0,0,0,0,False,True,True,True,True,0.07290179520670696
+fiji islands,1903,1903,1,48.0,1672150.0,0.02870555871183805,0.2870555871183805,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.2870555871183805
+new zealand,1903,1903,1,0.0,1672150.0,0.0,0.0,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+india,1903,1907,5,5521.0,1672150.0,3.301737284334539,33.01737284334539,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,6.603474568669078
+namibia,1904,1907,4,0.0,1685200.0,0.0,0.0,typhoid,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+sweden,1905,1905,1,0.0,1698250.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+"indonesia, java",1906,1906,1,0.0,1711300.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+south africa,1906,1914,9,5.0,1711300.0,0.002921755390638696,0.02921755390638696,tuberculosis,bacterial,airborne,0,0,0,0,False,True,True,False,True,0.00324639487848744
+new zealand and samoa,1907,1907,1,0.0,1724350.0,0.0,0.0,whooping cough,bacterial,droplet,0,0,0,1,False,True,True,True,True,0.0
+"usa, new york",1907,1907,1,0.0,1724350.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+japan,1908,1908,1,5.8,1737400.0,0.003338321630021872,0.03338321630021872,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.03338321630021872
+"canada, british columbia",1908,1913,6,0.0,1737400.0,0.0,0.0,typhoid,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+"china, manchuria, indonesia (java), morocco, vietnam",1910,1915,6,89.4,1763500.0,0.05069464133824781,0.5069464133824781,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.08449106889707969
+fiji islands,1911,1911,1,0.0,1777225.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+sweden,1911,1911,1,0.0,1777225.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+chad,1912,1940,29,700.0,1790950.0,0.3908540160250146,3.908540160250146,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.13477724690517745
+austrian invasion in serbia,1914,1914,1,195.0,1808392.857142857,0.1078305519897304,1.078305519897304,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,1.078305519897304
+new zealand,1915,1916,2,0.0,1832125.0,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+new zealand,1915,1916,2,0.0,1832125.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+american polio epidemic,1916,1916,1,7.0,1839179.0,0.003806046067294157,0.03806046067294157,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.03806046067294157
+american army,1917,1917,1,3.0,1859575.0,0.001613271849750615,0.01613271849750615,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.01613271849750615
+rhodesia and china,1917,1918,2,0.2,1859575.0,0.000107551456650041,0.00107551456650041,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.000537757283250205
+australia,1917,1918,2,0.0,1859575.0,0.0,0.0,murray valley encephalitis,viral,bite,1,0,1,0,False,False,False,False,True,0.0
+wwi and russian revolution,1917,1925,9,3000.0,1859575.0,1.613271849750615,16.13271849750615,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,1.7925242775006833
+pandemic spanish flu,1918,1920,3,32000.0,1873300.0,17.08215448673464,170.8215448673464,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,56.940514955782135
+sudan,1918,1924,7,0.0,1873300.0,0.0,0.0,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+britain,1919,1931,13,16.0,1887025.0,0.008478954968800096,0.08478954968800095,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.0065222730529231505
+"china, manchuria",1920,1921,2,10.0,1900750.0,0.005261081152176772,0.05261081152176772,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.02630540576088386
+usa,1921,1921,1,15.5,1920600.0,0.008070394668332813,0.08070394668332813,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.08070394668332813
+nigeria,1921,1921,1,45.0,1920600.0,0.02343017806935333,0.2343017806935333,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.2343017806935333
+mali,1921,1922,2,15.0,1920600.0,0.007810059356451109,0.0781005935645111,relapsing fever,bacterial,bite,0,0,0,0,False,False,False,False,True,0.03905029678225555
+australia,1922,1922,1,0.0,1940450.0,0.0,0.0,murray valley encephalitis,viral,bite,1,0,1,0,False,False,False,False,True,0.0
+chad,1922,1923,2,8.0,1940450.0,0.004122755031049499,0.04122755031049499,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.020613775155247496
+"spain, ghana, madagascar, los angeles, vietnam",1923,1923,1,10.0,1960300.0,0.005101260011222772,0.05101260011222772,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.05101260011222772
+japan,1924,1924,1,0.0,1980150.0,0.0,0.0,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+russia,1925,1926,2,,2000000.0,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+australia,1925,1926,2,0.0,2000000.0,0.0,0.0,murray valley encephalitis,viral,bite,1,0,1,0,False,False,False,False,True,0.0
+"salomon islands, ontong java",1926,1926,1,0.033,2020466.666666667,1.633286039528822e-05,0.0001633286039528822,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0001633286039528822
+france,1926,1926,1,0.0,2020466.666666667,0.0,0.0,miliary fever,bacterial,airborne/droplet,0,0,0,0,False,True,True,True,True,0.0
+samoa,1926,1926,1,0.0,2020466.666666667,0.0,0.0,whooping cough,bacterial,droplet,0,0,0,0,False,True,True,True,True,0.0
+ghana,1926,1926,1,0.0,2020466.666666667,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+russia,1926,1927,2,,2020466.666666667,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+"south africa , durban",1926,1927,2,0.0,2020466.666666667,0.0,0.0,dengue,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+sudan,1926,1928,3,200.0,2020466.666666667,0.09898703269871645,0.9898703269871645,relapsing fever,bacterial,bite,0,0,0,0,False,False,False,False,True,0.3299567756623882
+"sudan, mongalla",1926,1931,6,0.0,2020466.666666667,0.0,0.0,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+south africa,1926,1935,10,45.0,2020466.666666667,0.0222720823572112,0.222720823572112,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0222720823572112
+"salomon islands, ontong java",1928,1928,1,0.0,2061400.0,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+iraq,1928,1928,1,0.0,2061400.0,0.0,0.0,schistosomiasis,parasitic,feces (but also touching infected water),0,0,0,0,False,False,True,False,True,0.0
+"china, manchuria, mongolia, uganda, madagascar",1928,1933,6,53.0,2061400.0,0.02571068206073542,0.2571068206073542,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.042851136767892366
+venezuela,1929,1929,1,,2081866.666666667,,,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,
+nigeria,1930,1935,6,10.0,2102333.333333333,0.004756619628983669,0.04756619628983669,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.007927699381639447
+united states,1931,1931,1,4.0,2123250.0,0.001883904391852114,0.01883904391852113,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.01883904391852113
+china,1932,1933,2,32.0,2144166.666666667,0.01492421298095608,0.1492421298095608,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0746210649047804
+japan,1932,1933,2,0.0,2144166.666666667,0.0,0.0,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+"usa, los angeles",1934,1934,1,0.1,2186000.0,4.574565416285453e-05,0.0004574565416285453,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0004574565416285453
+south africa,1934,1934,1,0.0,2186000.0,0.0,0.0,typhus,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+ecuador,1935,1936,2,18.0,2206916.666666667,0.008156175659857264,0.08156175659857265,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.040780878299286324
+solomon islands,1935,1936,2,0.0,2206916.666666667,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+madagascar and south africa,1935,1937,3,12.0,2206916.666666667,0.005437450439904844,0.05437450439904844,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.018124834799682812
+gilbert and ellice islands,1936,1936,1,0.0,2227833.333333333,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+somalia,1936,1936,1,0.0,2227833.333333333,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+samoa,1936,1937,2,0.0,2227833.333333333,0.0,0.0,whooping cough,bacterial,droplet,0,0,0,0,False,True,True,True,True,0.0
+russia,1936,1938,3,,2227833.333333333,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+ghana,1936,1941,6,1.0,2227833.333333333,0.000448866611805192,0.004488666118051919,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.0007481110196753197
+japan,1937,1937,1,2.0,2248750.0,0.0008893829905503057,0.008893829905503057,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.008893829905503057
+new zealand,1937,1937,1,0.0,2248750.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+chad,1937,1939,3,6.5,2248750.0,0.002890494719288494,0.02890494719288494,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.009634982397628314
+china and afghanistan,1937,1942,6,0.0,2248750.0,0.0,0.0,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+new zealand,1938,1938,1,0.0,2269666.666666667,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+australia,1938,1941,4,,2269666.666666667,,,rubella,viral,droplet,1,0,1,0,False,True,True,True,True,
+south africa,1938,1943,6,0.0,2269666.666666667,0.0,0.0,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+sudan,1939,1939,1,1.5,2290583.333333333,0.0006548550223742134,0.006548550223742134,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.006548550223742134
+"burkina faso, upper volta",1939,1939,1,3.0,2290583.333333333,0.001309710044748427,0.01309710044748427,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.01309710044748427
+egypt - new zealand troops,1940,1941,2,0.0,2311500.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+uganda,1940,1943,4,0.25,2311500.0,0.0001081548777849881,0.001081548777849881,sleeping sickness,parasitic,bite,0,0,0,0,False,False,False,True,True,0.00027038719446247024
+"chile, santiago",1941,1943,3,0.771,2333993.1018,0.0003303351665458638,0.003303351665458637,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0011011172218195456
+north africa typhus outbreak  + persia + southwest pacific,1942,1942,1,29.0,2356486.2036,0.01230645863985825,0.1230645863985825,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,0.1230645863985825
+"tanzania, tanganyika",1942,1942,1,7.0,2356486.2036,0.00297052449927613,0.0297052449927613,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0297052449927613
+sri lanka,1942,1942,1,0.0,2356486.2036,0.0,0.0,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.0
+kenya and senegal,1942,1944,3,1.2,2356486.2036,0.0005092327713044795,0.005092327713044795,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.0016974425710149317
+ghana,1942,1944,3,3.0,2356486.2036,0.001273081928261199,0.01273081928261199,tuberculosis,bacterial,airborne,0,0,0,0,False,True,True,False,True,0.00424360642753733
+russia,1942,1944,3,0.0,2356486.2036,0.0,0.0,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.0
+malta,1942,1944,3,0.0,2356486.2036,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+japan,1942,1945,4,1.0,2356486.2036,0.0004243606427537329,0.004243606427537329,dengue,viral,bite,1,0,1,0,False,False,False,True,True,0.0010609016068843322
+usa,1942,1949,8,8.263,2446459.0,0.003377534632707926,0.03377534632707926,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.004221918290884907
+europe,1943,1943,1,50.0,2378979.3054,0.02101741695966247,0.2101741695966247,diphtheria,bacterial,droplet/fluid,0,0,0,1,False,True,True,True,True,0.2101741695966247
+wwii typhus,1943,1945,3,17.0,2378979.3054,0.00714592176628524,0.0714592176628524,typhus,bacterial,feces,0,0,0,1,False,False,True,True,True,0.023819739220950802
+algeria,1943,1945,3,0.0,2378979.3054,0.0,0.0,relapsing fever,bacterial,bite,0,0,0,0,False,False,False,False,True,0.0
+philippines,1944,1945,2,0.0,2401472.4072,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+new zealand,1944,1945,2,0.0,2401472.4072,0.0,0.0,scarlet fever,bacterial,airborne/droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+egypt,1944,1946,3,0.0,2401472.4072,0.0,0.0,relapsing fever,bacterial,bite,0,0,0,0,False,False,False,False,True,0.0
+ghana,1945,1945,1,0.6,2423965.509,0.0002475282745452629,0.002475282745452629,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.002475282745452629
+kenya,1945,1945,1,0.0,2423965.509,0.0,0.0,relapsing fever,bacterial,bite,0,0,0,0,False,False,False,False,True,0.0
+china and afghanistan,1945,1946,2,0.0,2423965.509,0.0,0.0,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+ghana,1945,1949,5,0.0,2423965.509,0.0,0.0,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+taiwan,1946,1946,1,2.2,2446458.6108,0.0008992590311105214,0.008992590311105214,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.008992590311105214
+russia,1946,1947,2,,2446458.6108,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+rhodesia,1946,1948,3,0.0,2446458.6108,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+"india, nicobar island",1947,1947,1,0.0,2468951.7126,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+egypt,1947,1948,2,10.277,2468951.7126,0.004162495340655129,0.04162495340655128,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.02081247670327564
+guam,1947,1948,2,0.0,2468951.7126,0.0,0.0,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+guam,1947,1948,2,0.0,2468951.7126,0.0,0.0,mumps,viral,droplet,1,0,1,0,False,True,True,False,True,0.0
+"china, beijing",1949,1949,1,0.0,2513937.9162,0.0,0.0,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+nigeria,1949,1950,2,16.0,2513937.9162,0.006364516759501032,0.06364516759501032,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.03182258379750516
+britain,1950,1951,2,50.0,2536431.018,0.01971273795548576,0.1971273795548577,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.09856368977742885
+israel,1950,1951,2,0.0,2536431.018,0.0,0.0,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+french polinesia,1950,1951,2,0.0,2536431.018,0.0,0.0,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0
+israel,1950,1952,3,0.1,2536431.018,3.942547591097154e-05,0.0003942547591097154,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0001314182530365718
+italy,1950,1952,3,0.0,2536431.018,0.0,0.0,typhoid,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0
+bangladesh and india,1950,1960,11,510.051,2536431.018,0.2010900341386694,2.010900341386694,cholera,bacterial,feces,0,0,0,0,False,False,True,True,True,0.1828091219442449
+australia,1951,1951,1,0.0,2584034.227,0.0,0.0,murray valley encephalitis,viral,bite,1,0,1,0,False,False,False,False,True,0.0
+tahiti and solomon islands,1951,1951,1,0.0,2584034.227,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+tanzania (tanganyika),1951,1953,3,0.25,2584034.227,9.674794450777993e-05,0.0009674794450777993,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.0003224931483592664
+israel,1951,1953,3,0.0,2584034.227,0.0,0.0,west nile,viral,bite,1,0,1,0,False,False,False,False,False,0.0
+bangkok and copenhagen,1952,1952,1,0.0,2630861.69,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+"china, beijing",1952,1954,3,,2630861.69,,,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,
+kenya,1954,1954,1,0.1,2727839.414,3.665904946118651e-05,0.0003665904946118651,typhoid,bacterial,feces,0,0,0,0,False,False,True,True,True,0.0003665904946118651
+zambia,1955,1956,2,0.5,2776328.276,0.00018009397675421,0.0018009397675421,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.00090046988377105
+philippines,1955,1956,2,0.0,2776328.276,0.0,0.0,dengue,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+israel,1957,1957,1,0.0,2873306.0,0.0,0.0,west nile,viral,bite,1,0,1,0,False,False,False,False,False,0.0
+pandemic of asian flu,1957,1958,2,2000.0,2873306.0,0.6960623059291283,6.960623059291283,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,3.4803115296456415
+india,1957,1958,2,0.0,2873306.0,0.0,0.0,kyasanur forest disease,viral,bite,1,0,1,0,False,False,False,False,False,0.0
+vietnam and thailand,1958,1958,1,0.0,2927940.5,0.0,0.0,dengue,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+"china, beijing",1958,1959,2,0.0,2927940.5,0.0,0.0,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+singapore and vietnam,1958,1959,2,0.0,2927940.5,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+taiwan,1958,1961,4,0.3,2927940.5,0.0001024610985093447,0.001024610985093447,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.00025615274627336173
+bolivia,1959,1964,6,4.0,2982575.0,0.001341123022891294,0.01341123022891294,hemorrhagic fever,viral,bite/fluid,1,0,1,0,False,False,True,False,False,0.002235205038152157
+ethiopia,1960,1962,3,0.0,3037209.5,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+"india, singapore, vietnam, thailand, philippines, caribbean",1960,1970,11,,3037209.5,,,dengue,viral,bite,1,0,1,0,False,False,False,True,True,
+seventh cholera pandemic,1961,2019,59,397.702,3091844.0,0.1286293875111422,1.286293875111422,cholera,bacterial,feces,0,0,0,1,False,False,True,True,True,0.02180159110358342
+usa,1964,1964,1,,3288881.857142857,,,rubella,viral,droplet,1,0,1,0,False,True,True,True,True,
+"usa, houston",1964,1964,1,0.0,3288881.857142857,0.0,0.0,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+russia,1964,1965,2,,3288881.857142857,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+vietnam and usa (new mexico),1964,1974,11,10.0,3288881.857142857,0.003040547041324032,0.03040547041324032,plague,bacterial,airborne/bite,0,0,0,1,False,True,True,True,True,0.002764133673930938
+senegal,1965,1965,1,0.0,3354561.142857143,0.0,0.0,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+indonesia,1965,1967,3,,3354561.142857143,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+guinea,1967,1967,1,0.0,3485919.714285714,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+morocco and south africa,1967,1972,6,3.0,3485919.714285714,0.000860605018441946,0.00860605018441946,meningitis,bacterial/viral,unknown,0,1,1,1,True,True,True,False,False,0.0014343416974032432
+hong kong flu,1968,1969,2,1000.0,3551599.0,0.2815633183813826,2.815633183813826,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,1.407816591906913
+vietnam,1968,1969,2,0.0,3551599.0,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+papua new guinea,1969,1970,2,3.0,3625680.965,0.0008274307720287794,0.008274307720287795,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.004137153860143897
+guatemala,1969,1970,2,12.0,3625680.965,0.003309723088115118,0.03309723088115118,dysentery,bacterial/parasitic,unknown,0,0,0,0,True,False,True,False,False,0.01654861544057559
+afghanistan,1970,1972,3,0.0,3700437.042,0.0,0.0,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.0
+burma,1970,1978,9,0.0,3700437.042,0.0,0.0,dengue,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+malaysia,1971,1972,2,0.0,3775760.03,0.0,0.0,polio,viral,droplet/feces,1,0,1,0,False,True,True,True,True,0.0
+bangladesh,1971,1973,3,,3775760.03,,,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,
+southwest pacific,1971,1978,8,0.0,3775760.03,0.0,0.0,dengue,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+vietnam and singapore,1973,1973,1,14.0,3927780.519,0.003564353948057249,0.03564353948057249,dengue,viral,bite,1,0,1,1,False,False,False,True,True,0.03564353948057249
+smallpox epidemic of india,1974,1974,1,26.0,4003794.0,0.0064938405921983,0.064938405921983,smallpox,viral,droplet,1,0,1,0,False,True,True,True,True,0.064938405921983
+india,1974,1975,2,0.0,4003794.0,0.0,0.0,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.0
+zaire,1976,1976,1,0.218,4154666.827,5.247111479151105e-05,0.0005247111479151106,ebola,viral,blood/fluid,1,0,1,0,False,False,True,False,False,0.0005247111479151106
+"usa, philadelphia",1976,1976,1,0.0,4154666.827,0.0,0.0,legionnaires' disease,bacterial,airborne/aspiration,0,0,0,0,False,True,True,False,False,0.0
+egypt,1977,1977,1,0.0,4229505.919,0.0,0.0,rift valley fever,viral,animalcontact/bite,1,0,1,0,False,False,False,False,False,0.0
+india,1977,1978,2,10.0,4229505.919,0.002364342358542991,0.02364342358542991,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.011821711792714955
+russia,1977,1978,2,,4229505.919,,,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,
+india,1979,1980,2,10.0,4380506.185,0.002282841200919341,0.02282841200919341,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.011414206004596705
+china,1979,1980,2,0.0,4380506.185,0.0,0.0,dengue,viral,bite,1,0,1,0,False,False,False,True,True,0.0
+india,1981,1981,1,10.0,4536996.619,0.002204101267812737,0.02204101267812737,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.02204101267812737
+hiv/aids pandemic,1981,2024,44,42300.0,4536996.619,9.323348362847877,93.23348362847878,hiv/aids,viral,fluid,1,0,1,1,False,False,True,False,False,2.118942809738154
+ecuador,1983,1983,1,0.0,4699569.187,0.0,0.0,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,0.0
+sudan,1983,1994,12,100.0,5145425.994,0.01943473681607867,0.1943473681607867,visceral leishmaniasis,parasitic,bite,0,0,0,0,False,False,False,True,True,0.016195614013398894
+nigeria,1986,1990,5,4.0,4960568.0,0.0008063592717608145,0.008063592717608144,yellow fever,viral,bite,1,0,1,0,False,False,False,True,True,0.001612718543521629
+burundi,1992,1992,1,0.0,5498919.893,0.0,0.0,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0
+russia,1992,1993,2,0.0,5498919.893,0.0,0.0,diphtheria,bacterial,droplet/fluid,0,0,0,0,False,True,True,True,True,0.0
+india,1994,1994,1,,5663150.428,,,plague,bacterial,airborne/bite,0,0,0,0,False,True,True,True,True,
+global sars,2003,2003,1,0.744,6381185.141,0.000116592761933782,0.00116592761933782,sars,viral,droplet,1,0,1,1,False,True,True,False,False,0.00116592761933782
+swine flu,2009,2009,1,284.5,6872767.0,0.0413952633633586,0.413952633633586,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,0.413952633633586
+measles in d.r. congo,2011,2018,8,4.5,7041194.0,0.0006390961532944554,0.006390961532944554,measles,viral,airborne/droplet,1,0,1,0,False,True,True,True,True,0.0007988701916180692
+global mers,2012,2017,6,0.659,7125827.957,9.248048142288316e-05,0.0009248048142288316,mers,viral,droplet,1,0,1,1,False,True,True,False,False,0.00015413413570480527
+western africa,2013,2016,4,11.325,7210582.0,0.001570608308732915,0.01570608308732915,ebola,viral,blood/fluid,1,0,1,1,False,False,True,False,False,0.0039265207718322875
+indian swine flu outbreak,2015,2015,1,2.0,7379797.0,0.0002710101646427402,0.002710101646427402,influenza,viral,droplet,1,0,1,0,False,True,True,False,False,0.002710101646427402
+kivu ebola epidemic,2018,2020,3,2.23,7631091.113,0.0002922255765235285,0.002922255765235285,ebola,viral,blood/fluid,1,0,1,0,False,False,True,False,False,0.0009740852550784284
+global covid-19,2019,2024,6,7100.0,7740000.0,0.917312661498708,9.17312661498708,covid-19,viral,airborne/droplet,1,0,1,1,False,True,True,False,False,1.52885443583118
+african mpox,2023,2024,2,0.812,8020000.0,0.00010124688279301745,0.0010124688279301746,mpox,viral,fluid,1,0,1,0,False,False,True,False,False,0.0005062344139650873

@@ -1,8 +1,41 @@
-output/*
 logs/*
 
+# Compiled / generated
 *.log
 *.out
 *.pyc
+a.out
 
+# Environment
 .env
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Python
+**/__pycache__/
+**/.pytest_cache/
+python/.venv/
+python/.python-version
+
+# MATLAB auto-save
+*.asv
+matlab/notebooks/
+
+# R
+renv/library/
+renv/staging/
+
+# Sensitive data
+data/derived/vaccine_ptrs_responses.csv
+data/derived/vaccine_rd_cost_responses.csv
+data/derived/vaccine_rd_timeline_responses.csv
+data/derived/arrival_rate_responses_all_clean.csv
+data/derived/arrival_rate_responses_virus_clean.csv
+
+# Outputs too large to commit
+data/clean/arrival_distributions/
+data/clean/duration_distributions/
+output/single_runs/
+output/sensitivity_runs/

@@ -1,4 +1,28 @@
 function [annual_results, simulation_table] = event_list_simulation(simulation_table, econ_loss_model, num_sims, params)
+    % Simulate pandemic events and compute annual cost and benefit arrays.
+    %
+    % For each pandemic event in simulation_table, computes vaccine benefits, mortality
+    % and economic losses, and all cost streams (advance capacity, R&D, surveillance,
+    % in-pandemic response). Returns a struct of annual arrays indexed by (simulation,
+    % year) for downstream aggregation, and appends per-event columns to simulation_table.
+    %
+    % Args:
+    %   simulation_table  Table of pandemic events from get_scenario_simulation_table.
+    %                     Must include: sim_num, yr_start, actual_dur, is_false,
+    %                     prep_start_month, ufv_protection, rd_state,
+    %                     month_response_vaccine_ready, intensity, eff_severity.
+    %   econ_loss_model   EconLossModel -- predicts output loss fraction from severity.
+    %   num_sims          Total number of simulations.
+    %   params            Struct of run parameters (see repository README, Configuration).
+    %                     Key fields: sim_periods, r, y, P0, Y0, value_of_death,
+    %                     z_m/z_o, base_cap_mrna/trad, surge_cap_mrna/trad,
+    %                     prototype_RD, universal_flu_rd, improved_early_warning.
+    %
+    % Returns:
+    %   annual_results    Struct of (num_sims x sim_periods) arrays for costs, benefits,
+    %                     deaths, and losses. All _PV fields are discounted.
+    %   simulation_table  Input table with added per-event columns: cap_avail_m/o,
+    %                     u_deaths, m_deaths, vax_benefits, loss columns, inp cost columns.
     % Extract events from simulation table
     simulation_table = sortrows(simulation_table, ["sim_num", "yr_start"]); % Make sure sorted
 
@@ -29,6 +53,8 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
     % Calculate advance and surge capacity
     base_cap_m = params.base_cap_mrna;
     base_cap_o = params.base_cap_trad;
+    
+    % Deployable ceiling 
     max_cap_m = params.mRNA_share * params.max_capacity;
     max_cap_o = (1 - params.mRNA_share) * params.max_capacity;
     frac_retained = params.capacity_kept;
@@ -189,18 +215,6 @@ function [annual_results, simulation_table] = event_list_simulation(simulation_t
         inp_marg_costs_PV(group_idx) = group_results.inp_marg_costs_PV;
     end
 
-    % Aggregate simulation results from group results, store in arrays, and put in simulation_table table
-    result_cols = {'cap_avail_m', 'cap_avail_o', 'u_deaths', 'm_deaths', 'vax_benefits', ...
-                   'm_mortality_losses', 'm_output_losses', 'm_learning_losses', 'ex_post_severity', ...
-                   'inp_marg_costs_PV', 'inp_tailoring_costs_PV', 'inp_RD_costs_PV', ...
-                   'inp_cap_costs_PV'};
-    
-    % Add result columns
-    for i = 1:numel(result_cols)
-        simulation_table.(result_cols{i}) = nan(height(simulation_table), 1);
-    end
-
-    % Fill in results only for simulations that had events
     simulation_table.cap_avail_m = cap_avail_m;
     simulation_table.cap_avail_o = cap_avail_o;
     simulation_table.u_deaths = u_deaths;
@@ -377,21 +391,13 @@ function results = process_group(group_data, group_all_cap_m, group_all_cap_o, e
     ufv_share(total_protected == 0) = 0;
     eff_multiplier = 1 - ufv_share .* (1 - params.univ_flu_vax_eff_multiplier);
 
-    h_arr = params.gamma .* h(total_protected .* eff_multiplier);
+    h_arr = params.gamma .* h_function(total_protected .* eff_multiplier);
 
-    % Vaccinate at rate of capacity until all vaccinated, then annual
-    % vaccination to maintain immunity.
-    % share_cap_m = cap_m ./ (cap_tot + eps);
-    % max_booster_rate = min(cap_tot, params.P0 / 12);
+    % Vaccinate at rate of capacity until all vaccinated
     stopped_vaccinating_idx = response_vax_fraction >= max_vax_rate;
 
-    % Have taken out booster logic
-    monthly_courses_m = (...
-        ~stopped_vaccinating_idx .* cap_m ... % + ~first_vax_idx .* max_booster_rate .* share_cap_m ...
-    ) .* active_idx; % No vaccination with false positive
-    monthly_courses_o = (...
-        ~stopped_vaccinating_idx .* cap_o ... % +~first_vax_idx .* max_booster_rate .* (1 - share_cap_m) ...
-    ) .* active_idx;
+    monthly_courses_m = (~stopped_vaccinating_idx .* cap_m) .* active_idx;
+    monthly_courses_o = (~stopped_vaccinating_idx .* cap_o) .* active_idx;
 
     % Pandemic losses
     monthly_intensity = (annual_intensity ./ 12) .* active_idx; % E x M

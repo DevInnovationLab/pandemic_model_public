@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --time=4:00:00
+#SBATCH --time=15:00:00
 #SBATCH --mem=45G
 #SBATCH --account=pi-rglennerster
 #SBATCH --account=pi-rglennerster
@@ -17,6 +17,6 @@ module load matlab/2023a
 NUM_CHUNKS=$1
 OVERWRITE=${2:-true};
 
-matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program.yaml', 'response', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"
+matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_runs_configs/baseline_vaccine_program.yaml', 'response', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"
 
-matlab -batch "run('./matlab/load_project.m'); agg_sensitivity_benefits('./output/sensitivity/baseline_vaccine_program'); write_sensitivity_benefits_figures('./output/sensitivity/baseline_vaccine_program');"
+matlab -batch "run('./matlab/load_project.m'); agg_sensitivity_benefits('./output/sensitivity_runs/baseline_vaccine_program');"

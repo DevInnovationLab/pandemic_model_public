@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=1
-#SBATCH --time=2:00:00
+#SBATCH --time=0:30:00
 #SBATCH --mem=30G
 #SBATCH --account=pi-rglennerster
 #SBATCH --account=pi-rglennerster
@@ -15,6 +15,7 @@
 module load matlab/2023a
 
 OUTDIR=$1
+FIGURE_EXPORT=$2
 
-matlab -batch "run('./matlab/load_project.m'); compare_exceedances('${OUTDIR}');"
+matlab -batch "run('./matlab/load_project.m'); compare_exceedances('${OUTDIR}', '${FIGURE_EXPORT}');"
 

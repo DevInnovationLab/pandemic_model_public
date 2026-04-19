@@ -1,13 +1,26 @@
+# create_ptrs_table.R — Assemble final PTRS table including prototype-effect adjustments.
+#
+# Merges marginal PTRS predictions with pathogen metadata. For pathogens that lack
+# a prototype at baseline, adds a second row with PTRS adjusted upward by the
+# estimated prototype platform effect.
+#
+# Inputs:  data/derived/marginal_ptrs_preds.csv
+#          data/clean/prototype_effect_preds.csv
+#          data/clean/pathogen_info.csv
+# Outputs: data/clean/ptrs_table.csv
+#
+# Run from the repository root.
+
 library(tidyverse)
 
 # Read PTRS predictions
-ptrs <- readr::read_csv("output/ptrs/marginal_ptrs_preds.csv", show_col_types = FALSE)
+ptrs <- readr::read_csv("data/derived/marginal_ptrs_preds.csv", show_col_types = FALSE)
 
 # Read pathogen info (including has_prototype)
-pathogen_info <- readr::read_csv("data/raw/pathogen_info.csv", show_col_types = FALSE) 
+pathogen_info <- readr::read_csv("data/clean/pathogen_info.csv", show_col_types = FALSE)
 
 # Read prototype effect predictions
-proto_effect <- readr::read_csv("output/ptrs/prototype_effect_preds.csv", show_col_types = FALSE)
+proto_effect <- readr::read_csv("data/clean/prototype_effect_preds.csv", show_col_types = FALSE)
 
 # Merge PTRS with prototype info
 ptrs_table <- ptrs %>%
@@ -36,4 +49,4 @@ ptrs_table_final <- bind_rows(ptrs_table, proto_effect_add) %>%
   arrange(pathogen, platform, desc(has_prototype))
 
 # Save the merged table as a CSV
-readr::write_csv(ptrs_table_final, "output/ptrs/ptrs_table.csv")
+readr::write_csv(ptrs_table_final, "data/clean/ptrs_table.csv")
