@@ -60,8 +60,7 @@ function write_status_quo_sensitivity_table(sensitivity_dir)
         baseline_value = baseline_config.(param_name);
 
         if strcmp(param_name, 'duration_dist_config')
-            parts = split(baseline_value, "_");
-            baseline_value = str2double(parts{10});
+            baseline_value = duration_stem_trunc_years_from_path(baseline_value);
         end
 
         % Load benefits from aggregated results
@@ -78,12 +77,10 @@ function write_status_quo_sensitivity_table(sensitivity_dir)
         param_value_1 = value_1_data.run_config.(param_name);
         param_value_2 = value_2_data.run_config.(param_name);
         
-        % Handle duration_dist_config specially
+        % Handle duration_dist_config specially (stem uses trunc{T}_n...; not fixed token index)
         if strcmp(param_name, 'duration_dist_config')
-            parts = split(param_value_1, "_");
-            param_value_1 = str2double(parts{10});
-            parts = split(param_value_2, "_");
-            param_value_2 = str2double(parts{10});
+            param_value_1 = duration_stem_trunc_years_from_path(param_value_1);
+            param_value_2 = duration_stem_trunc_years_from_path(param_value_2);
         end
         % Order by parameter value (low/high) and benefits (low/high) independently
         if param_value_1 < param_value_2
@@ -337,6 +334,14 @@ function s = format_multiparameter_field_display(field_name, value)
     else
         s = char(string(value));
     end
+end
+
+
+function ty = duration_stem_trunc_years_from_path(p)
+    % Years from a duration CSV stem such as ...__dur__trunc10_n1000000_s42
+    [~, stem, ~] = fileparts(char(p));
+    tok = regexp(stem, 'trunc(\d+)_', 'tokens', 'once');
+    ty = str2double(tok{1});
 end
 
 

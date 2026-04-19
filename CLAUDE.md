@@ -56,7 +56,7 @@ the full field reference and runtime composition semantics.
 
 **Job Configs** (`config/run_configs/`): Specify run-wide settings
 **Scenario Configs** (`config/scenario_configs/`): Intervention-specific parameters
-**Sensitivity Configs** (`config/sensitivity_runs_configs/`): Parameter sweep definitions
+**Sensitivity Configs** (`config/sensitivity_configs/`): Parameter sweep definitions
 
 ## Development Commands
 
@@ -97,15 +97,40 @@ sbatch --array=1-10 --export=JOB_CONFIG=config/run_configs/airborne_base.yaml,NU
 ./slurm/submit_workflow.sh config/run_configs/airborne_base.yaml
 ```
 
+## Data directories (clean vs derived)
+
+Run all prep CLIs with **current working directory = repository root** (`poetry --directory python run python …` from the repo root).
+
+| Location | Purpose |
+|----------|---------|
+| `data/raw/` | Source downloads and immutable inputs (not read directly by simulation YAML). |
+| `data/clean/` | Curated tables intended as **model inputs** (e.g. Marani-cleaned epidemic sheet, YAML such as `inverted_covid_severity.yaml`, arrival response tables). |
+| `data/derived/` | Pipeline outputs that are **not** final model inputs—e.g. filtered epidemic CSVs, COVID-adjusted copies, and R/Python prep intermediates (cleaned arrival-rate survey tables, marginal PTRS and R&D cost predictions, survey response extracts). |
+
+**Epidemics pipeline:** `clean_marani.py` reads `data/raw/` (e.g. `epidemics_241210.xlsx`) and writes `data/clean/` (e.g. `epidemics_241210_clean.csv`). `filter_epidemics_batch.py` reads that clean CSV and writes filtered `{lineage}__filt__{filter_slug}.csv` under `data/derived/epidemics_filtered/` (and Sankey PDFs under `output/epidemics_filter_figures/`). Stem grammar (lineage, filter slug, GPD/duration segments) is documented in `docs/naming_convention.md`.
+
+| Stage | Writer | Primary outputs |
+|-------|--------|-----------------|
+| Raw → clean sheet | `clean_marani.py` | `data/clean/epidemics_*_clean.csv` |
+| Clean → filtered | `filter_epidemics_batch.py` | `data/derived/epidemics_filtered/{lineage}__filt__{filter_slug}.csv`, `output/epidemics_filter_figures/*.pdf` |
+| GPD fits (optional) | `fit_genpareto_batch.py` | `data/clean/arrival_distributions/` (lineage encodes `*_clean_upcov` inputs, e.g. `e241210c_upcov__filt__...`) |
+| Duration fits (optional) | `fit_duration_dist_batch.py` | `data/clean/duration_distributions/` (CSVs), `output/duration_dist_figs/` (PMF PDFs for 50k runs) |
+
+Do not commit large generated files under `vendor/`; keep artifacts under `data/` and `output/` as appropriate.
+
+**Migration:** If you previously used a symlink or `data/epidemics_filtered/` under a different name, move filtered CSVs to `data/derived/epidemics_filtered/` (and COVID-adjusted outputs to `data/derived/epidemics_filtered/modified/`) and update any local scripts that still point at `data/epidemics_ds/`.
+
 ## Key File Paths
 
 All scripts should be run from the repository root. The model expects:
-- Arrival distributions: `output/arrival_distributions/`
-- Duration distributions: `output/duration_distributions/`
-- Economic loss models: `output/econ_loss_models/`
+- Arrival distributions (GPD): `data/clean/arrival_distributions/`; directory stem `{lineage}__filt__{filter_slug}__arr__gpd_{fit}_{arrival}_{trunc}_u{U}_n{n}_s{seed}` (see `docs/naming_convention.md`). COVID severity revision is encoded in lineage (e.g. `e241210c_upcov`), not in an extra folder tier.
+- Duration distributions: `data/clean/duration_distributions/`; filename stem `{lineage}__filt__{filter_slug}__dur__trunc{T}_n{n}_s{seed}.csv` (helpers in `pandemic_model.pipeline_names`).
+- Economic loss model (Poisson GLM on severity): `data/clean/econ_loss_model_sev_poisson.yaml`; curated rows `data/clean/econ_loss_model_sev_poisson.csv`; diagnostic PDF and LaTeX under `output/econ_loss_model_sev_poisson.*`
 - PTRS tables: `output/ptrs/`
 - R&D timelines: `output/rd_timelines/`
 - Response thresholds: `output/response_thresholds/response_threshold_half_covid_severity.yaml`
+- Filtered epidemic tables (from `filter_epidemics`): `data/derived/epidemics_filtered/`
+- Sankey figures from filter batch: `output/epidemics_filter_figures/`
 
 ## MATLAB Project Setup
 
@@ -152,7 +177,7 @@ git clone --recurse-submodules <repo-url>
 cd python && poetry install && cd ..
 
 # 3. Fit arrival distributions (prerequisite for the simulation)
-cd python && poetry run python scripts/fit_arrival_distributions.py && cd ..
+poetry --directory python run python scripts/fit_arrival_distributions.py
 
 # 4. Run other input-preparation scripts as needed (see python/scripts/)
 

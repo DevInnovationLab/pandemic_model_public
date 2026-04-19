@@ -4,8 +4,8 @@
 # airborne-only subsets), summarises across respondents, and saves the resulting
 # tables for use in downstream PTRS and timeline analyses.
 #
-# Inputs:  data/clean/arrival_rate_responses_virus_clean.csv
-#          data/raw/pathogen_info.csv
+# Inputs:  data/derived/arrival_rate_responses_virus_clean.csv
+#          data/clean/pathogen_info.csv
 # Outputs: data/clean/arrival_rates_all.csv
 #          data/clean/arrival_rates_airborne.csv
 #
@@ -44,8 +44,8 @@ summarize_arrival_risk <- function(arrival_long, pathogen_info) {
 }
 
 # Load virus arrival rates and pathogen metadata
-arrival_rates_virus <- read.csv("./data/clean/arrival_rate_responses_virus_clean.csv")
-pathogen_info <- read.csv("./data/raw/pathogen_info.csv")
+arrival_rates_virus <- read.csv("./data/derived/arrival_rate_responses_virus_clean.csv")
+pathogen_info <- read.csv("./data/clean/pathogen_info.csv")
 
 # --- All viruses: absolute and relative arrival rates ---
 # Relative risk: for each respondent, normalize risks to sum to 1 (relative to only viruses)

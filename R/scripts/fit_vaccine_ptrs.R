@@ -6,9 +6,9 @@
 # effect, and uncertainty is propagated via cluster bootstrap (B = 1000).
 # Also computes the prototype contrast (ΔPTRS per platform) as a post-estimation step.
 #
-# Inputs:  data/clean/vaccine_ptrs_responses.csv
-# Outputs: output/ptrs/marginal_ptrs_preds.csv
-#          output/ptrs/prototype_effect_preds.csv
+# Inputs:  data/derived/vaccine_ptrs_responses.csv
+# Outputs: data/derived/marginal_ptrs_preds.csv
+#          data/clean/prototype_effect_preds.csv
 #
 # Run from the repository root.
 
@@ -22,7 +22,7 @@ library(tidyverse)
 library(statmod)
 
 ## --- Load and prep data -------------------------------------------------------
-ptrs_raw <- read.csv("./data/clean/vaccine_ptrs_responses.csv")
+ptrs_raw <- read.csv("./data/derived/vaccine_ptrs_responses.csv")
 
 ptrs_raw <- ptrs_raw %>%
   filter(!(is.na(value_min) | is.na(value_max))) %>%
@@ -195,5 +195,5 @@ proto_effect_from_A <- tibble(
 
 
 ## --- Save outputs -------------------------------------------------------------
-readr::write_csv(ptrs_vf_marginal, "output/ptrs/marginal_ptrs_preds.csv")
-readr::write_csv(proto_effect_from_A, "output/ptrs/prototype_effect_preds.csv")
+readr::write_csv(ptrs_vf_marginal, "data/derived/marginal_ptrs_preds.csv")
+readr::write_csv(proto_effect_from_A, "data/clean/prototype_effect_preds.csv")

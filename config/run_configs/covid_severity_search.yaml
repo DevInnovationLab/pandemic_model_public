@@ -26,7 +26,7 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 response_threshold_path: "./output/response_thresholds/response_threshold_half_covid_severity.yaml"
 severity_dist_config: "./output/arrival_distributions/all_risk.yaml"
 duration_dist_config: "./output/duration_distributions/all_risk.yaml"
-econ_loss_model_config: "./output/econ_loss_models/poisson_model_total_severity.yaml"
+econ_loss_model_config: "./data/clean/econ_loss_model_sev_poisson.yaml"
 arrival_rates: "./data/clean/arrival_rates_all.csv"
 false_positive_rate: 0
 
@@ -52,8 +52,8 @@ rental_share: 0.4 # Share maintenance cost recuperated from pandemic in absence 
 adv_cap_build_period: 30 # number of years it takes to finish building adv capacity
 
 # Vaccine development
-pathogen_info: "./data/raw/pathogen_info.csv"
-ptrs_pathogen: "./output/ptrs/ptrs_table.csv" # Pathogen vaccine probability of success
+pathogen_info: "./data/clean/pathogen_info.csv"
+ptrs_pathogen: "./data/clean/ptrs_table.csv" # Pathogen vaccine probability of success
 prototype_effect_ptrs: "./output/ptrs/rd_model_preds.csv"
 rd_timelines: "./output/rd_timelines/timelines_from_predictions.csv"
 tau_m: 2 # months to repurpose mRNA candidate

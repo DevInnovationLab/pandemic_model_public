@@ -5,7 +5,7 @@ wide to long format, parses range strings into (min, max) numeric bounds, and ma
 diseases to pathogen groups. Output is used for interval regression in R.
 
 Inputs:  CEPI Expert Survey Excel file (Box path — see hardcoded path below)
-         data/raw/pathogen_info.csv
+         data/clean/pathogen_info.csv
 Outputs: data/clean/vaccine_ptrs_responses.csv
 
 Run from the repository root:
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     header=None,
   )
 
-  pathogen_info = pd.read_csv("./data/raw/pathogen_info.csv")
+  pathogen_info = pd.read_csv("./data/clean/pathogen_info.csv")
 
   # --- Clean PTRS data ---
   ptrs = ptrs_raw \
@@ -105,4 +105,4 @@ if __name__ == "__main__":
 
   # Save df for interval regression
   out_df = ptrs.drop(columns='ptrs_range')
-  out_df.to_csv("./data/clean/vaccine_ptrs_responses.csv")
+  out_df.to_csv("./data/derived/vaccine_ptrs_responses.csv")

@@ -6,8 +6,8 @@
 # sum to 1 for both all-pathogen and virus-only subsets.
 #
 # Inputs:  CEPI Expert Survey Excel file (Box path — see hardcoded path below)
-# Outputs: data/clean/arrival_rate_responses_all_clean.csv
-#          data/clean/arrival_rate_responses_virus_clean.csv
+# Outputs: data/derived/arrival_rate_responses_all_clean.csv
+#          data/derived/arrival_rate_responses_virus_clean.csv
 #
 # Run from the repository root.
 
@@ -107,5 +107,5 @@ arrival_rates_virus <- arrival_rates_collapsed |>
   mutate(across(everything(), ~ .x / rowSums(across(everything()), na.rm = TRUE)))
 
 ## --- Save outputs -------------------------------------------------------------
-write.csv(arrival_rates_all, "./data/clean/arrival_rate_responses_all_clean.csv", row.names = FALSE)
-write.csv(arrival_rates_virus, "./data/clean/arrival_rate_responses_virus_clean.csv", row.names = FALSE)
+write.csv(arrival_rates_all, "./data/derived/arrival_rate_responses_all_clean.csv", row.names = FALSE)
+write.csv(arrival_rates_virus, "./data/derived/arrival_rate_responses_virus_clean.csv", row.names = FALSE)

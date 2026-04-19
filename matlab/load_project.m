@@ -21,7 +21,6 @@ function load_project()
     addpath(fullfile(matlab_path, 'scripts', 'workflow'));
     addpath(fullfile(matlab_path, 'scripts', 'analysis'));
     addpath(fullfile(matlab_path, 'scripts', 'figures'));
-    addpath(fullfile(matlab_path, 'scripts', 'clean_data'));
 
     % External YAML library
     addpath(fullfile(matlab_path, 'yaml'));

@@ -27,10 +27,7 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
     [scenario_ids, scenario_paths] = get_sensitivity_scenarios(sensitivity_dir);
 
     baseline_config = yaml.loadFile(fullfile(sensitivity_dir, 'baseline', 'run_config.yaml'));
-    baseline_arrival_dist = baseline_config.arrival_dist_config;
-    baseline_vsl = baseline_config.value_of_death;
     baseline_r = baseline_config.r;
-    baseline_y = baseline_config.y;
     baseline_periods = baseline_config.sim_periods;
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
 
@@ -45,7 +42,7 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
         {'Variable', 'Value', 'TotalDeaths', 'TotalMortalityLoss', 'TotalEconomicLoss', 'TotalLearningLoss', ...
         'TotalLoss', 'TotalUnmitigatedLossUndiscounted'};
 
-    [vname, vval] = format_names('baseline', 'baseline', baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
+    [vname, vval] = format_names('baseline', '', baseline_config, baseline_config);
     mat_file = fullfile(baseline_dir, 'unmitigated_losses.mat');
     S = load(mat_file, 'sim_total_deaths', 'sim_mortality_loss', 'sim_output_loss', ...
         'sim_learning_loss', 'sim_total_loss', 'sim_total_loss_undiscounted');
@@ -71,7 +68,7 @@ function [annualized_summary_table, total_summary_table] = build_sensitivity_los
                 var_value = var_values{j};
             end
         end
-        [vname, vval] = format_names(var_name, var_value, baseline_arrival_dist, baseline_vsl, baseline_r, baseline_y);
+        [vname, vval] = format_names(var_name, var_value, baseline_config, run_config);
         mat_file = fullfile(value_dir, 'unmitigated_losses.mat');
         S = load(mat_file, 'sim_total_deaths', 'sim_mortality_loss', 'sim_output_loss', ...
             'sim_learning_loss', 'sim_total_loss', 'sim_total_loss_undiscounted');
@@ -140,11 +137,14 @@ function stats = get_mean_and_percentiles(sample)
     stats.p90 = pctiles(2);
 end
 
-function [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_arrival_dist, ...
-                                                          baseline_vsl, baseline_r, baseline_y)
-    formatted_name = var_name;
-    formatted_value = string(var_value);
-    b_meta = parse_arrival_dist_fp(baseline_arrival_dist);
+function [formatted_name, formatted_value] = format_names(var_name, var_value, baseline_config, run_config)
+    % Row labels for sensitivity summary tables. Baseline vs scenario run_config encodes combined
+    % pathogen (arrival + duration) settings; struct scenarios share the same logic as list sweeps.
+
+    baseline_vsl = baseline_config.value_of_death;
+    baseline_r = baseline_config.r;
+    baseline_y = baseline_config.y;
+
     switch var_name
         case "value_of_death"
             formatted_name = "Value of statistical life ($v$)";
@@ -152,62 +152,17 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 formatted_value = sprintf("Reduce to \\$%g million", var_value/1e6);
             elseif var_value > baseline_vsl
                 formatted_value = sprintf("Increase to \\$%g million", var_value/1e6);
+            else
+                formatted_value = string(var_value);
             end
-        case "arrival_dist_config"
-            s_meta = parse_arrival_dist_fp(var_value);
-            trunc_diff = s_meta.trunc_value ~= b_meta.trunc_value;
-            threshold_diff = s_meta.lower_threshold ~= b_meta.lower_threshold;
-            year_min_diff = s_meta.year_min ~= b_meta.year_min;
-            airborne = strcmp(s_meta.scope, "airborne");
-            incl_unid = s_meta.has_unid_token && s_meta.incl_unid;
-            if trunc_diff
-                % Severity ceiling in deaths per 10,000
-                formatted_name = "Severity ceiling ($\overline{s}$)";
-                if s_meta.trunc_value == 1000
-                    formatted_value = "Increase to 1,000 deaths per 10,000";
-                elseif s_meta.trunc_value == 10000
-                    formatted_value = "Increase to 10,000 deaths per 10,000";
-                else
-                    formatted_value = sprintf("Increase to %g deaths per 10,000", s_meta.trunc_value);
-                end
-            elseif threshold_diff
-                % Severity floor in deaths per 10,000 per year
-                formatted_name = "Severity floor ($\underline{s}$)";
-                if s_meta.lower_threshold == 1
-                    formatted_value = "Increase to 1 death per 10,000 per year";
-                else
-                    formatted_value = sprintf("Increase to %g deaths per 10,000 per year", s_meta.lower_threshold);
-                end
-            elseif year_min_diff
-                % Pathogen data: sample period (e.g. outbreaks since 1950)
-                formatted_name = "Pathogen data";
-                if s_meta.year_min == 1950
-                    formatted_value = "Novel viral since 1950";
-                else
-                    formatted_value = sprintf("Novel viral since %g", s_meta.year_min);
-                end
-            elseif airborne
-                formatted_name = "Pathogen data";
-                formatted_value = "Airborne novel viral outbreaks";
-            elseif s_meta.year_thresh_only
-                formatted_name = "Pathogen data";
-                formatted_value = "All outbreaks since 1900";
-            elseif incl_unid
-                formatted_name = "Pathogen data";
-                formatted_value = "Novel + unidentified viral";
-            end
-        case "duration_dist_config"
-            formatted_name = "Duration upper bound ($\overline{d}$)";
-            [~, config_name, ~] = fileparts(var_value);
-            config_metadata = split(config_name, "_");
-            trunc_value = config_metadata(8);
-            formatted_value = sprintf("%g years", trunc_value);
         case "y"
             formatted_name = "Per capita GDP growth rate ($r_g$)";
             if var_value < baseline_y
                 formatted_value = sprintf("Reduce to %.1f\\%%", var_value * 100);
             elseif var_value > baseline_y
                 formatted_value = sprintf("Increase to %.1f\\%%", var_value * 100);
+            else
+                formatted_value = string(var_value);
             end
         case "r"
             formatted_name = "Social discount rate ($r_s$)";
@@ -215,6 +170,8 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
                 formatted_value = sprintf("Reduce to %.1f\\%%", var_value * 100);
             elseif var_value > baseline_r
                 formatted_value = sprintf("Increase to %.1f\\%%", var_value * 100);
+            else
+                formatted_value = string(var_value);
             end
         case "ptrs_pathogen_gamma1"
             formatted_name = "Vaccines always succeed, $\\gamma = 1$";
@@ -222,5 +179,117 @@ function [formatted_name, formatted_value] = format_names(var_name, var_value, b
         case "baseline"
             formatted_name = "Baseline";
             formatted_value = "";
+        otherwise
+            [pn, pv] = pathogen_and_duration_labels(baseline_config, run_config);
+            if strlength(pn) > 0
+                formatted_name = pn;
+                formatted_value = pv;
+            elseif strcmp(char(var_name), 'duration_dist_config')
+                formatted_name = "Duration upper bound ($\overline{d}$)";
+                rt = duration_stem_trunc_years(var_value);
+                formatted_value = sprintf("%g years", rt);
+            else
+                formatted_name = humanize_scenario_key(var_name);
+                formatted_value = "";
+            end
     end
+end
+
+function [name, val] = pathogen_and_duration_labels(baseline_config, run_config)
+    % Compare merged pathogen inputs vs baseline (arrival GPD + duration CSV paths).
+    name = "";
+    val = "";
+    b_arr = char(baseline_config.arrival_dist_config);
+    r_arr = char(run_config.arrival_dist_config);
+
+    if strcmp(b_arr, r_arr)
+        [name, val] = duration_only_labels(baseline_config, run_config);
+        return;
+    end
+
+    b_meta = parse_arrival_dist_fp(b_arr);
+    s_meta = parse_arrival_dist_fp(r_arr);
+    trunc_diff = s_meta.trunc_value ~= b_meta.trunc_value;
+    threshold_diff = s_meta.lower_threshold ~= b_meta.lower_threshold;
+    year_min_diff = s_meta.year_min ~= b_meta.year_min;
+    airborne = strcmp(s_meta.scope, "airborne");
+    incl_unid = s_meta.has_unid_token && s_meta.incl_unid;
+
+    if trunc_diff
+        name = "Severity ceiling ($\overline{s}$)";
+        if s_meta.trunc_value == 1000
+            val = "Increase to 1,000 deaths per 10,000";
+        elseif s_meta.trunc_value == 10000
+            val = "Increase to 10,000 deaths per 10,000";
+        else
+            val = sprintf("Increase to %g deaths per 10,000", s_meta.trunc_value);
+        end
+        return;
+    elseif threshold_diff
+        name = "Severity floor ($\underline{s}$)";
+        if s_meta.lower_threshold == 1
+            val = "Increase to 1 death per 10,000 per year";
+        else
+            val = sprintf("Increase to %g deaths per 10,000 per year", s_meta.lower_threshold);
+        end
+        return;
+    elseif year_min_diff
+        name = "Pathogen data";
+        if s_meta.year_min == 1950
+            val = "Novel viral since 1950";
+        else
+            val = sprintf("Novel viral since %g", s_meta.year_min);
+        end
+        return;
+    elseif airborne
+        name = "Pathogen data";
+        val = "Airborne novel viral outbreaks";
+        return;
+    elseif s_meta.year_thresh_only
+        name = "Pathogen data";
+        val = "All outbreaks since 1900";
+        return;
+    elseif incl_unid
+        name = "Pathogen data";
+        val = "Novel + unidentified viral";
+        return;
+    end
+end
+
+function [name, val] = duration_only_labels(baseline_config, run_config)
+    name = "";
+    val = "";
+    if ~isfield(baseline_config, 'duration_dist_config') || ~isfield(run_config, 'duration_dist_config')
+        return;
+    end
+    bd = char(baseline_config.duration_dist_config);
+    rd = char(run_config.duration_dist_config);
+    if strcmp(bd, rd)
+        return;
+    end
+    bt = duration_stem_trunc_years(bd);
+    rt = duration_stem_trunc_years(rd);
+    if isnan(bt) || isnan(rt)
+        return;
+    end
+    name = "Duration upper bound ($\overline{d}$)";
+    val = sprintf("%g years", rt);
+end
+
+function ty = duration_stem_trunc_years(path_or_stem)
+    [~, stem, ~] = fileparts(char(path_or_stem));
+    tok = regexp(stem, 'trunc(\d+)_', 'tokens', 'once');
+    if isempty(tok)
+        ty = NaN;
+    else
+        ty = str2double(tok{1});
+    end
+end
+
+function s = humanize_scenario_key(k)
+    t = strrep(char(k), '_', ' ');
+    if ~isempty(t)
+        t(1) = upper(t(1));
+    end
+    s = string(t);
 end

@@ -4,18 +4,16 @@
 # pathogen–platform–prototype combination. Used as the ptrs_pathogen input in
 # sensitivity configs that assume perfect vaccine development success.
 #
-# Inputs:  output/ptrs/ptrs_table.csv
-# Outputs: output/ptrs/ptrs_table_always_succeed.csv
+# Inputs:  data/clean/ptrs_table.csv
+# Outputs: data/clean/ptrs_table_always_succeed.csv
 #
 # Run from the repository root.
 
+library(readr)
 library(tidyverse)
 
-ptrs_table <- readr::read_csv("output/ptrs/ptrs_table.csv", show_col_types = FALSE)
+ptrs_table <- readr::read_csv("data/clean/ptrs_table.csv", show_col_types = FALSE)
 
 ptrs_always_succeed <- ptrs_table %>%
   mutate(ptrs = 1)
-
-out_dir <- "output/ptrs"
-if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
-readr::write_csv(ptrs_always_succeed, file.path(out_dir, "ptrs_table_always_succeed.csv"))
+write_csv(ptrs_always_succeed, file.path("data/cleanptrs_table_always_succeed.csv"))

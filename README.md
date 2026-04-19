@@ -54,6 +54,10 @@ Rscript -e "renv::restore()"
 
 ---
 
+## Data layout
+
+Input and derived tables live under `data/raw/`, `data/clean/`, and `data/derived/` (see **Data directories** in [`CLAUDE.md`](CLAUDE.md)).
+
 ## Running the Model
 
 All commands are run from the **repository root**.

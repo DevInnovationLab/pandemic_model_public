@@ -4,8 +4,8 @@
 # pathogen (pathogen name only in the first row of each block, blank in subsequent
 # platform rows) without requiring the multirow package.
 #
-# Inputs:  output/ptrs/ptrs_table.csv
-# Outputs: output/ptrs/ptrs_pub_table.tex
+# Inputs:  data/clean/ptrs_table.csv
+# Outputs: output/ptrs_pub_table.tex
 #
 # Run from the repository root.
 
@@ -14,7 +14,7 @@ library(dplyr)
 library(stringr)
 
 ## --- Load and format data -----------------------------------------------------
-ptrs <- read_csv("output/ptrs/ptrs_table.csv", show_col_types = FALSE)
+ptrs <- read_csv("data/clean/ptrs_table.csv", show_col_types = FALSE)
 
 # Factors for technology display
 platform_levels <- c("mrna_only", "traditional_only")
@@ -112,4 +112,4 @@ tex_out <- paste0(
   "\n", table_footer
 )
 
-writeLines(tex_out, "output/ptrs/ptrs_pub_table.tex")
+writeLines(tex_out, "output/ptrs_pub_table.tex")

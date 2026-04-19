@@ -5,8 +5,8 @@
 #   2. Horizontal dot plot of the prototype R&D effect on PTRS by platform.
 # Pathogen ordering follows the arrival-share plot for visual consistency across figures.
 #
-# Inputs:  output/ptrs/marginal_ptrs_preds.csv
-#          output/ptrs/prototype_effect_preds.csv
+# Inputs:  data/derived/marginal_ptrs_preds.csv
+#          data/clean/prototype_effect_preds.csv
 #          data/clean/arrival_rates_all.csv
 # Outputs: output/ptrs/ptrs_plot.pdf
 #          output/ptrs/proto_effect_plot.pdf
@@ -20,7 +20,7 @@ library(tidyverse)
 
 ## --- Load data and derive pathogen ordering -----------------------------------
 
-ptrs_preds <- readr::read_csv("output/ptrs/marginal_ptrs_preds.csv")
+ptrs_preds <- readr::read_csv("data/derived/marginal_ptrs_preds.csv")
 
 arrival_risk_summary_all <- readr::read_csv("./data/clean/arrival_rates_all.csv")
 
@@ -113,7 +113,7 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
   )
 
 ## --- Build prototype effect plot (second panel) -------------------------------
-proto_effect <- readr::read_csv("output/ptrs/prototype_effect_preds.csv", show_col_types = FALSE)
+proto_effect <- readr::read_csv("data/clean/prototype_effect_preds.csv", show_col_types = FALSE)
 
 proto_effect <- proto_effect %>%
   mutate(
@@ -150,7 +150,7 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     breaks = c("Traditional", "mRNA")
   ) +
   scale_x_continuous(
-    limits = c(0, 1),
+    limits = c(-.04, 1),
     breaks = seq(0, 1, by = 0.1),
     labels = scales::percent_format(accuracy = 1, suffix = "")
   ) +

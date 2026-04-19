@@ -4,7 +4,7 @@
 # viral family, prototype vaccine status, and airborne transmission flag.
 #
 # Inputs:  none (data hardcoded in script)
-# Outputs: data/raw/pathogen_info.csv
+# Outputs: data/clean/pathogen_info.csv
 #
 # Run from the repository root.
 

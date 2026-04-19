@@ -22,10 +22,10 @@ gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
 response_threshold_path: "./output/response_thresholds/response_threshold_half_covid_severity.yaml" # Response threshold in terms intensity
-arrival_dist_config: "output/arrival_distributions/modified/gpd_all_excl_unid_filt_intensity_fit_severity_0d01_1900_poisson_sharp_upper_200_n_1000000_seed_42"
-duration_dist_config: "./output/duration_distributions/clean_filt_all_int_0d01_1900_mod_trunc_10_n_1000000_seed_42.csv"
+arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
+duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900__dur__trunc10_n1000000_s42.csv"
 arrival_rates: "./data/clean/arrival_rates_all.csv"
-econ_loss_model_config: "./output/econ_loss_models/poisson_model_total_severity.yaml"
+econ_loss_model_config: "./data/clean/econ_loss_model_sev_poisson.yaml"
 
 # Capacity
 theta: 0.25 # Max surge capacity displacement due to advance capacity
@@ -52,8 +52,8 @@ g_o: 0.4 # fraction of at risk capacity unsuccessful/repurpose-able in tradition
 adv_cap_build_period: 30 # number of years it takes to establish capacity reservation
 
 # Vaccine development
-pathogen_info: "./data/raw/pathogen_info.csv"
-ptrs_pathogen: "./output/ptrs/ptrs_table.csv" # Pathogen vaccine probability of success
+pathogen_info: "./data/clean/pathogen_info.csv"
+ptrs_pathogen: "./data/clean/ptrs_table.csv" # Pathogen vaccine probability of success
 prototype_effect_ptrs: "./output/ptrs/prototype_effect_preds.csv" # Probability of success across has and no advanced R&D. Used to calibrate improvement in probability from advanced R&D.
 rd_timelines: "./output/rd_timelines/timelines_from_predictions.csv" # Current deprecated
 tau_m: 2 # months to repurpose mRNA capacity

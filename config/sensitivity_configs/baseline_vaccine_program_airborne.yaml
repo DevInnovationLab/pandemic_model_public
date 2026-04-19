@@ -5,5 +5,5 @@ fix_params: # Parameters to update and fix in the base config
   scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:
   ptrs_pathogen_gamma1:   # scenario name (folder under run_name)
-    ptrs_pathogen: "./output/ptrs/ptrs_table_always_succeed.csv"
+    ptrs_pathogen: "./data/clean/ptrs_table_always_succeed.csv"
     gamma: 1

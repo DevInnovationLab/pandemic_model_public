@@ -5,8 +5,8 @@
 # are obtained via the closed-form Gamma log-RE identity, and uncertainty is
 # propagated via cluster bootstrap (B = 1000).
 #
-# Inputs:  data/clean/vaccine_rd_cost_responses.csv
-# Outputs: output/rd_costs/marginal_rd_costs_preds.csv
+# Inputs:  data/derived/vaccine_rd_cost_responses.csv
+# Outputs: data/derived/marginal_rd_costs_preds.csv
 #
 # Run from the repository root.
 
@@ -22,7 +22,7 @@ library(statmod)
 
 ## --- Load and prep data -------------------------------------------------------
 
-rd_costs <- read_csv("./data/clean/vaccine_rd_cost_responses.csv")
+rd_costs <- read_csv("./data/derived/vaccine_rd_cost_responses.csv")
 
 rd_costs <- rd_costs %>%
   mutate(
@@ -167,4 +167,4 @@ rd_costs_marginal <- tibble(
   hi95 = apply(mu_boot_C, 1, quantile, 0.975)
 )
 
-write_csv(rd_costs_marginal, "output/rd_costs/marginal_rd_costs_preds.csv")
+write_csv(rd_costs_marginal, "data/derived/marginal_rd_costs_preds.csv")

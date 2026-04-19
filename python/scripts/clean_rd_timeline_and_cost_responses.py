@@ -102,4 +102,4 @@ if __name__ == "__main__":
  
     vaccine_cost['pathogen'] = vaccine_cost.index.get_level_values('disease').map(pathogen_group_map)
 
-    vaccine_cost.to_csv("./data/clean/vaccine_rd_cost_responses.csv")
+    vaccine_cost.to_csv("./data/derived/vaccine_rd_cost_responses.csv")

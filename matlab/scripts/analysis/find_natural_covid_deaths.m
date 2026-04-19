@@ -8,7 +8,7 @@ function find_natural_covid_deaths(config_path)
     years = 5; % COVID-19 duration according to our records.
 
     % Load vaccination rates over time.
-    monthly_cum_vax = readtable("./data/clean/covid19_cum_vax_over_time.csv");
+    monthly_cum_vax = readtable("./data/derived/covid19_cum_vax_over_time.csv");
     cum_vax_rate = monthly_cum_vax.cum_vax_rate;
     monthly_cum_vax = [zeros(params.tau_a, 1); cum_vax_rate]; % Vaccinations are zero before vaccine available.
 
@@ -45,7 +45,7 @@ function find_natural_covid_deaths(config_path)
     results.ex_ante_severity = ex_ante_severity;
     results.gamma = gamma;
     
-    yaml.dumpFile("./output/inverted_covid_severity.yaml", results, "block");
+    yaml.dumpFile("./data/derived/inverted_covid_severity.yaml", results, "block");
 end
 
 
