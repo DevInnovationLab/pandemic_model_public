@@ -1,9 +1,17 @@
 function write_pairwise_program_table(job_dir)
+    % Build the pairwise complementarity summary table and write CSV + LaTeX.
+    %
+    % For each pair of advance investment programs, computes the complementarity
+    % (combined NPV minus sum of standalone NPVs) and net value. Writes results to
+    % processed/pairwise_program_summary.csv and a LaTeX table.
+    %
+    % Args:
+    %   job_dir  Path to the job output directory (contains processed/ and run_config.yaml).
     % Load data from processed results directory
     processed_dir = fullfile(job_dir, "processed");
 
     % Get scenarios from config
-    config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    config = yaml.loadFile(fullfile(job_dir, 'run_config.yaml'));
     scenarios = string(fieldnames(config.scenarios));
     scenarios = scenarios(~strcmp(scenarios, 'baseline') & ...
                           ~contains(scenarios, "prec1") & ...
@@ -130,9 +138,6 @@ function complementarity_table = compute_complementarity(summary_data, investmen
                     break;
                 end
             end
-            if isempty(with_scenario)
-                continue;
-            end
 
             with_benefits = raw_data.(with_scenario).benefits;
             with_costs = raw_data.(with_scenario).costs;
@@ -145,10 +150,7 @@ function complementarity_table = compute_complementarity(summary_data, investmen
                     break;
                 end
             end
-            if isempty(alone1_scenario)
-                warning('No alone scenario found for %s', investment1);
-                continue;
-            end
+
             alone1_benefits = raw_data.(alone1_scenario).benefits;
             alone1_costs = raw_data.(alone1_scenario).costs;
 
@@ -160,10 +162,7 @@ function complementarity_table = compute_complementarity(summary_data, investmen
                     break;
                 end
             end
-            if isempty(alone2_scenario)
-                warning('No alone scenario found for %s', investment2);
-                continue;
-            end
+
             alone2_benefits = raw_data.(alone2_scenario).benefits;
             alone2_costs = raw_data.(alone2_scenario).costs;
 

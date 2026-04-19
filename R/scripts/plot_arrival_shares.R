@@ -1,7 +1,17 @@
+# plot_arrival_shares.R — Plot pathogen pandemic arrival shares with 95% CIs.
+#
+# Produces a horizontal dot-and-errorbar chart of expected pathogen pandemic
+# shares, coloured by whether a prototype vaccine exists.
+#
+# Inputs:  data/clean/arrival_rates_all.csv
+# Outputs: output/pathogen_pandemic_share_all.pdf
+
 library(forcats)
 library(ggplot2)
 library(snakecase)
 library(tidyverse)
+
+## --- Load and prep data -------------------------------------------------------
 
 arrival_risk_summary_all <- readr::read_csv("./data/clean/arrival_rates_all.csv")
 
@@ -17,7 +27,8 @@ arrival_risk_plot <- arrival_risk_summary_all %>%
 prototype_colors <- c("Has prototype" = "#005185", "No prototype" = "#A50021") # blue and red
 
 
-# Reduce the vertical spacing by shrinking the plot height and point size
+## --- Build plot ---------------------------------------------------------------
+
 p <- ggplot(arrival_risk_plot, aes(
   x = estimate,
   y = reorder(pathogen, estimate),
@@ -67,7 +78,7 @@ p <- ggplot(arrival_risk_plot, aes(
     plot.margin = margin(0, 0, 0, 0)
   )
 
-# Save main plot (slightly taller for more vertical space)
+## --- Save output --------------------------------------------------------------
 ggsave(
   "./output/pathogen_pandemic_share_all.pdf",
   plot = p,

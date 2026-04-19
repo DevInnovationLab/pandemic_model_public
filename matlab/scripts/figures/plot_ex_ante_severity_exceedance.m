@@ -1,4 +1,14 @@
 function fig = plot_ex_ante_severity_exceedance(dist, n, logscale, visible)
+    % Plot the ex-ante pandemic severity exceedance function for a severity distribution.
+    %
+    % Args:
+    %   dist      SeverityDist object with .arrival_rate and .get_severity() method.
+    %   n         Number of evaluation points (default: 1000).
+    %   logscale  If true, use log scale on the x-axis (default: true).
+    %   visible   If true, make the figure visible on screen (default: false).
+    %
+    % Returns:
+    %   fig  Figure handle.
     arguments
         dist {mustBeA(dist, 'SeverityDist')}
         n (1,1) {mustBeNumeric} = 1000

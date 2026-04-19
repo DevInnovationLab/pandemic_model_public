@@ -10,14 +10,14 @@ function write_program_levels_invest_table(job_dir, varargin)
     % capacity_prototype_variations (or the same scenario stems).
     %
     % Args:
-    %   job_dir (char/string): Job output directory containing processed/ and job_config.yaml.
+    %   job_dir (char/string): Job output directory containing processed/ and run_config.yaml.
 
     p = inputParser;
     parse(p, varargin{:});
 
     job_dir = char(string(job_dir));
     processed_dir = fullfile(job_dir, "processed");
-    config = yaml.loadFile(fullfile(job_dir, 'job_config.yaml'));
+    config = yaml.loadFile(fullfile(job_dir, 'run_config.yaml'));
     available = string(fieldnames(config.scenarios));
     available = available(~strcmp(available, 'baseline'));
 

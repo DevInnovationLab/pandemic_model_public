@@ -4,7 +4,7 @@ function [adv_cap_mrna, adv_cap_trad, total_gap] = get_adv_capacity(params)
     %
     % Simulation ceiling (params.deployable_max_capacity in event_list_simulation) uses the
     % same total_gap when share > 1: deployable_max_capacity = ref_max + (share - 1) * total_gap,
-    % not ref_max * share. See update_params in run_job.m.
+    % not ref_max * share. See update_params in run_model.m.
 
     % Capacity gap per platform (floored at zero)
     gap_mrna = max(0, params.mRNA_share .* params.adv_cap_reference - params.base_cap_mrna);

@@ -1,6 +1,18 @@
 function [pathogens_with_baseline_prototype, new_invested_pathogens] = parse_neglected_pathogen_rd(rd_investment_config, pathogen_arrival_rates)
-    % Can pick specific diseases, random portfolio, and most profitable
-    % Consider handling success probabilities in here
+    % Determine which pathogens receive advance prototype R&D investment.
+    %
+    % Reads the R&D strategy from rd_investment_config and returns pathogens that
+    % already have baseline prototypes and the new ones selected for investment.
+    % Strategies: 'none', 'top' (highest arrival rate), 'random', or 'specific'.
+    %
+    % Args:
+    %   rd_investment_config    Struct with fields: strategy, num (for top/random),
+    %                           invest_families (for 'specific' strategy).
+    %   pathogen_arrival_rates  Table with columns: pathogen, estimate, has_prototype.
+    %
+    % Returns:
+    %   pathogens_with_baseline_prototype  String array of pathogens with existing prototypes.
+    %   new_invested_pathogens             String array of pathogens selected for new R&D.
 
     pathogens_with_baseline_prototype = pathogen_arrival_rates.pathogen(pathogen_arrival_rates.has_prototype == true);
     eligible_idx = ~pathogen_arrival_rates.has_prototype & ...

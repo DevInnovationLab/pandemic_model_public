@@ -11,7 +11,7 @@ function [out_tbl, info] = simulation_at_pct(job_dir, scenario_name, percentile)
     % inferring chunk ranges from chunk counts.
     %
     % Args:
-    %   job_dir (char/string): Completed job directory (job_config.yaml, raw/, processed/).
+    %   job_dir (char/string): Completed job directory (run_config.yaml, raw/, processed/).
     %   scenario_name (char/string): "baseline" or a scenario name.
     %   percentile (double): Value in [0, 100].
     %
@@ -59,18 +59,10 @@ end
 function [out_tbl, pan_path, chunk_idx] = load_rows_for_sim(job_dir, scenario_name, sim_num)
     % Locate the correct chunk by searching for the selected global sim_num.
     raw_dir = fullfile(job_dir, 'raw');
-    chunk_dirs = dir(fullfile(raw_dir, 'chunk_*'));
-    chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
+    chunk_dirs = list_chunk_dirs(raw_dir);
     if isempty(chunk_dirs)
         error('simulation_at_pct:NoChunks', 'No raw/chunk_* directories under %s.', raw_dir);
     end
-
-    parsed_idx = nan(size(chunk_dirs));
-    for i = 1:numel(chunk_dirs)
-        parsed_idx(i) = sscanf(chunk_dirs(i).name, 'chunk_%d');
-    end
-    [~, order] = sort(parsed_idx);
-    chunk_dirs = chunk_dirs(order);
 
     for i = 1:numel(chunk_dirs)
         chunk_name = chunk_dirs(i).name;

@@ -1,4 +1,14 @@
-"""Write presentable table of final datasets."""
+"""write_clean_ds_table.py — Write a publication-ready LaTeX table of the epidemic dataset.
+
+Reads a cleaned epidemic dataset CSV and produces a formatted LaTeX table with
+disease name, transmission mode, severity or intensity, and year range columns.
+
+Inputs:  data/clean/<dataset>.csv (path passed as CLI argument)
+Outputs: output/<dataset>.tex
+
+Usage:
+    python scripts/write_clean_ds_table.py <fp> [--measure intensity|severity]
+"""
 from pathlib import Path
 
 import click

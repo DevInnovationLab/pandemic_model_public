@@ -2,20 +2,17 @@
 % Loads base and baseline pandemic tables from a job's raw chunks, builds an
 % inspection table (severity, duration, vaccine effect, etc.) and plots
 % exceedance curves. Run as a script or copy sections into a Live Script.
-% Set outdir to your job output folder (e.g. './output/jobs/allrisk_base_small').
+% Set outdir to your job output folder (e.g. './output/single_runs/allrisk_base_small').
 
 outdir = fullfile(pwd, 'output', 'jobs', 'allrisk_base_small');  % <-- change as needed
 
 %% 1. Load job config and chunk list
-job_config = yaml.loadFile(fullfile(outdir, 'job_config.yaml'));
-sim_periods = job_config.sim_periods;
-num_simulations = job_config.num_simulations;
+run_config = yaml.loadFile(fullfile(outdir, 'run_config.yaml'));
+sim_periods = run_config.sim_periods;
+num_simulations = run_config.num_simulations;
 
 rawdir = fullfile(outdir, 'raw');
-chunk_dirs = dir(fullfile(rawdir, 'chunk_*'));
-chunk_dirs = chunk_dirs([chunk_dirs.isdir]);
-[~, sort_idx] = sort(cellfun(@(x) sscanf(x, 'chunk_%d'), {chunk_dirs.name}));
-chunk_dirs = chunk_dirs(sort_idx);
+chunk_dirs = list_chunk_dirs(rawdir);
 
 %% 2. Load base and pandemic tables (inspection columns)
 % Base: severity, duration, response flag. Pandemic: ex_post_severity, rd_state if present.

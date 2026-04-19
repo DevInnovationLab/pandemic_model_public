@@ -10,7 +10,7 @@ function bootstrap_sums(sim_results_path, varargin)
     % Parse optional arguments
     p = inputParser;
     addParameter(p, 'keep_vars', ["tot_benefits_pv_full"], @(x) isstring(x) || isempty(x));
-    addParameter(p, 'n_bootstrap', 200, @isnumeric);
+    addParameter(p, 'n_bootstrap', 1000, @isnumeric);
     addParameter(p, 'parallel', false, @islogical);
     addParameter(p, 'n_workers', 1, @isnumeric);
     addParameter(p, 'seed', 42, @isnumeric);
@@ -24,7 +24,7 @@ function bootstrap_sums(sim_results_path, varargin)
     processed_dir = fullfile(sim_results_path, "processed");
     
     % Load config to get scenario info
-    config = yaml.loadFile(fullfile(sim_results_path, "job_config.yaml"));
+    config = yaml.loadFile(fullfile(sim_results_path, "run_config.yaml"));
     scenario_names = fieldnames(config.scenarios);
     
     % Set up random seed for reproducibility    

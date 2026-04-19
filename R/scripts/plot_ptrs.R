@@ -1,9 +1,26 @@
+# plot_ptrs.R — Plot vaccine PTRS by pathogen/platform and prototype effect (two-panel figure).
+#
+# Produces two figures saved separately:
+#   1. Horizontal dot plot of PTRS by pathogen and technology platform with 95% CIs.
+#   2. Horizontal dot plot of the prototype R&D effect on PTRS by platform.
+# Pathogen ordering follows the arrival-share plot for visual consistency across figures.
+#
+# Inputs:  data/derived/marginal_ptrs_preds.csv
+#          data/clean/prototype_effect_preds.csv
+#          data/clean/arrival_rates_all.csv
+# Outputs: output/ptrs/ptrs_plot.pdf
+#          output/ptrs/proto_effect_plot.pdf
+#
+# Run from the repository root.
+
 library(forcats)
 library(ggplot2)
 library(snakecase)
 library(tidyverse)
 
-ptrs_preds <- readr::read_csv("output/ptrs/marginal_ptrs_preds.csv")
+## --- Load data and derive pathogen ordering -----------------------------------
+
+ptrs_preds <- readr::read_csv("data/derived/marginal_ptrs_preds.csv")
 
 arrival_risk_summary_all <- readr::read_csv("./data/clean/arrival_rates_all.csv")
 
@@ -18,7 +35,7 @@ arrival_pathogen_order <- arrival_risk_summary_all %>%
   arrange(estimate) %>%
   pull(pathogen)
 
-## Baseline vaccine PTRS
+## --- Build PTRS plot ----------------------------------------------------------
 ptrs_pred_plot <- ptrs_preds %>%
   mutate(
     pathogen = to_sentence_case(gsub("_", " ", pathogen)),
@@ -95,8 +112,8 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
     legend.text = element_text(size = 12)
   )
 
-# Prototype R&D investment effect plot (second panel)
-proto_effect <- readr::read_csv("output/ptrs/prototype_effect_preds.csv", show_col_types = FALSE)
+## --- Build prototype effect plot (second panel) -------------------------------
+proto_effect <- readr::read_csv("data/clean/prototype_effect_preds.csv", show_col_types = FALSE)
 
 proto_effect <- proto_effect %>%
   mutate(
@@ -133,7 +150,7 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     breaks = c("Traditional", "mRNA")
   ) +
   scale_x_continuous(
-    limits = c(0, 1),
+    limits = c(-.04, 1),
     breaks = seq(0, 1, by = 0.1),
     labels = scales::percent_format(accuracy = 1, suffix = "")
   ) +
@@ -159,7 +176,7 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     legend.position = "none"
   )
 
-# Save two separate figures
+## --- Save outputs -------------------------------------------------------------
 ggsave(
   "output/ptrs/ptrs_plot.pdf",
   ptrs_plot,

@@ -1,9 +1,0 @@
-pathogen,share,Viral Family
-Influenza,0.31,Orthomyxoviridae
-SARS-CoV-2,0.155,Coronaviridae
-Disease X,0.185,Unknown
-SARS-CoV,0.077,Coronaviridae
-Ebola,0.065,Filoviridae
-MERS-CoV,0.046,Coronaviridae
-Zika,0.034,Flaviviridae
-Other pathogens,0.130,Multiple

@@ -1,7 +1,7 @@
 # Config for sensitivity analysis on baseline and advance investment vaccine programs.
 # Mixed format: one-parameter sweeps plus ptrs_pathogen_gamma1 (vaccines always succeed, gamma=1).
-base_job_config: "./config/job_configs/allrisk_base.yaml"
-outdir: "./output/sensitivity"
+base_run_config: "./config/run_configs/allrisk_base.yaml"
+outdir: "./output/sensitivity_runs"
 fix_params: # Parameters to update and fix in the base config
   scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:
@@ -62,8 +62,8 @@ sensitivities:
     - 9      # 9 months
 
   duration_dist_config:
-    - "output/duration_distributions/clean_filt_all_int_0d01_1900_mod_trunc_5_n_1000000_seed_42.csv"
-    - "output/duration_distributions/clean_filt_all_int_0d01_1900_mod_trunc_50_n_1000000_seed_42.csv"
+    - "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900__dur__trunc5_n1000000_s42.csv"
+    - "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900__dur__trunc50_n1000000_s42.csv"
   
   max_capacity:
     - 16.28e9 # Calibrated to 50% advance capacity program
@@ -75,5 +75,5 @@ sensitivities:
 
   # Vaccines always succeed and gamma=1 (multi-parameter scenario)
   ptrs_pathogen_gamma1:
-    ptrs_pathogen: "./output/ptrs/ptrs_table_always_succeed.csv"
+    ptrs_pathogen: "./data/clean/ptrs_table_always_succeed.csv"
     gamma: 1

@@ -1,5 +1,15 @@
 function converted_names = convert_varnames(varnames)
-    % Check for nominal or present value indicators and modify names accordingly
+    % Map internal variable name codes to display labels for figures and tables.
+    %
+    % Handles _n (nominal) and _p (present value) suffixes: strips them, looks up
+    % the base name in a fixed dictionary, then re-appends the display suffix.
+    %
+    % Args:
+    %   varnames  String array of internal variable codes (e.g. "adv_cap_p").
+    %
+    % Returns:
+    %   converted_names  String array of display labels
+    %                    (e.g. "Advance capacity (present value)").
     is_nominal = endsWith(varnames, "_n");
     is_present = endsWith(varnames, "_p");
     

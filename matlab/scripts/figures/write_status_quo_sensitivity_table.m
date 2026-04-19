@@ -1,14 +1,14 @@
-function get_baseline_vaccine_sensitivity_table(sensitivity_dir)
-    %% Generate summary table for sensitivity analysis results.
-    %   To be used for the all risk
+function write_status_quo_sensitivity_table(sensitivity_dir)
+    % Build the status-quo vaccine benefits sensitivity table and write CSV + LaTeX.
+    %
+    % Loads aggregated benefits from all sensitivity variants and computes mean vaccine
+    % benefits for the baseline and each variant. Writes a summary table showing the
+    % baseline value and the range across sensitivity runs.
     %
     % Args:
-    %
-    % This function:
-    % 1. Loads results from all sensitivity runs
-    % 2. Calculates vaccine benefits for each scenario
-    % 3. Creates a summary table with baseline and ranges
-    % 4. Outputs the table in CSV and LaTeX formats
+    %   sensitivity_dir  Path to sensitivity output directory containing
+    %                    processed/baseline_benefits_summary.mat and
+    %                    sensitivity_config.yaml.
     
     % Load sensitivity configuration
     sensitivity_dir = char(sensitivity_dir);
@@ -16,9 +16,9 @@ function get_baseline_vaccine_sensitivity_table(sensitivity_dir)
     
     % Load baseline vaccine benefits from aggregated results
     baseline_results_path = fullfile(sensitivity_dir, 'processed', 'baseline_benefits_summary.mat');
-    baseline_data = load(baseline_results_path, 'mean_benefits', 'job_config');
+    baseline_data = load(baseline_results_path, 'mean_benefits', 'run_config');
     baseline_benefits = baseline_data.mean_benefits;
-    baseline_config = baseline_data.job_config;
+    baseline_config = baseline_data.run_config;
     
     % Initialize summary table
     parameters = fieldnames(sensitivity_config.sensitivities);
@@ -60,30 +60,27 @@ function get_baseline_vaccine_sensitivity_table(sensitivity_dir)
         baseline_value = baseline_config.(param_name);
 
         if strcmp(param_name, 'duration_dist_config')
-            parts = split(baseline_value, "_");
-            baseline_value = str2double(parts{10});
+            baseline_value = duration_stem_trunc_years_from_path(baseline_value);
         end
 
         % Load benefits from aggregated results
         value_1_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_1_benefits_summary.mat', param_name));
         value_2_path = fullfile(sensitivity_dir, 'processed', sprintf('%s_value_2_benefits_summary.mat', param_name));
         
-        value_1_data = load(value_1_path, 'mean_benefits', 'job_config');
-        value_2_data = load(value_2_path, 'mean_benefits', 'job_config');
+        value_1_data = load(value_1_path, 'mean_benefits', 'run_config');
+        value_2_data = load(value_2_path, 'mean_benefits', 'run_config');
         
         benefits_value_1 = value_1_data.mean_benefits;
         benefits_value_2 = value_2_data.mean_benefits;
         
         % Get parameter values from job configs
-        param_value_1 = value_1_data.job_config.(param_name);
-        param_value_2 = value_2_data.job_config.(param_name);
+        param_value_1 = value_1_data.run_config.(param_name);
+        param_value_2 = value_2_data.run_config.(param_name);
         
-        % Handle duration_dist_config specially
+        % Handle duration_dist_config specially (stem uses trunc{T}_n...; not fixed token index)
         if strcmp(param_name, 'duration_dist_config')
-            parts = split(param_value_1, "_");
-            param_value_1 = str2double(parts{10});
-            parts = split(param_value_2, "_");
-            param_value_2 = str2double(parts{10});
+            param_value_1 = duration_stem_trunc_years_from_path(param_value_1);
+            param_value_2 = duration_stem_trunc_years_from_path(param_value_2);
         end
         % Order by parameter value (low/high) and benefits (low/high) independently
         if param_value_1 < param_value_2
@@ -179,7 +176,7 @@ function generate_latex_table(summary_table, output_path, baseline_benefits, sen
     %   output_path (string): Path to save the LaTeX table
     %   baseline_benefits (double): Baseline benefits value
     %   sensitivity_config (struct): Loaded sensitivity YAML (sensitivities field used)
-    %   baseline_config (struct): Baseline job_config for default column text
+    %   baseline_config (struct): Baseline run_config for default column text
     % Open file for writing
     fileID = fopen(output_path, 'w');
     
@@ -337,6 +334,14 @@ function s = format_multiparameter_field_display(field_name, value)
     else
         s = char(string(value));
     end
+end
+
+
+function ty = duration_stem_trunc_years_from_path(p)
+    % Years from a duration CSV stem such as ...__dur__trunc10_n1000000_s42
+    [~, stem, ~] = fileparts(char(p));
+    tok = regexp(stem, 'trunc(\d+)_', 'tokens', 'once');
+    ty = str2double(tok{1});
 end
 
 

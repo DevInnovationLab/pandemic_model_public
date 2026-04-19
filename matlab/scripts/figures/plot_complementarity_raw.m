@@ -349,12 +349,9 @@ function plot_complementarity_raw(complementarity_data, metric_label, accent_lab
         lower(strrep(metric_short, ' ', '_')), ...
         lower(accent_short));
     
-    exportgraphics(fig_raw, fullfile(figure_path, [filename_base '_raw.pdf']), ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
-    exportgraphics(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct_deviation_from_mean.pdf']), ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
-    exportgraphics(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.pdf']), ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    exportgraphics(fig_raw, fullfile(figure_path, [filename_base '_raw.pdf']));
+    exportgraphics(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct_deviation_from_mean.pdf']));
+    exportgraphics(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.pdf']));
     close(fig_raw);
     close(fig_raw_pct);
     close(fig_relative);

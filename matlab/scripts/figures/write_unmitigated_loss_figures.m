@@ -7,10 +7,10 @@ function write_unmitigated_loss_figures(sensitivity_dir, annualized_summary_tabl
     %   total_summary_table (table): Optional. If either table is omitted, both are built.
     %
     % Saves:
-    %   sensitivity_dir/sensitivity_annualized_loss_summary.tex
-    %   sensitivity_dir/sensitivity_total_loss_summary.tex
-    %   sensitivity_dir/figures/sensitivity_stacked_losses.png (annualized)
-    %   sensitivity_dir/figures/sensitivity_total_stacked_losses.png (total)
+    %   sensitivity_dir/sensitivity_runs_annualized_loss_summary.tex
+    %   sensitivity_dir/sensitivity_runs_total_loss_summary.tex
+    %   sensitivity_dir/figures/sensitivity_runs_stacked_losses.png (annualized)
+    %   sensitivity_dir/figures/sensitivity_runs_total_stacked_losses.png (total)
 
     sensitivity_dir = char(sensitivity_dir);
     if nargin < 3
@@ -94,8 +94,7 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     xlim(ax_loss, xlims_loss);
 
     outpath_loss = fullfile(fig_dir, 'sensitivity_stacked_losses_social.pdf');
-    exportgraphics(fig_loss, outpath_loss, ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    export_figure(fig_loss, outpath_loss);
     close(fig_loss);
     fprintf('Social loss panel saved to %s\n', outpath_loss);
 
@@ -139,8 +138,7 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     xlim(ax_deaths, xlims_deaths);
 
     outpath_deaths = fullfile(fig_dir, 'sensitivity_stacked_losses_deaths.pdf');
-    exportgraphics(fig_deaths, outpath_deaths, ...
-        'ContentType', 'vector', 'Resolution', 600, 'BackgroundColor', 'none');
+    export_figure(fig_deaths, outpath_deaths);
     close(fig_deaths);
     fprintf('Annual deaths panel saved to %s\n', outpath_deaths);
 end

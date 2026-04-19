@@ -1,15 +1,19 @@
 function run_sensitivity(config_path, run_type, varargin)
-    % Run a sensivitity config, which takes a job_config and details parameter variations to run.
-    % The script has capacity for sens
-    % 
-    % Run type options:
-    %   - 'unmitigated': Calls estimate_unmitigated_losses.m, which runs the model without any response interventions.
-    %   - 'response': Calls run_job.m, which includes the full response model with interventions.
-    % 
-    % Optional parameters:
-    %   - 'overwrite': true or false; helpful for restarting run that was interrupted without running the same scenarios.
-    %   - 'num_chunks': Number of chunks to split simulations into (default: 1)
-    %   - 'array_task_id': SLURM array task ID for parallel processing (default: nan)
+    % Run a sensitivity analysis defined by a sensitivity config file.
+    %
+    % Iterates over parameter variations defined in the sensitivity config, runs the
+    % baseline and each variant (response or unmitigated), and writes per-scenario
+    % run configs and outputs under the sensitivity output directory.
+    %
+    % Args:
+    %   config_path  Path to the sensitivity YAML config file.
+    %   run_type     'response' (full model via run_model) or 'unmitigated'
+    %                (no-intervention model via estimate_unmitigated_losses).
+    %
+    % Name-value parameters:
+    %   overwrite       Overwrite existing scenario outputs (default: true).
+    %   num_chunks      Chunks to split simulations across (default: 1).
+    %   array_task_id   SLURM task ID; if set, processes only that chunk (default: NaN).
 
     p = inputParser;
     addParameter(p, 'overwrite', true, @islogical);
@@ -62,9 +66,9 @@ function run_sensitivity_core(sensitivity_config, run_type, overwrite, num_chunk
         run_config.outdir = scenario_dir;
         create_folders_recursively(run_config.outdir);
 
-        job_config_path = fullfile(run_config.outdir, 'job_config.yaml');
-        if ~overwrite && exist(job_config_path, 'file')
-            fprintf('Skipping scenario "%s" (job_config.yaml exists).\n', scenario_id);
+        run_config_path = fullfile(run_config.outdir, 'run_config.yaml');
+        if ~overwrite && exist(run_config_path, 'file')
+            fprintf('Skipping scenario "%s" (run_config.yaml exists).\n', scenario_id);
             continue;
         end
 
@@ -75,7 +79,7 @@ end
 
 
 function base_config = get_base_config(sensitivity_config)
-    base_config = yaml.loadFile(sensitivity_config.base_job_config);
+    base_config = yaml.loadFile(sensitivity_config.base_run_config);
 end
 
 
@@ -99,9 +103,9 @@ function run_baseline(base_config, base_dir, run_type, overwrite, num_chunks, ar
     run_config.outdir = fullfile(base_dir, 'baseline');
     create_folders_recursively(run_config.outdir);
 
-    % Only run if job_config.yaml does not exist in outdir, indicating job was not yet run
-    job_config_path = fullfile(run_config.outdir, 'job_config.yaml');
-    if ~overwrite && exist(job_config_path, 'file')
+    % Only run if run_config.yaml does not exist in outdir, indicating job was not yet run
+    run_config_path = fullfile(run_config.outdir, 'run_config.yaml');
+    if ~overwrite && exist(run_config_path, 'file')
         fprintf('Skipping baseline as overwrite set to false.\n');
         return;
     end
@@ -124,14 +128,14 @@ function run_single_scenario(run_config, run_type, num_chunks, array_task_id)
 
     % Handle run_type argument: either 'response' or 'unmitigated'
     if strcmp(run_type, "response")
-        run_job(temp_config_path, 'num_chunks', num_chunks, 'array_task_id', array_task_id);
+        run_model(temp_config_path, 'num_chunks', num_chunks, 'array_task_id', array_task_id);
     elseif strcmp(run_type, "unmitigated")
         estimate_unmitigated_losses(temp_config_path, 'num_chunks', num_chunks, 'array_task_id', array_task_id);
     else
         error('Unknown run_type: %s. Must be "response" or "unmitigated".', run_type);
     end
 
-    % For run_job, results are saved in a subfolder named after the temp config file
+    % For run_model, results are saved in a subfolder named after the temp config file
     [~, temp_name, ~] = fileparts(temp_config_path);
     temp_results = fullfile(run_config.outdir, temp_name);
     if exist(temp_results, 'dir')

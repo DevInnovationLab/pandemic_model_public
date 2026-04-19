@@ -1,40 +1,30 @@
 function clean_config = clean_scenario_config(scenario_config)
+    % Extract and validate scenario-specific fields from a raw scenario config struct.
+    %
+    % Normalises the raw YAML-loaded scenario config into a clean struct, applying
+    % defaults and validating required sub-fields for each intervention type.
+    %
+    % Args:
+    %   scenario_config  Struct loaded from a scenario YAML file. Must contain:
+    %                    neglected_pathogen_rd, advance_capacity,
+    %                    universal_flu_rd, improved_early_warning.
+    %
+    % Returns:
+    %   clean_config  Struct with validated sub-structs: neglected_pathogen_rd,
+    %                 advance_capacity, universal_flu_rd, improved_early_warning.
 
     clean_config = struct();
 
     clean_config.neglected_pathogen_rd = scenario_config.neglected_pathogen_rd;
     clean_config.advance_capacity.share_target_advance_capacity = scenario_config.advance_capacity.share_target_advance_capacity;
 
-    % Check universal flu R&D correctly configured
-    universal_flu_rd  = scenario_config.universal_flu_rd;
-    if universal_flu_rd.active && (isempty(universal_flu_rd.platform_response_invest) || isempty(universal_flu_rd.initial_share_ufv))
-        error("Universal flu vaccine investment active but platform response investment or initial share is empty.");
-    end
+    clean_config.universal_flu_rd = validate_intervention_config( ...
+        scenario_config.universal_flu_rd, 'Universal flu vaccine investment', ...
+        {'platform_response_invest', 'initial_share_ufv'}, ...
+        struct('platform_response_invest', "none", 'initial_share_ufv', 0));
 
-    if ~universal_flu_rd.active
-        if (~isempty(universal_flu_rd.platform_response_invest) || ~isempty(universal_flu_rd.initial_share_ufv))
-            warning("Universal flu vaccine investment inactive but platform response investment or initial share is not empty. Setting default values of none and zero.");
-        end
-        universal_flu_rd.platform_response_invest = "none";
-        universal_flu_rd.initial_share_ufv = 0;
-    end
-
-    clean_config.universal_flu_rd = universal_flu_rd;
-
-    % Check improved early warning parameter correctly configured
-    improved_early_warning = scenario_config.improved_early_warning;
-    if improved_early_warning.active && (isempty(improved_early_warning.precision) || isempty(improved_early_warning.recall))
-        error("Improved early warning active but precision or recall is empty");
-    end
-
-    if ~improved_early_warning.active 
-        if (~isempty(improved_early_warning.precision) || ~isempty(improved_early_warning.recall))
-            warning("Improved early warning inactive but precision or recall is not empty. Setting default values of zero.");
-        end
-
-        improved_early_warning.precision = 0;
-        improved_early_warning.recall = 0;
-    end
-
-    clean_config.improved_early_warning = improved_early_warning;
+    clean_config.improved_early_warning = validate_intervention_config( ...
+        scenario_config.improved_early_warning, 'Improved early warning', ...
+        {'precision', 'recall'}, ...
+        struct('precision', 0, 'recall', 0));
 end

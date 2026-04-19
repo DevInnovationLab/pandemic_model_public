@@ -1,8 +1,8 @@
-function compare_exceedances(sensitivity_dir, figure_export)
+function compare_exceedances(sensitivity_dir, figure_export, varargin)
 % Compare exceedance curves from an airborne sensitivity run (no mitigation, realized mitigation, vaccines always work).
 %
 % Uses output from run_sensitivity(..., 'response') with e.g.
-% config/sensitivity_configs/baseline_vaccine_program_airborne.yaml:
+% config/sensitivity_runs_configs/baseline_vaccine_program_airborne.yaml:
 %   sensitivity_dir/baseline/                    — baseline run (vaccines can fail)
 %   sensitivity_dir/ptrs_pathogen_gamma1/        — vaccines-always-succeed PTRs and gamma=1 (multi-parameter)
 %   or sensitivity_dir/ptrs_pathogen/value_1/   — same scenario, one-parameter layout
@@ -11,13 +11,23 @@ function compare_exceedances(sensitivity_dir, figure_export)
 %
 % figure_export — 'both' (default), 'simulations_only', or 'baseline_madhav'.
 %
+% When plot_response_threshold is true (default when figure_export is 'simulations_only'), the
+% simulations plot overlays the pandemic response severity threshold from the baseline run_config
+% (if present and type is severity).
+%
 % Args:
-%   sensitivity_dir — path to sensitivity run root (e.g. output/sensitivity/baseline_vaccine_program_airborne)
-%   figure_export   — optional; which PDF(s) to write
+%   sensitivity_dir        — path to sensitivity run root (e.g. output/sensitivity_runs/baseline_vaccine_program_airborne)
+%   figure_export          — optional; which PDF(s) to write
+%   plot_response_threshold — optional name-value; overlay response threshold marker (default: true when simulations_only)
 
-    if nargin < 2 || isempty(figure_export)
-        figure_export = 'both';
-    end
+    p = inputParser;
+    addOptional(p, 'figure_export', 'both');
+    addParameter(p, 'plot_response_threshold', strcmp(figure_export, 'simulations_only'));
+    parse(p, figure_export, varargin{:});
+
+    figure_export = p.Results.figure_export;
+    plot_response_threshold = p.Results.plot_response_threshold;
+
     valid = {'both', 'simulations_only', 'baseline_madhav'};
     if ~any(strcmp(figure_export, valid))
         error('compare_exceedances:BadFigureExport', 'figure_export must be one of: %s', strjoin(valid, ', '));
@@ -39,10 +49,10 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
 
     % Chunk layout and table sizes from baseline job config
-    job_config = yaml.loadFile(fullfile(baseline_dir, 'job_config.yaml'));
-    sim_periods = job_config.sim_periods;
-    num_simulations = job_config.num_simulations;
-    config_min_grid = load_arrival_y_min(job_config);
+    run_config = yaml.loadFile(fullfile(baseline_dir, 'run_config.yaml'));
+    sim_periods = run_config.sim_periods;
+    num_simulations = run_config.num_simulations;
+    config_min_grid = load_arrival_y_min(run_config);
 
     raw_baseline = fullfile(baseline_dir, 'raw');
     raw_value1   = fullfile(value1_dir, 'raw');
@@ -50,12 +60,8 @@ function compare_exceedances(sensitivity_dir, figure_export)
     base_vars = {'sim_num', 'yr_start', 'eff_severity', 'is_false'};
     pandemic_vars = {'sim_num', 'yr_start', 'ex_post_severity', 'is_false'};
 
-    chunk_dirs_b = dir(fullfile(raw_baseline, 'chunk_*'));
-    chunk_dirs_b = chunk_dirs_b([chunk_dirs_b.isdir]);
-    chunk_nums   = cellfun(@(x) sscanf(x, 'chunk_%d'), {chunk_dirs_b.name});
-    [~, sort_idx] = sort(chunk_nums);
-    chunk_dirs_b = chunk_dirs_b(sort_idx);
-    num_chunks   = length(chunk_dirs_b);
+    [chunk_dirs_b, ~] = list_chunk_dirs(raw_baseline);
+    num_chunks = length(chunk_dirs_b);
 
     all_base = cell(num_chunks, 1);
     all_pandemic_baseline = cell(num_chunks, 1);
@@ -191,11 +197,35 @@ function compare_exceedances(sensitivity_dir, figure_export)
     end
     [~, dirname] = fileparts(sensitivity_dir);
 
+    thr_x = [];
+    thr_y = [];
+    if plot_response_threshold
+        thr_val = [];
+        thr_type = '';
+        if isfield(run_config, 'response_threshold') && ~isempty(run_config.response_threshold)
+            thr_val = double(run_config.response_threshold);
+            if isfield(run_config, 'response_threshold_type')
+                thr_type = char(string(run_config.response_threshold_type));
+            end
+        elseif isfield(run_config, 'response_threshold_path') && strlength(string(run_config.response_threshold_path)) > 0
+            pth = char(string(run_config.response_threshold_path));
+            if isfile(pth)
+                d = yaml.loadFile(pth);
+                thr_val = double(d.response_threshold);
+                thr_type = char(string(d.response_threshold_type));
+            end
+        end
+        if ~isempty(thr_val) && strcmp(thr_type, 'severity')
+            thr_x = thr_val;
+            thr_y = interp1(x_plot, exceed_no, thr_x, 'linear', 'extrap');
+        end
+    end
+
     if strcmp(figure_export, 'both') || strcmp(figure_export, 'simulations_only')
         fig1 = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, ...
-            color_no, color_rel, color_alw);
+            color_no, color_rel, color_alw, thr_x, thr_y);
         out1 = fullfile(fig_dir, sprintf('%s_exceedance_curves_simulations_only.pdf', dirname));
-        exportgraphics(fig1, out1, "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+        export_figure(fig1, out1);
         close(fig1);
         fprintf('Exceedance figure (simulations only) saved to %s\n', out1);
     end
@@ -216,15 +246,15 @@ function compare_exceedances(sensitivity_dir, figure_export)
         fig2 = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madhav_severity_plot, madhav_exceedance_plot, ...
             color_rel, color_mad);
         out2 = fullfile(fig_dir, sprintf('%s_exceedance_curves_baseline_response_madhav.pdf', dirname));
-        exportgraphics(fig2, out2, "ContentType", "vector", "Resolution", 600, "BackgroundColor", "none");
+        export_figure(fig2, out2);
         close(fig2);
         fprintf('Exceedance figure (baseline response and Madhav et al.) saved to %s\n', out2);
     end
 end
 
-function y_min = load_arrival_y_min(job_config)
+function y_min = load_arrival_y_min(run_config)
     % Load y_min from the arrival distribution hyperparams in job config.
-    arrival_dir = char(string(job_config.arrival_dist_config));
+    arrival_dir = char(string(run_config.arrival_dist_config));
     hyper = yaml.loadFile(fullfile(arrival_dir, 'hyperparams.yaml'));
     y_min = double(hyper.y_min);
 end
@@ -241,8 +271,9 @@ function p = empirical_exceedance(sample, severity_grid)
     p = tail(2:end) ./ (n + 1);
 end
 
-function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, color_no, color_rel, color_alw)
-% Three simulation curves only (no Madhav et al.).
+function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, color_no, color_rel, color_alw, thr_x, thr_y)
+% Three simulation curves only (no Madhav et al.). Pass thr_x = [] to omit response threshold.
+    color_thr = [0.72 0.12 0.12];
     fig = figure('Position', [100 100 900 650]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
     set(ax, 'FontName', 'Arial', 'FontSize', 11);
@@ -262,6 +293,16 @@ function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exce
     max_x = max(x_plot);
     xlim(ax, [min_x, max_x]);
     set_log_axis_tick_labels(ax);  % avoid rounding 0.01 and 0.1 both to "0"
+
+    if ~isempty(thr_x) && isfinite(thr_y)
+        yl = get(ax, 'YLim');
+        plot(ax, thr_x, thr_y, 's', 'Color', color_thr, 'MarkerFaceColor', color_thr, 'MarkerSize', 6);
+        plot(ax, [thr_x thr_x], [yl(1) thr_y], '--', 'Color', color_thr, 'LineWidth', 1);
+        plot(ax, [min_x thr_x], [thr_y thr_y], '--', 'Color', color_thr, 'LineWidth', 1);
+        text(ax, thr_x * 0.95, thr_y * 0.95, sprintf('Pandemic response\nthreshold: %.2f', thr_x), ...
+            'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 10, ...
+            'FontName', 'Arial', 'Color', color_thr);
+    end
 
     % Line labels at fixed severities
     x_no  = max(min_x, min(max_x, 20));
