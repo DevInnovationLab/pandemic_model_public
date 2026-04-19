@@ -1,13 +1,20 @@
 function k = capital_costs(q, params, tailoring_fraction, is_mRNA, is_adv)
-    % Calculate capital costs for capacity expansion
-    % Inputs:
-    %   q: capacity expansion amount
-    %   params: struct containing model parameters
-    %   tailoring_fraction: fraction of capacity that is tailored
-    %   is_mRNA: boolean indicating if mRNA platform
-    %   is_adv: boolean indicating if advance capacity
-    % Output:
-    %   k: capital costs
+    % Calculate capital cost of a capacity increment using a CES cost function.
+    %
+    % For advance capacity (is_adv=1) or small expansions (q <= params.beta), uses
+    % constant marginal cost. Larger surge expansions use a CES scaling that
+    % increases with q/beta, parameterised by params.epsilon.
+    %
+    % Args:
+    %   q                   Capacity expansion amount (scalar or array).
+    %   params              Struct with fields: k_m, k_o, beta, epsilon.
+    %   tailoring_fraction  Fraction of capacity value attributable to tailoring
+    %                       (excluded from capital cost).
+    %   is_mRNA             1 for mRNA platform, 0 for traditional.
+    %   is_adv              1 for advance capacity (constant marginal cost), 0 for surge.
+    %
+    % Returns:
+    %   k  Capital cost(s), same size as q.
     % Determine which cost function to use based on capacity and type
     const_marginal_cost = q <= params.beta | is_adv == 1;
     
@@ -15,7 +22,7 @@ function k = capital_costs(q, params, tailoring_fraction, is_mRNA, is_adv)
     k_platform = is_mRNA .* params.k_m + ~is_mRNA .* params.k_o;
     
     % Calculate base cost component for non-zero capacities
-    base_cost = k_platform .* (1-tailoring_fraction) .* q;
+    base_cost = k_platform .* (1 - tailoring_fraction) .* q;
     
     % Initialize output array
     k = zeros(size(q));

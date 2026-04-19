@@ -1,9 +1,10 @@
-function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
+function arrival_dist = load_arrival_dist(config_path, false_positive_rate, param_range)
     % Load arrival distribution from YAML config file into MEVD object
     %
     % Parameters:
     %   config_path - Path to YAML config file containing arrival distribution parameters
     %   false_positive_rate - False positive rate
+    %   param_range - Optional [start_row, end_row] range for loading subset of parameters
     %
     % Returns:
     %   arrival_dist - MEVD object representing the arrival distribution
@@ -11,19 +12,24 @@ function arrival_dist = load_arrival_dist(config_path, false_positive_rate)
     arguments
         config_path (1,1) string
         false_positive_rate (1,1) double
+        param_range (1,2) double = [nan, nan]
     end
 
-    config = yaml.loadFile(config_path);
-    truncation_type = string(config.hyperparams.truncation_type);
-    variable = string(config.hyperparams.variable);
+    hyperparams = yaml.loadFile(fullfile(config_path, "hyperparams.yaml"));
+    trunc_method = hyperparams.trunc_method;
+    measure = hyperparams.measure;
 
-    % Create table with numeric arrays for each parameter
-    xi = cell2mat(config.dist_params.xi);
-    sigma = cell2mat(config.dist_params.sigma);
-    p = cell2mat(config.dist_params.p);
-    mu = cell2mat(config.dist_params.mu);
-    max_value = cell2mat(config.dist_params.max_value);
-    dist_params = table(xi, sigma, p, mu, max_value, 'VariableNames', ["xi", "sigma", "p", "mu", "max_value"]);
+    % Load parameter samples, optionally with specified row range
+    if all(~isnan(param_range))
+        param_samples = readtable(fullfile(config_path, "param_samples.csv"), ...
+                                  'Range', sprintf('%d:%d', param_range(1) + 1, param_range(2) + 1), ...
+                                  'VariableNamesLine', 1);
+    else
+        param_samples = readtable(fullfile(config_path, "param_samples.csv"));
+    end
 
-    arrival_dist = ArrivalDistSampler(dist_params, truncation_type, false_positive_rate, variable);
+    param_samples.max_value = hyperparams.y_max .* ones(size(param_samples, 1), 1);
+    param_samples.mu = hyperparams.y_min .* ones(size(param_samples, 1), 1);
+
+    arrival_dist = ArrivalDistSampler(param_samples, trunc_method, false_positive_rate, measure);
 end

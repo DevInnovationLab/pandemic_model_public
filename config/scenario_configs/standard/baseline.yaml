@@ -1,15 +1,21 @@
-# Neglected viral family advance R&D params
-rd_speedup_months: 12 # how much tau_a is shortened by with advance R&D (months)
-rd_investments: 
+# Neglected pathogen advance R&D params
+neglected_pathogen_rd: 
   strategy: none
   num: 0
 
 # Universal flu vaccine R&D params
-ufv_invest: false
-initial_share_ufv: 0.5
+universal_flu_rd:
+  active: false
+  platform_response_invest: null
+  initial_share_ufv: null
 
 # Advance capacity params
-share_target_advanced_capacity: 0
+advance_capacity:
+ share_target_advance_capacity: 0
 
 # Enhanced surveillance
-enhanced_surveillance: false
+improved_early_warning:
+  active: false
+  precision: null
+  recall: null
+

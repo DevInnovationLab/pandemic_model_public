@@ -1,10 +1,14 @@
 # Config for sensitivity analysis on baseline and advance investment vaccine programs.
-base_job_config: "./config/job_configs/allrisk_base.yaml"
-outdir: "./output/sensitivity"
+# Mixed format: one-parameter sweeps plus ptrs_pathogen_gamma1 (vaccines always succeed, gamma=1).
+base_run_config: "./config/run_configs/allrisk_base.yaml"
+outdir: "./output/sensitivity_runs"
 fix_params: # Parameters to update and fix in the base config
-  scenario_configs: "./config/scenario_configs/standard/baseline.yaml"
+  scenario_configs: "./config/scenario_configs/baseline"
 sensitivities:
-  # Vaccine-supply parameters
+  response_threshold_path:
+    - "./output/response_thresholds/response_threshold_quarter_covid_intensity.yaml"
+    - "./output/response_thresholds/response_threshold_covid_intensity.yaml"
+    
   gamma:  # Fraction remaining harm mitigated by vaccine
     - 0.3    # 30%
     - 0.7    # 70%
@@ -12,55 +16,64 @@ sensitivities:
   capacity_kept: # Share response capacity kept after a pandemic
     - 0.25
     - 0.75
-  
+
   k_m:  # Unit cost of advance mRNA capacity
     - 0.75   # $0.75 per annual course
     - 5.0    # $3.00 per annual course
-  
+
   k_o:  # Unit cost of advance capacity for other vaccines
     - 1.5    # $1.50 per annual course
     - 6.0    # $6.00 per annual course
-  
+
   c_m:  # Marginal cost of producing mRNA vaccines
-    - 20.0   
-    - 40.0    
-  
+    - 20.0
+    - 40.0
+
   c_o:  # Marginal cost of producing other vaccines
     - 12    # $1.50 per course
     - 30    # $6.00 per course
-  
+
   epsilon:  # Decreasing returns to pandemic capacity
     - 0.75   # 0.75
     - 1.25   # 1.25
-  
+
   f_m:  # Fraction of at-risk capacity successful in mRNA
     - 0.15    # 20%
     - 0.5    # 40%
-  
+
   f_o:  # Fraction of at-risk capacity successful in traditional
     - 0.15    # 20%
     - 0.5    # 40%
-  
+
   g_m:  # Fraction of at-risk capacity repurposable in mRNA
     - 0.2    # 20%
     - 0.6    # 60%
-  
+
   g_o:  # Fraction of at-risk capacity repurposable in traditional
     - 0.2    # 20%
     - 0.6    # 60%
-  
+
   tau_m:  # Time to repurpose mRNA capacity
     - 1      # 1 month
     - 3      # 3 months
-  
+
   tau_o:  # Time to repurpose other capacity
     - 3      # 3 months
     - 9      # 9 months
 
-  tau_a:  # Time to vaccine without existing prototype
-    - 15
-    - 30
+  duration_dist_config:
+    - "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900__dur__trunc5_n1000000_s42.csv"
+    - "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900__dur__trunc50_n1000000_s42.csv"
+  
+  max_capacity:
+    - 16.28e9 # Calibrated to 50% advance capacity program
+    - 32.56e9 # Calibrated to 200% advance capacity program
 
-  false_positive_rate:
-    - 0
-    - 0.5
+  delta:
+    - 0.13
+    - 0.25
+
+  # Vaccines always succeed and gamma=1 (multi-parameter scenario)
+  ptrs_pathogen_gamma1:
+    ptrs_pathogen: "./data/clean/ptrs_table_always_succeed.csv"
+    gamma: 1

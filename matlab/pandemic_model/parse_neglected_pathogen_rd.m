@@ -1,0 +1,46 @@
+function [pathogens_with_baseline_prototype, new_invested_pathogens] = parse_neglected_pathogen_rd(rd_investment_config, pathogen_arrival_rates)
+    % Determine which pathogens receive advance prototype R&D investment.
+    %
+    % Reads the R&D strategy from rd_investment_config and returns pathogens that
+    % already have baseline prototypes and the new ones selected for investment.
+    % Strategies: 'none', 'top' (highest arrival rate), 'random', or 'specific'.
+    %
+    % Args:
+    %   rd_investment_config    Struct with fields: strategy, num (for top/random),
+    %                           invest_families (for 'specific' strategy).
+    %   pathogen_arrival_rates  Table with columns: pathogen, estimate, has_prototype.
+    %
+    % Returns:
+    %   pathogens_with_baseline_prototype  String array of pathogens with existing prototypes.
+    %   new_invested_pathogens             String array of pathogens selected for new R&D.
+
+    pathogens_with_baseline_prototype = pathogen_arrival_rates.pathogen(pathogen_arrival_rates.has_prototype == true);
+    eligible_idx = ~pathogen_arrival_rates.has_prototype & ...
+                   ~strcmpi(pathogen_arrival_rates.pathogen, "unknown_virus") & ...
+                   ~strcmpi(pathogen_arrival_rates.pathogen, "other_known_virus");
+    pathogens_no_prototype = pathogen_arrival_rates(eligible_idx, :); % Get viral families that don't already have advanced R&D
+    rd_strategy = rd_investment_config.strategy;
+
+    if strcmpi(rd_strategy, "none")
+        new_invested_pathogens = [];
+    elseif strcmpi(rd_strategy, "top")
+        invest_num = rd_investment_config.num;
+        assert(invest_num > 0, "Must invest in more than one pathogen if rd_strategy is not none")
+        sorted_pathogens = sortrows(pathogens_no_prototype, 'estimate', "descend");
+        invest_num = min(invest_num, height(sorted_pathogens)); % Don't invest in more than available
+        new_invested_pathogens = sorted_pathogens.pathogen(1:invest_num);
+    elseif strcmpi(rd_strategy, "random")
+        invest_num = rd_investment_config.num;
+        invest_num = min(invest_num, height(pathogens_no_prototype)); % Don't invest in more than available
+        shuffled_pathogens = pathogens_no_prototype(randperm(height(pathogens_no_prototype)), :);
+        new_invested_pathogens = shuffled_pathogens.pathogen(1:invest_num);
+    elseif strcmpi(rd_strategy, "specific")
+        new_invested_pathogens = rd_investment_config.invest_families;
+
+        if ~all(ismember(string(new_invested_pathogens), string(pathogens_no_prototype.pathogen)))
+            error("Viral family targeted for advance R&D not eligible.")
+        end
+    else
+        error("Invalid RD investment strategy.")
+    end
+end

@@ -1,0 +1,14 @@
+location,year_start,year_end,duration,death_thousand,pop_thousand,severity_perthousand,severity,disease,type,transmission,is_vira_only,is_vira_mixed,contains_vira,is_pandemic,unidentified,airborne,contagious,recurrent_1900,recurrent_1950,intensity,final_inclusion_node
+south africa,1900,1904,5,40.0,1633000.0,0.024494794856093,0.2449479485609308,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0489895897121861,Unidentified
+pandemic spanish flu,1918,1920,3,32000.0,1873300.0,17.08215448673464,170.8215448673464,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,56.940514955782135,Novel
+nigeria,1921,1921,1,45.0,1920600.0,0.0234301780693533,0.2343017806935333,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.2343017806935333,Unidentified
+south africa,1926,1935,10,45.0,2020466.666666667,0.0222720823572112,0.222720823572112,pneumonia,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0222720823572112,Unidentified
+"burkina faso, upper volta",1939,1939,1,3.0,2290583.333333333,0.0013097100447484,0.0130971004474842,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0130971004474842,Unidentified
+"tanzania, tanganyika",1942,1942,1,7.0,2356486.2036,0.0029705244992761,0.0297052449927613,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0297052449927613,Unidentified
+nigeria,1949,1950,2,16.0,2513937.9162,0.006364516759501,0.0636451675950103,meningitis,bacterial/viral,unknown,0,1,1,0,True,True,True,False,False,0.0318225837975051,Unidentified
+pandemic of asian flu,1957,1958,2,2000.0,2873306.0,0.6960623059291283,6.960623059291283,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,3.480311529645641,Novel
+hong kong flu,1968,1969,2,1000.0,3551599.0,0.2815633183813826,2.815633183813826,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,1.407816591906913,Novel
+india,1977,1978,2,10.0,4229505.919,0.0023643423585429,0.0236434235854299,encephalitis,bacterial/fungal/parasitic/viral,unknown,0,1,1,0,True,True,True,False,False,0.0118217117927149,Unidentified
+hiv/aids pandemic,1981,2024,46,42300.0,4536996.619,9.323348362847875,93.23348362847878,hiv/aids,viral,fluid,1,0,1,1,False,False,True,False,False,2.026814861488669,Novel
+swine flu,2009,2009,1,284.5,6872767.0,0.0413952633633586,0.413952633633586,influenza,viral,droplet,1,0,1,1,False,True,True,False,False,0.413952633633586,Novel
+global covid-19,2019,2024,6,7100.0,7740000.0,0.917312661498708,12.278108108108109,covid-19,viral,airborne/droplet,1,0,1,1,False,True,True,False,False,2.046351351351352,Novel

@@ -1,13 +1,13 @@
 classdef ArrivalDistSampler
     properties
-        dist_params
+        param_samples
         false_positive_rate
-        truncation_type
-        variable
+        trunc_method
+        measure
     end
 
     methods
-        function obj = ArrivalDistSampler(dist_params, truncation_type, false_positive_rate, variable)
+        function obj = ArrivalDistSampler(param_samples, trunc_method, false_positive_rate, measure)
             % Create a y_sample sampler that samples from multiple parameter combinations
             %
             % Args:
@@ -15,16 +15,15 @@ classdef ArrivalDistSampler
             %   param_table: Table containing parameter combinations, one row per draw
             %   max_y_sample: Maximum allowed y_sample
             arguments
-                dist_params (:,5) table
-                truncation_type (1,1) {mustBeMember(truncation_type, {'sharp', 'smooth'})}
+                param_samples (:,5) table
+                trunc_method (1,1) {mustBeMember(trunc_method, {'sharp', 'smooth'})}
                 false_positive_rate (1,1) {mustBeNumeric, mustBeInRange(false_positive_rate, 0, 1)} = 0
-                variable (1,1) string = "undefined"
+                measure (1,1) string = "undefined"
             end
-
-            obj.dist_params = dist_params;
             obj.false_positive_rate = false_positive_rate;
-            obj.truncation_type = truncation_type;
-            obj.variable = variable;
+            obj.param_samples = param_samples;
+            obj.trunc_method = trunc_method;
+            obj.measure = measure;
         end
 
         % ---------------------------------------------------------------------
@@ -35,35 +34,20 @@ classdef ArrivalDistSampler
             %
             % The mass (1-p) sits at the threshold, the remaining p is spread
             % over (min_y_sample , max_y_sample].
-            assert(height(unifrnd_draw) == height(obj.dist_params), 'First dimension of draws must match number of parameter samples');
+            assert(height(unifrnd_draw) == height(obj.param_samples), 'First dimension of draws must match number of parameter samples');
 
-            xi = obj.dist_params.xi;
-            sigma = obj.dist_params.sigma;
-            p_tail_raw = obj.dist_params.p;
-            mu = obj.dist_params.mu;
-            max_val = obj.dist_params.max_value;
-            y_sample = zeros(size(unifrnd_draw));
+            xi = obj.param_samples.xi;
+            sigma = obj.param_samples.sigma;
+            lambda_raw = obj.param_samples.lambda;
+            mu = obj.param_samples.mu;
+            max_val = obj.param_samples.max_value;
 
             % Adjust arrival probability for false positive rate
-            p_tail = p_tail_raw ./ (1 - obj.false_positive_rate);
-            assert(~any(p_tail >= 1), "Annual arrival probability cannot be greater than one. Ensure false positive rate not set too high.")
+            lambda = lambda_raw ./ (1 - obj.false_positive_rate);
 
-            % --- rescale uniforms to (0,1) conditional on being in the tail --------
-            cum_prob_at_th = 1 - p_tail;
-            [row, col] = find(unifrnd_draw > cum_prob_at_th);
-            lin_idx = sub2ind(size(unifrnd_draw), row, col);
-            u_raw = (unifrnd_draw(lin_idx) - cum_prob_at_th(row)) ./ p_tail(row);   % U~Unif(0,1)
-
-            if strcmp(obj.truncation_type, "sharp")
-                y_sample(lin_idx) = gpinv(u_raw, xi(row), sigma(row), mu(row)); % Check that this gives right answer.
-                [row_over, col_over] = find(y_sample > max_val);
-                y_sample(sub2ind([height(y_sample), width(y_sample)], row_over, col_over)) = max_val(row_over);
-            elseif strcmp(obj.truncation_type, "smooth")
-                F_max = gpcdf(max_val(row), xi(row), sigma(row), mu(row));
-                u_trunc = u_raw .* F_max;
-                y_sample(lin_idx) = gpinv(u_trunc, xi(row), sigma(row), mu(row));
-                assert(all(y_sample <= max_val, 'all'));
-            end
+            % Get sample
+            y_sample = PoissonGPD(lambda, xi, sigma, mu, max_val).icdf(unifrnd_draw);
+            y_sample(y_sample <= mu) = 0; % Hacky but must be done somewhere.
         end
 
         function rank = get_rank(obj, y_sample)
@@ -72,44 +56,19 @@ classdef ArrivalDistSampler
             %
             % Overall rank = (1-p)  on the atom  +  p · F_trunc(y)
             
-            assert(~any(y_sample > obj.dist_params.max_value, 'all'), "Some values exceed the max values.");
+            assert(~any(y_sample > obj.param_samples.max_value, 'all'), "Some values exceed the max values.");
 
-            xi = obj.dist_params.xi;
-            sigma = obj.dist_params.sigma;
-            p_tail_raw = obj.dist_params.p;
-            mu = obj.dist_params.mu;
-            max_val = obj.dist_params.max_value;
-            rank = zeros(size(y_sample));
+            xi = obj.param_samples.xi;
+            sigma = obj.param_samples.sigma;
+            lambda_raw = obj.param_samples.lambda;
+            mu = obj.param_samples.mu;
+            max_val = obj.param_samples.max_value;
 
             % Adjust arrival probability for false positive rate
-            p_tail = p_tail_raw ./ (1 - obj.false_positive_rate);
-            assert(~any(p_tail >= 1), "Annual arrival probability cannot be greater than one. Ensure false positive rate not set too high.")
-            cum_prob_at_th = 1 - p_tail;
+            lambda = lambda_raw ./ (1 - obj.false_positive_rate);
 
-            % Case 1: at or below the threshold (atom)
-            idx_th = y_sample <= mu;
-            rank(idx_th) = cum_prob_at_th;
-
-            % Case 2: between threshold and max_y_sample
-            idx_mid = y_sample > mu & y_sample < max_val;
-            [row_mid, ~] = find(idx_mid);
-            idx_top = y_sample >= max_val;
-
-            if strcmp(obj.truncation_type, "sharp")
-                if any(idx_mid(:))
-                    F_y = gpcdf(y_sample(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + p_tail(row_mid) .* F_y;
-                    rank(idx_top) = 1.0;
-                end
-            elseif strcmp(obj.truncation_type, "smooth")
-                if any(idx_mid(:))
-                    F_y = gpcdf(severity(idx_mid), xi(row_mid), sigma(row_mid), mu(row_mid));
-                    F_max = gpcdf(max_val(row_mid), xi(row_mid), sigma(row_mid), mu(row_mid)); 
-                    rank(idx_mid) = cum_prob_at_th(row_mid) + p_tail(row_mid) .* (F_y ./ F_max);
-                end
-            end
-
-            assert(all(isbetween(rank, 0, 1), 'all'));
+            % Get rank
+            rank = PoissonGPD(lambda, xi, sigma, mu, max_val).cdf(y_sample);
         end
 
         function y_sample = ppf(obj, unifrnd_draw)
@@ -117,7 +76,7 @@ classdef ArrivalDistSampler
         end
 
         function rank = cdf(obj, y_sample)
-            rank = obj.get_y_sample_rank(y_sample);
+            rank = obj.get_rank(y_sample);
         end
     end
 end
