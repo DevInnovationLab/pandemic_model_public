@@ -11,13 +11,12 @@ sensitivities:
   severity_trunc_10000:
     arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
   lower_sev_threshold_1:
-    arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_1d0_1900__arr__gpd_severity_poisson_sharp_u10000_n1000000_s42"
+    arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_1d0_1900__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
   airborne_only:
     arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__airborne_int_0d01_1900__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
     duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__airborne_int_0d01_1900__dur__trunc10_n1000000_s42.csv"
   year_min_1950:
     arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1950__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
-    duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1950__dur__trunc10_n1000000_s42.csv"
   include_unid:
     arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900_incl_unid__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
     duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900_incl_unid__dur__trunc10_n1000000_s42.csv"

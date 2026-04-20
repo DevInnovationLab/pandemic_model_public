@@ -101,4 +101,4 @@ Rscript -e "${LOAD_RENV}
 matlab -batch "${LOAD_MATPROJ}
                 plot_h;"
 
-step 'Finish input cleaning pipeline'
+step 'Finished input cleaning pipeline.'

@@ -21,7 +21,7 @@ conservative: 1 # Whether harm avoided is calculated at beginning (conservative)
 gamma: 0.5 # fraction of remaining harm mitigated by vaccine
 
 # Pandemic params
-response_threshold_path: "./data/clean/response_thresholds/response_threshold_half_covid_severity.yaml" # Response threshold in terms intensity
+response_threshold_path: "./data/clean/response_thresholds/half_covid_severity.yaml" # Response threshold in terms intensity
 arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
 duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900__dur__trunc10_n1000000_s42.csv"
 arrival_rates: "./data/clean/arrival_rates_all.csv"

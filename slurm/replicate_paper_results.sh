@@ -44,6 +44,11 @@ Before you submit: Confirm that repo and data inputs on this host are up to date
     
         bash transfer_to_remote.sh (run on your local machine)
 
+    3. Install the defined submodules:
+    
+        git submodule update --init --recursive
+        (You may need to add the --force flag)
+
   This script does not run git or transfers. Cancel with Ctrl+C if you are not ready.
 
 ================================================================================

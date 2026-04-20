@@ -21,6 +21,7 @@ cd "${SCRIPT_DIR}"
 
 NUM_CHUNKS="${NUM_CHUNKS:-20}"
 SENS_CONFIG="${SENS_CONFIG:-config/sensitivity_configs/no_mitigation_all.yaml}"
+OVERWRITE="${OVERWRITE:-true}"
 
 if [ ! -f "${SENS_CONFIG}" ]; then
   echo "Sensitivity config not found: ${SENS_CONFIG}" >&2
@@ -30,9 +31,10 @@ fi
 echo "Running unmitigated losses (run_sensitivity, unmitigated)"
 echo "  Config: ${SENS_CONFIG}"
 echo "  Chunks: ${NUM_CHUNKS}"
+echo "  Overwrite: ${OVERWRITE}"
 echo ""
 
-matlab -batch "run('./matlab/load_project'); run_sensitivity('${SENS_CONFIG}', 'unmitigated', 'num_chunks', ${NUM_CHUNKS});"
-
+matlab -batch "run('./matlab/load_project');
+               run_sensitivity('${SENS_CONFIG}', 'unmitigated', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"
 echo ""
 echo "Done. Outputs under output/sensitivity_runs/<run_name>/ (see sensitivity YAML run_name)."
