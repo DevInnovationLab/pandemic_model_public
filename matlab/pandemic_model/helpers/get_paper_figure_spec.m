@@ -19,7 +19,6 @@ function spec = get_paper_figure_spec(preset, varargin)
     parse(p, preset, varargin{:});
 
     preset = lower(string(p.Results.preset));
-    grid_cols = p.Results.GridCols;
 
     ref_width = 3.35;
 

@@ -21,8 +21,6 @@
 #   4–5  simulation_at_pct for allrisk_base baseline @ 10th and 90th percentiles (submitted
 #        after all three workflows; still depends only on allrisk_base bootstrap completing)
 #   6–7  Sensitivity batches (10 chunks each): airborne, baseline vaccine program
-#   8    compare_exceedances (baseline_madhav) after airborne sensitivity completes
-#   9    compare_exceedances (simulations_only) after baseline sensitivity completes
 ###############################################################################
 
 set -euo pipefail
@@ -139,40 +137,10 @@ BASELINE_SENS_JOB="$(
 echo "Submitted: ${BASELINE_SENS_JOB}"
 echo ""
 
-echo "================================================================"
-echo "  compare_exceedances (depends on airborne sensitivity ${AIRBORNE_SENS_JOB})"
-echo "================================================================"
-COMPARE_AIRBORNE_JOB="$(
-  sbatch --parsable \
-    --dependency="afterok:${AIRBORNE_SENS_JOB}" \
-    --job-name=cmp_exceed_airborne_madhav \
-    slurm/compare_exceedances.sbatch \
-    output/sensitivity_runs/baseline_vaccine_program_airborne \
-    baseline_madhav
-)"
-echo "Submitted: ${COMPARE_AIRBORNE_JOB}"
-echo ""
-
-echo "================================================================"
-echo "  compare_exceedances (depends on baseline sensitivity ${BASELINE_SENS_JOB})"
-echo "================================================================"
-COMPARE_BASELINE_JOB="$(
-  sbatch --parsable \
-    --dependency="afterok:${BASELINE_SENS_JOB}" \
-    --job-name=cmp_exceed_baseline_simsonly \
-    slurm/compare_exceedances.sbatch \
-    output/sensitivity_runs/baseline_vaccine_program \
-    simulations_only
-)"
-echo "Submitted: ${COMPARE_BASELINE_JOB}"
-echo ""
-
 echo "All jobs submitted."
 echo "  allrisk_base bootstrap:      ${ALLRISK_BOOT}"
 echo "  simulation_at_pct p10:       ${SIM_PCT_10_JOB}  (after ${ALLRISK_BOOT})"
 echo "  simulation_at_pct p90:       ${SIM_PCT_90_JOB}  (after ${ALLRISK_BOOT})"
 echo "  Airborne sensitivity:        ${AIRBORNE_SENS_JOB}"
 echo "  Baseline sensitivity:        ${BASELINE_SENS_JOB}"
-echo "  compare_exceedances (air):   ${COMPARE_AIRBORNE_JOB}  (after ${AIRBORNE_SENS_JOB})"
-echo "  compare_exceedances (base):  ${COMPARE_BASELINE_JOB}  (after ${BASELINE_SENS_JOB})"
 echo "Monitor:  squeue -u \$USER"

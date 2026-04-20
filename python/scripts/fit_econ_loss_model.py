@@ -156,7 +156,7 @@ if __name__ == "__main__":
         fontsize=style.legend_size,
         ha="center",
         va="bottom",
-        color=col_poisson,
+        color="black",
     )
     plt.tight_layout()
     save_paper_figure(fig, path_fig, dpi=600)

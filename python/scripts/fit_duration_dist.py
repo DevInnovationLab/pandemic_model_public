@@ -347,7 +347,7 @@ def fit_mle_duration(
         ax.set_xticks(years)
         apply_paper_axis_style(ax, figstyle)
  
-        fig_fn = fig_dir / f"{outstring}_pmf_rounded_years_with_ci.pdf"
+        fig_fn = fig_dir / f"{outstring}_pmf_with_ci.pdf"
         save_paper_figure(fig, fig_fn, dpi=600)
 
         # --- Exceedance curve S(t)=P(T>t) with 95% delta-method CI ---

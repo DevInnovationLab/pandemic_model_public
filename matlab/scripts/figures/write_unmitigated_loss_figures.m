@@ -30,6 +30,7 @@ end
 
 function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     % Two-panel figure: top = expected annualized pandemic losses (stacked), bottom = expected annual deaths.
+    spec = get_paper_figure_spec("double_col_standard");
     n = height(summary_table);
     mortality = zeros(n, 1);
     economic  = zeros(n, 1);
@@ -53,10 +54,9 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
               0.25 0.65 0.32];% nice green for learning
     nrows = size(loss_data_ordered, 1);
 
-    % Combined two-panel figure (for reference)
     % Figure: social losses only
-    fig_loss = figure('Visible', 'off', 'Position', [100 100 780 640]);
-    fig_loss.PaperPositionMode = 'auto';
+    fig_loss = figure('Visible', 'off', 'Units', 'inches', ...
+        'Position', [1 1 spec.width_in spec.height_in]);
     ax_loss = axes(fig_loss);
     % Grouped y-axis layout with group headers and spacing
     [y_bar_loss, y_ticks_loss, y_ticklabels_loss, header_y_loss, header_labels_loss] = ...
@@ -70,12 +70,12 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     ax_loss.YTickLabel = y_ticklabels_loss;
     ax_loss.TickLabelInterpreter = 'tex';
 
-    apply_axis_style(ax_loss);
-    draw_group_headers(ax_loss, header_y_loss, header_labels_loss);
-    xlabel(ax_loss, 'Expected annualized social loss (trillion $)', 'FontName', 'Arial', ...
-        'FontSize', 13, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
+    apply_axis_style(ax_loss, spec);
+    draw_group_headers(ax_loss, header_y_loss, header_labels_loss, [], spec);
+    xlabel(ax_loss, 'Expected annualized social loss (trillion $)', 'FontName', spec.font_name, ...
+        'FontSize', spec.typography.axis_label, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     legend(ax_loss, {'Mortality', 'Economic', 'Learning'}, 'Location', 'southeast', ...
-        'Orientation', 'vertical', 'FontName', 'Arial', 'FontSize', 12, ...
+        'Orientation', 'vertical', 'FontName', spec.font_name, 'FontSize', spec.typography.legend, ...
         'Interpreter', 'tex', 'TextColor', [0.2 0.2 0.2]);
     set(ax_loss, 'Layer', 'bottom');
     format_axis_ticks(ax_loss);
@@ -87,7 +87,8 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
         y_val = y_bar_loss(i);
         text(ax_loss, x_val + 0.3, y_val, format_number_for_display(x_val), ...
             'HorizontalAlignment', 'left', 'VerticalAlignment', 'middle', ...
-            'FontName', 'Arial', 'FontSize', 10, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
+            'FontName', spec.font_name, 'FontSize', spec.typography.legend, ...
+            'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     end
     % Save axis limits to match styling on second panel
     xlims_loss = [0, ceil(max(total_loss)) + 1];
@@ -99,8 +100,8 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     fprintf('Social loss panel saved to %s\n', outpath_loss);
 
     % Figure: annual deaths only
-    fig_deaths = figure('Visible', 'off', 'Position', [100 100 780 640]);
-    fig_deaths.PaperPositionMode = 'auto';
+    fig_deaths = figure('Visible', 'off', 'Units', 'inches', ...
+        'Position', [1 1 spec.width_in spec.height_in]);
     ax_deaths = axes(fig_deaths);
     % Reuse grouped y-axis layout for deaths
     [y_bar_deaths, y_ticks_deaths, y_ticklabels_deaths, header_y_deaths, header_labels_deaths] = ...
@@ -117,10 +118,10 @@ function plot_annualized_and_deaths_panel(summary_table, fig_dir)
     ax_deaths.YTick = y_ticks_deaths;
     ax_deaths.YTickLabel = y_ticklabels_deaths;
     ax_deaths.TickLabelInterpreter = 'tex';
-    apply_axis_style(ax_deaths);
-    draw_group_headers(ax_deaths, header_y_deaths, header_labels_deaths, 0.2);
-    xlabel(ax_deaths, 'Expected annual deaths (millions)', 'FontName', 'Arial', ...
-        'FontSize', 13, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
+    apply_axis_style(ax_deaths, spec);
+    draw_group_headers(ax_deaths, header_y_deaths, header_labels_deaths, 0.2, spec);
+    xlabel(ax_deaths, 'Expected annual deaths (millions)', 'FontName', spec.font_name, ...
+        'FontSize', spec.typography.axis_label, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     set(ax_deaths, 'Layer', 'bottom');
     format_axis_ticks(ax_deaths);
 
@@ -431,33 +432,53 @@ function [y_bar, y_ticks, y_ticklabels, header_y, header_labels] = grouped_y_lay
     end
 end
 
-function apply_axis_style(ax)
-% Apply consistent styling to axes. Slightly dark color for weightier look without full bold.
-    ax.FontName = 'Arial';
-    ax.FontSize = 11;
+function apply_axis_style(ax, spec)
+% Apply consistent styling to axes (paper spec when spec is provided).
+% Horizontal bar charts: x-grid only, y-grid off.
+    if nargin >= 2 && ~isempty(spec)
+        ax.FontName = char(spec.font_name);
+        ax.FontSize = spec.typography.tick;
+        ax.LineWidth = spec.stroke.reference;
+    else
+        ax.FontName = 'Arial';
+        ax.FontSize = 11;
+    end
     ax.Box = 'off';
     ax.XColor = [0.2 0.2 0.2];
     ax.YColor = [0.2 0.2 0.2];
     ax.XGrid = 'on';
     ax.YGrid = 'off';
     ax.GridColor = [0.4 0.4 0.4];
-    ax.GridAlpha = 0.6;
+    if nargin >= 2 && ~isempty(spec)
+        ax.GridAlpha = 0.30;
+    else
+        ax.GridAlpha = 0.6;
+    end
     ax.TickDir = 'out';
 end
 
-function draw_group_headers(ax, header_y, header_labels, gap)
+function draw_group_headers(ax, header_y, header_labels, gap, spec)
 % Draw group header text left of axis (no tick marks). Right-aligned with small gap.
-    if nargin < 4
+    if nargin < 4 || isempty(gap)
         gap = 0.4;
+    end
+    header_fs = 11;
+    if nargin >= 5 && ~isempty(spec)
+        header_fs = spec.typography.title;
     end
     if isempty(header_y)
         return;
+    end
+    font_nm = 'Arial';
+    if nargin >= 5 && ~isempty(spec)
+        font_nm = char(spec.font_name);
     end
     x_pos = ax.XLim(1) - gap;
     for k = 1:numel(header_y)
         text(ax, x_pos, header_y(k), header_labels(k), ...
             'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', ...
-            'FontName', 'Arial', 'FontWeight', 'bold', 'FontSize', 11, 'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
+            'FontName', font_nm, 'FontWeight', 'bold', 'FontSize', header_fs, ...
+            'Interpreter', 'tex', 'Color', [0.2 0.2 0.2]);
     end
 end
 

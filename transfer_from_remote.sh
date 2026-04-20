@@ -40,12 +40,14 @@ DEFAULT_PATHS=(
   "output/single_runs/allrisk_base_program_levels/run_config.yaml"
   # Sensitivity batches
   "output/sensitivity_runs/baseline_vaccine_program/baseline"
+  "output/sensitivity_runs/baseline_vaccine_program/ptrs_pathogen_gamma1"
   "output/sensitivity_runs/baseline_vaccine_program/processed"
   "output/sensitivity_runs/baseline_vaccine_program/figures"
   "output/sensitivity_runs/baseline_vaccine_program/sensitivity_config.yaml"
   "output/sensitivity_runs/baseline_vaccine_program/mean_annual_recurrence_rates.csv"
   "output/sensitivity_runs/baseline_vaccine_program/mean_annual_recurrence_rates_selected.csv"
-  "output/sensitivity_runs/baseline_vaccine_progam_airborne/baseline" # This may be larger
+  "output/sensitivity_runs/baseline_vaccine_program_airborne/baseline"
+  "output/sensitivity_runs/baseline_vaccine_program_airborne/ptrs_pathogen_gamma1"
   "output/sensitivity_runs/baseline_vaccine_program_airborne/processed"
   "output/sensitivity_runs/baseline_vaccine_program_airborne/figures"
   "output/sensitivity_runs/baseline_vaccine_program_airborne/sensitivity_config.yaml"

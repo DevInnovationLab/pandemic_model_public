@@ -21,6 +21,7 @@ cd "${SCRIPT_DIR}"
 DIR_NO_MIT="${DIR_NO_MIT:-output/sensitivity_runs/no_mitigation_all}"
 DIR_NO_MIT_BASELINE="${DIR_NO_MIT_BASELINE:-${DIR_NO_MIT}/baseline}"
 DIR_BASELINE_VACCINE_SENS="${DIR_BASELINE_VACCINE_SENS:-output/sensitivity_runs/baseline_vaccine_program}"
+DIR_BASELINE_VACCINE_SENS_AIRBORNE="${DIR_BASELINE_VACCINE_SENS_AIRBORNE:-output/sensitivity_runs/baseline_vaccine_program_airborne}"
 DIR_ALLRISK="${DIR_ALLRISK:-output/single_runs/allrisk_base}"
 DIR_PAIRWISE="${DIR_PAIRWISE:-output/single_runs/allrisk_base_pairwise}"
 DIR_PROGRAM_LEVELS="${DIR_PROGRAM_LEVELS:-output/single_runs/allrisk_base_program_levels}"
@@ -44,6 +45,7 @@ step 'Checking expected input directories'
 require_dir "${DIR_NO_MIT}"
 require_dir "${DIR_NO_MIT_BASELINE}"
 require_dir "${DIR_BASELINE_VACCINE_SENS}"
+require_dir "${DIR_BASELINE_VACCINE_SENS_AIRBORNE}"
 require_dir "${DIR_ALLRISK}"
 require_dir "${DIR_PAIRWISE}"
 require_dir "${DIR_PROGRAM_LEVELS}"
@@ -61,6 +63,8 @@ matlab -batch "run('./matlab/load_project.m');
                write_invest_scenario_table('${DIR_ALLRISK}');
                plot_net_value_boxplot('${DIR_ALLRISK}');
                plot_pairwise_program_matrix('${DIR_PAIRWISE}');
-               write_program_levels_invest_table('${DIR_PROGRAM_LEVELS}');"
+               write_program_levels_invest_table('${DIR_PROGRAM_LEVELS}');
+               compare_exceedances('${DIR_BASELINE_VACCINE_SENS}', 'simulations_only');
+               compare_exceedances('${DIR_BASELINE_VACCINE_SENS_AIRBORNE}', 'baseline_madhav');"
 
 step 'Finished generate_outputs.sh'

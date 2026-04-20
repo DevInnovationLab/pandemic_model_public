@@ -21,31 +21,24 @@ function compare_exceedances(sensitivity_dir, figure_export, varargin)
 %   plot_response_threshold — optional name-value; overlay response threshold marker (default: true when simulations_only)
 
     p = inputParser;
-    addOptional(p, 'figure_export', 'both');
+    valid_export = {'both', 'simulations_only', 'baseline_madhav'};
+    valid_export_fn = @(x) any(strcmp(x, valid_export));
+    addOptional(p, 'figure_export', 'both', valid_export_fn);
     addParameter(p, 'plot_response_threshold', strcmp(figure_export, 'simulations_only'));
     parse(p, figure_export, varargin{:});
 
     figure_export = p.Results.figure_export;
     plot_response_threshold = p.Results.plot_response_threshold;
 
-    valid = {'both', 'simulations_only', 'baseline_madhav'};
-    if ~any(strcmp(figure_export, valid))
-        error('compare_exceedances:BadFigureExport', 'figure_export must be one of: %s', strjoin(valid, ', '));
-    end
-
     baseline_dir = fullfile(sensitivity_dir, 'baseline');
-    % Multi-parameter folder ptrs_pathogen_gamma1, or one-parameter ptrs_pathogen/value_1.
     value1_dir = fullfile(sensitivity_dir, 'ptrs_pathogen_gamma1');
-    if ~isfolder(value1_dir)
-        value1_dir = fullfile(sensitivity_dir, 'ptrs_pathogen', 'value_1');
-    end
 
     if ~isfolder(baseline_dir)
         error('compare_exceedances:NoBaseline', 'Baseline directory not found: %s', baseline_dir);
     end
     if ~isfolder(value1_dir)
         error('compare_exceedances:NoVariant', ...
-            'Expected ptrs_pathogen_gamma1 or ptrs_pathogen/value_1 under %s', sensitivity_dir);
+            'Expected ptrs_pathogen_gamma1 under %s', sensitivity_dir);
     end
 
     % Chunk layout and table sizes from baseline job config
@@ -285,6 +278,8 @@ function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exce
 
     set(ax, 'XScale', 'log', 'YScale', 'log');
     apply_paper_axis_style(ax, spec);
+    ax.XMinorGrid = 'off';
+    ax.YMinorGrid = 'off';
     xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
     ylabel(ax, 'Annual exceedance risk', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
 
@@ -336,6 +331,8 @@ function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madh
 
     set(ax, 'XScale', 'log', 'YScale', 'log');
     apply_paper_axis_style(ax, spec);
+    ax.XMinorGrid = 'off';
+    ax.YMinorGrid = 'off';
     xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
     ylabel(ax, 'Annual exceedance risk', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
 
