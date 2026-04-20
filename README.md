@@ -7,24 +7,24 @@ This repository contains the code behind [Estimating future pandemic harms and t
 
 | Folder                           | Role                                                         |
 | -------------------------------- | ------------------------------------------------------------ |
-| `[config/](config/)`             | Configs for model runs (see explanation below)               |
-| `[data/raw/](data/raw/)`         | Raw data that will be manipulated into model inputs          |
-| `[data/derived/](data/derived/)` | Data cleaning intermediates — not final model inputs         |
-| `[data/clean/](data/clean/)`     | Data used as inputs into the pandemic simulation models.     |
+| `[config/](config/)`             | Configs for model runs (see explanation below) |
+| `[data/raw/](data/raw/)`         | Raw data that will be manipulated into model inputs |
+| `[data/derived/](data/derived/)` | Data cleaning intermediates — not final model inputs |
+| `[data/clean/](data/clean/)`     | Data used as inputs into the pandemic simulation models. |
 | `[matlab/](matlab/)`             | MATLAB code (mostly pandemic simulations and postprocessing) |
-| `[python/](python/)`             | Python code (mostly input generation)                        |
-| `[R/](R/)`                       |                                                              |
-| `[slurm/](slurm/)`               | SLURM batch files and wrappers for cluster workflows         |
-| `[output/](output/)`             | Ouputs from pandemic simulations                             |
+| `[python/](python/)`             | Python code (mostly input generation) |
+| `[R/](R/)`                       | R code (mostly input generation) |
+| `[slurm/](slurm/)`               | SLURM batch files and wrappers for cluster workflows |
+| `[output/](output/)`             | Ouputs from pandemic simulations |
 
 
 ## Requirements
 
 
-| Language | Version                             | Manager                                                   |
-| -------- | ----------------------------------- | --------------------------------------------------------- |
-| MATLAB   | R2020a+ (e.g. R2023a on RCC Midway) | —                                                         |
-| Python   | 3.11.9                              | [Poetry](https://python-poetry.org/)                      |
+| Language | Version                             | Manager |
+| -------- | ----------------------------------- | ---------------------------------------------------------  |
+| MATLAB   | R2020a+ (e.g. R2023a on RCC Midway) | —       |
+| Python   | 3.11.9                              | [Poetry](https://python-poetry.org/) |
 | R        | —                                   | [renv](https://rstudio.github.io/renv/articles/renv.html) |
 
 

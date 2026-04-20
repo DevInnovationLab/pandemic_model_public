@@ -90,6 +90,9 @@ function plot_net_value_boxplot(out_dir)
 
     spec_main = get_paper_figure_spec("grid_2xn");
     spec_base = get_paper_figure_spec("double_col_standard");
+    % Bump all typography by a fixed delta, then use tick / axis_label slots (not ad hoc suptitle).
+    spec_main_adj = adjust_paper_typography(spec_main, 1);
+    spec_base_adj = adjust_paper_typography(spec_base, 2);
     box_hw = 0.32;
     face_color = [0.88 0.92 0.97];
     edge_color = [0.35 0.45 0.65];
@@ -135,14 +138,14 @@ function plot_net_value_boxplot(out_dir)
     ax.YTick = 1:n;
     ax.YTickLabel = y_labels;
     ax.TickLabelInterpreter = 'none';
-    ax.FontSize = spec_main.typography.tick;
+    ax.FontSize = spec_main_adj.typography.tick;
     ax.FontName = spec_main.font_name;
     ax.TickDir = 'out';
     ax.Box = 'off';
     ax.YAxisLocation = 'left';
     ax.XGrid = 'on';
     ax.GridAlpha = 0.3;
-    xlabel(ax, 'Net present value (trillion $)', 'FontName', spec_main.font_name, 'FontSize', spec_main.typography.axis_label);
+    xlabel(ax, 'Net present value (trillion $)', 'FontName', spec_main.font_name, 'FontSize', spec_main_adj.typography.axis_label);
 
     % X-axis limits and ticks at every trillion dollars, based on whisker endpoints
     valid_whiskers = ~isnan(perc_10_90(:, 1));
@@ -193,7 +196,7 @@ function plot_net_value_boxplot(out_dir)
 
     % Make the baseline figure a bit less tall than the advance
     % investment figure so it is visually shorter in panels.
-    fig_b = figure('Visible', 'off', 'Units', 'inches', 'Position', [1 1 spec_base.width_in spec_base.height_in]);
+    fig_b = figure('Visible', 'off', 'Units', 'inches', 'Position', [1 1 spec_base.width_in (spec_base.height_in / 1.5)]);
     ax_b = axes();
     hold(ax_b, 'on');
 
@@ -226,14 +229,14 @@ function plot_net_value_boxplot(out_dir)
     ax_b.YTick = 1;
     % Two-line y-tick label using TeX interpreter and newline
     ax_b.YTickLabel = {'Status quo response'};
-    ax_b.FontSize = spec_base.typography.tick;
+    ax_b.FontSize = spec_base_adj.typography.tick;
     ax_b.FontName = spec_base.font_name;
     ax_b.TickDir = 'out';
     ax_b.Box = 'off';
     ax_b.YAxisLocation = 'left';
     ax_b.XGrid = 'on';
     ax_b.GridAlpha = 0.3;
-    xlabel(ax_b, 'Net present value (trillion $)', 'FontName', spec_base.font_name, 'FontSize', spec_base.typography.axis_label);
+    xlabel(ax_b, 'Net present value (trillion $)', 'FontName', spec_base.font_name, 'FontSize', spec_base_adj.typography.axis_label);
 
     % X-axis limits and ticks every 5 trillion dollars
     global_min_b = perc_10_90_b(1);
@@ -258,8 +261,6 @@ function plot_net_value_boxplot(out_dir)
 
     % Export baseline net value boxplot as PNG
     export_figure(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'));
-    export_figure(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.png'), ...
-        'ContentType', 'image', 'Resolution', 600);
     close(fig_b);
 
     baseline_table = table("baseline", "Status quo response", mean_base, med_b, ...

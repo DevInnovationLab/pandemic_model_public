@@ -48,8 +48,10 @@ function plot_losses_lorenz(job_dir)
     hold on;
     plot([0; cum_event_share], [0; cum_loss_share], "b-", "LineWidth", spec.stroke.primary);
 
-    xlabel("Cumulative share of pandemics", "FontName", spec.font_name, "FontSize", spec.typography.axis_label);
-    ylabel("Cumulative share of social losses", "FontName", spec.font_name, "FontSize", spec.typography.axis_label);
+    xlabel("Cumulative share of pandemics", "FontName", spec.font_name, ...
+        "FontSize", spec.typography.axis_label);
+    ylabel("Cumulative share of social losses", "FontName", spec.font_name, ...
+        "FontSize", spec.typography.axis_label);
 
     xlim([0 1]);
     ylim([0 1]);

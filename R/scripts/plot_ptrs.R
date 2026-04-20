@@ -55,6 +55,11 @@ ptrs_pred_plot <- ptrs_preds %>%
 # Set color palette for platforms
 platform_colors <- c("mRNA" = "#0072B2", "Traditional" = "#D55E00")
 
+ptrs_panel_delta <- 4
+ptrs_ty <- paper_typography(delta = ptrs_panel_delta)
+# Axis titles one point larger than ptrs_ty$axis_label (ticks/legend stay at ptrs_panel_delta).
+ptrs_axis_title_size <- ptrs_ty$axis_label + 1
+
 ptrs_plot <- ggplot(ptrs_pred_plot, aes(
   x = mu_hat,
   y = pathogen,
@@ -91,8 +96,11 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
     x = "Probability of vaccine success (PTRS)",
     y = "Pathogen"
   ) +
-  theme_paper(width_in = get_paper_size("double_col_tall")["width"], base_family = "Arial") +
+  # font_delta = ptrs_panel_delta: slightly larger type than default (busy dot + errorbar chart).
+  theme_paper(base_family = "Arial", font_delta = ptrs_panel_delta) +
   theme(
+    axis.title.x = element_text(size = ptrs_axis_title_size),
+    axis.title.y = element_text(size = ptrs_axis_title_size),
     plot.margin = margin(0, 0, 0, 0),
     legend.position = c(0.8, 0.1),
     legend.justification = c(0.5, 0.5),
@@ -111,6 +119,10 @@ proto_effect <- proto_effect %>%
     ),
     platform = factor(platform, levels = c("mRNA", "Traditional"))
   )
+
+proto_panel_delta <- 4
+proto_ty <- paper_typography(delta = proto_panel_delta)
+proto_axis_title_size <- proto_ty$axis_label + .5
 
 proto_effect_plot <- ggplot(proto_effect, aes(
   x = effect_mean,
@@ -145,8 +157,10 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     x = "Increase in probability of success (ΔPTRS)",
     y = "Technology\nplatform"
   ) +
-  theme_paper(width_in = get_paper_size("double_col_standard")["width"], base_family = "Arial") +
+  theme_paper(base_family = "Arial", font_delta = proto_panel_delta) +
   theme(
+    axis.title.x = element_text(size = proto_axis_title_size),
+    axis.title.y = element_text(size = proto_axis_title_size),
     plot.margin = margin(12, 14, 10, 10),
     legend.position = "none"
   )
@@ -154,14 +168,14 @@ proto_effect_plot <- ggplot(proto_effect, aes(
 ## --- Save outputs -------------------------------------------------------------
 save_paper_plot(
   plot = ptrs_plot,
-  path = "output/ptrs/ptrs_plot.pdf",
+  path = "output/ptrs_plot.pdf",
   preset = "double_col_tall",
   dpi = 600
 )
 
 save_paper_plot(
   plot = proto_effect_plot,
-  path = "output/ptrs/proto_effect_plot.pdf",
+  path = "output/proto_effect_plot.pdf",
   preset = "double_col_wide",
   dpi = 600
 )

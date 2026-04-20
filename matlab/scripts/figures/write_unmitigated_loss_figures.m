@@ -464,7 +464,7 @@ function draw_group_headers(ax, header_y, header_labels, gap, spec)
     end
     header_fs = 11;
     if nargin >= 5 && ~isempty(spec)
-        header_fs = spec.typography.title;
+        header_fs = spec.typography.axis_label;
     end
     if isempty(header_y)
         return;

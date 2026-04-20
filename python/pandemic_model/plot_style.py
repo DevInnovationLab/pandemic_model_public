@@ -1,15 +1,18 @@
-"""Shared paper figure style helpers for plotting scripts."""
+"""Shared paper figure style helpers for plotting scripts.
+
+Typography uses fixed point sizes (``BASE_FONT_PT``) with no width-based scaling.
+Use :func:`adjust_font_sizes` to shift all font sizes together (e.g. +1 pt on busy
+ggplot-style figures is handled in R via ``theme_paper(font_delta = 1)`` in
+``plot_ptrs.R`` and ``plot_arrival_shares.R``).
+"""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
 import matplotlib.pyplot as plt
-import numpy as np
-
-REF_WIDTH_IN = 3.35
 
 FIGURE_SIZE_PRESETS = {
     "single_col": (3.35, 2.40),
@@ -21,11 +24,11 @@ FIGURE_SIZE_PRESETS = {
 }
 
 BASE_FONT_PT = {
-    "tick": 8.8,
-    "axis_label": 9.8,
-    "legend": 8.8,
-    "title": 9.8,
-    "suptitle": 10.8,
+    "tick": 9,
+    "axis_label": 10,
+    "legend": 10,
+    "title": 12,
+    "suptitle": 11,
 }
 
 STROKE = {
@@ -39,7 +42,7 @@ STROKE = {
 
 @dataclass(frozen=True)
 class PaperFigureStyle:
-    """Container for size-aware paper typography and stroke settings."""
+    """Container for paper typography and stroke settings."""
 
     width_in: float
     height_in: float
@@ -56,12 +59,6 @@ class PaperFigureStyle:
     ci_alpha_light: float
 
 
-def _clamped_scale(width_in: float, ref_width_in: float = REF_WIDTH_IN) -> float:
-    """Return clamped square-root typography scale based on figure width."""
-    raw = np.sqrt(width_in / ref_width_in)
-    return float(np.clip(raw, 0.95, 1.15))
-
-
 def get_figure_size(preset: str, *, n_cols: int = 4) -> tuple[float, float]:
     """Return (width, height) in inches for a named paper-size preset."""
     if preset == "grid_2xn":
@@ -74,23 +71,34 @@ def get_figure_size(preset: str, *, n_cols: int = 4) -> tuple[float, float]:
 
 
 def get_paper_style(preset: str, *, font_family: str = "Arial", n_cols: int = 4) -> PaperFigureStyle:
-    """Build a style object with size-aware typography for a given preset."""
+    """Build a style object for a given preset using fixed base font sizes."""
     width_in, height_in = get_figure_size(preset, n_cols=n_cols)
-    scale = _clamped_scale(width_in)
     return PaperFigureStyle(
         width_in=width_in,
         height_in=height_in,
         font_family=font_family,
-        tick_size=round(BASE_FONT_PT["tick"] * scale, 1),
-        axis_label_size=round(BASE_FONT_PT["axis_label"] * scale, 1),
-        legend_size=round(BASE_FONT_PT["legend"] * scale, 1),
-        title_size=round(BASE_FONT_PT["title"] * scale, 1),
-        suptitle_size=round(BASE_FONT_PT["suptitle"] * scale, 1),
+        tick_size=float(BASE_FONT_PT["tick"]),
+        axis_label_size=float(BASE_FONT_PT["axis_label"]),
+        legend_size=float(BASE_FONT_PT["legend"]),
+        title_size=float(BASE_FONT_PT["title"]),
+        suptitle_size=float(BASE_FONT_PT["suptitle"]),
         primary_lw=STROKE["primary"],
         secondary_lw=STROKE["secondary"],
         reference_lw=STROKE["reference"],
         ci_alpha=STROKE["ci_alpha"],
         ci_alpha_light=STROKE["ci_alpha_light"],
+    )
+
+
+def adjust_font_sizes(style: PaperFigureStyle, delta: float) -> PaperFigureStyle:
+    """Return a copy of ``style`` with all font sizes shifted by ``delta`` (points)."""
+    return replace(
+        style,
+        tick_size=style.tick_size + delta,
+        axis_label_size=style.axis_label_size + delta,
+        legend_size=style.legend_size + delta,
+        title_size=style.title_size + delta,
+        suptitle_size=style.suptitle_size + delta,
     )
 
 

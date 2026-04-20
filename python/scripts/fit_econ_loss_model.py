@@ -21,6 +21,7 @@ import yaml
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
 from pandemic_model.plot_style import (
+    adjust_font_sizes,
     apply_paper_axis_style,
     apply_paper_rc,
     get_paper_style,
@@ -108,53 +109,55 @@ if __name__ == "__main__":
     y_pred = pm_sev_results.predict(sm.add_constant(log_sev_range)) * 100
 
     style = get_paper_style("double_col_standard")
+    style = adjust_font_sizes(style, 1)
     apply_paper_rc(style)
 
     fig, ax = plt.subplots(figsize=(style.width_in, style.height_in))
+    ax.plot(
+        np.exp(log_sev_range).flatten(),
+        y_pred,
+        linewidth=style.primary_lw,
+        color=col_poisson,
+        zorder=1
+    )
     ax.scatter(
         econ_loss_clean['severity'],
         econ_loss_clean['total_pct_gdp_loss'],
         color="black",
-        s=60,
-        alpha=0.7,
+        s=40,
+        zorder=2
     )
 
-    # Annotate each disease (layout chosen for readability of six main diseases in set)
+    # Annotate each disease (layout chosen for readability of six main diseases in set).
+    # Point labels use tick_size to match axis tick labels; axis titles use axis_label_size.
     for i, disease in enumerate(econ_loss_clean['disease']):
         x = econ_loss_clean['severity'].iloc[i]
         y = econ_loss_clean['total_pct_gdp_loss'].iloc[i]
         d = str(disease).strip()
         if d.lower() == 'covid-19':
-            ax.text(x * 0.88, y * 1.06, d, fontsize=style.legend_size, ha='right', va='bottom', color='black')
+            ax.text(x * 0.88, y * 1.06, d, fontsize=style.tick_size, ha='right', va='bottom', color='black')
         elif d.lower() in ('hong kong flu', '1918 flu'):
-            ax.text(x * 1.08, y - 0.5, d, fontsize=style.legend_size, ha='left', va='top', color='black')
+            ax.text(x * 1.08, y - 0.5, d, fontsize=style.tick_size, ha='left', va='top', color='black')
         else:
-            ax.text(x * 1.15, y - 0.4, d, fontsize=style.legend_size, ha='left', va='top', color='black')
+            ax.text(x * 1.15, y - 0.4, d, fontsize=style.tick_size, ha='left', va='top', color='black')
 
     ax.set_xlabel("Severity (deaths per 10,000 people)", fontsize=style.axis_label_size)
     ax.set_ylabel("Total GDP loss (%)", fontsize=style.axis_label_size)
     apply_paper_axis_style(ax, style)
     ax.set_xscale('log')
 
-    ax.plot(
-        np.exp(log_sev_range).flatten(),
-        y_pred,
-        linewidth=style.primary_lw,
-        color=col_poisson,
-    )
-
-    # Label fitted line just above y at 10^3 severity
-    x_label = 1e3
+    # Label fitted line just above y at 10^3 severity (legend_size matches legend text scale).
+    x_label = 2.2e3
     x_vals = np.exp(log_sev_range).flatten()
     y_at_1e3 = np.interp(x_label, x_vals, y_pred)
-    y_offset = (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.12
+    y_offset = (ax.get_ylim()[1] - ax.get_ylim()[0]) * 0.1
     ax.text(
-        x_label - 5e2,
+        x_label - 1e2,
         y_at_1e3 + y_offset,
         "Fitted\nPoisson\nregression",
         fontfamily=style.font_family,
         fontsize=style.legend_size,
-        ha="center",
+        ha="right",
         va="bottom",
         color="black",
     )

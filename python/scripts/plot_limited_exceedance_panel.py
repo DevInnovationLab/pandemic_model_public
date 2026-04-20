@@ -16,6 +16,7 @@ import pandas as pd
 
 from pandemic_statistics.pareto import ArrivalGPD
 from pandemic_model.plot_style import (
+    adjust_font_sizes,
     apply_paper_axis_style,
     apply_paper_rc,
     get_paper_style,
@@ -148,6 +149,7 @@ def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
     """Plot exceedance functions for all epidemics and a preferred sample of novel viral epidemics on one axes (x extent 0.01–200)."""
     x = np.logspace(np.log10(X_MIN), np.log10(X_MAX), N_POINTS)
     style = get_paper_style("double_col_standard")
+    style = adjust_font_sizes(style, 1)
     apply_paper_rc(style)
     fig, ax = plt.subplots(figsize=(style.width_in, style.height_in))
 
@@ -221,7 +223,7 @@ def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
             y_label,
             label_text,
             color="black",
-            fontsize=style.legend_size,
+            fontsize=style.legend_size - .5,
             ha="left",
             va=va,
             fontfamily=style.font_family,

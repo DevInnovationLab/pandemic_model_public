@@ -134,7 +134,8 @@ function plot_pairwise_program_matrix(job_dir)
                 if ~isnan(net_value_mat(row, col))
                     label_str = char(round_nicely(net_value_mat(row, col)));
                     text(x, y, label_str, 'HorizontalAlignment', 'center', ...
-                        'VerticalAlignment', 'middle', 'FontSize', spec.typography.legend, 'FontName', spec.font_name, 'Parent', ax);
+                        'VerticalAlignment', 'middle', 'FontSize', spec.typography.tick, ...
+                        'FontName', spec.font_name, 'Parent', ax);
                 end
             elseif row > col && ~isnan(comp_mat(row, col))
                 % Lower triangle: complementarities
@@ -150,8 +151,8 @@ function plot_pairwise_program_matrix(job_dir)
                           'FaceColor', face_color, 'EdgeColor', [0, 0, 0], 'Parent', ax, 'LineWidth', spec.stroke.reference);
                 label_str = char(round_nicely(value));
                 text(x, y, label_str, 'HorizontalAlignment', 'center', ...
-                    'VerticalAlignment', 'middle', 'FontSize', spec.typography.legend, 'FontName', spec.font_name, ...
-                    'Color', [1, 1, 1], 'Parent', ax);
+                    'VerticalAlignment', 'middle', 'FontSize', spec.typography.tick, ...
+                    'FontName', spec.font_name, 'Color', [1, 1, 1], 'Parent', ax);
             end
         end
     end
@@ -165,12 +166,9 @@ function plot_pairwise_program_matrix(job_dir)
     if ~exist(figures_dir, 'dir')
         mkdir(figures_dir);
     end
+    
     outfile_pdf = fullfile(figures_dir, "pairwise_complementarity_matrix.pdf");
-    outfile_png = fullfile(figures_dir, "pairwise_complementarity_matrix.png");
-
     export_figure(fig, outfile_pdf);
-    export_figure(fig, outfile_png, ...
-        'ContentType', 'image', 'Resolution', 600);
     close(fig);
 
 end

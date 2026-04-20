@@ -27,6 +27,9 @@ arrival_risk_plot <- arrival_risk_summary_all %>%
 
 prototype_colors <- c("Has prototype" = "#005185", "No prototype" = "#A50021") # blue and red
 
+arrival_delta <- 2
+arrival_ty <- paper_typography(delta = arrival_delta)
+arrival_legend_size <- arrival_ty$legend - 1
 
 ## --- Build plot ---------------------------------------------------------------
 
@@ -54,8 +57,9 @@ p <- ggplot(arrival_risk_plot, aes(
     y = "Pathogen",
     caption = NULL
   ) +
-  theme_paper(width_in = get_paper_size("double_col_tall")["width"], base_family = "Arial") +
+  theme_paper(base_family = "Arial", font_delta = arrival_delta) +
   theme(
+    legend.text = element_text(size = arrival_legend_size),
     legend.position = c(0.94, 0.5), # inside, center-right
     legend.justification = c("right", "center"),
     legend.direction = "vertical",

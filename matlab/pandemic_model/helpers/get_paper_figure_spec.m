@@ -1,8 +1,9 @@
 function spec = get_paper_figure_spec(preset, varargin)
 % Return standardized paper figure settings.
 %
-% Uses named presets for figure dimensions and applies clamped square-root
-% scaling for typography relative to the single-column reference width.
+% Named presets set figure dimensions; typography uses fixed point sizes (no
+% width scaling). Use adjust_paper_typography after this function to shift all
+% font sizes together if needed.
 %
 % Args:
 %   preset: Preset name ('single_col', 'double_col_standard', 'double_col_wide', 'tall_panel', 'double_col_tall', 'grid_2xn')
@@ -19,8 +20,6 @@ function spec = get_paper_figure_spec(preset, varargin)
     parse(p, preset, varargin{:});
 
     preset = lower(string(p.Results.preset));
-
-    ref_width = 3.35;
 
     switch preset
         case "single_col"
@@ -45,22 +44,18 @@ function spec = get_paper_figure_spec(preset, varargin)
             error("get_paper_figure_spec:UnknownPreset", "Unknown figure preset: %s", preset);
     end
 
-    scale = sqrt(width_in / ref_width);
-    scale = min(max(scale, 0.95), 1.15);
-
     spec = struct();
     spec.preset = char(preset);
     spec.width_in = width_in;
     spec.height_in = height_in;
     spec.font_name = "Arial";
-    spec.scale = scale;
 
     spec.typography = struct( ...
-        "tick", round(8.8 * scale, 1), ...
-        "axis_label", round(9.8 * scale, 1), ...
-        "legend", round(8.8 * scale, 1), ...
-        "title", round(9.8 * scale, 1), ...
-        "suptitle", round(10.8 * scale, 1));
+        "tick", 9, ...
+        "axis_label", 10, ...
+        "legend", 10, ...
+        "title", 12, ...
+        "suptitle", 11);
 
     spec.stroke = struct( ...
         "primary", 1.6, ...

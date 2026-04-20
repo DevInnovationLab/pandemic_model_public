@@ -54,7 +54,7 @@ PANELS = [
     ),
     (
         "Year-threshold-only, incl. unidentified",
-        _L + "all_int_0d01_1900_yearthreshonly_incl_unid__arr__gpd_severity_poisson_sharp_u200_n50000_s42",
+        _L + "all_int_0d01_1900_yearthreshonly__arr__gpd_severity_poisson_sharp_u200_n50000_s42",
     ),
 ]
 
