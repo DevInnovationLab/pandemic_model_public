@@ -34,7 +34,8 @@ LOAD_RENV="renv::activate();"
 
 
 step 'Clean Marani epidemic sheet'
-python ./python/vendor/pandemic-statistics/scripts/clean_marani.py
+python ./python/vendor/pandemic-statistics/scripts/clean_marani.py \
+  --outdir "./data/derived"
 
 
 step 'Estimate ``state of nature'' COVID severity and merge into dataset'

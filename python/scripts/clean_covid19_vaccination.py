@@ -59,6 +59,6 @@ else:
     print("Year-months are not contiguous.")
 
 # --- 5. Save ---
-output_path = "./data/clean/covid19_cum_vax_over_time.csv"
+output_path = "./data/derived/covid19_cum_vax_over_time.csv"
 mid_month_vax.to_csv(output_path, index=False)
 print(f"Saved COVID-19 vaccination rollout to {output_path}")

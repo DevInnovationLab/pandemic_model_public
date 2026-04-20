@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     vaccine_speedup['pathogen'] = vaccine_speedup.index.get_level_values('disease').map(pathogen_group_map)
 
-    vaccine_speedup.to_csv("./data/clean/vaccine_rd_timeline_responses.csv")
+    vaccine_speedup.to_csv("./data/derived/vaccine_rd_timeline_responses.csv")
     
     # --- Vaccine R&D costs ---
 
