@@ -273,9 +273,9 @@ def fit_mle_duration(
             else Path("./output/duration_dist_figs").resolve()
         )
         fig_dir.mkdir(parents=True, exist_ok=True)
-        single_col_style = get_paper_style("single_col")
-        double_col_style = get_paper_style("double_col")
-        apply_paper_rc(single_col_style)
+        figstyle = get_paper_style("double_col_standard")
+        figstyle_exceedance = get_paper_style("double_col_wide")
+        apply_paper_rc(figstyle)
 
         # --- Build discretized PMF for diagnostic plots ---
 
@@ -294,18 +294,6 @@ def fit_mle_duration(
             floc=floc,
             half_width=half_width,
         )
- 
-        # Plot PMF without confidence intervals.
-        fig, ax = plt.subplots(figsize=(double_col_style.width_in, double_col_style.height_in))
-        ax.bar(years, mle_pmf, color="blue", alpha=0.8)
- 
-        ax.set_xlabel("Year", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
-        ax.set_ylabel("Probability mass", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
-        ax.set_xticks(years)
-        apply_paper_axis_style(ax, double_col_style)
- 
-        fig_fn = fig_dir / f"{outstring}_pmf_rounded_years.pdf"
-        save_paper_figure(fig, fig_fn, dpi=600)
  
         # Delta-method CI for the discretized PMF.
         cov_theta = best_fit.cov_theta 
@@ -341,7 +329,7 @@ def fit_mle_duration(
         z = 1.96
  
         # Plot PMF with 95% CI as error bars.
-        fig, ax = plt.subplots(figsize=(single_col_style.width_in, single_col_style.height_in))
+        fig, ax = plt.subplots(figsize=(figstyle.width_in, figstyle.height_in))
         ax.bar(years, mle_pmf, color="blue", alpha=0.5)
         ax.errorbar(
             years[1:],
@@ -351,13 +339,13 @@ def fit_mle_duration(
             ecolor="blue",
             alpha=0.9,
             capsize=3,
-            elinewidth=single_col_style.secondary_lw,
+            elinewidth=figstyle.secondary_lw,
         )
  
-        ax.set_xlabel("Years", fontsize=single_col_style.axis_label_size, fontfamily=single_col_style.font_family)
-        ax.set_ylabel("Probability mass", fontsize=single_col_style.axis_label_size, fontfamily=single_col_style.font_family)
+        ax.set_xlabel("Years", fontsize=figstyle.axis_label_size, fontfamily=figstyle.font_family)
+        ax.set_ylabel("Probability mass", fontsize=figstyle.axis_label_size, fontfamily=figstyle.font_family)
         ax.set_xticks(years)
-        apply_paper_axis_style(ax, single_col_style)
+        apply_paper_axis_style(ax, figstyle)
  
         fig_fn = fig_dir / f"{outstring}_pmf_rounded_years_with_ci.pdf"
         save_paper_figure(fig, fig_fn, dpi=600)
@@ -373,32 +361,40 @@ def fit_mle_duration(
         lower_sf = np.clip(mle_sf - z95 * se_sf, 0.0, 1.0)
         upper_sf = np.clip(mle_sf + z95 * se_sf, 0.0, 1.0)
 
-        fig, ax = plt.subplots(figsize=(double_col_style.width_in, double_col_style.height_in))
+        fig, ax = plt.subplots(figsize=(figstyle_exceedance.width_in, figstyle_exceedance.height_in))
         ax.fill_between(
             t_grid,
             lower_sf,
             upper_sf,
             color="blue",
-            alpha=double_col_style.ci_alpha,
+            alpha=figstyle_exceedance.ci_alpha,
             label="95% confidence interval",
         )
         ax.plot(
             t_grid,
             mle_sf,
             color="blue",
-            linewidth=double_col_style.primary_lw,
+            linewidth=figstyle_exceedance.primary_lw,
             alpha=0.9,
             label="MLE",
         )
-        ax.set_xlabel("Duration (years)", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
-        ax.set_ylabel("Exceedance probability", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
+        ax.set_xlabel(
+            "Duration (years)",
+            fontsize=figstyle_exceedance.axis_label_size,
+            fontfamily=figstyle_exceedance.font_family,
+        )
+        ax.set_ylabel(
+            "Exceedance probability",
+            fontsize=figstyle_exceedance.axis_label_size,
+            fontfamily=figstyle_exceedance.font_family,
+        )
         ax.set_xlim(float(t_grid[0]), float(t_grid[-1]))
         ax.set_ylim(0.0, 1.0)
-        apply_paper_axis_style(ax, double_col_style)
+        apply_paper_axis_style(ax, figstyle_exceedance)
         ax.legend(
             loc="upper right",
             frameon=False,
-            prop={"family": double_col_style.font_family, "size": double_col_style.legend_size},
+            prop={"family": figstyle_exceedance.font_family, "size": figstyle_exceedance.legend_size},
         )
         fig_fn = fig_dir / f"{outstring}_exceedance.pdf"
         save_paper_figure(fig, fig_fn, dpi=600)

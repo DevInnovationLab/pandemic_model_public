@@ -7,7 +7,7 @@ fix_params:
   response_threshold_type: "severity"
 sensitivities:
   severity_trunc_1000:
-    arrival_dist_config: "data/clean/arrival_distributions/e241210c__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
+    arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
   severity_trunc_10000:
     arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
   lower_sev_threshold_1:

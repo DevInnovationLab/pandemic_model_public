@@ -107,7 +107,7 @@ if __name__ == "__main__":
     log_sev_range = np.linspace(np.log(1e-5), np.log(1e4), 1000).reshape(-1, 1)
     y_pred = pm_sev_results.predict(sm.add_constant(log_sev_range)) * 100
 
-    style = get_paper_style("double_col_tall")
+    style = get_paper_style("double_col_standard")
     apply_paper_rc(style)
 
     fig, ax = plt.subplots(figsize=(style.width_in, style.height_in))

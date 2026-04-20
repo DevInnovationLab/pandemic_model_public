@@ -54,9 +54,9 @@ p <- ggplot(arrival_risk_plot, aes(
     y = "Pathogen",
     caption = NULL
   ) +
-  theme_paper(width_in = get_paper_size("double_col")["width"], base_family = "Arial") +
+  theme_paper(width_in = get_paper_size("double_col_tall")["width"], base_family = "Arial") +
   theme(
-    legend.position = c(0.96, 0.5), # inside, center-right
+    legend.position = c(0.94, 0.5), # inside, center-right
     legend.justification = c("right", "center"),
     legend.direction = "vertical",
     legend.background = element_rect(fill = alpha("white", 0.9), color = NA),
@@ -69,6 +69,6 @@ p <- ggplot(arrival_risk_plot, aes(
 save_paper_plot(
   plot = p,
   path = "output/pathogen_pandemic_share_all.pdf",
-  preset = "double_col",
+  preset = "double_col_tall",
   dpi = 600
 )

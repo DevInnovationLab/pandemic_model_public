@@ -147,7 +147,7 @@ def _find_model_dir(root: Path, folder_stem: str) -> Path:
 def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
     """Plot exceedance functions for all epidemics and a preferred sample of novel viral epidemics on one axes (x extent 0.01–200)."""
     x = np.logspace(np.log10(X_MIN), np.log10(X_MAX), N_POINTS)
-    style = get_paper_style("double_col")
+    style = get_paper_style("double_col_standard")
     apply_paper_rc(style)
     fig, ax = plt.subplots(figsize=(style.width_in, style.height_in))
 
@@ -195,7 +195,7 @@ def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
     ax.set_ylabel("Annual exceedance probability", fontsize=style.axis_label_size, fontfamily=style.font_family)
 
     # Remove legend and instead label curves directly near the y-axis.
-    x_label_pos = 0.02
+    x_label_pos = 0.03
     idx_label = int(np.argmin(np.abs(x - x_label_pos)))
 
     for (title, folder_stem), color in zip(SERIES, COLORS):
@@ -209,18 +209,18 @@ def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
 
         if title == "All epidemics":
             label_text = "All epidemics"
-            y_label = y_on_curve * 1.5
+            y_label = y_on_curve * 1.3
             va = "bottom"
         else:
             label_text = "Preferred sample\n(Novel viral only)"
-            y_label = y_on_curve / 1.5
+            y_label = y_on_curve / 1.3
             va = "top"
 
         ax.text(
             x_label_pos,
             y_label,
             label_text,
-            color=color,
+            color="black",
             fontsize=style.legend_size,
             ha="left",
             va=va,

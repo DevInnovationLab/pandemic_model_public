@@ -7,7 +7,7 @@
 % h(>=0.7) = 1
 
 % Create figure
-spec = get_paper_figure_spec("single_col");
+spec = get_paper_figure_spec("double_col_standard");
 fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in], 'Visible', 'off');
 
 % Generate x values

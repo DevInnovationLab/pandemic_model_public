@@ -106,7 +106,7 @@ function plot_pairwise_program_matrix(job_dir)
     end
 
     % Create figure
-    spec = get_paper_figure_spec("double_col");
+    spec = get_paper_figure_spec("double_col_standard");
     fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in], 'Visible', 'off');
     ax = axes('Parent', fig);
     hold(ax, 'on');

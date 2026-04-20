@@ -41,7 +41,7 @@ function plot_losses_lorenz(job_dir)
     cum_event_share = (1:n)' / n;
     cum_loss_share = cumsum(sorted_losses) / total_losses;
 
-    spec = get_paper_figure_spec("single_col");
+    spec = get_paper_figure_spec("double_col_standard");
     fig = figure("Units", "inches", "Position", [1 1 spec.width_in spec.height_in]);
 
     plot([0 1], [0 1], "--k", "LineWidth", spec.stroke.reference);
@@ -59,8 +59,8 @@ function plot_losses_lorenz(job_dir)
     ax = gca;
     apply_paper_axis_style(ax, spec);
 
-    comparisons_dir = fullfile(job_dir, "figures", "comparison");
-    create_folders_recursively(comparisons_dir);
-    export_figure(fig, fullfile(comparisons_dir, "unmitigated_losses_lorenz.pdf"));
+    figdir = fullfile(job_dir, "figures");
+    create_folders_recursively(figdir);
+    export_figure(fig, fullfile(figdir, "unmitigated_losses_lorenz.pdf"));
     close(fig);
 end

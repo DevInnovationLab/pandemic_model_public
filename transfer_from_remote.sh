@@ -18,11 +18,6 @@
 #
 # With no extra arguments, transfers the default path list.
 #
-# All paths are pulled in a single SSH session (remote tar stream | local tar extract)
-# so you authenticate once, analogous to transfer_to_remote.sh’s single scp batch.
-#
-# Progress: remote GNU tar uses --checkpoint/--checkpoint-action=dot (dots on stderr
-# as the archive is built). Override spacing with TAR_CHECKPOINT (default 8192).
 # Requires: ssh, GNU tar on the cluster, tar locally.
 ###############################################################################
 
@@ -43,12 +38,14 @@ DEFAULT_PATHS=(
   "output/single_runs/allrisk_base_pairwise/run_config.yaml"
   "output/single_runs/allrisk_base_program_levels/processed"
   "output/single_runs/allrisk_base_program_levels/run_config.yaml"
-  # Sensitivity batches + compare_exceedances recurrence outputs
+  # Sensitivity batches
+  "output/sensitivity_runs/baseline_vaccine_program/baseline"
   "output/sensitivity_runs/baseline_vaccine_program/processed"
   "output/sensitivity_runs/baseline_vaccine_program/figures"
   "output/sensitivity_runs/baseline_vaccine_program/sensitivity_config.yaml"
   "output/sensitivity_runs/baseline_vaccine_program/mean_annual_recurrence_rates.csv"
   "output/sensitivity_runs/baseline_vaccine_program/mean_annual_recurrence_rates_selected.csv"
+  "output/sensitivity_runs/baseline_vaccine_progam_airborne/baseline" # This may be larger
   "output/sensitivity_runs/baseline_vaccine_program_airborne/processed"
   "output/sensitivity_runs/baseline_vaccine_program_airborne/figures"
   "output/sensitivity_runs/baseline_vaccine_program_airborne/sensitivity_config.yaml"
@@ -99,16 +96,11 @@ print_preflight_note() {
   Before you pull: confirm cluster jobs have FINISHED
 ================================================================================
 
-  These transfers read outputs under your Midway checkout. If jobs are still
-  running, files may be incomplete or missing.
+  If jobs are still running, files may be incomplete or missing.
 
-  How to check (SSH to Midway, then):
+  To check the status of your jobs, run the following on your SLURM cluster:
 
     squeue -u $USER
-
-  Or one shot from your laptop:
-
-    ssh squaade@midway2.rcc.uchicago.edu "squeue -u squaade"
 
   After nothing is left in squeue, confirm jobs finished successfully (not FAILED
   or CANCELLED) using the accounting log:
@@ -140,8 +132,6 @@ REMOTE_DIR_Q=$(printf '%q' "${REMOTE_DIR}")
 PATHS_Q=$(printf '%q ' "${PATHS[@]}")
 TAR_CHECKPOINT="${TAR_CHECKPOINT:-8192}"
 
-echo "Streaming archive (remote GNU tar checkpoint dots on stderr, every ${TAR_CHECKPOINT} records)."
-echo ""
 ssh "${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}" \
   "cd ${REMOTE_DIR_Q} && tar --checkpoint=${TAR_CHECKPOINT} --checkpoint-action=dot -czf - ${PATHS_Q}" \
   | tar xzf - -C "${SCRIPT_DIR}"

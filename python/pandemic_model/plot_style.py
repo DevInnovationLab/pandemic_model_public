@@ -13,9 +13,10 @@ REF_WIDTH_IN = 3.35
 
 FIGURE_SIZE_PRESETS = {
     "single_col": (3.35, 2.40),
-    "double_col": (6.90, 3.20),
+    "double_col_standard": (6.90, 4.80),
+    "double_col_wide": (6.90, 4.20),
     "tall_panel": (3.35, 3.40),
-    "double_col_tall": (6.90, 7.80),
+    "double_col_tall": (6.90, 7),
     "grid_2x4": (6.90, 4.80),
 }
 
@@ -64,7 +65,7 @@ def _clamped_scale(width_in: float, ref_width_in: float = REF_WIDTH_IN) -> float
 def get_figure_size(preset: str, *, n_cols: int = 4) -> tuple[float, float]:
     """Return (width, height) in inches for a named paper-size preset."""
     if preset == "grid_2xn":
-        width_per_col = FIGURE_SIZE_PRESETS["double_col"][0] / 4.0
+        width_per_col = FIGURE_SIZE_PRESETS["double_col_standard"][0] / 4.0
         width = max(FIGURE_SIZE_PRESETS["single_col"][0], n_cols * width_per_col)
         return width, 2 * FIGURE_SIZE_PRESETS["single_col"][1]
     if preset in FIGURE_SIZE_PRESETS:

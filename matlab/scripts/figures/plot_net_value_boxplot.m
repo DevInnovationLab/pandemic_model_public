@@ -89,7 +89,7 @@ function plot_net_value_boxplot(out_dir)
     end
 
     spec_main = get_paper_figure_spec("grid_2xn");
-    spec_base = get_paper_figure_spec("double_col");
+    spec_base = get_paper_figure_spec("double_col_standard");
     box_hw = 0.32;
     face_color = [0.88 0.92 0.97];
     edge_color = [0.35 0.45 0.65];

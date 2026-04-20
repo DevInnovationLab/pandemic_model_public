@@ -2,9 +2,10 @@
 
 paper_figure_sizes <- list(
   single_col = c(width = 3.35, height = 2.4),
-  double_col = c(width = 6.9, height = 3.2),
+  double_col_standard = c(width = 6.9, height = 4.8),
+  double_col_wide = c(width = 6.9, height = 4.2),
   tall_panel = c(width = 3.35, height = 3.4),
-  double_col_tall = c(width = 6.9, height = 7.8),
+  double_col_tall = c(width = 6.9, height = 7),
   grid_2x4 = c(width = 6.9, height = 4.8)
 )
 

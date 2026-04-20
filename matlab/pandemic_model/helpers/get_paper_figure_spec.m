@@ -5,7 +5,7 @@ function spec = get_paper_figure_spec(preset, varargin)
 % scaling for typography relative to the single-column reference width.
 %
 % Args:
-%   preset: Preset name ('single_col', 'double_col', 'tall_panel', 'double_col_tall', 'grid_2xn')
+%   preset: Preset name ('single_col', 'double_col_standard', 'double_col_wide', 'tall_panel', 'double_col_tall', 'grid_2xn')
 %
 % Name-value args:
 %   GridCols: Number of columns when preset is 'grid_2xn' (default: 4)
@@ -27,15 +27,18 @@ function spec = get_paper_figure_spec(preset, varargin)
         case "single_col"
             width_in = 3.35;
             height_in = 2.40;
-        case "double_col"
+        case "double_col_standard"
             width_in = 6.90;
-            height_in = 3.20;
+            height_in = 4.80;
+        case "double_col_wide"
+            width_in = 6.90;
+            height_in = 4.20;
         case "tall_panel"
             width_in = 3.35;
             height_in = 3.40;
         case "double_col_tall"
             width_in = 6.90;
-            height_in = 7.80;
+            height_in = 7;
         case "grid_2xn"
             width_in = 6.90;
             height_in = 2 * 2.40;

@@ -18,6 +18,7 @@
 # Options:
 #   -d remote_dir     Override the default remote directory.
 #   -h                Show this help message and exit.
+#
 ###############################################################################
 
 set -e
@@ -47,6 +48,8 @@ usage() {
     echo "Options:"
     echo "  -d remote_dir     Override default remote directory."
     echo "  -h                Show this help message and exit."
+    echo
+    echo "  TAR_CHECKPOINT=N  Records between GNU tar checkpoint dots (default: 8192)"
     exit 1
 }
 
@@ -98,11 +101,10 @@ for SRC in "${FINAL_SRC_LIST[@]}"; do
     echo "  $SRC"
 done
 
-if ! command -v rsync >/dev/null 2>&1; then
-    echo "Error: rsync is required but was not found in PATH."
-    exit 3
-fi
+REMOTE_DIR_Q=$(printf '%q' "${REMOTE_DIR}")
+TAR_CHECKPOINT="${TAR_CHECKPOINT:-8192}"
 
-rsync -aR -- "${FINAL_SRC_LIST[@]}" "${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}:${REMOTE_DIR}/"
+tar --checkpoint="${TAR_CHECKPOINT}" --checkpoint-action=dot -czf - "${FINAL_SRC_LIST[@]}" \
+  | ssh "${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}" "cd ${REMOTE_DIR_Q} && tar xzf -"
 
 echo "Transfer complete."

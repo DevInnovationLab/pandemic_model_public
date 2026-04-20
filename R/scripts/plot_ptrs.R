@@ -145,7 +145,7 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     x = "Increase in probability of success (ΔPTRS)",
     y = "Technology\nplatform"
   ) +
-  theme_paper(width_in = get_paper_size("double_col")["width"], base_family = "Arial") +
+  theme_paper(width_in = get_paper_size("double_col_standard")["width"], base_family = "Arial") +
   theme(
     plot.margin = margin(12, 14, 10, 10),
     legend.position = "none"
@@ -162,6 +162,6 @@ save_paper_plot(
 save_paper_plot(
   plot = proto_effect_plot,
   path = "output/ptrs/proto_effect_plot.pdf",
-  preset = "double_col",
+  preset = "double_col_wide",
   dpi = 600
 )

@@ -274,7 +274,7 @@ end
 function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, color_no, color_rel, color_alw, thr_x, thr_y)
 % Three simulation curves only (no Madhav et al.). Pass thr_x = [] to omit response threshold.
     color_thr = [0.72 0.12 0.12];
-    spec = get_paper_figure_spec("double_col");
+    spec = get_paper_figure_spec("double_col_standard");
     fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
     hold(ax, 'on');
@@ -326,7 +326,7 @@ end
 
 function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madhav_severity_plot, madhav_exceedance_plot, color_rel, color_mad)
 % Baseline realized mitigation vs Madhav et al. reference only.
-    spec = get_paper_figure_spec("double_col");
+    spec = get_paper_figure_spec("double_col_standard");
     fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
     hold(ax, 'on');
