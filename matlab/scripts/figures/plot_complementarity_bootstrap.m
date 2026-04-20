@@ -43,6 +43,7 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
     % Reorganize data into matrix format: bootstrap_matrix{i,j} contains complementarity between i and j
     n_investments = length(investments);
     bootstrap_matrix = cell(n_investments, n_investments);
+    spec = get_paper_figure_spec("grid_2xn", "GridCols", n_investments);
     
     for i = 1:n_investments
         inv_i = investments{i};
@@ -80,8 +81,14 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
     end
     
     % Create figures: bootstrap means
-    fig_boot = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
-    fig_boot_pct = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
+    fig_boot = figure('Visible', 'off', 'Units', 'inches', ...
+        'Position', [1 1 spec.width_in spec.height_in], ...
+        'DefaultAxesFontName', spec.font_name, ...
+        'DefaultAxesFontSize', spec.typography.tick);
+    fig_boot_pct = figure('Visible', 'off', 'Units', 'inches', ...
+        'Position', [1 1 spec.width_in spec.height_in], ...
+        'DefaultAxesFontName', spec.font_name, ...
+        'DefaultAxesFontSize', spec.typography.tick);
     
     % Extract simple metric name (remove "complementarity")
     simple_metric = strrep(metric_label, ' complementarity', '');
@@ -119,10 +126,10 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
                     % Add mean line
                     yl = ylim;
                     if ~isnan(mean_val)
-                        plot([mean_val mean_val], yl, 'k--', 'LineWidth', 1.5);
+                        plot([mean_val mean_val], yl, 'k--', 'LineWidth', spec.stroke.secondary);
                     end
                     if i ~= j  % Only show zero line for complementarities, not standalones
-                        plot([0 0], yl, 'r:', 'LineWidth', 1); % Zero line
+                        plot([0 0], yl, 'r:', 'LineWidth', spec.stroke.reference); % Zero line
                     end
                 end
             end
@@ -133,28 +140,28 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
             ax.XGrid = 'on';
             ax.YGrid = 'on';
             ax.GridAlpha = 0.15;
-            ax.LineWidth = 1;
-            ax.FontSize = 9;
+            ax.LineWidth = spec.stroke.reference;
+            ax.FontSize = spec.typography.tick;
             ax.TickDir = 'out';
             
             % Labels
-            xlabel(simple_metric, 'FontSize', 10);
+            xlabel(simple_metric, 'FontSize', spec.typography.axis_label, 'FontName', spec.font_name);
             if j == 1
-                ylabel('Probability', 'FontSize', 10);
+                ylabel('Probability', 'FontSize', spec.typography.axis_label, 'FontName', spec.font_name);
             end
             
             % Add row label on left side for first column
             if j == 1
                 text(-0.3, 0.5, inv_i_label, 'Units', 'normalized', ...
                      'Rotation', 90, 'HorizontalAlignment', 'center', ...
-                     'FontSize', 10, 'FontWeight', 'bold');
+                     'FontSize', spec.typography.legend, 'FontWeight', 'bold', 'FontName', spec.font_name);
             end
             
             % Add column label on top for first row
             if i == 1
                 text(0.5, 1.15, inv_j_label, 'Units', 'normalized', ...
                      'HorizontalAlignment', 'center', ...
-                     'FontSize', 10, 'FontWeight', 'bold');
+                     'FontSize', spec.typography.legend, 'FontWeight', 'bold', 'FontName', spec.font_name);
             end
             
             hold off;
@@ -180,7 +187,7 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
                     
                     % Add mean line
                     yl = ylim;
-                    plot([0 0], yl, 'r:', 'LineWidth', 1); % Zero line
+                    plot([0 0], yl, 'r:', 'LineWidth', spec.stroke.reference); % Zero line
                 end
             end
             
@@ -190,28 +197,28 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
             ax.XGrid = 'on';
             ax.YGrid = 'on';
             ax.GridAlpha = 0.15;
-            ax.LineWidth = 1;
-            ax.FontSize = 9;
+            ax.LineWidth = spec.stroke.reference;
+            ax.FontSize = spec.typography.tick;
             ax.TickDir = 'out';
             
             % Labels
-            xlabel(strcat(simple_metric, " % deviation"), 'FontSize', 10);
+            xlabel(strcat(simple_metric, " % deviation"), 'FontSize', spec.typography.axis_label, 'FontName', spec.font_name);
             if j == 1
-                ylabel('Probability', 'FontSize', 10);
+                ylabel('Probability', 'FontSize', spec.typography.axis_label, 'FontName', spec.font_name);
             end
             
             % Add row label on left side for first column
             if j == 1
                 text(-0.3, 0.5, inv_i_label, 'Units', 'normalized', ...
                      'Rotation', 90, 'HorizontalAlignment', 'center', ...
-                     'FontSize', 10, 'FontWeight', 'bold');
+                     'FontSize', spec.typography.legend, 'FontWeight', 'bold', 'FontName', spec.font_name);
             end
             
             % Add column label on top for first row
             if i == 1
                 text(0.5, 1.15, inv_j_label, 'Units', 'normalized', ...
                      'HorizontalAlignment', 'center', ...
-                     'FontSize', 10, 'FontWeight', 'bold');
+                     'FontSize', spec.typography.legend, 'FontWeight', 'bold', 'FontName', spec.font_name);
             end
             
             hold off;
@@ -225,12 +232,12 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
     figure(fig_boot);
     sgtitle({sprintf('\\fontsize{14}\\bf Bootstrapped mean complementarity in %s', lower(metric_short)), ...
              sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
-            'FontWeight', 'normal', 'Interpreter', 'tex');
+           'FontWeight', 'normal', 'Interpreter', 'tex', 'FontName', spec.font_name);
     
     figure(fig_boot_pct);
     sgtitle({sprintf('\\fontsize{14}\\bf Bootstrapped %s mean %% deviation from mean', lower(metric_short)), ...
              sprintf('\\fontsize{12}Accent: %s', accent_short)}, ...
-            'FontWeight', 'normal', 'Interpreter', 'tex');
+           'FontWeight', 'normal', 'Interpreter', 'tex', 'FontName', spec.font_name);
     
     % Adjust subplot positions for all figures
     for fig = [fig_boot, fig_boot_pct]
@@ -252,8 +259,8 @@ function plot_complementarity_bootstrap(complementarity_data, metric_label, acce
         lower(strrep(metric_short, ' ', '_')), ...
         lower(accent_short));
     
-    print(fig_boot, fullfile(figure_path, [filename_base '_bootstrap']), '-djpeg', '-r600');
-    print(fig_boot_pct, fullfile(figure_path, [filename_base '_bootstrap_pct_deviation_from_mean']), '-djpeg', '-r600');
+    export_figure(fig_boot, fullfile(figure_path, [filename_base '_bootstrap.pdf']));
+    export_figure(fig_boot_pct, fullfile(figure_path, [filename_base '_bootstrap_pct_deviation_from_mean.pdf']));
     close(fig_boot);
     close(fig_boot_pct);
     

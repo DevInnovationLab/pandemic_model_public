@@ -17,6 +17,7 @@ library(forcats)
 library(ggplot2)
 library(snakecase)
 library(tidyverse)
+source("R/scripts/paper_figure_style.R")
 
 ## --- Load data and derive pathogen ordering -----------------------------------
 
@@ -90,26 +91,12 @@ ptrs_plot <- ggplot(ptrs_pred_plot, aes(
     x = "Probability of vaccine success (PTRS)",
     y = "Pathogen"
   ) +
-  theme_classic(base_size = 10, base_family = "Arial") +
+  theme_paper(width_in = get_paper_size("double_col_tall")["width"], base_family = "Arial") +
   theme(
-    axis.text = element_text(size = 13, colour = "black"),
-    axis.title = element_text(size = 15),
-    axis.title.x = element_text(size = 15, margin = margin(t = 10)),
-    axis.title.y = element_text(size = 15, colour = "black", face = "bold"),
-    axis.line = element_line(color = "black", linewidth = 0.5),
-    axis.ticks = element_line(color = "black", linewidth = 0.5),
-    panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.background = element_rect(fill = "white"),
-    plot.background = element_rect(fill = "white"),
     plot.margin = margin(0, 0, 0, 0),
     legend.position = c(0.8, 0.1),
     legend.justification = c(0.5, 0.5),
-    legend.background = element_rect(fill = "white", colour = NA),
-    legend.title = element_blank(),
-    legend.text = element_text(size = 12)
+    legend.background = element_rect(fill = "white", colour = NA)
   )
 
 ## --- Build prototype effect plot (second panel) -------------------------------
@@ -158,41 +145,23 @@ proto_effect_plot <- ggplot(proto_effect, aes(
     x = "Increase in probability of success (ΔPTRS)",
     y = "Technology\nplatform"
   ) +
-  theme_classic(base_size = 10, base_family = "Arial") +
+  theme_paper(width_in = get_paper_size("double_col")["width"], base_family = "Arial") +
   theme(
-    axis.text = element_text(size = 13, colour = "black"),
-    axis.title = element_text(size = 15),
-    axis.title.x = element_text(size = 15, margin = margin(t = 10)),
-    axis.title.y = element_text(size = 15, colour = "black", face = "bold"),
-    axis.line = element_line(color = "black", linewidth = 0.5),
-    axis.ticks = element_line(color = "black", linewidth = 0.5),
-    panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.background = element_rect(fill = "white"),
-    plot.background = element_rect(fill = "white"),
     plot.margin = margin(12, 14, 10, 10),
     legend.position = "none"
   )
 
 ## --- Save outputs -------------------------------------------------------------
-ggsave(
-  "output/ptrs/ptrs_plot.pdf",
-  ptrs_plot,
-  width = 7,
-  height = 8,
-  units = "in",
-  dpi = 600,
-  device = cairo_pdf
+save_paper_plot(
+  plot = ptrs_plot,
+  path = "output/ptrs/ptrs_plot.pdf",
+  preset = "double_col_tall",
+  dpi = 600
 )
 
-ggsave(
-  "output/ptrs/proto_effect_plot.pdf",
-  proto_effect_plot,
-  width = 7,
-  height = 3.5,
-  units = "in",
-  dpi = 600,
-  device = cairo_pdf
+save_paper_plot(
+  plot = proto_effect_plot,
+  path = "output/ptrs/proto_effect_plot.pdf",
+  preset = "double_col",
+  dpi = 600
 )

@@ -20,26 +20,16 @@ import pandas as pd
 import yaml
 import matplotlib.pyplot as plt
 import statsmodels.api as sm
+from pandemic_model.plot_style import (
+    apply_paper_axis_style,
+    apply_paper_rc,
+    get_paper_style,
+    save_paper_figure,
+)
 
 STEM = "econ_loss_model_sev_poisson"
 DATA_CLEAN_DIR = Path("data/clean")
 OUTPUT_DIR = Path("output")
-
-# --- Set plot style for consistency -------------------------------------------
-plt.style.use('seaborn-v0_8-white')
-plt.rcParams.update({
-    'font.size': 14,
-    'axes.labelsize': 15,
-    'axes.titlesize': 18,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
-    'xtick.bottom': True,
-    'xtick.major.size': 8,
-    'xtick.major.width': 1,
-    'ytick.left': True,
-    'ytick.major.size': 5,
-    'ytick.major.width': 1,
-})
 
 if __name__ == "__main__":
     DATA_CLEAN_DIR.mkdir(parents=True, exist_ok=True)
@@ -117,12 +107,15 @@ if __name__ == "__main__":
     log_sev_range = np.linspace(np.log(1e-5), np.log(1e4), 1000).reshape(-1, 1)
     y_pred = pm_sev_results.predict(sm.add_constant(log_sev_range)) * 100
 
-    fig, ax = plt.subplots(figsize=(10, 8))
+    style = get_paper_style("double_col_tall")
+    apply_paper_rc(style)
+
+    fig, ax = plt.subplots(figsize=(style.width_in, style.height_in))
     ax.scatter(
         econ_loss_clean['severity'],
         econ_loss_clean['total_pct_gdp_loss'],
         color="black",
-        s=80,
+        s=60,
         alpha=0.7,
     )
 
@@ -132,23 +125,21 @@ if __name__ == "__main__":
         y = econ_loss_clean['total_pct_gdp_loss'].iloc[i]
         d = str(disease).strip()
         if d.lower() == 'covid-19':
-            ax.text(x * 0.88, y * 1.06, d, fontsize=12, ha='right', va='bottom', color='black')
+            ax.text(x * 0.88, y * 1.06, d, fontsize=style.legend_size, ha='right', va='bottom', color='black')
         elif d.lower() in ('hong kong flu', '1918 flu'):
-            ax.text(x * 1.08, y - 0.5, d, fontsize=12, ha='left', va='top', color='black')
+            ax.text(x * 1.08, y - 0.5, d, fontsize=style.legend_size, ha='left', va='top', color='black')
         else:
-            ax.text(x * 1.15, y - 0.4, d, fontsize=12, ha='left', va='top', color='black')
+            ax.text(x * 1.15, y - 0.4, d, fontsize=style.legend_size, ha='left', va='top', color='black')
 
-    ax.set_xlabel("Severity (deaths per 10,000 people)", fontsize=14)
-    ax.set_ylabel("Total GDP loss (%)", fontsize=14)
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.grid(True, color="0.8", alpha=0.3, axis="both")
+    ax.set_xlabel("Severity (deaths per 10,000 people)", fontsize=style.axis_label_size)
+    ax.set_ylabel("Total GDP loss (%)", fontsize=style.axis_label_size)
+    apply_paper_axis_style(ax, style)
     ax.set_xscale('log')
 
     ax.plot(
         np.exp(log_sev_range).flatten(),
         y_pred,
-        linewidth=2.5,
+        linewidth=style.primary_lw,
         color=col_poisson,
     )
 
@@ -161,13 +152,15 @@ if __name__ == "__main__":
         x_label - 5e2,
         y_at_1e3 + y_offset,
         "Fitted\nPoisson\nregression",
-        fontsize=14,
+        fontfamily=style.font_family,
+        fontsize=style.legend_size,
         ha="center",
         va="bottom",
         color=col_poisson,
     )
     plt.tight_layout()
-    plt.savefig(path_fig, dpi=600)
+    save_paper_figure(fig, path_fig, dpi=600)
+    plt.close(fig)
 
     # --- Export model params as YAML -------------------------------------------
     poisson_sev_dict = {

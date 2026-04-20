@@ -1,10 +1,10 @@
 """
-Create a single-panel figure of GPD exceedance functions: All epidemics vs novel viral only.
+Create a single-panel figure of GPD exceedance functions: all epidemics versus novel viral only.
 
 Both series are plotted on the same axes. X extent is 0.01–200 (deaths per 10,000).
 Uncertainty is shown as 95% confidence intervals from the delta method (MLE + asymptotic
 variance of the survival function via parameter covariance from samples).
-Uses a single figure-level legend. Output is high-resolution PNG.
+Uses a single figure-level legend. Output is a manuscript-ready PDF by default.
 """
 
 from pathlib import Path
@@ -15,6 +15,12 @@ import numpy as np
 import pandas as pd
 
 from pandemic_statistics.pareto import ArrivalGPD
+from pandemic_model.plot_style import (
+    apply_paper_axis_style,
+    apply_paper_rc,
+    get_paper_style,
+    save_paper_figure,
+)
 
 
 # Series to plot on the same axes (lineage e241210c_upcov = clean + inverted COVID severity; see docs/naming_convention.md)
@@ -141,11 +147,9 @@ def _find_model_dir(root: Path, folder_stem: str) -> Path:
 def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
     """Plot exceedance functions for all epidemics and a preferred sample of novel viral epidemics on one axes (x extent 0.01–200)."""
     x = np.logspace(np.log10(X_MIN), np.log10(X_MAX), N_POINTS)
-
-    # Use Arial font throughout the figure.
-    plt.rcParams["font.family"] = "Arial"
-
-    fig, ax = plt.subplots(figsize=(7, 5))
+    style = get_paper_style("double_col")
+    apply_paper_rc(style)
+    fig, ax = plt.subplots(figsize=(style.width_in, style.height_in))
 
     for (title, folder_stem), color in zip(SERIES, COLORS):
         model_dir = _find_model_dir(root, folder_stem)
@@ -169,14 +173,14 @@ def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
                 lower,
                 upper,
                 color=color,
-                alpha=0.3,
+                alpha=style.ci_alpha,
             )
 
         ax.plot(
             x,
             mle_sf,
             "-",
-            linewidth=2,
+            linewidth=style.primary_lw,
             color=color,
             alpha=0.8,
             label=title,
@@ -186,11 +190,9 @@ def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
     ax.set_yscale("log")
     ax.set_xlim(X_MIN, X_MAX)
     ax.set_ylim(Y_MIN, Y_MAX)
-    ax.grid(True, alpha=0.3)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
-    ax.set_xlabel("Severity (deaths per 10,000)", fontsize=12)
-    ax.set_ylabel("Annual exceedance probability", fontsize=12)
+    apply_paper_axis_style(ax, style)
+    ax.set_xlabel("Severity (deaths per 10,000)", fontsize=style.axis_label_size, fontfamily=style.font_family)
+    ax.set_ylabel("Annual exceedance probability", fontsize=style.axis_label_size, fontfamily=style.font_family)
 
     # Remove legend and instead label curves directly near the y-axis.
     x_label_pos = 0.02
@@ -219,14 +221,14 @@ def plot_exceedance_two_panel(root: Path, out: Path, dpi: int) -> None:
             y_label,
             label_text,
             color=color,
-            fontsize=10,
+            fontsize=style.legend_size,
             ha="left",
             va=va,
+            fontfamily=style.font_family,
         )
 
     plt.tight_layout()
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=dpi)
+    save_paper_figure(fig, out, dpi=dpi)
     plt.close(fig)
     click.echo(f"Saved {out}")
 

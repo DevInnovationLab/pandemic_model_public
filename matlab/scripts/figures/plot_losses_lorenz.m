@@ -41,27 +41,26 @@ function plot_losses_lorenz(job_dir)
     cum_event_share = (1:n)' / n;
     cum_loss_share = cumsum(sorted_losses) / total_losses;
 
-    fig = figure("Position", [100 100 800 600]);
+    spec = get_paper_figure_spec("single_col");
+    fig = figure("Units", "inches", "Position", [1 1 spec.width_in spec.height_in]);
 
-    plot([0 1], [0 1], "--k", "LineWidth", 1);
+    plot([0 1], [0 1], "--k", "LineWidth", spec.stroke.reference);
     hold on;
-    plot([0; cum_event_share], [0; cum_loss_share], "b-", "LineWidth", 2);
+    plot([0; cum_event_share], [0; cum_loss_share], "b-", "LineWidth", spec.stroke.primary);
 
-    xlabel("Cumulative share of pandemics", "FontName", "Arial", "FontSize", 14);
-    ylabel("Cumulative share of social losses", "FontName", "Arial", "FontSize", 14);
+    xlabel("Cumulative share of pandemics", "FontName", spec.font_name, "FontSize", spec.typography.axis_label);
+    ylabel("Cumulative share of social losses", "FontName", spec.font_name, "FontSize", spec.typography.axis_label);
 
     xlim([0 1]);
     ylim([0 1]);
     xticks(0:0.2:1);
     yticks(0:0.2:1);
 
-    box off;
-    grid on;
     ax = gca;
-    ax.GridAlpha = 0.3;
+    apply_paper_axis_style(ax, spec);
 
     comparisons_dir = fullfile(job_dir, "figures", "comparison");
     create_folders_recursively(comparisons_dir);
-    exportgraphics(fig, fullfile(comparisons_dir, "unmitigated_losses_lorenz.pdf"));
+    export_figure(fig, fullfile(comparisons_dir, "unmitigated_losses_lorenz.pdf"));
     close(fig);
 end

@@ -2,7 +2,6 @@
 
 Fits a shifted lognormal distribution to pandemic duration data, verifies convergence consistency, and
 draws samples from the asymptotic MLE distribution in the unconstrained (phi) space.
-Optionally produces diagnostic plots of the discretized PMF with delta-method CIs.
 
 Inputs:  filtered epidemic CSV (CLI argument).
 Outputs: CSV under ``--outdir``; PMF PDFs under ``--fig-outdir`` when ``--create-fig``
@@ -19,6 +18,12 @@ import numpy as np
 import pandas as pd
 from pandemic_statistics.grad import hess
 from pandemic_model.pipeline_names import build_duration_csv_stem
+from pandemic_model.plot_style import (
+    apply_paper_axis_style,
+    apply_paper_rc,
+    get_paper_style,
+    save_paper_figure,
+)
 from pandemic_statistics.utils import parse_filtered_ds_fp
 from pandemic_statistics.transform import DiagonalBijector, PassthroughBijector, SoftplusBijector
 from scipy.optimize import minimize
@@ -124,7 +129,30 @@ def pmf_rounded_to_years(years, mu, sigma, floc, half_width=0.5):
  
     return pmf
 
- 
+
+def survival_exceedance_and_grad(
+    t: np.ndarray,
+    mu: float,
+    sigma: float,
+    floc: float,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Survival function and partial derivatives for shifted lognormal.
+    """
+    t = np.asarray(t, dtype=float)
+    x = t - floc
+    s = np.ones_like(t, dtype=float)
+    d_s_dmu = np.zeros_like(t, dtype=float)
+    d_s_dsigma = np.zeros_like(t, dtype=float)
+    safe = x > 0
+    if np.any(safe):
+        z = (np.log(x[safe]) - mu) / sigma
+        s[safe] = norm.sf(z)
+        phi_z = norm.pdf(z)
+        d_s_dmu[safe] = phi_z / sigma
+        d_s_dsigma[safe] = phi_z * z / sigma
+    return s, d_s_dmu, d_s_dsigma
+
+
 @click.command()
 @click.argument("fp", type=click.Path(exists=True, file_okay=True, dir_okay=False))
 @click.option(
@@ -245,6 +273,9 @@ def fit_mle_duration(
             else Path("./output/duration_dist_figs").resolve()
         )
         fig_dir.mkdir(parents=True, exist_ok=True)
+        single_col_style = get_paper_style("single_col")
+        double_col_style = get_paper_style("double_col")
+        apply_paper_rc(single_col_style)
 
         # --- Build discretized PMF for diagnostic plots ---
 
@@ -265,18 +296,16 @@ def fit_mle_duration(
         )
  
         # Plot PMF without confidence intervals.
-        plt.rc("font", family="Arial")
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(double_col_style.width_in, double_col_style.height_in))
         ax.bar(years, mle_pmf, color="blue", alpha=0.8)
  
-        ax.set_xlabel("Year", fontname="Arial", fontsize=14)
-        ax.set_ylabel("Probability mass", fontname="Arial", fontsize=14)
+        ax.set_xlabel("Year", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
+        ax.set_ylabel("Probability mass", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
         ax.set_xticks(years)
-        ax.grid(True, axis="both", alpha=0.3)
-        ax.spines[["top", "right"]].set_visible(False)
+        apply_paper_axis_style(ax, double_col_style)
  
         fig_fn = fig_dir / f"{outstring}_pmf_rounded_years.pdf"
-        fig.savefig(fig_fn, dpi=600)
+        save_paper_figure(fig, fig_fn, dpi=600)
  
         # Delta-method CI for the discretized PMF.
         cov_theta = best_fit.cov_theta 
@@ -312,7 +341,7 @@ def fit_mle_duration(
         z = 1.96
  
         # Plot PMF with 95% CI as error bars.
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(single_col_style.width_in, single_col_style.height_in))
         ax.bar(years, mle_pmf, color="blue", alpha=0.5)
         ax.errorbar(
             years[1:],
@@ -322,18 +351,59 @@ def fit_mle_duration(
             ecolor="blue",
             alpha=0.9,
             capsize=3,
-            elinewidth=1.0,
+            elinewidth=single_col_style.secondary_lw,
         )
  
-        ax.set_xlabel("Years", fontname="Arial", fontsize=14)
-        ax.set_ylabel("Probability mass", fontname="Arial", fontsize=14)
+        ax.set_xlabel("Years", fontsize=single_col_style.axis_label_size, fontfamily=single_col_style.font_family)
+        ax.set_ylabel("Probability mass", fontsize=single_col_style.axis_label_size, fontfamily=single_col_style.font_family)
         ax.set_xticks(years)
-        ax.grid(True, axis="both", alpha=0.3)
-        ax.spines[["top", "right"]].set_visible(False)
+        apply_paper_axis_style(ax, single_col_style)
  
         fig_fn = fig_dir / f"{outstring}_pmf_rounded_years_with_ci.pdf"
-        fig.savefig(fig_fn, dpi=600)
- 
+        save_paper_figure(fig, fig_fn, dpi=600)
+
+        # --- Exceedance curve S(t)=P(T>t) with 95% delta-method CI ---
+        t_grid = np.linspace(floc + 1e-6, float(trunc_years), 300)
+        mle_sf, g_mu, g_sigma = survival_exceedance_and_grad(
+            t_grid, best_mu, best_sigma, floc
+        )
+        var_sf = cov_theta[0, 0] * g_mu**2 + cov_theta[1, 1] * g_sigma**2
+        se_sf = np.sqrt(np.maximum(var_sf, 0.0))
+        z95 = 1.96
+        lower_sf = np.clip(mle_sf - z95 * se_sf, 0.0, 1.0)
+        upper_sf = np.clip(mle_sf + z95 * se_sf, 0.0, 1.0)
+
+        fig, ax = plt.subplots(figsize=(double_col_style.width_in, double_col_style.height_in))
+        ax.fill_between(
+            t_grid,
+            lower_sf,
+            upper_sf,
+            color="blue",
+            alpha=double_col_style.ci_alpha,
+            label="95% confidence interval",
+        )
+        ax.plot(
+            t_grid,
+            mle_sf,
+            color="blue",
+            linewidth=double_col_style.primary_lw,
+            alpha=0.9,
+            label="MLE",
+        )
+        ax.set_xlabel("Duration (years)", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
+        ax.set_ylabel("Exceedance probability", fontsize=double_col_style.axis_label_size, fontfamily=double_col_style.font_family)
+        ax.set_xlim(float(t_grid[0]), float(t_grid[-1]))
+        ax.set_ylim(0.0, 1.0)
+        apply_paper_axis_style(ax, double_col_style)
+        ax.legend(
+            loc="upper right",
+            frameon=False,
+            prop={"family": double_col_style.font_family, "size": double_col_style.legend_size},
+        )
+        fig_fn = fig_dir / f"{outstring}_exceedance.pdf"
+        save_paper_figure(fig, fig_fn, dpi=600)
+        plt.close("all")
+
 
 if __name__ == "__main__":
     fit_mle_duration()

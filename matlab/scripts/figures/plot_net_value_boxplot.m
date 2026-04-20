@@ -88,12 +88,14 @@ function plot_net_value_boxplot(out_dir)
         end
     end
 
+    spec_main = get_paper_figure_spec("grid_2xn");
+    spec_base = get_paper_figure_spec("double_col");
     box_hw = 0.32;
     face_color = [0.88 0.92 0.97];
     edge_color = [0.35 0.45 0.65];
     whisker_color = [0.5 0.5 0.5];
 
-    fig = figure('Visible', 'off', 'Position', [100 100 750 520]);
+    fig = figure('Visible', 'off', 'Units', 'inches', 'Position', [1 1 spec_main.width_in spec_main.height_in]);
     ax = axes();
     hold(ax, 'on');
 
@@ -108,15 +110,15 @@ function plot_net_value_boxplot(out_dir)
         end
         y = y_pos(k);
         % 1. Whisker: 10th to 90th with caps (drawn first, at back)
-        hw = plot(ax, [perc_10_90(k, 1), perc_10_90(k, 2)], [y, y], '-', 'Color', whisker_color, 'LineWidth', 1.6);
-        plot(ax, [perc_10_90(k, 1), perc_10_90(k, 1)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
-        plot(ax, [perc_10_90(k, 2), perc_10_90(k, 2)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', 1.2);
+        hw = plot(ax, [perc_10_90(k, 1), perc_10_90(k, 2)], [y, y], '-', 'Color', whisker_color, 'LineWidth', spec_main.stroke.secondary);
+        plot(ax, [perc_10_90(k, 1), perc_10_90(k, 1)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', spec_main.stroke.reference);
+        plot(ax, [perc_10_90(k, 2), perc_10_90(k, 2)], [y - 0.08, y + 0.08], '-', 'Color', whisker_color, 'LineWidth', spec_main.stroke.reference);
         % 2. Box: interquartile range (Q1 to Q3)
         xb = [q1(k), q3(k), q3(k), q1(k)];
         yb = [y - box_hw, y - box_hw, y + box_hw, y + box_hw];
-        hb = patch(ax, xb, yb, face_color, 'EdgeColor', edge_color, 'LineWidth', 1.0);
+        hb = patch(ax, xb, yb, face_color, 'EdgeColor', edge_color, 'LineWidth', spec_main.stroke.reference);
         % 3. Median line at x = median
-        hm = plot(ax, [med(k), med(k)], [y - box_hw, y + box_hw], '-', 'Color', edge_color, 'LineWidth', 2.2);
+        hm = plot(ax, [med(k), med(k)], [y - box_hw, y + box_hw], '-', 'Color', edge_color, 'LineWidth', spec_main.stroke.primary);
         if isempty(h_whisker)
             h_whisker = hw;
             h_box = hb;
@@ -133,12 +135,14 @@ function plot_net_value_boxplot(out_dir)
     ax.YTick = 1:n;
     ax.YTickLabel = y_labels;
     ax.TickLabelInterpreter = 'none';
-    ax.FontSize = 10;
+    ax.FontSize = spec_main.typography.tick;
+    ax.FontName = spec_main.font_name;
     ax.TickDir = 'out';
     ax.Box = 'off';
     ax.YAxisLocation = 'left';
     ax.XGrid = 'on';
-    xlabel(ax, 'Net present value (trillion $)', 'FontSize', 11);
+    ax.GridAlpha = 0.3;
+    xlabel(ax, 'Net present value (trillion $)', 'FontName', spec_main.font_name, 'FontSize', spec_main.typography.axis_label);
 
     % X-axis limits and ticks at every trillion dollars, based on whisker endpoints
     valid_whiskers = ~isnan(perc_10_90(:, 1));
@@ -156,7 +160,7 @@ function plot_net_value_boxplot(out_dir)
 
     % No legend in the advance investment panel (legend only in baseline panel).
     % Export main net value boxplot as vector PDF
-    exportgraphics(fig, fullfile(figure_path, 'net_value_boxplot.pdf'));
+    export_figure(fig, fullfile(figure_path, 'net_value_boxplot.pdf'));
     close(fig);
 
     % Distribution moments matching the figure (trillions $), for tables / paper
@@ -189,27 +193,27 @@ function plot_net_value_boxplot(out_dir)
 
     % Make the baseline figure a bit less tall than the advance
     % investment figure so it is visually shorter in panels.
-    fig_b = figure('Visible', 'off', 'Position', [100 100 750 300]);
+    fig_b = figure('Visible', 'off', 'Units', 'inches', 'Position', [1 1 spec_base.width_in spec_base.height_in]);
     ax_b = axes();
     hold(ax_b, 'on');
 
     % Whisker: 10th to 90th with caps
     hw_b = plot(ax_b, [perc_10_90_b(1), perc_10_90_b(2)], [y_base, y_base], '-', ...
-        'Color', whisker_color, 'LineWidth', 1.6);
+        'Color', whisker_color, 'LineWidth', spec_base.stroke.secondary);
     plot(ax_b, [perc_10_90_b(1), perc_10_90_b(1)], [y_base - 0.08, y_base + 0.08], '-', ...
-        'Color', whisker_color, 'LineWidth', 1.2);
+        'Color', whisker_color, 'LineWidth', spec_base.stroke.reference);
     plot(ax_b, [perc_10_90_b(2), perc_10_90_b(2)], [y_base - 0.08, y_base + 0.08], '-', ...
-        'Color', whisker_color, 'LineWidth', 1.2);
+        'Color', whisker_color, 'LineWidth', spec_base.stroke.reference);
 
     % Box: interquartile range
     single_box_hw = box_hw * 0.5;
     xb_b = [q1_b, q3_b, q3_b, q1_b];
     yb_b = [y_base - single_box_hw, y_base - single_box_hw, y_base + single_box_hw, y_base + single_box_hw];
-    hb_b = patch(ax_b, xb_b, yb_b, face_color, 'EdgeColor', edge_color, 'LineWidth', 1.0);
+    hb_b = patch(ax_b, xb_b, yb_b, face_color, 'EdgeColor', edge_color, 'LineWidth', spec_base.stroke.reference);
 
     % Median line
     hm_b = plot(ax_b, [med_b, med_b], [y_base - single_box_hw, y_base + single_box_hw], '-', ...
-        'Color', edge_color, 'LineWidth', 2.2);
+        'Color', edge_color, 'LineWidth', spec_base.stroke.primary);
 
     % Mean point
     mean_base = mean(data_base);
@@ -222,12 +226,14 @@ function plot_net_value_boxplot(out_dir)
     ax_b.YTick = 1;
     % Two-line y-tick label using TeX interpreter and newline
     ax_b.YTickLabel = {'Status quo response'};
-    ax_b.FontSize = 10;
+    ax_b.FontSize = spec_base.typography.tick;
+    ax_b.FontName = spec_base.font_name;
     ax_b.TickDir = 'out';
     ax_b.Box = 'off';
     ax_b.YAxisLocation = 'left';
     ax_b.XGrid = 'on';
-    xlabel(ax_b, 'Net present value (trillion $)', 'FontSize', 11);
+    ax_b.GridAlpha = 0.3;
+    xlabel(ax_b, 'Net present value (trillion $)', 'FontName', spec_base.font_name, 'FontSize', spec_base.typography.axis_label);
 
     % X-axis limits and ticks every 5 trillion dollars
     global_min_b = perc_10_90_b(1);
@@ -245,13 +251,14 @@ function plot_net_value_boxplot(out_dir)
     h_median_legend_b = plot(ax_b, NaN, NaN, '-', 'LineStyle', 'none', 'Marker', 'none');
     h_legend = legend(ax_b, [hmean_b, h_median_legend_b, hb_b, hw_b], ...
         {'Mean', 'Median', 'Interquartile range', '10/90 percentiles'}, ...
-        'FontSize', 9, 'Interpreter', 'none', ...
+        'FontSize', spec_base.typography.legend, 'Interpreter', 'none', ...
         'Location', 'northoutside', 'Orientation', 'horizontal', ...
         'Box', 'on');
+    set(h_legend, 'FontName', spec_base.font_name);
 
     % Export baseline net value boxplot as PNG
-    exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'));
-    exportgraphics(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.png'), ...
+    export_figure(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.pdf'));
+    export_figure(fig_b, fullfile(figure_path, 'net_value_boxplot_baseline.png'), ...
         'ContentType', 'image', 'Resolution', 600);
     close(fig_b);
 

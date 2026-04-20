@@ -106,12 +106,15 @@ function plot_pairwise_program_matrix(job_dir)
     end
 
     % Create figure
-    figure;
-    hold on;
-    set(gca, 'YDir', 'reverse', 'XTick', 1:n_inv, 'YTick', 1:n_inv);
+    spec = get_paper_figure_spec("double_col");
+    fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in], 'Visible', 'off');
+    ax = axes('Parent', fig);
+    hold(ax, 'on');
+    set(ax, 'YDir', 'reverse', 'XTick', 1:n_inv, 'YTick', 1:n_inv);
 
     clean_names = cellfun(@get_clean_investment_name, investments, 'UniformOutput', false);
-    set(gca, 'XTickLabel', clean_names, 'YTickLabel', clean_names);
+    set(ax, 'XTickLabel', clean_names, 'YTickLabel', clean_names, ...
+        'FontSize', spec.typography.axis_label, 'FontName', spec.font_name);
 
     % Define colormap for complementarities (blue for positive, red for negative)
     max_abs_comp = max(abs(comp_mat(~isnan(comp_mat))));
@@ -127,11 +130,11 @@ function plot_pairwise_program_matrix(job_dir)
                 % Diagonal cells: net value (grey)
                 face_color = [0.95, 0.95, 0.95];
                 rectangle('Position', [x - 0.5, y - 0.5, 1, 1], ...
-                          'FaceColor', face_color, 'EdgeColor', [0, 0, 0]);
+                          'FaceColor', face_color, 'EdgeColor', [0, 0, 0], 'Parent', ax, 'LineWidth', spec.stroke.reference);
                 if ~isnan(net_value_mat(row, col))
                     label_str = char(round_nicely(net_value_mat(row, col)));
                     text(x, y, label_str, 'HorizontalAlignment', 'center', ...
-                        'VerticalAlignment', 'middle', 'FontSize', 10);
+                        'VerticalAlignment', 'middle', 'FontSize', spec.typography.legend, 'FontName', spec.font_name, 'Parent', ax);
                 end
             elseif row > col && ~isnan(comp_mat(row, col))
                 % Lower triangle: complementarities
@@ -144,16 +147,18 @@ function plot_pairwise_program_matrix(job_dir)
                 end
 
                 rectangle('Position', [x - 0.5, y - 0.5, 1, 1], ...
-                          'FaceColor', face_color, 'EdgeColor', [0, 0, 0]);
+                          'FaceColor', face_color, 'EdgeColor', [0, 0, 0], 'Parent', ax, 'LineWidth', spec.stroke.reference);
                 label_str = char(round_nicely(value));
                 text(x, y, label_str, 'HorizontalAlignment', 'center', ...
-                    'VerticalAlignment', 'middle', 'FontSize', 10, 'Color', [1, 1, 1]);
+                    'VerticalAlignment', 'middle', 'FontSize', spec.typography.legend, 'FontName', spec.font_name, ...
+                    'Color', [1, 1, 1], 'Parent', ax);
             end
         end
     end
 
-    box off;
-    xtickangle(45);
+    apply_paper_axis_style(ax, spec);
+    set(ax, 'YDir', 'reverse');
+    xtickangle(ax, 45);
 
     % Ensure figures directory exists and save with exportgraphics
     figures_dir = fullfile(job_dir, "figures");
@@ -163,9 +168,10 @@ function plot_pairwise_program_matrix(job_dir)
     outfile_pdf = fullfile(figures_dir, "pairwise_complementarity_matrix.pdf");
     outfile_png = fullfile(figures_dir, "pairwise_complementarity_matrix.png");
 
-    export_figure(gcf, outfile_pdf);
-    export_figure(gcf, outfile_png, ...
+    export_figure(fig, outfile_pdf);
+    export_figure(fig, outfile_png, ...
         'ContentType', 'image', 'Resolution', 600);
+    close(fig);
 
 end
 

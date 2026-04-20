@@ -70,9 +70,19 @@ function plot_complementarity_raw(complementarity_data, metric_label, accent_lab
     end
     
     % Create figures: raw distributions and relative to combined
-    fig_raw = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
-    fig_raw_pct = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
-    fig_relative = figure('Visible', 'off', 'Position', [100 100 350*n_investments 300*n_investments]);
+    spec = get_paper_figure_spec("grid_2xn", "GridCols", n_investments);
+    fig_raw = figure('Visible', 'off', 'Units', 'inches', ...
+        'Position', [1 1 spec.width_in spec.height_in], ...
+        'DefaultAxesFontName', spec.font_name, ...
+        'DefaultAxesFontSize', spec.typography.tick);
+    fig_raw_pct = figure('Visible', 'off', 'Units', 'inches', ...
+        'Position', [1 1 spec.width_in spec.height_in], ...
+        'DefaultAxesFontName', spec.font_name, ...
+        'DefaultAxesFontSize', spec.typography.tick);
+    fig_relative = figure('Visible', 'off', 'Units', 'inches', ...
+        'Position', [1 1 spec.width_in spec.height_in], ...
+        'DefaultAxesFontName', spec.font_name, ...
+        'DefaultAxesFontSize', spec.typography.tick);
     
     % Extract simple metric name (remove "complementarity")
     simple_metric = strrep(metric_label, ' complementarity', '');
@@ -349,9 +359,9 @@ function plot_complementarity_raw(complementarity_data, metric_label, accent_lab
         lower(strrep(metric_short, ' ', '_')), ...
         lower(accent_short));
     
-    exportgraphics(fig_raw, fullfile(figure_path, [filename_base '_raw.pdf']));
-    exportgraphics(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct_deviation_from_mean.pdf']));
-    exportgraphics(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.pdf']));
+    export_figure(fig_raw, fullfile(figure_path, [filename_base '_raw.pdf']));
+    export_figure(fig_raw_pct, fullfile(figure_path, [filename_base '_raw_pct_deviation_from_mean.pdf']));
+    export_figure(fig_relative, fullfile(figure_path, [filename_base '_relative_to_combined.pdf']));
     close(fig_raw);
     close(fig_raw_pct);
     close(fig_relative);

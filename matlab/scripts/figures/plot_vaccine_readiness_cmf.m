@@ -21,7 +21,8 @@ function plot_vaccine_readiness_cmf(job_dir)
     % This fallback can be customized for the specific project scenario names.
 
     % Set up the figure with two subplots
-    fig = figure('Color', 'w', 'Position', [200 200 1100 500]);
+    spec = get_paper_figure_spec("grid_2xn");
+    fig = figure('Color', 'w', 'Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in], 'Visible', 'off');
 
     % Surplus subplot
     subplot(1,2,1);
@@ -73,24 +74,21 @@ function plot_vaccine_readiness_cmf(job_dir)
 
         % Plot CMF with distinct style
         stairs(sorted_months, cmf, ...
-            'LineWidth', 2.5, ...
+            'LineWidth', spec.stroke.primary, ...
             'Color', color_palette_1(ii,:));
 
         leg_entries_1{end+1} = scenario;
     end
-    xlabel('Months with vaccine', 'FontSize', 14, 'FontWeight', 'normal');
-    ylabel('Cumulative share of outbreaks', 'FontSize', 14, 'FontWeight', 'normal');
-    title('Surplus Scenarios', ...
-        'FontSize', 16, 'FontWeight', 'normal', 'Units', 'normalized', 'Position', [0.5, 1.04, 0]);
+    xlabel('Months with vaccine', 'FontSize', spec.typography.axis_label, 'FontWeight', 'normal', 'FontName', spec.font_name);
+    ylabel('Cumulative share of outbreaks', 'FontSize', spec.typography.axis_label, 'FontWeight', 'normal', 'FontName', spec.font_name);
     if ~isempty(leg_entries_1)
         legend(convert_varnames(leg_entries_1), ...
             'Location', 'southeast', ...
             'Box', 'on', ...
-            'FontSize', 13);
+            'FontSize', spec.typography.legend, 'FontName', spec.font_name);
     end
-    grid on;
     ax1 = gca;
-    ax1.GridAlpha = 0.3;
+    apply_paper_axis_style(ax1, spec);
     ax1.GridColor = [0.6 0.6 0.6];
     hold off;
 
@@ -144,23 +142,20 @@ function plot_vaccine_readiness_cmf(job_dir)
 
         % Plot CMF with distinct style
         stairs(sorted_months, cmf, ...
-            'LineWidth', 2.5, ...
+            'LineWidth', spec.stroke.primary, ...
             'Color', color_palette_2(ii,:));
         leg_entries_2{end+1} = scenario;
     end
-    xlabel('Months with vaccine', 'FontSize', 14, 'FontWeight', 'normal');
-    ylabel('Cumulative share of outbreaks', 'FontSize', 14, 'FontWeight', 'normal');
-    title('BCR Scenarios', ...
-        'FontSize', 16, 'FontWeight', 'normal', 'Units', 'normalized', 'Position', [0.5, 1.04, 0]);
+    xlabel('Months with vaccine', 'FontSize', spec.typography.axis_label, 'FontWeight', 'normal', 'FontName', spec.font_name);
+    ylabel('Cumulative share of outbreaks', 'FontSize', spec.typography.axis_label, 'FontWeight', 'normal', 'FontName', spec.font_name);
     if ~isempty(leg_entries_2)
         legend(convert_varnames(leg_entries_2), ...
             'Location', 'southeast', ...
             'Box', 'on', ...
-            'FontSize', 13);
+            'FontSize', spec.typography.legend, 'FontName', spec.font_name);
     end
-    grid on;
     ax2 = gca;
-    ax2.GridAlpha = 0.3;
+    apply_paper_axis_style(ax2, spec);
     ax2.GridColor = [0.6 0.6 0.6];
     hold off;
 
@@ -171,6 +166,6 @@ function plot_vaccine_readiness_cmf(job_dir)
     end
 
     % Save the figure as high-resolution vector PDF
-    exportgraphics(fig, fullfile(figure_dir, 'vaccine_readiness_cmf_subplots.pdf'));
+    export_figure(fig, fullfile(figure_dir, 'vaccine_readiness_cmf_subplots.pdf'));
     close(fig);
 end

@@ -274,20 +274,19 @@ end
 function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exceed_rel, exceed_alw, color_no, color_rel, color_alw, thr_x, thr_y)
 % Three simulation curves only (no Madhav et al.). Pass thr_x = [] to omit response threshold.
     color_thr = [0.72 0.12 0.12];
-    fig = figure('Position', [100 100 900 650]);
+    spec = get_paper_figure_spec("double_col");
+    fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
-    set(ax, 'FontName', 'Arial', 'FontSize', 11);
     hold(ax, 'on');
 
-    plot(ax, x_plot, exceed_no,  'LineWidth', 2, 'Color', color_no);
-    plot(ax, x_plot, exceed_rel, 'LineWidth', 2, 'Color', color_rel);
-    plot(ax, x_plot, exceed_alw, 'LineWidth', 2, 'Color', color_alw);
+    plot(ax, x_plot, exceed_no,  'LineWidth', spec.stroke.primary, 'Color', color_no);
+    plot(ax, x_plot, exceed_rel, 'LineWidth', spec.stroke.primary, 'Color', color_rel);
+    plot(ax, x_plot, exceed_alw, 'LineWidth', spec.stroke.primary, 'Color', color_alw);
 
     set(ax, 'XScale', 'log', 'YScale', 'log');
-    grid(ax, 'on');
-    box(ax, 'off');
-    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', 'Arial', 'FontSize', 14);
-    ylabel(ax, 'Annual exceedance risk', 'FontName', 'Arial', 'FontSize', 14);
+    apply_paper_axis_style(ax, spec);
+    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
+    ylabel(ax, 'Annual exceedance risk', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
 
     min_x = min(x_plot);
     max_x = max(x_plot);
@@ -297,11 +296,11 @@ function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exce
     if ~isempty(thr_x) && isfinite(thr_y)
         yl = get(ax, 'YLim');
         plot(ax, thr_x, thr_y, 's', 'Color', color_thr, 'MarkerFaceColor', color_thr, 'MarkerSize', 6);
-        plot(ax, [thr_x thr_x], [yl(1) thr_y], '--', 'Color', color_thr, 'LineWidth', 1);
-        plot(ax, [min_x thr_x], [thr_y thr_y], '--', 'Color', color_thr, 'LineWidth', 1);
+        plot(ax, [thr_x thr_x], [yl(1) thr_y], '--', 'Color', color_thr, 'LineWidth', spec.stroke.reference);
+        plot(ax, [min_x thr_x], [thr_y thr_y], '--', 'Color', color_thr, 'LineWidth', spec.stroke.reference);
         text(ax, thr_x * 0.95, thr_y * 0.95, sprintf('Pandemic response\nthreshold: %.2f', thr_x), ...
-            'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', 10, ...
-            'FontName', 'Arial', 'Color', color_thr);
+            'VerticalAlignment', 'top', 'HorizontalAlignment', 'right', 'FontSize', spec.typography.legend, ...
+            'FontName', spec.font_name, 'Color', color_thr);
     end
 
     % Line labels at fixed severities
@@ -313,33 +312,32 @@ function fig = compare_exceedances_plot_simulations_only(x_plot, exceed_no, exce
     y_alw = interp1(x_plot, exceed_alw, x_alw, 'linear', 'extrap');
 
     text(ax, x_no, y_no, ' No mitigation', ...
-        'Color', color_no, 'FontName', 'Arial', 'FontSize', 12, ...
+        'Color', color_no, 'FontName', spec.font_name, 'FontSize', spec.typography.legend, ...
         'VerticalAlignment', 'bottom');
 
     text(ax, x_rel, y_rel, {'Status quo', 'response'}, ...
-        'Color', color_rel, 'FontName', 'Arial', 'FontSize', 12, ...
+        'Color', color_rel, 'FontName', spec.font_name, 'FontSize', spec.typography.legend, ...
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
 
     text(ax, x_alw, y_alw, {'Vaccines', 'always work'}, ...
-        'Color', color_alw, 'FontName', 'Arial', 'FontSize', 12, ...
+        'Color', color_alw, 'FontName', spec.font_name, 'FontSize', spec.typography.legend, ...
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
 end
 
 function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madhav_severity_plot, madhav_exceedance_plot, color_rel, color_mad)
 % Baseline realized mitigation vs Madhav et al. reference only.
-    fig = figure('Position', [100 100 900 650]);
+    spec = get_paper_figure_spec("double_col");
+    fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in]);
     ax = axes('Parent', fig, 'Position', [0.14 0.14 0.82 0.82]);
-    set(ax, 'FontName', 'Arial', 'FontSize', 11);
     hold(ax, 'on');
 
-    plot(ax, x_plot, exceed_rel, 'LineWidth', 2, 'Color', color_rel);
-    plot(ax, madhav_severity_plot, madhav_exceedance_plot, 'LineWidth', 2, 'Color', color_mad);
+    plot(ax, x_plot, exceed_rel, 'LineWidth', spec.stroke.primary, 'Color', color_rel);
+    plot(ax, madhav_severity_plot, madhav_exceedance_plot, 'LineWidth', spec.stroke.primary, 'Color', color_mad);
 
     set(ax, 'XScale', 'log', 'YScale', 'log');
-    grid(ax, 'on');
-    box(ax, 'off');
-    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', 'Arial', 'FontSize', 14);
-    ylabel(ax, 'Annual exceedance risk', 'FontName', 'Arial', 'FontSize', 14);
+    apply_paper_axis_style(ax, spec);
+    xlabel(ax, 'Severity (deaths per 10,000)', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
+    ylabel(ax, 'Annual exceedance risk', 'FontName', spec.font_name, 'FontSize', spec.typography.axis_label);
 
     min_x = max(min(x_plot), min(madhav_severity_plot));
     max_x = min(max(x_plot), max(madhav_severity_plot));
@@ -352,11 +350,11 @@ function fig = compare_exceedances_plot_baseline_madhav(x_plot, exceed_rel, madh
     y_mad = interp1(madhav_severity_plot, madhav_exceedance_plot, x_mad, 'linear', 'extrap');
 
     text(ax, x_rel, y_rel, {'Status quo', 'response'}, ...
-        'Color', color_rel, 'FontName', 'Arial', 'FontSize', 12, ...
+        'Color', color_rel, 'FontName', spec.font_name, 'FontSize', spec.typography.legend, ...
         'VerticalAlignment', 'top', 'HorizontalAlignment', 'right');
 
     text(ax, x_mad, y_mad, ' Madhav et al. (2023)', ...
-        'Color', color_mad, 'FontName', 'Arial', 'FontSize', 12, ...
+        'Color', color_mad, 'FontName', spec.font_name, 'FontSize', spec.typography.legend, ...
         'VerticalAlignment', 'bottom');
 end
 

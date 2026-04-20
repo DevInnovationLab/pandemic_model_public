@@ -32,8 +32,9 @@ function plot_disagg_cost_comparison(job_dir)
     n_scenarios = length(delta_scenarios);
     n_rows = floor(sqrt(n_scenarios));
     n_cols = ceil(n_scenarios/n_rows);
+    spec = get_paper_figure_spec("grid_2xn", "GridCols", n_cols);
     % Create wide figure with space for legend at bottom
-    fig = figure('Position', [100 100 1800 1000], 'Visible', 'off');
+    fig = figure('Units', 'inches', 'Position', [1 1 spec.width_in spec.height_in], 'Visible', 'off');
     
     % Professional color scheme
     colors = {[0, 0.4470, 0.7410], ... % Blue
@@ -46,7 +47,7 @@ function plot_disagg_cost_comparison(job_dir)
     
     % Create subplot layout with space at bottom for legend
     tiledlayout(n_rows, n_cols, 'TileSpacing', 'compact', 'Padding', 'compact');
-    sgtitle('Nominal costs (relative to baseline)', 'FontSize', 20)
+    sgtitle('Nominal costs (relative to baseline)', 'FontSize', spec.typography.suptitle, 'FontName', spec.font_name)
     
     % Track axis limits to make them equal later
     y_min = Inf;
@@ -118,36 +119,37 @@ function plot_disagg_cost_comparison(job_dir)
             % Plot with professional styling
             line_label = convert_varnames(var);
             line_label = strrep(line_label, ' (nominal value)', '');
-            plot(1:length(mean_rel), mean_rel, 'Color', colors{j}, 'LineWidth', 2, 'DisplayName', line_label);
+            plot(1:length(mean_rel), mean_rel, 'Color', colors{j}, 'LineWidth', spec.stroke.primary, 'DisplayName', line_label);
         end
-        title(convert_varnames(scenario), 'Interpreter', 'None', 'FontSize', 14)
+        title(convert_varnames(scenario), 'Interpreter', 'None', 'FontSize', spec.typography.title, 'FontName', spec.font_name)
         
         % Only add x labels to bottom row
         if i > n_scenarios - n_cols
-            xlabel('Year', 'FontSize', 12)
+            xlabel('Year', 'FontSize', spec.typography.axis_label, 'FontName', spec.font_name)
         end
         
         % Only add y labels to leftmost column
         if mod(i-1, n_cols) == 0
-            ylabel('Costs ($ billions)', 'FontSize', 12, "Interpreter", 'none')
+            ylabel('Costs ($ billions)', 'FontSize', spec.typography.axis_label, "Interpreter", 'none', 'FontName', spec.font_name)
         end
         
         % Set consistent axis limits and appearance
         ylim([y_min y_max])
-        grid on
-        box off
-        set(gca, 'FontSize', 11)
-        set(gca, 'Box', 'on', 'XGrid', 'on', 'YGrid', 'on')
+        ax = gca;
+        apply_paper_axis_style(ax, spec);
+        set(ax, 'FontSize', spec.typography.tick, 'FontName', spec.font_name);
+        set(ax, 'Box', 'on', 'XGrid', 'on', 'YGrid', 'on', 'GridAlpha', 0.3);
     end
 
     % Add legend at bottom with good spacing
     leg = legend('NumColumns', 3, ...
            'Orientation', 'horizontal', ...
-           'FontSize', 11, ...
+           'FontSize', spec.typography.legend, ...
            'Box', 'off');
+    set(leg, 'FontName', spec.font_name);
     leg.Layout.Tile = 'south'; % Place legend below plots
     % Save figure with adjusted dimensions
     figpath = fullfile(comparisons_dir, "cost_vars_relative_comparison.png");
-    exportgraphics(fig, figpath, 'Resolution', 400);
+    export_figure(fig, figpath, 'ContentType', 'image', 'Resolution', 600);
     close(fig);
 end

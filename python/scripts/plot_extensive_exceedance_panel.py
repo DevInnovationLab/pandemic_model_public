@@ -3,7 +3,7 @@ Create a panel figure of GPD exceedance functions for selected model variants.
 
 The top-left panel is the base case (all, excl_unid, threshold 0.01, year 1900,
 upper 200). Other panels show one variant each with short titles. Uses common
-axes and a single figure-level legend. Output is high-resolution PNG.
+axes and a single figure-level legend. Output is a manuscript-ready PDF by default.
 """
 
 from pathlib import Path
@@ -15,6 +15,12 @@ import pandas as pd
 
 from pandemic_statistics.pareto import ArrivalGPD
 
+from pandemic_model.plot_style import (
+    apply_paper_axis_style,
+    apply_paper_rc,
+    get_paper_style,
+    save_paper_figure,
+)
 from pandemic_model.utils import get_measure_units
 
 
@@ -86,12 +92,14 @@ def _find_model_dir(root: Path, folder_stem: str) -> Path:
     default=Path("output/graphs/exceedance_panel.pdf"),
     help="Output path for the panel figure.",
 )
-@click.option("--dpi", type=int, default=300, help="Resolution for the saved figure.")
+@click.option("--dpi", type=int, default=600, help="Resolution for the saved figure.")
 def plot_exceedance_panel(root: Path, out: Path, dpi: int) -> None:
     """Plot a 2x4 panel of exceedance functions for selected GPD variants."""
     x = np.logspace(np.log10(X_MIN), np.log10(X_MAX), N_POINTS)
+    style = get_paper_style("grid_2xn", n_cols=4)
+    apply_paper_rc(style)
 
-    fig, axes = plt.subplots(2, 4, figsize=(14, 8), sharex=True, sharey=True)
+    fig, axes = plt.subplots(2, 4, figsize=(style.width_in, style.height_in), sharex=True, sharey=True)
     axes = axes.flatten()
 
     # So we can add one legend for the whole figure, plot the first curve with a label
@@ -127,7 +135,7 @@ def plot_exceedance_panel(root: Path, out: Path, dpi: int) -> None:
                 percentiles[0],
                 percentiles[2],
                 color="blue",
-                alpha=0.17,
+                alpha=style.ci_alpha_light,
                 label="10/90% percentile band",
             )
 
@@ -136,7 +144,7 @@ def plot_exceedance_panel(root: Path, out: Path, dpi: int) -> None:
             x,
             mle_sf,
             "--",
-            linewidth=2,
+            linewidth=style.primary_lw,
             color="blue",
             alpha=0.5,
             label="MLE",
@@ -152,15 +160,18 @@ def plot_exceedance_panel(root: Path, out: Path, dpi: int) -> None:
         ax.set_yscale("log")
         ax.set_xlim(X_MIN, X_MAX)
         ax.set_ylim(Y_MIN, Y_MAX)
-        ax.grid(True, alpha=0.3)
-        ax.set_title(title, fontsize=11)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+        apply_paper_axis_style(ax, style)
+        ax.set_title(title, fontsize=style.title_size, fontname=style.font_family)
 
     # Shared axis labels (sentence case, similar font size to single-panel).
     # Place them close to the axes; put the legend just below the x-axis label.
-    fig.supxlabel(get_measure_units("severity").capitalize(), fontsize=14, y=0.08)
-    fig.supylabel("Annual exceedance probability", fontsize=14)
+    fig.supxlabel(
+        get_measure_units("severity").capitalize(),
+        fontsize=style.suptitle_size,
+        fontname=style.font_family,
+        y=0.08,
+    )
+    fig.supylabel("Annual exceedance probability", fontsize=style.suptitle_size, fontname=style.font_family)
 
     # Tight layout with a bit more bottom margin reserved for labels and legend.
     plt.tight_layout(rect=(0.02, 0.06, 0.98, 0.96))
@@ -172,11 +183,12 @@ def plot_exceedance_panel(root: Path, out: Path, dpi: int) -> None:
         ncol=1 if len(legend_handles) == 1 else 2,
         bbox_to_anchor=(0.5, 0.01),
         frameon=True,
-        fontsize=12,
+        fontsize=style.legend_size,
     )
+    for text in fig.legends[0].get_texts():
+        text.set_fontfamily(style.font_family)
 
-    out.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out, dpi=dpi)
+    save_paper_figure(fig, out, dpi=dpi)
     plt.close(fig)
     click.echo(f"Saved {out}")
 

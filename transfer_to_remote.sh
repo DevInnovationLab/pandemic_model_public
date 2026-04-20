@@ -14,9 +14,7 @@
 # If no files or directories are provided explicitly, the following are transferred:
 #   data/clean/arrival_distributions
 #   data/clean/duration_distributions
-#
-# To avoid multiple authentication prompts, all paths are sent in a single scp command.
-#
+##
 # Options:
 #   -d remote_dir     Override the default remote directory.
 #   -h                Show this help message and exit.
@@ -39,6 +37,8 @@ usage() {
     echo "Transfer large files and folders to (by default):"
     echo "  ${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}:${DEFAULT_REMOTE_DIR}"
     echo
+    echo "Paths are transferred with their relative directory structure preserved."
+    echo
     echo "If no paths are given, the following will be transferred by default:"
     for path in "${DEFAULT_PATHS[@]}"; do
         echo "  $path"
@@ -51,6 +51,9 @@ usage() {
 }
 
 REMOTE_DIR="${DEFAULT_REMOTE_DIR}"
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
 
 # Parse options
 while getopts ":d:h" opt; do
@@ -95,7 +98,11 @@ for SRC in "${FINAL_SRC_LIST[@]}"; do
     echo "  $SRC"
 done
 
-# All valid paths in a single scp call to minimize authentication prompts (-r recursive, -p preserve times/modes)
-scp -rp "${FINAL_SRC_LIST[@]}" "${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}:${REMOTE_DIR}/"
+if ! command -v rsync >/dev/null 2>&1; then
+    echo "Error: rsync is required but was not found in PATH."
+    exit 3
+fi
+
+rsync -aR -- "${FINAL_SRC_LIST[@]}" "${DEFAULT_REMOTE_USER}@${DEFAULT_REMOTE_HOST}:${REMOTE_DIR}/"
 
 echo "Transfer complete."

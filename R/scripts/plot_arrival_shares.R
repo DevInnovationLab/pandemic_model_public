@@ -10,6 +10,7 @@ library(forcats)
 library(ggplot2)
 library(snakecase)
 library(tidyverse)
+source("R/scripts/paper_figure_style.R")
 
 ## --- Load and prep data -------------------------------------------------------
 
@@ -53,38 +54,21 @@ p <- ggplot(arrival_risk_plot, aes(
     y = "Pathogen",
     caption = NULL
   ) +
-  theme_classic(base_size = 8, base_family = "Arial") +
+  theme_paper(width_in = get_paper_size("double_col")["width"], base_family = "Arial") +
   theme(
-    axis.text.y = element_text(family = "Arial", size = 13, color = "black"),
-    axis.text.x = element_text(family = "Arial", size = 13, color = "black"),
-    axis.title.x = element_text(family = "Arial", size = 15,  margin = margin(t = 10)),
-    axis.title.y = element_text(size = 15, color = "black", face = "bold"),
-    axis.line = element_line(color = "black", linewidth = 0.5),
-    axis.ticks = element_line(color = "black", linewidth = 0.5),
-    panel.grid.major.x = element_line(color = "gray", linewidth = 0.5),
-    panel.grid.minor.x = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.background = element_rect(fill = "white"),
-    plot.background = element_rect(fill = "white"),
     legend.position = c(0.96, 0.5), # inside, center-right
     legend.justification = c("right", "center"),
     legend.direction = "vertical",
     legend.background = element_rect(fill = alpha("white", 0.9), color = NA),
-    legend.title = element_blank(),
-    legend.text = element_text(family = "Arial", size = 14),
     legend.key.size = unit(1.1, "lines"),
     legend.box.margin = margin(0, 0, 0, 0),
     plot.margin = margin(0, 0, 0, 0)
   )
 
 ## --- Save output --------------------------------------------------------------
-ggsave(
-  "./output/pathogen_pandemic_share_all.pdf",
+save_paper_plot(
   plot = p,
-  width = 10,
-  height = 7.5,
-  units = "in",
-  dpi = 600,
-  device = cairo_pdf
+  path = "output/pathogen_pandemic_share_all.pdf",
+  preset = "double_col",
+  dpi = 600
 )
