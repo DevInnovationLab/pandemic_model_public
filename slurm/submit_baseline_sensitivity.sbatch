@@ -13,9 +13,11 @@
 #SBATCH --mail-user=squaade@rcc.uchicago.edu
 
 module load matlab/2023a
+set -e # Exit on fail
 
 NUM_CHUNKS=$1
 OVERWRITE=${2:-true};
+
 
 matlab -batch "run('./matlab/load_project.m');
                run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program.yaml', 'response', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"

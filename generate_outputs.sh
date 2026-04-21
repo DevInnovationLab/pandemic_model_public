@@ -64,7 +64,7 @@ matlab -batch "run('./matlab/load_project.m');
                plot_net_value_boxplot('${DIR_ALLRISK}');
                plot_pairwise_program_matrix('${DIR_PAIRWISE}');
                write_program_levels_invest_table('${DIR_PROGRAM_LEVELS}');
-               compare_exceedances('${DIR_BASELINE_VACCINE_SENS}', 'simulations_only');
-               compare_exceedances('${DIR_BASELINE_VACCINE_SENS_AIRBORNE}', 'baseline_madhav');"
+               plot_baseline_program_exceedances();
+               plot_airborne_baseline_madhav_exceedances();"
 
 step 'Finished generate_outputs.sh'

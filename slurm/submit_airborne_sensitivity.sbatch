@@ -16,6 +16,7 @@ module load matlab/2023a
 
 NUM_CHUNKS=$1
 OVERWRITE=${2:-true};
+set -e # Exit on fail
 
 matlab -batch "run('./matlab/load_project.m');
                run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program_airborne.yaml', 'response', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"
