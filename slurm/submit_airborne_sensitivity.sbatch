@@ -18,8 +18,6 @@ NUM_CHUNKS=$1
 OVERWRITE=${2:-true};
 set -e # Exit on fail
 
-matlab -batch "run('./matlab/load_project.m');
-               run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program_airborne.yaml', 'response', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"
+matlab -batch "run('./matlab/load_project.m'); run_sensitivity('./config/sensitivity_configs/baseline_vaccine_program_airborne.yaml', 'response', 'num_chunks', ${NUM_CHUNKS}, 'overwrite', ${OVERWRITE});"
 
-matlab -batch "run('./matlab/load_project.m');
-               agg_sensitivity_benefits('./output/sensitivity_runs/baseline_vaccine_program_airborne'); write_sensitivity_benefits_figures('./output/sensitivity_runs/baseline_vaccine_program_airborne');"
+matlab -batch "run('./matlab/load_project.m'); agg_sensitivity_benefits('./output/sensitivity_runs/baseline_vaccine_program_airborne'); write_sensitivity_benefits_figures('./output/sensitivity_runs/baseline_vaccine_program_airborne');"
