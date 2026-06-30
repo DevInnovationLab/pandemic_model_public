@@ -1,0 +1,37 @@
+function converted_names = convert_varnames(varnames)
+    % Map internal variable name codes to display labels for figures and tables.
+    %
+    % Handles _n (nominal) and _p (present value) suffixes: strips them, looks up
+    % the base name in a fixed dictionary, then re-appends the display suffix.
+    %
+    % Args:
+    %   varnames  String array of internal variable codes (e.g. "adv_cap_p").
+    %
+    % Returns:
+    %   converted_names  String array of display labels
+    %                    (e.g. "Advance capacity (present value)").
+    is_nominal = endsWith(varnames, "_n");
+    is_present = endsWith(varnames, "_p");
+    
+    % Remove the _n and _p suffixes before dictionary lookup
+    varnames_clean = varnames;
+    varnames_clean(is_nominal) = extractBefore(varnames(is_nominal), "_n");
+    varnames_clean(is_present) = extractBefore(varnames(is_present), "_p");
+
+    converter = dictionary( ...
+        ["adv_cap", "prototype_RD", "benefits", "inp_cap", "inp_marg", "inp_RD", "inp_tailoring", ...
+         "m_learning_losses", "m_deaths", "m_mortality_losses", "m_output_losses", "surveil", "u_deaths", ...
+         "advance_capacity", "advance_rd", "neglected_pathogen_rd", "improved_early_warning", "combined_invest", "status_quo", "ufv_RD", ...
+         "universal_flu_rd"], ...
+        ["Advance capacity", "Advance R&D", "Benefits (present value)", "Response capacity", "Vaccination unit costs", ...
+         "Response R&D", "Tailoring costs", "Learning losses (present value)", "Deaths", "Mortality losses", ...
+         "Economic losses", "Improved early warning costs", "Unmitigated deaths", ...
+         "Advance capacity", "Neglected disease R&D", "Neglected disease R&D", "Improved early warning", "Combined", "Status quo response", "Universal flu vaccine R&D", ...
+         "Universal flu vaccine R&D"] ...
+    );
+
+    % Add nominal/present value indicators to names after dictionary lookup
+    converted_names = converter(varnames_clean);
+    converted_names(is_nominal) = converted_names(is_nominal) + " (nominal value)";
+    converted_names(is_present) = converted_names(is_present) + " (present value)";
+end

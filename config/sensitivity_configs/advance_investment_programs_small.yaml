@@ -1,0 +1,141 @@
+# Sensitivity analysis focused on parameters that drive advance investment capacity outcomes.
+base_run_config: "./config/run_configs/allrisk_base_small.yaml"
+outdir: "./output/sensitivity_runs"
+program_sensitivities:
+  advance_capacity:
+    fix_params:
+      # Include baseline plus advance-capacity scenario only.
+      scenario_configs:
+        - "./config/scenario_configs/standard/status_quo.yaml"
+        - "./config/scenario_configs/standard/advance_capacity_6_month.yaml"
+    sensitivities:
+      arrival_dist_config:
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u100_n1000000_s42"
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
+      include_unid_yearthreshonly:
+        arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
+        duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__dur__n1000000_s42.csv"
+
+      # Build cost of reserved capacity.
+      k_m:
+        - 0.75
+        - 5.0
+      k_o:
+        - 1.5
+        - 6.0
+
+      # Upper bound and deployment timing of available capacity.
+      max_capacity:
+        - 16.28e9
+        - 32.56e9
+      adv_cap_build_period:
+        - 20
+        - 40
+      capacity_kept:
+        - 0.25
+        - 0.75
+
+      # In-pandemic production economics and scalability.
+      epsilon:
+        - 0.75
+        - 1.25
+      theta:
+        - 0.1
+        - 0.5
+      tailoring_fraction:
+        - 0.1
+        - 0.5
+
+  improved_early_warning:
+    fix_params:
+      scenario_configs:
+        - "./config/scenario_configs/standard/status_quo.yaml"
+        - "./config/scenario_configs/standard/improved_early_warning_low_threshold.yaml"
+    sensitivities:
+      arrival_dist_config:
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u100_n1000000_s42"
+
+      include_unid_yearthreshonly:
+        arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
+        duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__dur__n1000000_s42.csv"
+
+      improved_ew_precision:
+        - 0.2
+        - 0.7
+      improved_ew_recall:
+        - 0.4
+        - 0.9
+      ew_annual_cost:
+        - 245e6
+        - 980e6
+      months_to_early_detect:
+        - 1
+        - 3
+      frac_invest_on_false:
+        - 0.1
+        - 0.5
+      delta:
+        - 0.05
+        - 0.13
+  
+  prototype_rd:
+    fix_params:
+      scenario_configs:
+        - "./config/scenario_configs/standard/status_quo.yaml"
+        - "./config/scenario_configs/standard/neglected_pathogen_rd_all.yaml"
+    sensitivities:
+      arrival_dist_config:
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u100_n1000000_s42"
+      include_unid_yearthreshonly:
+        arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
+        duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__dur__n1000000_s42.csv"
+
+      advance_RD_cost_per_pathogen:
+        - 0.53e9
+        - 2.12e9
+      advance_RD_benefit_start:
+        - 6
+        - 16
+      prototype_effect_ptrs:
+        - "./data/clean/prototype_effect_preds_q25.csv"
+        - "./data/clean/prototype_effect_preds_q75.csv"
+      prototype_success_prob:
+        - 0.5
+        - 1
+      rd_months_with_prototype:
+        - 6
+        - 16
+      rd_months_no_prototype:
+        - 13
+        - 28
+  
+  universal_flu_vaccine:
+    fix_params:
+      scenario_configs:
+        - "./config/scenario_configs/standard/status_quo.yaml"
+        - "./config/scenario_configs/standard/universal_flu_rd_invest_both.yaml"
+    sensitivities:
+      arrival_dist_config:
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u100_n1000000_s42"
+      include_unid_yearthreshonly:
+        arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
+        duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__dur__n1000000_s42.csv"
+
+      univ_flu_vax_eff_multiplier:
+        - 0.25
+        - 1
+      univ_flu_cost_multiplier:
+        - 1
+        - 3
+      initial_share_ufv:
+        - 0.0
+        - 0.2
+      ufv_success_prob:
+        - 0.5
+        - 1
+      advance_RD_benefit_start:
+        - 6
+        - 16

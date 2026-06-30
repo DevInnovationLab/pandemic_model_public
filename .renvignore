@@ -1,0 +1,12 @@
+output/*
+data/*
+config/*
+matlab/*
+python/*
+resources/*
+
+*.log
+*.out
+*.pyc
+
+.env

@@ -1,0 +1,118 @@
+# Config for sensitivity analysis on baseline and advance investment vaccine programs.
+# Mixed format: one-parameter sweeps plus ptrs_pathogen_gamma1 (vaccines always succeed, gamma=1).
+base_run_config: "./config/run_configs/allrisk_base.yaml"
+outdir: "./output/sensitivity_runs"
+program_sensitivities:
+  vaccine_program:
+    fix_params: # Parameters to update and fix in the base config
+      # List form supports explicit scenario file paths.
+      scenario_configs:
+        - "./config/scenario_configs/standard/status_quo.yaml"
+    sensitivities:
+      arrival_dist_config:
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u100_n1000000_s42"
+        - "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900__arr__gpd_severity_poisson_sharp_u1000_n1000000_s42"
+      include_unid_yearthreshonly:
+        arrival_dist_config: "data/clean/arrival_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__arr__gpd_severity_poisson_sharp_u200_n1000000_s42"
+        duration_dist_config: "data/clean/duration_distributions/e241210c_upcov__filt__all_int_0d01_1900_yearthreshonly__dur__n1000000_s42.csv"
+
+      response_threshold_path:
+        - "./data/clean/response_thresholds/quarter_covid_severity.yaml"
+        - "./data/clean/response_thresholds/full_covid_severity.yaml"
+      
+      gamma:  # Fraction remaining harm mitigated by vaccine
+        - 0.3    # 30%
+        - 0.7    # 70%
+
+      capacity_kept: # Share response capacity kept after a pandemic
+        - 0
+        - 0.75
+
+      surge_cap_mrna:
+        - 1e9
+        - 3e9
+
+      surge_cap_trad:
+        - 1e9
+        - 3e9
+
+      k_m:  # Unit cost of advance mRNA capacity
+        - 0.75   # $0.75 per annual course
+        - 5.0    # $5.00 per annual course
+
+      k_o:  # Unit cost of advance capacity for other vaccines
+        - 1.5    # $1.50 per annual course
+        - 6.0    # $6.00 per annual course
+
+      c_m:  # Marginal cost of producing mRNA vaccines
+        - 20.0
+        - 40.0
+
+      c_o:  # Marginal cost of producing other vaccines
+        - 12    # $1.50 per course
+        - 30    # $6.00 per course
+
+      epsilon:  # Decreasing returns to pandemic capacity
+        - 0.75   # 0.75
+        - 1.25   # 1.25
+
+      f_m:  # Fraction of at-risk capacity successful in mRNA
+        - 0.15    # 20%
+        - 0.5    # 40%
+
+      f_o:  # Fraction of at-risk capacity successful in traditional
+        - 0.15    # 20%
+        - 0.5    # 40%
+
+      g_m:  # Fraction of at-risk capacity repurposable in mRNA
+        - 0.2    # 20%
+        - 0.6    # 60%
+
+      g_o:  # Fraction of at-risk capacity repurposable in traditional
+        - 0.2    # 20%
+        - 0.6    # 60%
+
+      tau_m:  # Time to repurpose mRNA capacity
+        - 1      # 1 month
+        - 4      # 3 months
+
+      tau_o:  # Time to repurpose other capacity
+        - 4      # 3 months
+        - 12      # 9 months
+
+      rd_months_with_prototype:
+        - 6
+        - 16
+
+      rd_months_no_prototype:
+        - 13
+        - 28
+
+      max_capacity:
+        - 16.28e9 # Calibrated to 50% advance capacity program
+        - 32.56e9 # Calibrated to 200% advance capacity program
+
+      delta:
+        - 0.05
+        - 0.13
+
+      # Vaccines always succeed and gamma=1 (multi-parameter scenario)
+      ptrs_pathogen_gamma1:
+        ptrs_pathogen: "./data/clean/ptrs_table_always_succeed.csv"
+        gamma: 1
+      
+      ptrs_pathogen: 
+        - "./data/clean/ptrs_table_q25.csv"
+        - "./data/clean/ptrs_table_q75.csv"
+
+      inp_RD_spend:
+        - 3.43e9
+        - 9e9
+
+      months_to_regular_detect:
+        - 1
+        - 5
+
+      beta:
+        - 50e6
+        - 200e6

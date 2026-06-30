@@ -1,0 +1,74 @@
+classdef ArrivalDistSampler
+    properties
+        param_samples
+        false_positive_rate
+        trunc_method
+        measure
+    end
+
+    methods
+        function obj = ArrivalDistSampler(param_samples, trunc_method, measure)
+            % Create a y_sample sampler that samples from multiple parameter combinations
+            %
+            % Args:
+            %   dist_name: Name of the distribution to sample from
+            %   param_table: Table containing parameter combinations, one row per draw
+            %   max_y_sample: Maximum allowed y_sample
+            arguments
+                param_samples (:,5) table
+                trunc_method (1,1) {mustBeMember(trunc_method, {'sharp', 'smooth'})}
+                measure (1,1) string = "undefined"
+            end
+            obj.param_samples = param_samples;
+            obj.trunc_method = trunc_method;
+            obj.measure = measure;
+        end
+
+        % ---------------------------------------------------------------------
+        function y_sample = get_y_sample(obj, unifrnd_draw)
+            % Draw severities from a GPD tail that is
+            %  – left-truncated  at  min_y_sample  (threshold)
+            %  – right-truncated at  max_y_sample
+            %
+            % The mass (1-p) sits at the threshold, the remaining p is spread
+            % over (min_y_sample , max_y_sample].
+            assert(height(unifrnd_draw) == height(obj.param_samples), 'First dimension of draws must match number of parameter samples');
+
+            xi = obj.param_samples.xi;
+            sigma = obj.param_samples.sigma;
+            lambda = obj.param_samples.lambda;
+            mu = obj.param_samples.mu;
+            max_val = obj.param_samples.max_value;
+
+            % Get sample
+            y_sample = PoissonGPD(lambda, xi, sigma, mu, max_val).icdf(unifrnd_draw);
+            y_sample(y_sample <= mu) = 0; % Hacky but must be done somewhere.
+        end
+
+        function rank = get_rank(obj, y_sample)
+            % Truncated tail CDF mapped back to the mixed distribution:
+            %   F_trunc(y) = (F(y) - F(threshold)) / (F(max) - F(threshold))
+            %
+            % Overall rank = (1-p)  on the atom  +  p · F_trunc(y)
+            
+            assert(~any(y_sample > obj.param_samples.max_value, 'all'), "Some values exceed the max values.");
+
+            xi = obj.param_samples.xi;
+            sigma = obj.param_samples.sigma;
+            lambda = obj.param_samples.lambda;
+            mu = obj.param_samples.mu;
+            max_val = obj.param_samples.max_value;
+
+            % Get rank
+            rank = PoissonGPD(lambda, xi, sigma, mu, max_val).cdf(y_sample);
+        end
+
+        function y_sample = ppf(obj, unifrnd_draw)
+            y_sample = obj.get_y_sample(unifrnd_draw);
+        end
+
+        function rank = cdf(obj, y_sample)
+            rank = obj.get_rank(y_sample);
+        end
+    end
+end
